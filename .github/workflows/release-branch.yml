@@ -2,7 +2,7 @@ name: Release Branch Workflow
 
 on:
   push:
-    branches: [ release/v* ]
+    branches: [release/v*]
 
 jobs:
   Build-Test-Package:
@@ -37,7 +37,7 @@ jobs:
         uses: sonarsource/sonarcloud-github-action@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}          
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       - name: Package App
         run: devops/scripts/package-artifact.sh
         env:
@@ -48,7 +48,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: Test
-      url: https://easey-tst.app.cloud.gov/api/notifications-mgmt/swagger
+      url: https://api.epa.gov/easey/test/notifications-mgmt/swagger
     steps:
       - name: Checkout repo
         uses: actions/checkout@v2
@@ -83,7 +83,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: Beta
-      url: https://easey-beta.app.cloud.gov/api/notifications-mgmt/swagger
+      url: https://api.epa.gov/easey/beta/notifications-mgmt/swagger
     steps:
       - name: Checkout repo
         uses: actions/checkout@v2
@@ -118,7 +118,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: Staging
-      url: https://easey-stg.app.cloud.gov/api/notifications-mgmt/swagger
+      url: https://api.epa.gov/easey/staging/notifications-mgmt/swagger
     steps:
       - name: Checkout repo
         uses: actions/checkout@v2

@@ -9,7 +9,6 @@ import appConfig from './config/app.config';
 import { TypeOrmConfigService } from './config/typeorm.config';
 
 import { MailModule } from './mail/mail.module';
-
 import { LoggerModule } from '@us-epa-camd/easey-common/logger';
 import { CorsOptionsModule } from '@us-epa-camd/easey-common/cors-options';
 
@@ -18,10 +17,7 @@ import { CorsOptionsModule } from '@us-epa-camd/easey-common/cors-options';
     RouterModule.forRoutes(routes),
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [
-        dbConfig,
-        appConfig,
-      ],
+      load: [dbConfig, appConfig],
     }),
     TypeOrmModule.forRootAsync({
       useClass: TypeOrmConfigService,
@@ -29,6 +25,6 @@ import { CorsOptionsModule } from '@us-epa-camd/easey-common/cors-options';
     LoggerModule,
     CorsOptionsModule,
     MailModule,
-    ],
+  ],
 })
 export class AppModule {}

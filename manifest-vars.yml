@@ -1,0 +1,12 @@
+#THIS FILE SHOULD CONTAIN DEV SETTINGS AND CI/CD WORKFLOW WILL CHANGE SETTINGS BASED ON ENV
+name: notifications-mgmt
+title: Notifications Management
+path: notifications-mgmt
+port: 8080
+instances: 1
+memory: 512M
+environment: development
+host: api-easey-dev.app.cloud.gov
+apiHost: api.epa.gov/easey/dev
+smtpPort: 25
+smtpHost: 'smtp.epa.gov'

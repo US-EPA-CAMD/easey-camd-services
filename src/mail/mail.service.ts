@@ -1,36 +1,34 @@
 import { MailerService } from '@nestjs-modules/mailer';
-import { Injectable } from '@nestjs/common';
-import { Mail } from './../interfaces/mail.interface';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { CreateMailDto } from 'src/dto/create-mail.dto';
+import { Logger } from '@us-epa-camd/easey-common/logger';
 
 @Injectable()
 export class MailService {
-	constructor(private mailerService: MailerService) {}
+  constructor(
+    private readonly mailerService: MailerService,
+    private readonly logger: Logger,
+  ) {}
 
-	private readonly mail: Mail[]  = [];
-
-	async sendEmail(mail: Mail) {
-		const url = 'www.google.com';
-
-		// curl -X POST -d "toEmail=yefim@yefim-VirtualBox&fromEmail=from@otherexample.com&subject=test subject&body=test body" http://localhost:3000/mail
-		console.log(mail);
-
-		await this.mailerService.sendMail({
-			to: mail.toEmail,
-			subject: mail.subject,
-			template: './testTemplate',
-			// "Yefim Test" <yefim@yefim-VirtualBox.com>'
-			from: `'Test Contact Us' <${mail.fromEmail}>`,
-			context: {
-				url
-			},
-		});
-	}
-
-	create(mail: Mail) {
-		this.mail.push(mail);
-	}
-
-	findAll(): Mail[] {
-		return this.mail;
-	}
+  async sendEmail(createMailDTO: CreateMailDto): Promise<void> {
+    this.mailerService
+      .sendMail({
+        to: createMailDTO.toEmail, // list of receivers
+        from: createMailDTO.fromEmail, // sender address
+        subject: createMailDTO.subject, // Subject line
+        template: './testTemplate',
+        context: {
+          url: 'www.google.com',
+        },
+      })
+      .then(() => {
+        this.logger.info('Successfully sent an email', {
+          to: createMailDTO.toEmail,
+          from: createMailDTO.fromEmail,
+        });
+      })
+      .catch((e) => {
+        this.logger.error(InternalServerErrorException, e, true);
+      });
+  }
 }

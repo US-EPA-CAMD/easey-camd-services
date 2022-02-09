@@ -1,0 +1,23 @@
+applications:
+  - name: ((name))
+    memory: ((memory))
+    instances: ((instances))
+    buildpacks:
+      - nodejs_buildpack
+    env:
+      OPTIMIZE_MEMORY: true
+      EASEY_API_GATEWAY_HOST: ((apiHost))
+      EASEY_NOTIFICATIONS_API_TITLE: ((title))
+      EASEY_NOTIFICATIONS_API_HOST: ((host))
+      EASEY_NOTIFICATIONS_API_PORT: ((port))
+      EASEY_NOTIFICATIONS_API_PATH: ((path))
+      EASEY_NOTIFICATIONS_API_ENV: ((environment))
+      EASEY_NOTIFICATIONS_API_SMTP_PORT: ((smtpPort))
+      EASEY_NOTIFICATIONS_API_SMTP_HOST: ((smtpHost))
+      EASEY_NOTIFICATIONS_API_ENABLE_CORS: true
+      EASEY_NOTIFICATIONS_API_ENABLE_API_KEY: true
+
+    routes:
+      - route: ((host))/((path))
+    services:
+      - camd-pg-db

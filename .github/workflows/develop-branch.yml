@@ -9,6 +9,9 @@ on:
 jobs:
   Build-Test-Deploy:
     runs-on: ubuntu-latest
+    environment:
+      name: Dev
+      url: https://api.epa.gov/easey/dev/notifications-mgmt/swagger
     steps:
       - name: Checkout repo
         uses: actions/checkout@v2

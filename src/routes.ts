@@ -4,7 +4,7 @@ import { MailModule } from './mail/mail.module';
 
 const routes: Routes = [
   {
-    path: '/mail',
+    path: '/email',
     module: MailModule,
   },
 ];
