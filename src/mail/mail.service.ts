@@ -1,25 +1,31 @@
-import { MailerService } from '@nestjs-modules/mailer';
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { CreateMailDto } from 'src/dto/create-mail.dto';
 import { Logger } from '@us-epa-camd/easey-common/logger';
+import { ConfigService } from '@nestjs/config';
+
+const nodeEmailer = require('nodemailer');
+let transporter;
 
 @Injectable()
 export class MailService {
   constructor(
-    private readonly mailerService: MailerService,
+    private readonly configService: ConfigService,
     private readonly logger: Logger,
-  ) {}
+  ) {
+    transporter = nodeEmailer.createTransport({
+      host: configService.get<string>('app.smtpHost'),
+      port: configService.get<number>('app.smtpPort'),
+      secure: false, // true for 465, false for other ports
+    });
+  }
 
   async sendEmail(createMailDTO: CreateMailDto): Promise<void> {
-    this.mailerService
+    transporter
       .sendMail({
-        to: createMailDTO.toEmail, // list of receivers
         from: createMailDTO.fromEmail, // sender address
+        to: createMailDTO.toEmail, // list of receivers
         subject: createMailDTO.subject, // Subject line
-        template: './testTemplate',
-        context: {
-          url: 'www.google.com',
-        },
+        text: createMailDTO.message,
       })
       .then(() => {
         this.logger.info('Successfully sent an email', {
