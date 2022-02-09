@@ -1,9 +1,9 @@
-import { ApiTags, ApiOkResponse } from '@nestjs/swagger';
+import { ApiTags, ApiOkResponse, ApiSecurity } from '@nestjs/swagger';
 import { Controller, Post, Body } from '@nestjs/common';
 import { CreateMailDto } from './../dto/create-mail.dto';
 import { MailService } from './mail.service';
 
-//@ApiSecurity('APIKey')
+@ApiSecurity('APIKey')
 @ApiTags('email')
 @Controller()
 export class MailController {
