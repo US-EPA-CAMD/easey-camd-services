@@ -26,10 +26,4 @@ export class CreateMailDto {
     name: 'message',
   })
   message: string;
-
-  @ApiProperty({
-    description: 'Purpose of email message',
-    name: 'purpose',
-  })
-  purpose: string;
 }

@@ -20,21 +20,19 @@ export class MailService {
   }
 
   async sendEmail(createMailDTO: CreateMailDto): Promise<void> {
-    transporter
-      .sendMail({
+    try {
+      await transporter.sendMail({
         from: createMailDTO.fromEmail, // sender address
         to: createMailDTO.toEmail, // list of receivers
         subject: createMailDTO.subject, // Subject line
         text: createMailDTO.message,
-      })
-      .then(() => {
-        this.logger.info('Successfully sent an email', {
-          to: createMailDTO.toEmail,
-          from: createMailDTO.fromEmail,
-        });
-      })
-      .catch((e) => {
-        this.logger.error(InternalServerErrorException, e, true);
       });
+    } catch (e) {
+      this.logger.error(InternalServerErrorException, e, true);
+    }
+    this.logger.info('Successfully sent an email', {
+      to: createMailDTO.toEmail,
+      from: createMailDTO.fromEmail,
+    });
   }
 }
