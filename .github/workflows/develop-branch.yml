@@ -2,11 +2,12 @@ name: Develop Branch Workflow
 
 on:
   push:
-    branches: [develop]
+    branches: [ develop ]
     paths-ignore:
-      - '**/*.md'
-      - 'LICENSE'
-      - '.github/**'
+    - '**/*.md'
+    - 'LICENSE'
+    - '.github/**'
+    - '.gitignore'
 
 jobs:
   Build-Test-Deploy:

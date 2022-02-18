@@ -2,7 +2,15 @@
   "collection": "@nestjs/schematics",
   "sourceRoot": "src",
   "compilerOptions": {
-    "assets": ["mail/templates/**/*.hbs"],
-    "watchAssets": true
+    "plugins": [
+      {
+        "name": "@nestjs/swagger/plugin",
+        "options": {
+          "dtoFileNameSuffix": [".dto.ts", ".entity.ts"],
+          "controllerFileNameSuffix": [".controller.ts"],
+          "introspectComments": true
+        }
+      }
+    ]
   }
 }
