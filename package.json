@@ -1,12 +1,12 @@
 {
-  "name": "easey-notification-api",
-  "version": "1.0.0",
-  "description": "EPA CAMD Notifications Management API",
+  "name": "easey-camd-services",
+  "version": "0.0.0",
+  "description": "EPA CAMD Services",
   "license": "MIT",
   "private": true,
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/US-EPA-CAMD/easey-notifications-api.git"
+    "url": "git+https://github.com/US-EPA-CAMD/easey-camd-services.git"
   },
   "engines": {
     "node": "16.x"

@@ -48,7 +48,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: Test
-      url: https://api.epa.gov/easey/test/notifications-mgmt/swagger
+      url: https://api.epa.gov/easey/test/camd-services/swagger
     steps:
       - name: Checkout repo
         uses: actions/checkout@v2
@@ -83,7 +83,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: Beta
-      url: https://api.epa.gov/easey/beta/notifications-mgmt/swagger
+      url: https://api.epa.gov/easey/beta/camd-services/swagger
     steps:
       - name: Checkout repo
         uses: actions/checkout@v2
@@ -118,7 +118,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: Staging
-      url: https://api.epa.gov/easey/staging/notifications-mgmt/swagger
+      url: https://api.epa.gov/easey/staging/camd-services/swagger
     steps:
       - name: Checkout repo
         uses: actions/checkout@v2

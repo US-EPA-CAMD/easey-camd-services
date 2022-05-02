@@ -1,11 +1,11 @@
 import { Routes } from 'nest-router';
 
-import { MailModule } from './mail/mail.module';
+import { BookmarkModule } from './bookmark/bookmark.module';
 
 const routes: Routes = [
   {
-    path: '/email',
-    module: MailModule,
+    path: '/bookmarks',
+    module: BookmarkModule,
   },
 ];
 

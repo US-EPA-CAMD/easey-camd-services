@@ -10,7 +10,8 @@ import { CorsOptionsModule } from '@us-epa-camd/easey-common/cors-options';
 import routes from './routes';
 import appConfig from './config/app.config';
 import { TypeOrmConfigService } from './config/typeorm.config';
-import { MailModule } from './mail/mail.module';
+
+import { BookmarkModule } from './bookmark/bookmark.module';
 
 @Module({
   imports: [
@@ -24,7 +25,7 @@ import { MailModule } from './mail/mail.module';
     }),
     LoggerModule,
     CorsOptionsModule,
-    MailModule,
+    BookmarkModule,
   ],
 })
 export class AppModule {}
