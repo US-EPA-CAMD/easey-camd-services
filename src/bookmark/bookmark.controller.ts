@@ -2,14 +2,18 @@ import {
   ApiTags,
   ApiOkResponse,
   ApiSecurity,
+  ApiExtraModels,
 } from '@nestjs/swagger';
 
-import { Controller, Get, Post } from '@nestjs/common';
+import { Controller, Get, Post, Body } from '@nestjs/common';
 
 import { BookmarkService } from './bookmark.service';
+import { BoomarkPayloadDTO } from '../dto/bookmark-payload.dto';
+import { BookmarkCreatedDTO } from '../dto/bookmark-created.dto';
 
 @ApiSecurity('APIKey')
 @ApiTags('Bookmarks')
+@ApiExtraModels(BookmarkCreatedDTO)
 @Controller()
 export class BookmarkController {
   constructor(private service: BookmarkService) {}
@@ -19,14 +23,16 @@ export class BookmarkController {
     description: 'Retrieves a bookmark by its id',
   })
   async getBookmark() {
-    return "get bookmark";
+    return 'get bookmark';
   }
 
   @Post()
   @ApiOkResponse({
     description: 'Creates a bookmark record',
   })
-  async createBookmark() {
-    return "create bookmark";
+  async createBookmark(
+    @Body() payload: BoomarkPayloadDTO,
+  ): Promise<BookmarkCreatedDTO> {
+    return this.service.createBookmark(payload);
   }
 }
