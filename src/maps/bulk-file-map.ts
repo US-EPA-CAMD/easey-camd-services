@@ -8,16 +8,21 @@ import { BulkFileMetadata } from 'src/entities/bulk_file_metadata.entity';
 export class BulkFileMap extends BaseMap<BulkFileMetadata, BulkFileDTO> {
   public async one(entity: BulkFileMetadata): Promise<BulkFileDTO> {
     const splits = entity.s3_key.split('/');
+    const metadata = JSON.parse(entity.metadata);
+
+    const metaToLower = Object.fromEntries(
+      Object.entries(metadata).map(([k, v]) => [k.toLowerCase(), v]),
+    );
 
     return {
-      Id: entity.id,
-      FileName: splits[splits.length - 1],
-      Metadata: JSON.parse(entity.metadata),
-      Bytes: entity.file_size,
-      Kilobytes: entity.file_size / 1024,
-      Megabytes: entity.file_size / 1024 / 1024,
-      Gigabytes: entity.file_size / 1024 / 1024 / 1024,
-      LastUpdated: entity.last_update_date,
+      id: entity.id,
+      filename: splits[splits.length - 1],
+      metadata: metaToLower,
+      bytes: entity.file_size,
+      kiloBytes: entity.file_size / 1024,
+      megaBytes: entity.file_size / 1024 / 1024,
+      gigaBytes: entity.file_size / 1024 / 1024 / 1024,
+      lastUpdated: entity.last_update_date,
     };
   }
 }

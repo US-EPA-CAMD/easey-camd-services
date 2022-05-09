@@ -1,10 +1,10 @@
 export class BulkFileDTO {
-  Id: number;
-  FileName: string;
-  Bytes: number;
-  Kilobytes: number;
-  Megabytes: number;
-  Gigabytes: number;
-  LastUpdated: Date;
-  Metadata: object;
+  id: number;
+  filename: string;
+  bytes: number;
+  kiloBytes: number;
+  megaBytes: number;
+  gigaBytes: number;
+  lastUpdated: Date;
+  metadata: object;
 }
