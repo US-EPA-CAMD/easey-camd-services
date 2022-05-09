@@ -12,13 +12,15 @@ import appConfig from './config/app.config';
 import { TypeOrmConfigService } from './config/typeorm.config';
 
 import { BookmarkModule } from './bookmark/bookmark.module';
+import { BulkFileModule } from './bulkFile/bulk_file.module';
+import s3Config from './config/s3.config';
 
 @Module({
   imports: [
     RouterModule.forRoutes(routes),
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [dbConfig, appConfig],
+      load: [dbConfig, appConfig, s3Config],
     }),
     TypeOrmModule.forRootAsync({
       useClass: TypeOrmConfigService,
@@ -26,6 +28,7 @@ import { BookmarkModule } from './bookmark/bookmark.module';
     LoggerModule,
     CorsOptionsModule,
     BookmarkModule,
+    BulkFileModule,
   ],
 })
 export class AppModule {}
