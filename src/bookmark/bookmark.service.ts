@@ -1,16 +1,23 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Logger } from '@us-epa-camd/easey-common/logger';
 
 import { BookmarkRepository } from './bookmark.repository';
 import { BoomarkPayloadDTO } from '../dto/bookmark-payload.dto';
 import { BookmarkCreatedDTO } from '../dto/bookmark-created.dto';
+import { BookmarkDTO } from '../dto/bookmark.dto';
+import { BookmarkMap } from '../maps/bookmark.map';
 
 @Injectable()
 export class BookmarkService {
   constructor(
     @InjectRepository(BookmarkRepository)
     private readonly repository: BookmarkRepository,
+    private readonly bookmarkMap: BookmarkMap,
     private readonly logger: Logger,
   ) {}
 
@@ -21,7 +28,7 @@ export class BookmarkService {
       const bookmarkEntity = this.repository.create({
         bookmarkData: JSON.stringify(payload),
         bookmarkAddDate: new Date(),
-        bookmarklastAccessedDate: null,
+        bookmarkLastAccessedDate: null,
         bookmarkHitCount: 0,
       });
 
@@ -38,5 +45,21 @@ export class BookmarkService {
         'Payload should not be null, undefined, or empty',
       );
     }
+  }
+
+  async getBookmarkById(id: number): Promise<BookmarkDTO> {
+    const results = await this.repository.findOne(id);
+    if (results === undefined) {
+      throw new NotFoundException('Bookmark id does not exist');
+    }
+
+    await this.repository.update(id, {
+      bookmarkLastAccessedDate: new Date(),
+      bookmarkHitCount: results.bookmarkHitCount + 1,
+    });
+
+    let updatedResults = await this.repository.findOne(id);
+
+    return this.bookmarkMap.one(updatedResults);
   }
 }
