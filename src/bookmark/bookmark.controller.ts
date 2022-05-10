@@ -5,11 +5,23 @@ import {
   ApiExtraModels,
 } from '@nestjs/swagger';
 
-import { Controller, Get, Post, Body } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  ParseIntPipe,
+} from '@nestjs/common';
 
+import {
+  BadRequestResponse,
+  NotFoundResponse,
+} from '../utils/swagger-decorator.const';
 import { BookmarkService } from './bookmark.service';
 import { BoomarkPayloadDTO } from '../dto/bookmark-payload.dto';
 import { BookmarkCreatedDTO } from '../dto/bookmark-created.dto';
+import { BookmarkDTO } from '../dto/bookmark.dto';
 
 @ApiSecurity('APIKey')
 @ApiTags('Bookmarks')
@@ -22,8 +34,12 @@ export class BookmarkController {
   @ApiOkResponse({
     description: 'Retrieves a bookmark by its id',
   })
-  async getBookmark() {
-    return 'get bookmark';
+  @BadRequestResponse()
+  @NotFoundResponse()
+  async getBookmarkById(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<BookmarkDTO> {
+    return this.service.getBookmarkById(id);
   }
 
   @Post()

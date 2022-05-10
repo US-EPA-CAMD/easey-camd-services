@@ -20,7 +20,7 @@ export class Bookmark extends BaseEntity {
   @Column({
     name: 'bookmark_last_accessed_date',
   })
-  bookmarklastAccessedDate: Date;
+  bookmarkLastAccessedDate: Date;
 
   @Column({
     name: 'bookmark_hit_count',

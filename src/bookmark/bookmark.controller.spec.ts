@@ -6,6 +6,8 @@ import { BookmarkController } from './bookmark.controller';
 import { BookmarkService } from './bookmark.service';
 import { BookmarkCreatedDTO } from '../dto/bookmark-created.dto';
 import { BoomarkPayloadDTO } from '../dto/bookmark-payload.dto';
+import { BookmarkMap } from '../maps/bookmark.map';
+import { BookmarkDTO } from '../dto/bookmark.dto';
 
 describe('-- Bookmark Controller --', () => {
   let controller: BookmarkController;
@@ -15,7 +17,7 @@ describe('-- Bookmark Controller --', () => {
     const module = await Test.createTestingModule({
       imports: [LoggerModule],
       controllers: [BookmarkController],
-      providers: [BookmarkRepository, BookmarkService],
+      providers: [BookmarkMap, BookmarkRepository, BookmarkService],
     }).compile();
 
     controller = module.get(BookmarkController);
@@ -32,6 +34,14 @@ describe('-- Bookmark Controller --', () => {
       const payloadDto = new BoomarkPayloadDTO();
       jest.spyOn(service, 'createBookmark').mockResolvedValue(expectedResult);
       expect(await controller.createBookmark(payloadDto)).toBe(expectedResult);
+    });
+  });
+
+  describe('* getBookmarkById', () => {
+    it('should return a single bookmark', async () => {
+      const expectedResult = new BookmarkDTO();
+      jest.spyOn(service, 'getBookmarkById').mockResolvedValue(expectedResult);
+      expect(await controller.getBookmarkById(1000)).toBe(expectedResult);
     });
   });
 });
