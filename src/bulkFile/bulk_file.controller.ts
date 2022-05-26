@@ -39,13 +39,13 @@ export class BulkFileController {
     return this.service.postBulkDataFile(bulkDataFile);
   }
 
-  @Put('bulk-files/:id')
+  @Put('bulk-files/:s3_key')
   @ApiOkResponse({
     type: BulkFileInputDTO,
     description: 'Puts new information for a database entry for an S3 file'
   })
-  async putBulkFile(@Param('id') id: number, @Body() bulkDataFile: BulkFileInputDTO) {
-    return this.service.putBulkDataFile(id, bulkDataFile);
+  async putBulkFile(@Param('s3_key') s3_key: string, @Body() bulkDataFile: BulkFileInputDTO) {
+    return this.service.putBulkDataFile(s3_key, bulkDataFile);
   }
 
 }
