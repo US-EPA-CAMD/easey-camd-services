@@ -1,16 +1,16 @@
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { BaseEntity, Column, Entity, PrimaryColumn } from 'typeorm';
 
 @Entity({ name: 'camdaux.bulk_file_metadata' })
 export class BulkFileMetadata extends BaseEntity {
-  @PrimaryGeneratedColumn({
-    name: 'bulk_file_id',
+  @PrimaryColumn({
+    name: 'file_name',
   })
-  id: number;
+  fileName: string;
 
   @Column({
-    name: 's3_key',
+    name: 's3_path',
   })
-  s3_key: string;
+  s3Path: string;
 
   @Column({
     name: 'metadata',
@@ -20,15 +20,15 @@ export class BulkFileMetadata extends BaseEntity {
   @Column({
     name: 'file_size',
   })
-  file_size: number;
+  fileSize: number;
 
   @Column({
     name: 'add_date',
   })
-  add_date: Date;
+  addDate: Date;
 
   @Column({
     name: 'last_update_date',
   })
-  last_update_date: Date;
+  lastUpdateDate: Date;
 }

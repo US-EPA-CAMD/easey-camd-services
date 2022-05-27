@@ -1,6 +1,6 @@
 export class BulkFileInputDTO {
-  s3Path: string;
   filename: string;
+  s3Path: string;
   bytes: number;
   metadata: object;
 }

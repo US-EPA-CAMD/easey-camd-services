@@ -1,4 +1,4 @@
-import { BulkFileMetadata } from '../entities/bulk_file_metadata.entity';
+import { BulkFileMetadata } from '../entities/bulk-file-metadata.entity';
 import { EntityRepository, Repository } from 'typeorm';
 
 @EntityRepository(BulkFileMetadata)

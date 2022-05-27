@@ -2,7 +2,7 @@ import { ApiOkResponse, ApiSecurity, ApiTags } from '@nestjs/swagger';
 
 import { Controller, Get, Post, Put, Body, Param } from '@nestjs/common';
 
-import { BulkFileService } from './bulk_file.service';
+import { BulkFileService } from './bulk-file.service';
 
 import { BulkFileInputDTO } from 'src/dto/bulk_file_input.dto';
 
@@ -22,6 +22,7 @@ export class BulkFileController {
     return this.service.getBulkDataFiles();
   }
 
+  /*
   @Post('metadata/bulk-file')
   @ApiOkResponse({
     description: 'Posts a new database metadata entry for an S3 file',
@@ -29,23 +30,26 @@ export class BulkFileController {
   async postBulkFileMetadata() {
     return 'get bookmark';
   }
+  */
 
-  @Post('bulk-files')
+  @Post('metadata/bulk-files')
   @ApiOkResponse({
     type: BulkFileInputDTO,
-    description: 'Posts a new database entry for an S3 file'
+    description: 'Adds a new database entry for an S3 file',
   })
-  async postBulkFile(@Body() bulkDataFile: BulkFileInputDTO) {
-    return this.service.postBulkDataFile(bulkDataFile);
+  async addBulkFile(@Body() bulkDataFile: BulkFileInputDTO) {
+    return this.service.addBulkDataFile(bulkDataFile);
   }
 
-  @Put('bulk-files/:s3_key')
+  @Put('metadata/bulk-files/:s3_path')
   @ApiOkResponse({
     type: BulkFileInputDTO,
-    description: 'Puts new information for a database entry for an S3 file'
+    description: 'Updates a database entry for an S3 file',
   })
-  async putBulkFile(@Param('s3_key') s3_key: string, @Body() bulkDataFile: BulkFileInputDTO) {
-    return this.service.putBulkDataFile(s3_key, bulkDataFile);
+  async updateBulkFile(
+    @Param('s3_path') s3_path: string,
+    @Body() bulkDataFile: BulkFileInputDTO,
+  ) {
+    return this.service.updateBulkDataFile(s3_path, bulkDataFile);
   }
-
 }

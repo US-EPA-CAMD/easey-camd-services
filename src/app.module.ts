@@ -12,7 +12,7 @@ import appConfig from './config/app.config';
 import { TypeOrmConfigService } from './config/typeorm.config';
 
 import { BookmarkModule } from './bookmark/bookmark.module';
-import { BulkFileModule } from './bulkFile/bulk_file.module';
+import { BulkFileModule } from './bulkFile/bulk-file.module';
 import s3Config from './config/s3.config';
 
 @Module({
