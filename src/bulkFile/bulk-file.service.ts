@@ -5,7 +5,38 @@ import { BulkFileDTO } from 'src/dto/bulk_file.dto';
 import { BulkFileInputDTO } from 'src/dto/bulk_file_input.dto';
 import { BulkFileMetadataRepository } from './bulk-file.repository';
 import { BulkFileMap } from '../maps/bulk-file-map';
-import { BulkFileMetadata } from 'src/entities/bulk-file-metadata.entity';
+import { BulkFileMetadata } from '../entities/bulk-file-metadata.entity';
+import { BulkFileCopyParamsDTO } from '../dto/bulk-file-copy.params.dto';
+import { BulkFileGAFTPCopyService } from './bulk-file-gaftp-copy.service';
+
+const directoryInformation = {
+  ['EDR']: {
+    url: 'https://gaftp.epa.gov/dmdnload/edr/',
+    prefix: 'edr/',
+    description: 'Electronic data reporting (EDR) file',
+    dataType: 'EDR',
+    subType: null,
+  },
+  ['EM']: {
+    url: 'https://gaftp.epa.gov/dmdnload/xml/em/',
+    prefix: 'xml/em/',
+    description: 'Emissions file',
+    dataType: 'XML',
+    subType: 'Emissions',
+  },
+  ['QA']: {
+    url: 'https://gaftp.epa.gov/dmdnload/xml/qa/',
+    prefix: 'xml/qa/',
+    description: 'Quality Assurance file',
+    dataType: 'XML',
+    subType: 'QA',
+  },
+  ['MP']: {
+    description: 'Monitoring plan file',
+    dataType: 'XML',
+    subType: 'Monitoring Plan',
+  },
+};
 
 @Injectable()
 export class BulkFileService {
@@ -14,10 +45,54 @@ export class BulkFileService {
     private readonly repository: BulkFileMetadataRepository,
     private readonly map: BulkFileMap,
     private readonly logger: Logger,
+    private bulkFileGaftpCopyService: BulkFileGAFTPCopyService,
   ) {}
 
   async getBulkDataFiles(): Promise<BulkFileDTO[]> {
     return this.map.many(await this.repository.find());
+  }
+
+  async copyBulkFiles(params: BulkFileCopyParamsDTO) {
+    this.logger.info(`Copying ${params.type} data to S3`);
+
+    let directoryInfo;
+    const directory = directoryInformation[params.type];
+
+    if (params.type !== 'MP') {
+      directoryInfo = await this.bulkFileGaftpCopyService.generateSubUrls(
+        params,
+        directory.url,
+        directory.prefix,
+      );
+      console.log(directoryInfo);
+    } else {
+      directoryInfo = [
+        {
+          url: 'https://gaftp.epa.gov/dmdnload/xml/mp/',
+          fileNamePrefix: 'xml/mp/',
+          quarter: null,
+          year: null,
+        },
+      ];
+    }
+
+    for (const row of directoryInfo) {
+      const fileData = await this.bulkFileGaftpCopyService.generateFileData(
+        row,
+      );
+
+      if (fileData && fileData.length > 0) {
+        await this.bulkFileGaftpCopyService.uploadFilesToS3(
+          fileData,
+          directory.description,
+          directory.dataType,
+          directory.subType,
+        );
+      }
+    }
+
+    this.logger.info(`Succesfully copied ${params.type} data to S3`);
+    return true;
   }
 
   async addBulkDataFile(bulkFileDTO: BulkFileInputDTO): Promise<BulkFileDTO> {
