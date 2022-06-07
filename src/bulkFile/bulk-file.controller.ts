@@ -1,10 +1,11 @@
 import { ApiOkResponse, ApiSecurity, ApiTags } from '@nestjs/swagger';
 
-import { Controller, Get, Post, Put, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Param, Query } from '@nestjs/common';
 
 import { BulkFileService } from './bulk-file.service';
 
 import { BulkFileInputDTO } from 'src/dto/bulk_file_input.dto';
+import { BulkFileCopyParamsDTO } from 'src/dto/bulk-file-copy.params.dto';
 
 @ApiSecurity('APIKey')
 @ApiTags('Bulk Files')
@@ -22,6 +23,14 @@ export class BulkFileController {
     return this.service.getBulkDataFiles();
   }
 
+  @Post('gaftp-copy/bulk-files')
+  @ApiOkResponse({
+    description: 'Copies a list of files from GAFTP to S3',
+  })
+  async copyBulkFiles(@Query() params: BulkFileCopyParamsDTO) {
+    return this.service.copyBulkFiles(params);
+  }
+
   /*
   @Post('metadata/bulk-file')
   @ApiOkResponse({
@@ -31,7 +40,6 @@ export class BulkFileController {
     return 'get bookmark';
   }
   */
-
   @Post('metadata/bulk-files')
   @ApiOkResponse({
     type: BulkFileInputDTO,
