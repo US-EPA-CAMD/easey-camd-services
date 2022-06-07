@@ -1,5 +1,7 @@
 import axios from 'axios';
-
+import { stat, createWriteStream, readFileSync } from 'fs';
+import { Agent } from 'https';
+import { load } from 'cheerio';
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Logger } from '@us-epa-camd/easey-common/logger';
@@ -10,11 +12,8 @@ import { BulkFileCopyFileGenerationDTO } from 'src/dto/bulk-file-copy-file-gener
 import { getManager } from 'typeorm';
 import { Plant } from 'src/entities/plant.entity';
 import { BulkFileMetadata } from 'src/entities/bulk-file-metadata.entity';
+import { S3, S3ClientConfig } from '@aws-sdk/client-s3';
 
-const AWS = require('aws-sdk');
-const cheerio = require('cheerio');
-const https = require('https');
-const fs = require('fs');
 axios.defaults.headers.common = {
   'x-api-key': process.env.EASEY_SFTP_SCRAPER_API_KEY,
 };
@@ -30,9 +29,8 @@ export class BulkFileGAFTPCopyService {
     private readonly repository: BulkFileMetadataRepository,
     private readonly logger: Logger,
   ) {
-    this.s3Client = new AWS.S3({
-      accessKeyId: process.env.EASEY_CAMD_SERVICES_S3_ACCESS_KEY,
-      secretAccessKey: process.env.EASEY_CAMD_SERVICES_S3_SECRET_ACCESS_KEY,
+    const s: S3ClientConfig = {};
+    this.s3Client = new S3({
       region: process.env.EASEY_CAMD_SERVICES_S3_REGION,
     });
   }
@@ -41,7 +39,7 @@ export class BulkFileGAFTPCopyService {
     for (const fileData of fileInformation) {
       try {
         const res = await axios.get(fileData.download, {
-          httpsAgent: new https.Agent({
+          httpsAgent: new Agent({
             rejectUnauthorized: false,
           }),
           responseType: 'stream',
@@ -49,7 +47,7 @@ export class BulkFileGAFTPCopyService {
 
         if (res.status == 200) {
           res.data.pipe(
-            fs.createWriteStream('src/bulkFile/writeLocation/file.zip'),
+            createWriteStream('src/bulkFile/writeLocation/file.zip'),
           );
 
           let writing = true;
@@ -77,42 +75,37 @@ export class BulkFileGAFTPCopyService {
           const fileParts = fileData.name.split('/');
           const fileName = fileParts[fileParts.length - 1];
 
-          fs.stat(
-            'src/bulkFile/writeLocation/file.zip',
-            async (error, stats) => {
-              if (error) {
-                this.logger.error(
-                  InternalServerErrorException,
-                  error.message,
-                  false,
-                );
+          stat('src/bulkFile/writeLocation/file.zip', async (error, stats) => {
+            if (error) {
+              this.logger.error(
+                InternalServerErrorException,
+                error.message,
+                false,
+              );
+            } else {
+              const bulkFileMeta = new BulkFileMetadata();
+              bulkFileMeta.fileName = fileName;
+              bulkFileMeta.s3Path = fileData.name;
+              bulkFileMeta.metadata = JSON.stringify(meta);
+              bulkFileMeta.fileSize = stats.size;
+              bulkFileMeta.addDate = new Date(Date.now());
+              bulkFileMeta.lastUpdateDate = new Date(Date.now());
+
+              console.log(bulkFileMeta);
+
+              if (await this.repository.findOne(fileName)) {
+                await this.repository.update(fileName, bulkFileMeta);
               } else {
-                const bulkFileMeta = new BulkFileMetadata();
-                bulkFileMeta.fileName = fileName;
-                bulkFileMeta.s3Path = fileData.name;
-                bulkFileMeta.metadata = JSON.stringify(meta);
-                bulkFileMeta.fileSize = stats.size;
-                bulkFileMeta.addDate = new Date(Date.now());
-                bulkFileMeta.lastUpdateDate = new Date(Date.now());
-
-                console.log(bulkFileMeta);
-
-                if (await this.repository.findOne(fileName)) {
-                  await this.repository.update(fileName, bulkFileMeta);
-                } else {
-                  await this.repository.insert(bulkFileMeta);
-                }
+                await this.repository.insert(bulkFileMeta);
               }
-            },
-          );
+            }
+          });
 
-          await this.s3Client
-            .putObject({
-              Bucket: process.env.EASEY_CAMD_SERVICES_S3_BUCKET,
-              Key: fileData.name,
-              Body: fs.readFileSync('src/bulkFile/writeLocation/file.zip'),
-            })
-            .send();
+          await this.s3Client.putObject({
+            Bucket: process.env.EASEY_CAMD_SERVICES_S3_BUCKET,
+            Key: fileData.name,
+            Body: readFileSync('src/bulkFile/writeLocation/file.zip'),
+          });
         }
       } catch (err) {
         this.logger.error(InternalServerErrorException, err.message, true);
@@ -125,13 +118,13 @@ export class BulkFileGAFTPCopyService {
 
     try {
       const { data } = await axios.get(lookupData.url, {
-        httpsAgent: new https.Agent({
+        httpsAgent: new Agent({
           rejectUnauthorized: false,
         }),
       });
 
       // Get initial Edr landing page and parse out all years
-      const $ = cheerio.load(data);
+      const $ = load(data);
       const listItems = $('tbody tr td a');
 
       const zipFiles = [];
@@ -184,13 +177,13 @@ export class BulkFileGAFTPCopyService {
   ) {
     try {
       const { data } = await axios.get(url, {
-        httpsAgent: new https.Agent({
+        httpsAgent: new Agent({
           rejectUnauthorized: false,
         }),
       });
 
       // Get initial Edr landing page and parse out all years
-      const $ = cheerio.load(data);
+      const $ = load(data);
       const listItems = $('tbody tr td a');
       const rows = [];
       listItems.each((idx, el) => {
