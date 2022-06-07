@@ -156,8 +156,7 @@ export class BulkFileGAFTPCopyService {
           row.year = lookupData.year;
 
           const facilityQuery = await axios.get(
-            'http://api-easey-dev.app.cloud.gov/facilities-mgmt/facilities/' +
-              row.facilityId,
+            process.env.EASEY_FACILITIES_API + row.facilityId,
           );
           row.stateCode = facilityQuery['data']['stateCode'];
 
