@@ -2,12 +2,12 @@ name: Develop Branch Workflow
 
 on:
   push:
-    branches: [ develop ]
+    branches: [develop]
     paths-ignore:
-    - '**/*.md'
-    - 'LICENSE'
-    - '.github/**'
-    - '.gitignore'
+      - '**/*.md'
+      - 'LICENSE'
+      - '.github/**'
+      - '.gitignore'
 
 jobs:
   Build-Test-Deploy:
@@ -55,5 +55,12 @@ jobs:
           CF_PASSWORD: ${{ secrets.CF_DEV_DEPLOYMENT_SVC_PWD }}
       - name: Init Application
         run: devops/scripts/cf-app-init.sh
+      - name: Configure Env Vars (secrets)
+        run: |
+          cf set-env $APP_NAME AWS_ACCESS_KEY_ID $S3_AWS_ACCESS_KEY_ID
+          cf set-env $APP_NAME AWS_SECRET_ACCESS_KEY $S3_AWS_SECRET_ACCESS_KEY
+        env:
+          S3_AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          S3_AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_ID }}
       - name: Deploy
         run: devops/scripts/deploy.sh
