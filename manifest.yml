@@ -15,9 +15,11 @@ applications:
       EASEY_CAMD_SERVICES_ENV: ((environment))
       EASEY_CAMD_SERVICES_SMTP_PORT: ((smtpPort))
       EASEY_CAMD_SERVICES_SMTP_HOST: ((smtpHost))
+      EASEY_AUTH_API: https://((apiHost))/((authApiPath))
       EASEY_CAMD_SERVICES_ENABLE_CORS: true
       EASEY_CAMD_SERVICES_ENABLE_API_KEY: true
       EASEY_CAMD_SERVICES_ENABLE_AUTH_TOKEN: false
+      EASEY_CAMD_SERVICES_ENABLE_CLIENT_TOKEN: true
       EASEY_CAMD_SERVICES_ENABLE_GLOBAL_VALIDATION_PIPE: true
     routes:
       - route: ((host))/((path))

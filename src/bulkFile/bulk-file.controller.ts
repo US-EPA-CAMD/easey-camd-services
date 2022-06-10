@@ -1,11 +1,25 @@
-import { ApiOkResponse, ApiSecurity, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOkResponse,
+  ApiSecurity,
+  ApiTags,
+} from '@nestjs/swagger';
 
-import { Controller, Get, Post, Put, Body, Param, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 
 import { BulkFileService } from './bulk-file.service';
-
 import { BulkFileInputDTO } from 'src/dto/bulk_file_input.dto';
 import { BulkFileCopyParamsDTO } from 'src/dto/bulk-file-copy.params.dto';
+import { ClientTokenGuard } from '@us-epa-camd/easey-common/guards';
 
 @ApiSecurity('APIKey')
 @ApiTags('Bulk Files')
@@ -14,7 +28,7 @@ import { BulkFileCopyParamsDTO } from 'src/dto/bulk-file-copy.params.dto';
 export class BulkFileController {
   constructor(private service: BulkFileService) {}
 
-  @Get('bulk-files')
+  @Get()
   @ApiOkResponse({
     description:
       'Retrieves a list of bulk data files and their metadata from S3',
@@ -23,37 +37,37 @@ export class BulkFileController {
     return this.service.getBulkDataFiles();
   }
 
-  @Post('gaftp-copy/bulk-files')
+  @Post('gaftp-copy')
   @ApiOkResponse({
     description: 'Copies a list of files from GAFTP to S3',
   })
+  @ApiBearerAuth('ClientToken')
+  @ApiSecurity('ClientId')
+  @UseGuards(ClientTokenGuard)
   async copyBulkFiles(@Query() params: BulkFileCopyParamsDTO) {
     return this.service.copyBulkFiles(params);
   }
 
-  /*
-  @Post('metadata/bulk-file')
-  @ApiOkResponse({
-    description: 'Posts a new database metadata entry for an S3 file',
-  })
-  async postBulkFileMetadata() {
-    return 'get bookmark';
-  }
-  */
-  @Post('metadata/bulk-files')
+  @Post('metadata')
   @ApiOkResponse({
     type: BulkFileInputDTO,
     description: 'Adds a new database entry for an S3 file',
   })
+  @ApiBearerAuth('ClientToken')
+  @ApiSecurity('ClientId')
+  @UseGuards(ClientTokenGuard)
   async addBulkFile(@Body() bulkDataFile: BulkFileInputDTO) {
     return this.service.addBulkDataFile(bulkDataFile);
   }
 
-  @Put('metadata/bulk-files/:s3_path')
+  @Put('metadata/:filePath')
   @ApiOkResponse({
     type: BulkFileInputDTO,
     description: 'Updates a database entry for an S3 file',
   })
+  @ApiBearerAuth('ClientToken')
+  @ApiSecurity('ClientId')
+  @UseGuards(ClientTokenGuard)
   async updateBulkFile(
     @Param('s3_path') s3_path: string,
     @Body() bulkDataFile: BulkFileInputDTO,

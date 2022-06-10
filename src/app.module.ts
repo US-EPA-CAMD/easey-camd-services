@@ -14,6 +14,7 @@ import { TypeOrmConfigService } from './config/typeorm.config';
 import { BookmarkModule } from './bookmark/bookmark.module';
 import { BulkFileModule } from './bulkFile/bulk-file.module';
 import s3Config from './config/s3.config';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import s3Config from './config/s3.config';
     LoggerModule,
     CorsOptionsModule,
     BookmarkModule,
+    MailModule,
     BulkFileModule,
   ],
 })
