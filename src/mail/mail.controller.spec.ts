@@ -1,3 +1,4 @@
+import { createMock } from '@golevelup/ts-jest';
 import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import { LoggerModule } from '@us-epa-camd/easey-common/logger';
@@ -32,7 +33,7 @@ describe('Mail Controller', () => {
   });
 
   it('should call the service', () => {
-    controller.send(new CreateMailDto());
+    controller.send(createMock<Request>(), new CreateMailDto());
 
     expect(service.sendEmail).toHaveBeenCalled();
   });

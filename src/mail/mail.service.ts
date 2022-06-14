@@ -1,7 +1,9 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { getManager } from 'typeorm';
 import { CreateMailDto } from 'src/dto/create-mail.dto';
 import { Logger } from '@us-epa-camd/easey-common/logger';
 import { ConfigService } from '@nestjs/config';
+import { Api } from '../entities/api.entity';
 
 const nodeEmailer = require('nodemailer');
 let transporter;
@@ -19,19 +21,37 @@ export class MailService {
     });
   }
 
-  async sendEmail(createMailDTO: CreateMailDto): Promise<void> {
-    try {
-      await transporter.sendMail({
-        from: createMailDTO.fromEmail, // sender address
-        to: createMailDTO.toEmail, // list of receivers
-        subject: createMailDTO.subject, // Subject line
-        text: createMailDTO.message,
-      });
-    } catch (e) {
-      this.logger.error(InternalServerErrorException, e, true);
+  returnManager(): any {
+    return getManager();
+  }
+
+  async sendEmail(
+    request: Request,
+    createMailDTO: CreateMailDto,
+  ): Promise<void> {
+    const apiRecord = await this.returnManager().findOne(Api, {
+      clientId: request.headers['x-client-id'],
+    });
+
+    let toInbox;
+    if (apiRecord.name === 'camd-ui') {
+      toInbox = this.configService.get<string>('app.camdInbox');
+    } else {
+      toInbox = this.configService.get<string>('app.ecmpsInbox');
     }
+
+    if (request.headers['x-client-id'])
+      try {
+        await transporter.sendMail({
+          from: createMailDTO.fromEmail, // sender address
+          to: toInbox, // list of receivers
+          subject: createMailDTO.subject, // Subject line
+          text: createMailDTO.message,
+        });
+      } catch (e) {
+        this.logger.error(InternalServerErrorException, e, true);
+      }
     this.logger.info('Successfully sent an email', {
-      to: createMailDTO.toEmail,
       from: createMailDTO.fromEmail,
     });
   }

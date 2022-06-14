@@ -11,3 +11,4 @@ host: api-easey-dev.app.cloud.gov
 apiHost: api.epa.gov/easey/dev
 smtpPort: 25
 smtpHost: 'smtp.epa.gov'
+authApiPath: auth-mgmt

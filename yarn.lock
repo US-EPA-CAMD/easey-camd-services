@@ -1250,6 +1250,11 @@
     minimatch "^3.0.4"
     strip-json-comments "^3.1.1"
 
+"@golevelup/ts-jest@^0.3.3":
+  version "0.3.3"
+  resolved "https://registry.yarnpkg.com/@golevelup/ts-jest/-/ts-jest-0.3.3.tgz#f9901f3eaaa7fd366d97538d2fc859ffc3052693"
+  integrity sha512-gut5EhD2S7W1p+C/IsUS1o0P5SHgxsN9TqHyRTjG+rfycniLNBfvIWZPEizpsTev/lR10/XOTpE0YicxPme2+Q==
+
 "@humanwhocodes/config-array@^0.9.2":
   version "0.9.5"
   resolved "https://registry.yarnpkg.com/@humanwhocodes/config-array/-/config-array-0.9.5.tgz#2cbaf9a89460da24b5ca6531b8bbfc23e1df50c7"
@@ -1480,7 +1485,7 @@
     "@jridgewell/resolve-uri" "^3.0.3"
     "@jridgewell/sourcemap-codec" "^1.4.10"
 
-"@nestjs/axios@0.0.3":
+"@nestjs/axios@0.0.3", "@nestjs/axios@^0.0.3":
   version "0.0.3"
   resolved "https://registry.yarnpkg.com/@nestjs/axios/-/axios-0.0.3.tgz#f53ba265e15687b9acb036642ed5f29998695bd1"
   integrity sha512-Cc+D2S2uesthRpalmZEPdm5wF2N9ji4l9Wsb2vFaug/CVWg2BoegHm0L1jzFUL+6kS+mXWSFvwXJmofv+7bajw==
@@ -1960,10 +1965,10 @@
     "@typescript-eslint/types" "5.1.0"
     eslint-visitor-keys "^3.0.0"
 
-"@us-epa-camd/easey-common@^4.1.2":
-  version "4.8.2"
-  resolved "https://npm.pkg.github.com/download/@us-epa-camd/easey-common/4.8.2/b2ccf53b56e34007f5840e949df9d5b2c20f92df503902af0a67a7d2bbcf4b10#61eccbd87b09893721143b06a4c79389530d0d4c"
-  integrity sha512-PYgqS9CxJs351neHda/iodDaUgTPyteUE36Ux8CxmqvDVYQwPKhNpc4NG02b+Xp0FqmuN1rxLaa22y/8iNqoLQ==
+"@us-epa-camd/easey-common@^5.2.0":
+  version "5.2.0"
+  resolved "https://npm.pkg.github.com/download/@us-epa-camd/easey-common/5.2.0/3cbb4020d15f15a30841c9f766e24ed93f488dcf7f9165367037c6e13a6c9af0#b4bde83c95a1cb5983fd3e240185ca2c82252397"
+  integrity sha512-hnecf+DGmqhNkZczzc/qMjBKBskNElp+PPDkX6nLqHtxEen3e2U2HFd6ZpZsBTjDoiB6bnyBtTkBgJDjASRrXw==
   dependencies:
     "@nestjs/axios" "0.0.3"
     "@nestjs/common" "^8.1.1"
