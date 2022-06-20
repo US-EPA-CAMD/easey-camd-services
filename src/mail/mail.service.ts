@@ -29,9 +29,10 @@ export class MailService {
     request: Request,
     createMailDTO: CreateMailDto,
   ): Promise<void> {
-    const apiRecord = await this.returnManager().findOne(Api, {
-      clientId: request.headers['x-client-id'],
-    });
+    const apiRecord = await this.returnManager().findOne(
+      Api,
+      request.headers['x-client-id'],
+    );
 
     let toInbox;
     if (apiRecord.name === 'camd-ui') {
@@ -40,17 +41,16 @@ export class MailService {
       toInbox = this.configService.get<string>('app.ecmpsInbox');
     }
 
-    if (request.headers['x-client-id'])
-      try {
-        await transporter.sendMail({
-          from: createMailDTO.fromEmail, // sender address
-          to: toInbox, // list of receivers
-          subject: createMailDTO.subject, // Subject line
-          text: createMailDTO.message,
-        });
-      } catch (e) {
-        this.logger.error(InternalServerErrorException, e, true);
-      }
+    try {
+      await transporter.sendMail({
+        from: createMailDTO.fromEmail, // sender address
+        to: toInbox, // list of receivers
+        subject: createMailDTO.subject, // Subject line
+        text: createMailDTO.message,
+      });
+    } catch (e) {
+      this.logger.error(InternalServerErrorException, e, true);
+    }
     this.logger.info('Successfully sent an email', {
       from: createMailDTO.fromEmail,
     });
