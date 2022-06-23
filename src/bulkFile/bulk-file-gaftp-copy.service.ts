@@ -119,11 +119,15 @@ export class BulkFileGAFTPCopyService {
     try {
       // Get initial Edr landing page and parse out all years
 
+      /*
       const { data } = await axios.get(lookupData.url, {
         httpsAgent: new Agent({
           rejectUnauthorized: false,
         }),
       });
+      */
+
+      const { data } = await axios.get(lookupData.url);
 
       const $ = load(data);
       const listItems = $('tbody tr td a');
