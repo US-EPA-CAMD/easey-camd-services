@@ -14,4 +14,9 @@ export class Plant extends BaseEntity {
     transformer: new NumericColumnTransformer(),
   })
   orisCode: number;
+
+  @Column({
+    name: 'state',
+  })
+  stateCode: string;
 }

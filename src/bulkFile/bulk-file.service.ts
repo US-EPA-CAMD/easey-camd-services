@@ -64,7 +64,6 @@ export class BulkFileService {
         directory.url,
         directory.prefix,
       );
-      console.log(directoryInfo);
     } else {
       directoryInfo = [
         {

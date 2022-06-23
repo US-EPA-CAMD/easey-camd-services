@@ -117,13 +117,14 @@ export class BulkFileGAFTPCopyService {
     const entityManager = getManager();
 
     try {
+      // Get initial Edr landing page and parse out all years
+
       const { data } = await axios.get(lookupData.url, {
         httpsAgent: new Agent({
           rejectUnauthorized: false,
         }),
       });
 
-      // Get initial Edr landing page and parse out all years
       const $ = load(data);
       const listItems = $('tbody tr td a');
 
@@ -155,10 +156,7 @@ export class BulkFileGAFTPCopyService {
           row.name = lookupData.fileNamePrefix + name;
           row.year = lookupData.year;
 
-          const facilityQuery = await axios.get(
-            process.env.EASEY_FACILITIES_API + row.facilityId,
-          );
-          row.stateCode = facilityQuery['data']['stateCode'];
+          row.stateCode = result.stateCode;
 
           zipFiles.push(row);
         }
