@@ -14,7 +14,7 @@ export class BulkFileMap extends BaseMap<BulkFileMetadata, BulkFileDTO> {
     );
 
     return {
-      fileName: entity.fileName,
+      filename: entity.fileName,
       s3Path: entity.s3Path,
       metadata: metaToLower,
       bytes: entity.fileSize,
