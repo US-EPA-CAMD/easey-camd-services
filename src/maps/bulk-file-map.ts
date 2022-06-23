@@ -18,9 +18,9 @@ export class BulkFileMap extends BaseMap<BulkFileMetadata, BulkFileDTO> {
       s3Path: entity.s3Path,
       metadata: metaToLower,
       bytes: entity.fileSize,
-      kiloBytes: entity.fileSize / 1024,
-      megaBytes: entity.fileSize / 1024 / 1024,
-      gigaBytes: entity.fileSize / 1024 / 1024 / 1024,
+      kiloBytes: +(entity.fileSize / 1024).toFixed(1),
+      megaBytes: +(entity.fileSize / 1024 / 1024).toFixed(1),
+      gigaBytes: +(entity.fileSize / 1024 / 1024 / 1024).toFixed(1),
       lastUpdated: entity.lastUpdateDate,
     };
   }
