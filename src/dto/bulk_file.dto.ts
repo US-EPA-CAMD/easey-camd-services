@@ -1,5 +1,5 @@
 export class BulkFileDTO {
-  fileName: string;
+  filename: string;
   s3Path: string;
   bytes: number;
   kiloBytes: number;
