@@ -38,12 +38,16 @@ export class BulkFileGAFTPCopyService {
   public async uploadFilesToS3(fileInformation, descriptor, dataType, subType) {
     for (const fileData of fileInformation) {
       try {
+        console.log('About to stream down');
+
         const res = await axios.get(fileData.download, {
           httpsAgent: new Agent({
             rejectUnauthorized: false,
           }),
           responseType: 'stream',
         });
+
+        console.log('Attempt stream down');
 
         if (res.status == 200) {
           res.data.pipe(
@@ -75,6 +79,7 @@ export class BulkFileGAFTPCopyService {
           const fileParts = fileData.name.split('/');
           const fileName = fileParts[fileParts.length - 1];
 
+          console.log('Stat here');
           stat('src/bulkFile/writeLocation/file.zip', async (error, stats) => {
             if (error) {
               this.logger.error(
@@ -93,6 +98,8 @@ export class BulkFileGAFTPCopyService {
 
               console.log(bulkFileMeta);
 
+              console.log('Inside further');
+
               if (await this.repository.findOne(fileName)) {
                 await this.repository.update(fileName, bulkFileMeta);
               } else {
@@ -101,6 +108,7 @@ export class BulkFileGAFTPCopyService {
             }
           });
 
+          console.log('Putting object');
           await this.s3Client.putObject({
             Bucket: process.env.EASEY_CAMD_SERVICES_S3_BUCKET,
             Key: fileData.name,
@@ -119,15 +127,13 @@ export class BulkFileGAFTPCopyService {
     try {
       // Get initial Edr landing page and parse out all years
 
-      /*
       const { data } = await axios.get(lookupData.url, {
         httpsAgent: new Agent({
           rejectUnauthorized: false,
         }),
       });
-      */
 
-      const { data } = await axios.get(lookupData.url);
+      console.log('Ran here');
 
       const $ = load(data);
       const listItems = $('tbody tr td a');
@@ -143,6 +149,8 @@ export class BulkFileGAFTPCopyService {
           const result = await entityManager.findOne(Plant, {
             orisCode: orisCode,
           });
+
+          console.log('Further here');
 
           if (!result) {
             this.logger.error(
