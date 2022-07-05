@@ -1,0 +1,26 @@
+name: Deploy Package Workflow
+
+on:
+  workflow_dispatch:
+    inputs:
+      ENV:
+        description: 'Select the Environment to deploy to'
+        required: true
+        type: environment
+      PACKAGE:
+        description: 'Add package (defalut to latest)'
+        required: false
+        type: string
+        default: 'latest'
+
+jobs:
+  Deployment:
+    uses: US-EPA-CAMD/devops/.github/workflows/reusable-release-workflow.yaml@main
+    with:
+      ENV: ${{ inputs.ENV }}
+      VERSION: ${{ inputs.VERSION }}
+    secrets:
+      CF_ENV_DEPLOYMENT_SVC: ${{ secrets.CF_ENV_DEPLOYMENT_SVC }}
+      CF_ENV_DEPLOYMENT_SVC_PWD: ${{ secrets.CF_ENV_DEPLOYMENT_SVC_PWD }}
+      ARTIFACTS_STORAGE_ACCESS_KEY_ID: ${{ secrets.ARTIFACTS_STORAGE_ACCESS_KEY_ID }}
+      ARTIFACTS_STORAGE_SECRET_ACCESS_KEY: ${{ secrets.ARTIFACTS_STORAGE_SECRET_ACCESS_KEY }}
