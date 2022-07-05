@@ -1,0 +1,13 @@
+name: Build Package
+
+on:
+  workflow_dispatch
+
+jobs:
+  Build-Package:
+    uses: US-EPA-CAMD/devops/.github/workflows/reusable-build-workflow.yaml@main
+    secrets:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      ARTIFACTS_STORAGE_ACCESS_KEY_ID: ${{ secrets.ARTIFACTS_STORAGE_ACCESS_KEY_ID }}
+      ARTIFACTS_STORAGE_SECRET_ACCESS_KEY: ${{ secrets.ARTIFACTS_STORAGE_SECRET_ACCESS_KEY }}
