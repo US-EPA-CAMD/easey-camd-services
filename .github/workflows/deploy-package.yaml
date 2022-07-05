@@ -15,7 +15,7 @@ on:
 
 jobs:
   Deployment:
-    uses: US-EPA-CAMD/devops/.github/workflows/reusable-release-workflow.yaml@main
+    uses: US-EPA-CAMD/devops/.github/workflows/reusable-release-workflow.yaml@master
     with:
       ENV: ${{ inputs.ENV }}
       VERSION: ${{ inputs.VERSION }}

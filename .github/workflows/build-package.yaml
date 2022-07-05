@@ -5,7 +5,7 @@ on:
 
 jobs:
   Build-Package:
-    uses: US-EPA-CAMD/devops/.github/workflows/reusable-build-workflow.yaml@main
+    uses: US-EPA-CAMD/devops/.github/workflows/reusable-build-workflow.yaml@master
     secrets:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
