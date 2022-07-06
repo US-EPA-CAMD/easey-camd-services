@@ -62,15 +62,14 @@ export class BulkFileGAFTPCopyService {
           await new Promise((f) => setTimeout(f, 1000));
 
           const meta = {
-            Description: `${descriptor} submitted by facility ID ${fileData.facilityId} for Part 75 reporting for ${fileData.year} quarter ${fileData.quarter}`,
-            DataType: dataType,
-            Year: fileData.year,
-            s3Path: fileData.name,
+            description: `${descriptor} submitted by facility ID ${fileData.facilityId} for Part 75 reporting for ${fileData.year} quarter ${fileData.quarter}`,
+            dataType: dataType,
+            year: fileData.year,
           };
 
-          if (fileData.stateCode) meta['StateCode'] = fileData.stateCode;
-          if (fileData.quarter) meta['Quarter'] = fileData.quarter;
-          if (subType) meta['DataSubType '] = subType;
+          if (fileData.stateCode) meta['stateCode'] = fileData.stateCode;
+          if (fileData.quarter) meta['quarter'] = fileData.quarter;
+          if (subType) meta['dataSubType '] = subType;
 
           const fileParts = fileData.name.split('/');
           const fileName = fileParts[fileParts.length - 1];
