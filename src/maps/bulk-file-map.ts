@@ -7,16 +7,10 @@ import { BulkFileMetadata } from 'src/entities/bulk-file-metadata.entity';
 @Injectable()
 export class BulkFileMap extends BaseMap<BulkFileMetadata, BulkFileDTO> {
   public async one(entity: BulkFileMetadata): Promise<BulkFileDTO> {
-    const metadata = JSON.parse(entity.metadata);
-
-    const metaToLower = Object.fromEntries(
-      Object.entries(metadata).map(([k, v]) => [k.toLowerCase(), v]),
-    );
-
     return {
       filename: entity.fileName,
       s3Path: entity.s3Path,
-      metadata: metaToLower,
+      metadata: JSON.parse(entity.metadata),
       bytes: entity.fileSize,
       kiloBytes: +(entity.fileSize / 1024).toFixed(1),
       megaBytes: +(entity.fileSize / 1024 / 1024).toFixed(1),
