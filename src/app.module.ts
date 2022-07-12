@@ -15,6 +15,7 @@ import { BookmarkModule } from './bookmark/bookmark.module';
 import { BulkFileModule } from './bulkFile/bulk-file.module';
 import s3Config from './config/s3.config';
 import { MailModule } from './mail/mail.module';
+import { LoggingModule } from './logging/logging.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { MailModule } from './mail/mail.module';
     BookmarkModule,
     MailModule,
     BulkFileModule,
+    LoggingModule,
   ],
 })
 export class AppModule {}
