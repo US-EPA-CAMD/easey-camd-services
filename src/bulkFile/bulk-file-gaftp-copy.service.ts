@@ -73,7 +73,7 @@ export class BulkFileGAFTPCopyService {
 
           if (fileData.stateCode) meta['stateCode'] = fileData.stateCode;
           if (fileData.quarter) meta['quarter'] = fileData.quarter;
-          if (subType) meta['dataSubType '] = subType;
+          if (subType) meta['dataSubType'] = subType;
 
           const fileParts = fileData.name.split('/');
           const fileName = fileParts[fileParts.length - 1];
