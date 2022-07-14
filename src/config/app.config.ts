@@ -21,6 +21,7 @@ export default registerAs('app', () => ({
   host,
   apiHost: process.env.EASEY_API_GATEWAY_HOST || 'api.epa.gov/easey/dev',
   port,
+  timeout: process.env.EASEY_CAMD_SERVICES_TIMEOUT || 1800000,
   uri,
   env: process.env.EASEY_CAMD_SERVICES_ENV || 'local-dev',
   enableCors: parseBool(process.env.EASEY_CAMD_SERVICES_ENABLE_CORS, true),
