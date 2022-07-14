@@ -35,7 +35,7 @@ export class MailService {
     );
 
     let toInbox;
-    if (apiRecord.name === 'camd-ui') {
+    if (apiRecord.name === 'campd-ui') {
       toInbox = this.configService.get<string>('app.camdInbox');
     } else {
       toInbox = this.configService.get<string>('app.ecmpsInbox');
