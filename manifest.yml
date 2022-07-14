@@ -21,7 +21,6 @@ applications:
       EASEY_CAMD_SERVICES_ENABLE_AUTH_TOKEN: false
       EASEY_CAMD_SERVICES_ENABLE_CLIENT_TOKEN: true
       EASEY_CAMD_SERVICES_ENABLE_GLOBAL_VALIDATION_PIPE: true
-      EASEY_CAMD_SERVICES_TIMEOUT: 1800000
     routes:
       - route: ((host))/((path))
     services:
