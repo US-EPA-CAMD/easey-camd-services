@@ -45,7 +45,8 @@ export class BulkFileController {
   @ApiSecurity('ClientId')
   @UseGuards(ClientTokenGuard)
   async copyBulkFiles(@Query() params: BulkFileCopyParamsDTO) {
-    return this.service.copyBulkFiles(params);
+    this.service.copyBulkFiles(params);
+    return true;
   }
 
   @Post('metadata')

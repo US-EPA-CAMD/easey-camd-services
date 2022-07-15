@@ -58,7 +58,6 @@ export class BulkFileService {
     let directoryInfo;
     const directory = directoryInformation[params.type];
 
-
     if (params.type !== 'MP') {
       directoryInfo = await this.bulkFileGaftpCopyService.generateSubUrls(
         params,
@@ -76,12 +75,10 @@ export class BulkFileService {
       ];
     }
 
-
     for (const row of directoryInfo) {
       const fileData = await this.bulkFileGaftpCopyService.generateFileData(
         row,
       );
-
 
       if (fileData && fileData.length > 0) {
         await this.bulkFileGaftpCopyService.uploadFilesToS3(
