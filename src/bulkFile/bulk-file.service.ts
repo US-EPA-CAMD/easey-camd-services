@@ -8,6 +8,8 @@ import { BulkFileMap } from '../maps/bulk-file-map';
 import { BulkFileMetadata } from '../entities/bulk-file-metadata.entity';
 import { BulkFileCopyParamsDTO } from '../dto/bulk-file-copy.params.dto';
 import { BulkFileGAFTPCopyService } from './bulk-file-gaftp-copy.service';
+import { BulkFileGaftpCopyRepository } from './bulk-file-gaftp-copy.repository';
+import { SftpLog } from 'src/entities/sftp-log.entity';
 
 const directoryInformation = {
   ['EDR']: {
@@ -43,6 +45,10 @@ export class BulkFileService {
   constructor(
     @InjectRepository(BulkFileMetadataRepository)
     private readonly repository: BulkFileMetadataRepository,
+
+    @InjectRepository(BulkFileGaftpCopyRepository)
+    private readonly sftpRepository: BulkFileGaftpCopyRepository,
+
     private readonly map: BulkFileMap,
     private readonly logger: Logger,
     private bulkFileGaftpCopyService: BulkFileGAFTPCopyService,
@@ -52,8 +58,14 @@ export class BulkFileService {
     return this.map.many(await this.repository.find());
   }
 
-  async copyBulkFiles(params: BulkFileCopyParamsDTO) {
+  async copyBulkFiles(params: BulkFileCopyParamsDTO, id) {
     this.logger.info(`Copying ${params.type} data to S3`);
+
+    const logRecord = new SftpLog();
+    logRecord.id = id;
+    logRecord.startDate = new Date();
+
+    await this.sftpRepository.insert(logRecord);
 
     let directoryInfo;
     const directory = directoryInformation[params.type];
@@ -63,6 +75,7 @@ export class BulkFileService {
         params,
         directory.url,
         directory.prefix,
+        id,
       );
     } else {
       directoryInfo = [
@@ -78,6 +91,7 @@ export class BulkFileService {
     for (const row of directoryInfo) {
       const fileData = await this.bulkFileGaftpCopyService.generateFileData(
         row,
+        id,
       );
 
       if (fileData && fileData.length > 0) {
@@ -86,9 +100,14 @@ export class BulkFileService {
           directory.description,
           directory.dataType,
           directory.subType,
+          id,
         );
       }
     }
+
+    logRecord.endDate = new Date();
+    logRecord.statusCd = 'COMPLETE';
+    await this.sftpRepository.update(logRecord, logRecord);
 
     this.logger.info(`Succesfully copied ${params.type} data to S3`);
     return true;

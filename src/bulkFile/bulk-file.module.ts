@@ -7,9 +7,16 @@ import { BulkFileGAFTPCopyService } from './bulk-file-gaftp-copy.service';
 import { BulkFileMetadataRepository } from './bulk-file.repository';
 import { BulkFileService } from './bulk-file.service';
 import { BulkFileController } from './bulk-file.controller';
+import { BulkFileGaftpCopyRepository } from './bulk-file-gaftp-copy.repository';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([BulkFileMetadataRepository]), HttpModule],
+  imports: [
+    TypeOrmModule.forFeature([
+      BulkFileMetadataRepository,
+      BulkFileGaftpCopyRepository,
+    ]),
+    HttpModule,
+  ],
   controllers: [BulkFileController],
   providers: [
     ConfigService,

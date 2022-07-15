@@ -13,6 +13,7 @@ import { getManager } from 'typeorm';
 import { Plant } from 'src/entities/plant.entity';
 import { BulkFileMetadata } from 'src/entities/bulk-file-metadata.entity';
 import { S3, S3ClientConfig } from '@aws-sdk/client-s3';
+import { BulkFileGaftpCopyRepository } from './bulk-file-gaftp-copy.repository';
 
 axios.defaults.headers.common = {
   'x-api-key': process.env.EASEY_CAMD_SERVICES_API_KEY,
@@ -27,6 +28,10 @@ export class BulkFileGAFTPCopyService {
   constructor(
     @InjectRepository(BulkFileMetadataRepository)
     private readonly repository: BulkFileMetadataRepository,
+
+    @InjectRepository(BulkFileGaftpCopyRepository)
+    private readonly sftpRepository: BulkFileGaftpCopyRepository,
+
     private readonly logger: Logger,
   ) {
     const s: S3ClientConfig = {};
@@ -35,7 +40,35 @@ export class BulkFileGAFTPCopyService {
     });
   }
 
-  public async uploadFilesToS3(fileInformation, descriptor, dataType, subType) {
+  private async logError(error, id) {
+    const logRecord = await this.sftpRepository.findOne(id);
+
+    let errors;
+    if (logRecord.errors && logRecord.errors !== '') {
+      errors = JSON.parse(logRecord.errors);
+      errors = [...errors, error];
+    } else {
+      errors = [];
+    }
+
+    logRecord.errors = JSON.stringify(errors);
+
+    await this.sftpRepository.update({ id: id }, { errors: logRecord.errors });
+  }
+
+  public async uploadFilesToS3(
+    fileInformation,
+    descriptor,
+    dataType,
+    subType,
+    id,
+  ) {
+    await this.sftpRepository.update(
+      { id: id },
+      {
+        details: `Uploading Files ${dataType}-${subType}`,
+      },
+    );
     for (const fileData of fileInformation) {
       try {
         const res = await axios.get(fileData.download, {
@@ -105,16 +138,24 @@ export class BulkFileGAFTPCopyService {
           });
         }
       } catch (err) {
+        await this.logError(err.message, id);
         this.logger.error(InternalServerErrorException, err.message, true);
       }
     }
   }
 
-  public async generateFileData(lookupData) {
+  public async generateFileData(lookupData, id) {
     const entityManager = getManager();
 
     try {
       // Get initial Edr landing page and parse out all years
+
+      await this.sftpRepository.update(
+        { id: id },
+        {
+          details: `Generating File Data ${lookupData.year} ${lookupData.quarter} ${lookupData.fileNamePrefix}`,
+        },
+      );
 
       const { data } = await axios.get(lookupData.url, {
         httpsAgent: new Agent({
@@ -138,6 +179,11 @@ export class BulkFileGAFTPCopyService {
           });
 
           if (!result) {
+            await this.logError(
+              `Missing Oris Code: ${orisCode} ${lookupData.year} ${lookupData.quarter}`,
+              id,
+            );
+
             this.logger.error(
               InternalServerErrorException,
               `Missing Oris Code: ${orisCode} ${lookupData.year} ${lookupData.quarter}`,
@@ -160,6 +206,7 @@ export class BulkFileGAFTPCopyService {
       }
       return zipFiles;
     } catch (err) {
+      this.logError(err.message, id);
       this.logger.error(InternalServerErrorException, err.message, false);
     }
   }
@@ -168,8 +215,14 @@ export class BulkFileGAFTPCopyService {
     params: BulkFileCopyParamsDTO,
     url: string,
     objectKeyPrefix: string,
+    id: string,
   ) {
     try {
+      await this.sftpRepository.update(
+        { id: id },
+        { statusCd: 'RUNNING', details: 'Generating sub URLS' },
+      );
+
       const { data } = await axios.get(url, {
         httpsAgent: new Agent({
           rejectUnauthorized: false,
@@ -216,6 +269,7 @@ export class BulkFileGAFTPCopyService {
 
       return directoryUrls;
     } catch (err) {
+      this.logError(err.message, id);
       this.logger.error(InternalServerErrorException, err.message, false);
     }
   }
