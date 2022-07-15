@@ -105,9 +105,10 @@ export class BulkFileService {
       }
     }
 
-    logRecord.endDate = new Date();
-    logRecord.statusCd = 'COMPLETE';
-    await this.sftpRepository.update(logRecord, logRecord);
+    await this.sftpRepository.update(
+      { id: id },
+      { endDate: new Date(), statusCd: 'COMPLETE' },
+    );
 
     this.logger.info(`Succesfully copied ${params.type} data to S3`);
     return true;
