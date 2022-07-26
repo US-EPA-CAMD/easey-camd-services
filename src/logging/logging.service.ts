@@ -25,11 +25,9 @@ export class LoggingService {
       request.headers['x-client-id'],
     );
 
-    this.logger.error(
-      InternalServerErrorException,
-      errorDto.errorMessage,
-      false,
-      { appName: apiRecord.name, ...errorDto.metadata },
-    );
+    this.logger.info(errorDto.errorMessage, {
+      appName: apiRecord.name,
+      ...errorDto.metadata,
+    });
   }
 }

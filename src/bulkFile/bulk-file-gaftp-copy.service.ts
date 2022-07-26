@@ -2,7 +2,12 @@ import axios from 'axios';
 import { stat, createWriteStream, readFileSync } from 'fs';
 import { Agent } from 'https';
 import { load } from 'cheerio';
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  HttpStatus,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
+import { LoggingException } from '@us-epa-camd/easey-common/exceptions';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Logger } from '@us-epa-camd/easey-common/logger';
 import { BulkFileMetadataRepository } from './bulk-file.repository';
@@ -109,11 +114,7 @@ export class BulkFileGAFTPCopyService {
 
           stat('src/bulkFile/writeLocation/file.zip', async (error, stats) => {
             if (error) {
-              this.logger.error(
-                InternalServerErrorException,
-                error.message,
-                false,
-              );
+              this.logger.info(error.message);
             } else {
               const bulkFileMeta = new BulkFileMetadata();
               bulkFileMeta.fileName = fileName;
@@ -139,7 +140,10 @@ export class BulkFileGAFTPCopyService {
         }
       } catch (err) {
         await this.logError(err.message, id);
-        this.logger.error(InternalServerErrorException, err.message, true);
+        throw new LoggingException(
+          err.message,
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
       }
     }
   }
@@ -184,10 +188,8 @@ export class BulkFileGAFTPCopyService {
               id,
             );
 
-            this.logger.error(
-              InternalServerErrorException,
+            this.logger.info(
               `Missing Oris Code: ${orisCode} ${lookupData.year} ${lookupData.quarter}`,
-              false,
             );
             continue;
           }
@@ -207,7 +209,7 @@ export class BulkFileGAFTPCopyService {
       return zipFiles;
     } catch (err) {
       this.logError(err.message, id);
-      this.logger.error(InternalServerErrorException, err.message, false);
+      this.logger.info(err.message);
     }
   }
 
@@ -270,7 +272,7 @@ export class BulkFileGAFTPCopyService {
       return directoryUrls;
     } catch (err) {
       this.logError(err.message, id);
-      this.logger.error(InternalServerErrorException, err.message, false);
+      this.logger.info(err.message);
     }
   }
 }
