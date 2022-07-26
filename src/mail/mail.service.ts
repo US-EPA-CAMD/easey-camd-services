@@ -1,9 +1,14 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  HttpStatus,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { getManager } from 'typeorm';
 import { CreateMailDto } from 'src/dto/create-mail.dto';
 import { Logger } from '@us-epa-camd/easey-common/logger';
 import { ConfigService } from '@nestjs/config';
 import { Api } from '../entities/api.entity';
+import { LoggingException } from '@us-epa-camd/easey-common/exceptions';
 
 const nodeEmailer = require('nodemailer');
 let transporter;
@@ -49,7 +54,7 @@ export class MailService {
         text: createMailDTO.message,
       });
     } catch (e) {
-      this.logger.error(InternalServerErrorException, e, true);
+      throw new LoggingException(e.message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
     this.logger.info('Successfully sent an email', {
       from: createMailDTO.fromEmail,
