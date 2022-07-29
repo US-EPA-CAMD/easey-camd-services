@@ -5,6 +5,7 @@ import { LoggerModule } from '@us-epa-camd/easey-common/logger';
 import { Api } from '../entities/api.entity';
 import { CreateMailDto } from '../dto/create-mail.dto';
 import { MailService } from './mail.service';
+import { HttpModule } from '@nestjs/axios';
 
 jest.mock('nodemailer', () => ({
   createTransport: jest.fn().mockReturnValue({ sendMail: jest.fn() }),
@@ -15,7 +16,7 @@ describe('Mail Service', () => {
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      imports: [LoggerModule],
+      imports: [LoggerModule, HttpModule],
       providers: [MailService, ConfigService],
     }).compile();
 

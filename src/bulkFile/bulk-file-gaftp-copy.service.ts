@@ -11,12 +11,12 @@ import { LoggingException } from '@us-epa-camd/easey-common/exceptions';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Logger } from '@us-epa-camd/easey-common/logger';
 import { BulkFileMetadataRepository } from './bulk-file.repository';
-import { BulkFileCopyParamsDTO } from 'src/dto/bulk-file-copy.params.dto';
-import { BulkFileCopyDirectoryGenerationDTO } from 'src/dto/bulk-file-copy-directory-generation.dto';
-import { BulkFileCopyFileGenerationDTO } from 'src/dto/bulk-file-copy-file-generation.dto copy';
+import { BulkFileCopyParamsDTO } from '../dto/bulk-file-copy.params.dto';
+import { BulkFileCopyDirectoryGenerationDTO } from '../dto/bulk-file-copy-directory-generation.dto';
+import { BulkFileCopyFileGenerationDTO } from '../dto/bulk-file-copy-file-generation.dto copy';
 import { getManager } from 'typeorm';
-import { Plant } from 'src/entities/plant.entity';
-import { BulkFileMetadata } from 'src/entities/bulk-file-metadata.entity';
+import { Plant } from '../entities/plant.entity';
+import { BulkFileMetadata } from '../entities/bulk-file-metadata.entity';
 import { S3, S3ClientConfig } from '@aws-sdk/client-s3';
 import { BulkFileGaftpCopyRepository } from './bulk-file-gaftp-copy.repository';
 

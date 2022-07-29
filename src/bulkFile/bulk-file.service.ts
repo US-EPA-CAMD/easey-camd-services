@@ -1,15 +1,15 @@
-import { ConsoleLogger, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Logger } from '@us-epa-camd/easey-common/logger';
-import { BulkFileDTO } from 'src/dto/bulk_file.dto';
-import { BulkFileInputDTO } from 'src/dto/bulk_file_input.dto';
+import { BulkFileDTO } from '../dto/bulk_file.dto';
+import { BulkFileInputDTO } from '../dto/bulk_file_input.dto';
 import { BulkFileMetadataRepository } from './bulk-file.repository';
 import { BulkFileMap } from '../maps/bulk-file-map';
 import { BulkFileMetadata } from '../entities/bulk-file-metadata.entity';
 import { BulkFileCopyParamsDTO } from '../dto/bulk-file-copy.params.dto';
 import { BulkFileGAFTPCopyService } from './bulk-file-gaftp-copy.service';
 import { BulkFileGaftpCopyRepository } from './bulk-file-gaftp-copy.repository';
-import { SftpLog } from 'src/entities/sftp-log.entity';
+import { SftpLog } from '../entities/sftp-log.entity';
 
 const directoryInformation = {
   ['EDR']: {
@@ -147,6 +147,7 @@ export class BulkFileService {
     databaseinput.fileSize = bulkFileDTO.bytes;
     databaseinput.lastUpdateDate = new Date();
     await this.repository.update(databaseinput.fileName, databaseinput);
+
     return this.map.one(databaseinput);
   }
 }
