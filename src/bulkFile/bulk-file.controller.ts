@@ -17,8 +17,8 @@ import {
 } from '@nestjs/common';
 
 import { BulkFileService } from './bulk-file.service';
-import { BulkFileInputDTO } from 'src/dto/bulk_file_input.dto';
-import { BulkFileCopyParamsDTO } from 'src/dto/bulk-file-copy.params.dto';
+import { BulkFileInputDTO } from '../dto/bulk_file_input.dto';
+import { BulkFileCopyParamsDTO } from '../dto/bulk-file-copy.params.dto';
 import { ClientTokenGuard } from '@us-epa-camd/easey-common/guards';
 import { uuid } from 'uuidv4';
 

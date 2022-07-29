@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { BulkFileMap } from 'src/maps/bulk-file-map';
+import { BulkFileMap } from '../maps/bulk-file-map';
 import { BulkFileGAFTPCopyService } from './bulk-file-gaftp-copy.service';
 import { BulkFileMetadataRepository } from './bulk-file.repository';
 import { BulkFileService } from './bulk-file.service';

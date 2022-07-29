@@ -1,4 +1,5 @@
 import { createMock } from '@golevelup/ts-jest';
+import { HttpModule } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import { LoggerModule } from '@us-epa-camd/easey-common/logger';
@@ -16,7 +17,7 @@ describe('Mail Controller', () => {
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      imports: [LoggerModule],
+      imports: [LoggerModule, HttpModule],
       controllers: [MailController],
       providers: [
         { provide: MailService, useFactory: mockMailService },
