@@ -77,9 +77,11 @@ export class BulkFileGAFTPCopyService {
     for (const fileData of fileInformation) {
       try {
         const res = await axios.get(fileData.download, {
+          /*
           httpsAgent: new Agent({
             rejectUnauthorized: false,
           }),
+          */
           responseType: 'stream',
         });
 
@@ -162,9 +164,11 @@ export class BulkFileGAFTPCopyService {
       );
 
       const { data } = await axios.get(lookupData.url, {
-        httpsAgent: new Agent({
-          rejectUnauthorized: false,
-        }),
+        /*
+          httpsAgent: new Agent({
+            rejectUnauthorized: false,
+          }),
+        */
       });
 
       const $ = load(data);
@@ -226,9 +230,11 @@ export class BulkFileGAFTPCopyService {
       );
 
       const { data } = await axios.get(url, {
-        httpsAgent: new Agent({
-          rejectUnauthorized: false,
-        }),
+        /*
+          httpsAgent: new Agent({
+            rejectUnauthorized: false,
+          }),
+        */
       });
 
       // Get initial Edr landing page and parse out all years
