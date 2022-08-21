@@ -8,31 +8,37 @@ import { LoggerModule } from '@us-epa-camd/easey-common/logger';
 import { CorsOptionsModule } from '@us-epa-camd/easey-common/cors-options';
 
 import routes from './routes';
+import s3Config from './config/s3.config';
 import appConfig from './config/app.config';
 import { TypeOrmConfigService } from './config/typeorm.config';
 
-import { BookmarkModule } from './bookmark/bookmark.module';
 import { BulkFileModule } from './bulkFile/bulk-file.module';
-import s3Config from './config/s3.config';
-import { MailModule } from './mail/mail.module';
+import { BookmarkModule } from './bookmark/bookmark.module';
 import { LoggingModule } from './logging/logging.module';
+import { ReportModule } from './report/report.module';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
     RouterModule.forRoutes(routes),
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [dbConfig, appConfig, s3Config],
+      load: [
+        s3Config,
+        dbConfig,
+        appConfig,
+      ],
     }),
     TypeOrmModule.forRootAsync({
       useClass: TypeOrmConfigService,
     }),
     LoggerModule,
     CorsOptionsModule,
-    BookmarkModule,
-    MailModule,
     BulkFileModule,
+    BookmarkModule,
     LoggingModule,
+    ReportModule,
+    MailModule,
   ],
 })
 export class AppModule {}

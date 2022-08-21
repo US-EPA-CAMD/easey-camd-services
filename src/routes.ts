@@ -1,8 +1,9 @@
 import { Routes } from 'nest-router';
 
-import { BookmarkModule } from './bookmark/bookmark.module';
 import { BulkFileModule } from './bulkFile/bulk-file.module';
+import { BookmarkModule } from './bookmark/bookmark.module';
 import { LoggingModule } from './logging/logging.module';
+import { ReportModule } from './report/report.module';
 import { MailModule } from './mail/mail.module';
 
 const routes: Routes = [
@@ -21,6 +22,10 @@ const routes: Routes = [
   {
     path: '/logging',
     module: LoggingModule,
+  },
+  {
+    path: '/reports',
+    module: ReportModule,
   },
 ];
 

@@ -105,7 +105,7 @@ describe('-- Bookmark Service --', () => {
     });
   });
 
-  describe('createBookmark', () => {
+  describe('getBookmark', () => {
     it('calls BookmarkRepository.getBookmarkById() and gets bookmark by id', async () => {
       const bookmarkId = 1000;
       const bookmark = mockBookmark(

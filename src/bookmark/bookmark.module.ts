@@ -6,6 +6,7 @@ import { BookmarkController } from './bookmark.controller';
 import { BookmarkService } from './bookmark.service';
 import { BookmarkRepository } from './bookmark.repository';
 import { BookmarkMap } from '../maps/bookmark.map';
+
 @Module({
   imports: [TypeOrmModule.forFeature([BookmarkRepository])],
   controllers: [BookmarkController],

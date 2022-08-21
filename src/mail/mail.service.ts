@@ -1,10 +1,9 @@
 import {
   HttpStatus,
   Injectable,
-  InternalServerErrorException,
 } from '@nestjs/common';
 import { getManager } from 'typeorm';
-import { CreateMailDto } from 'src/dto/create-mail.dto';
+import { CreateMailDto } from '../dto/create-mail.dto';
 import { Logger } from '@us-epa-camd/easey-common/logger';
 import { ConfigService } from '@nestjs/config';
 import { Api } from '../entities/api.entity';
