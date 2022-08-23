@@ -1,9 +1,9 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { getManager } from 'typeorm';
 import { Logger } from '@us-epa-camd/easey-common/logger';
 import { ConfigService } from '@nestjs/config';
 import { Api } from '../entities/api.entity';
-import { ServerErrorDto } from 'src/dto/server-error.dto';
+import { ServerErrorDto } from '../dto/server-error.dto';
 
 @Injectable()
 export class LoggingService {

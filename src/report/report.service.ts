@@ -1,5 +1,5 @@
 import { getManager } from 'typeorm';
-import { Injectable } from '@nestjs/common';
+import { ConsoleLogger, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Logger } from '@us-epa-camd/easey-common/logger';
 
@@ -14,19 +14,24 @@ export class ReportService {
     private readonly map: ReportMap,
     @InjectRepository(ReportRepository)
     private readonly repository: ReportRepository,
-  ) { }
+  ) {}
+
+  returnManager(): any {
+    return getManager();
+  }
 
   async getReport(params: ReportParamsDTO) {
     let plant = null;
     const promises = [];
-    const mgr = getManager();
+    const mgr = this.returnManager();
     const report = await this.map.one(
-      await this.repository.getReport(params.reportCode)
+      await this.repository.getReport(params.reportCode),
     );
     const schema = params.workspace ? 'camdecmpswks' : 'camdecmps';
 
     if (params.monitorPlanId) {
-      const locations = await mgr.query(`
+      const locations = await mgr.query(
+        `
         SELECT
           p.fac_id AS "facilityId",
           p.oris_code AS "orisCode",
@@ -46,14 +51,14 @@ export class ReportService {
         LEFT JOIN ${schema}.stack_pipe sp USING(stack_pipe_id)
         WHERE mp.mon_plan_id = $1
         ORDER BY u.unitId, sp.stack_name`,
-        [params.monitorPlanId]
+        [params.monitorPlanId],
       );
 
       plant = locations[0];
-      report.unitStackInfo = locations.map(i => i.unitStack).join(', ');
-    }
-    else if (params.facilityId) {
-      plant = await mgr.query(`
+      report.unitStackInfo = locations.map((i) => i.unitStack).join(', ');
+    } else if (params.facilityId) {
+      plant = await mgr.query(
+        `
         SELECT
           p.fac_id AS "facilityId",
           p.oris_code AS "orisCode",
@@ -63,7 +68,7 @@ export class ReportService {
         FROM camd.plant p
         JOIN camdmd.county_code cc USING(county_cd)
         WHERE p.fac_id = $1`,
-        [params.facilityId]
+        [params.facilityId],
       );
     }
 
@@ -73,13 +78,16 @@ export class ReportService {
     report.facilityId = plant.facilityId;
     report.facilityName = plant.facilityName;
 
-    report.details.forEach(detail => {
+    report.details.forEach((detail) => {
       promises.push(
         new Promise(async (resolve, _reject) => {
           const sqlParams = detail.parameters.map(
-            param => params[param.name] ?? param.defaultValue
+            (param) => params[param.name] ?? param.defaultValue,
           );
-          detail.sqlStatement = detail.sqlStatement.replace(/camdecmpswks/, schema);
+          detail.sqlStatement = detail.sqlStatement.replace(
+            /camdecmpswks/,
+            schema,
+          );
           const results = mgr.query(detail.sqlStatement, sqlParams);
           resolve(results);
         }),
@@ -88,7 +96,7 @@ export class ReportService {
 
     await Promise.all(promises);
 
-    for(let i = 0; i < promises.length; i++) {
+    for (let i = 0; i < promises.length; i++) {
       report.details[i].results = await promises[i];
     }
 
