@@ -8,7 +8,7 @@ import {
 import { Controller, Post, Body, Req, UseGuards } from '@nestjs/common';
 import { LoggingService } from './logging.service';
 import { ClientTokenGuard } from '@us-epa-camd/easey-common/guards';
-import { ServerErrorDto } from 'src/dto/server-error.dto';
+import { ServerErrorDto } from '../dto/server-error.dto';
 
 @ApiSecurity('APIKey')
 @ApiTags('Logging')
