@@ -1,11 +1,9 @@
 import axios from 'axios';
 import { stat, createWriteStream, readFileSync } from 'fs';
-import { Agent } from 'https';
 import { load } from 'cheerio';
 import {
   HttpStatus,
   Injectable,
-  InternalServerErrorException,
 } from '@nestjs/common';
 import { LoggingException } from '@us-epa-camd/easey-common/exceptions';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -13,7 +11,7 @@ import { Logger } from '@us-epa-camd/easey-common/logger';
 import { BulkFileMetadataRepository } from './bulk-file.repository';
 import { BulkFileCopyParamsDTO } from '../dto/bulk-file-copy.params.dto';
 import { BulkFileCopyDirectoryGenerationDTO } from '../dto/bulk-file-copy-directory-generation.dto';
-import { BulkFileCopyFileGenerationDTO } from '../dto/bulk-file-copy-file-generation.dto copy';
+import { BulkFileCopyFileGenerationDTO } from '../dto/bulk-file-copy-file-generation.dto';
 import { getManager } from 'typeorm';
 import { Plant } from '../entities/plant.entity';
 import { BulkFileMetadata } from '../entities/bulk-file-metadata.entity';
