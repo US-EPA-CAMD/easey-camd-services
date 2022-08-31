@@ -20,7 +20,7 @@ import { BulkFileService } from './bulk-file.service';
 import { BulkFileInputDTO } from '../dto/bulk_file_input.dto';
 import { BulkFileCopyParamsDTO } from '../dto/bulk-file-copy.params.dto';
 import { ClientTokenGuard } from '@us-epa-camd/easey-common/guards';
-import { uuid } from 'uuidv4';
+import { v4 } from 'uuid';
 
 @ApiSecurity('APIKey')
 @ApiTags('Bulk Files')
@@ -46,7 +46,7 @@ export class BulkFileController {
   @ApiSecurity('ClientId')
   @UseGuards(ClientTokenGuard)
   async copyBulkFiles(@Query() params: BulkFileCopyParamsDTO) {
-    const job_id = uuid();
+    const job_id = v4();
 
     this.service.copyBulkFiles(params, job_id);
     return job_id;
