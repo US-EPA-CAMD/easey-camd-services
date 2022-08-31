@@ -1,10 +1,7 @@
 import axios from 'axios';
 import { stat, createWriteStream, readFileSync } from 'fs';
 import { load } from 'cheerio';
-import {
-  HttpStatus,
-  Injectable,
-} from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { LoggingException } from '@us-epa-camd/easey-common/exceptions';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Logger } from '@us-epa-camd/easey-common/logger';
@@ -17,6 +14,7 @@ import { Plant } from '../entities/plant.entity';
 import { BulkFileMetadata } from '../entities/bulk-file-metadata.entity';
 import { S3, S3ClientConfig } from '@aws-sdk/client-s3';
 import { BulkFileGaftpCopyRepository } from './bulk-file-gaftp-copy.repository';
+import { Agent } from 'https';
 
 axios.defaults.headers.common = {
   'x-api-key': process.env.EASEY_CAMD_SERVICES_API_KEY,
@@ -59,13 +57,7 @@ export class BulkFileGAFTPCopyService {
     await this.sftpRepository.update({ id: id }, { errors: logRecord.errors });
   }
 
-  public async uploadFilesToS3(
-    fileInformation,
-    descriptor,
-    dataType,
-    subType,
-    id,
-  ) {
+  public async uploadFilesToS3(fileInformation, dataType, subType, id) {
     await this.sftpRepository.update(
       { id: id },
       {
@@ -100,10 +92,28 @@ export class BulkFileGAFTPCopyService {
           await new Promise((f) => setTimeout(f, 1000));
 
           const meta = {
-            description: `${descriptor} submitted by facility ID ${fileData.facilityId} for Part 75 reporting for ${fileData.year} quarter ${fileData.quarter}`,
             dataType: dataType,
             year: fileData.year,
           };
+
+          let description;
+
+          switch (subType) {
+            case 'Emissions':
+              description = `Emissions file submitted by facility ID ${fileData.facilityId} for ${fileData.year} quarter ${fileData.quarter} under Part 75`;
+              break;
+            case 'QA':
+              description = `Quality Assurance file submitted by facility ID ${fileData.facilityId} for ${fileData.year} quarter ${fileData.quarter} under Part 75`;
+              break;
+            case 'Monitoring Plan':
+              description = `Monitoring plan file submitted by facility ID ${fileData.facilityId} under Part 75`;
+              break;
+            default:
+              description = `Electronic data reporting (EDR) file submitted by facility ID ${fileData.facilityId} for Part 75 reporting for ${fileData.year} quarter ${fileData.quarter}`;
+              break;
+          }
+
+          meta['description'] = description;
 
           if (fileData.stateCode) meta['stateCode'] = fileData.stateCode;
           if (fileData.quarter) meta['quarter'] = fileData.quarter;
@@ -140,10 +150,7 @@ export class BulkFileGAFTPCopyService {
         }
       } catch (err) {
         await this.logError(err.message, id);
-        throw new LoggingException(
-          err.message,
-          HttpStatus.INTERNAL_SERVER_ERROR,
-        );
+        this.logger.info(err.message);
       }
     }
   }
@@ -163,9 +170,9 @@ export class BulkFileGAFTPCopyService {
 
       const { data } = await axios.get(lookupData.url, {
         /*
-          httpsAgent: new Agent({
-            rejectUnauthorized: false,
-          }),
+        httpsAgent: new Agent({
+          rejectUnauthorized: false,
+        }),
         */
       });
 
@@ -196,7 +203,7 @@ export class BulkFileGAFTPCopyService {
             continue;
           }
 
-          row.facilityId = result.id;
+          row.facilityId = orisCode;
 
           row.download = lookupData.url + name;
           row.quarter = lookupData.quarter;
@@ -229,9 +236,9 @@ export class BulkFileGAFTPCopyService {
 
       const { data } = await axios.get(url, {
         /*
-          httpsAgent: new Agent({
-            rejectUnauthorized: false,
-          }),
+        httpsAgent: new Agent({
+          rejectUnauthorized: false,
+        }),
         */
       });
 

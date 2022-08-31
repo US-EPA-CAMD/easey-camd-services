@@ -88,6 +88,8 @@ export class BulkFileService {
       ];
     }
 
+    console.log(directoryInfo);
+
     for (const row of directoryInfo) {
       const fileData = await this.bulkFileGaftpCopyService.generateFileData(
         row,
@@ -97,7 +99,6 @@ export class BulkFileService {
       if (fileData && fileData.length > 0) {
         await this.bulkFileGaftpCopyService.uploadFilesToS3(
           fileData,
-          directory.description,
           directory.dataType,
           directory.subType,
           id,
