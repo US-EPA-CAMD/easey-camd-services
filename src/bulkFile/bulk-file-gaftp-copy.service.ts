@@ -73,7 +73,7 @@ export class BulkFileGAFTPCopyService {
           }),
           */
           responseType: 'stream',
-        });
+        }); //
 
         if (res.status == 200) {
           res.data.pipe(
