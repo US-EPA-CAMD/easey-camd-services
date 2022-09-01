@@ -88,8 +88,6 @@ export class BulkFileService {
       ];
     }
 
-    console.log(directoryInfo);
-
     for (const row of directoryInfo) {
       const fileData = await this.bulkFileGaftpCopyService.generateFileData(
         row,
