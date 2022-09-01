@@ -1,8 +1,7 @@
 import axios from 'axios';
-import { stat, createWriteStream, readFileSync } from 'fs';
+import { stat, createWriteStream, readFileSync, unlink } from 'fs';
 import { load } from 'cheerio';
-import { HttpStatus, Injectable } from '@nestjs/common';
-import { LoggingException } from '@us-epa-camd/easey-common/exceptions';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Logger } from '@us-epa-camd/easey-common/logger';
 import { BulkFileMetadataRepository } from './bulk-file.repository';
@@ -15,6 +14,7 @@ import { BulkFileMetadata } from '../entities/bulk-file-metadata.entity';
 import { S3, S3ClientConfig } from '@aws-sdk/client-s3';
 import { BulkFileGaftpCopyRepository } from './bulk-file-gaftp-copy.repository';
 import { Agent } from 'https';
+import { v4 } from 'uuid';
 
 axios.defaults.headers.common = {
   'x-api-key': process.env.EASEY_CAMD_SERVICES_API_KEY,
@@ -64,94 +64,119 @@ export class BulkFileGAFTPCopyService {
         details: `Uploading Files ${dataType}-${subType}`,
       },
     );
+
+    const promises = [];
+
     for (const fileData of fileInformation) {
-      try {
-        const res = await axios.get(fileData.download, {
-          httpsAgent: new Agent({
-            rejectUnauthorized: false,
-          }),
+      await new Promise((f) => setTimeout(f, 50));
+      promises.push(
+        new Promise(async (resolve) => {
+          try {
+            const fileNameUid = v4();
 
-          responseType: 'stream',
-        }); //
+            const res = await axios.get(fileData.download, {
+              httpsAgent: new Agent({
+                rejectUnauthorized: false,
+              }),
 
-        if (res.status == 200) {
-          res.data.pipe(
-            createWriteStream('src/bulkFile/writeLocation/file.zip'),
-          );
+              responseType: 'stream',
+            }); //
 
-          let writing = true;
-          res.data.on('end', () => {
-            writing = false;
-          });
+            if (res.status == 200) {
+              res.data.pipe(
+                createWriteStream(
+                  `src/bulkFile/writeLocation/${fileNameUid}.zip`,
+                ),
+              );
 
-          while (writing) {
-            await new Promise((f) => setTimeout(f, 1));
-          }
+              let writing = true;
+              res.data.on('end', () => {
+                writing = false;
+              });
 
-          await new Promise((f) => setTimeout(f, 1000));
-
-          const meta = {
-            dataType: dataType,
-            year: fileData.year,
-          };
-
-          let description;
-
-          switch (subType) {
-            case 'Emissions':
-              description = `Emissions file submitted by facility ID ${fileData.facilityId} for ${fileData.year} quarter ${fileData.quarter} under Part 75`;
-              break;
-            case 'QA':
-              description = `Quality Assurance file submitted by facility ID ${fileData.facilityId} for ${fileData.year} quarter ${fileData.quarter} under Part 75`;
-              break;
-            case 'Monitoring Plan':
-              description = `Monitoring plan file submitted by facility ID ${fileData.facilityId} under Part 75`;
-              break;
-            default:
-              description = `Electronic data reporting (EDR) file submitted by facility ID ${fileData.facilityId} for Part 75 reporting for ${fileData.year} quarter ${fileData.quarter}`;
-              break;
-          }
-
-          meta['description'] = description;
-
-          if (fileData.stateCode) meta['stateCode'] = fileData.stateCode;
-          if (fileData.quarter) meta['quarter'] = fileData.quarter;
-          if (subType) meta['dataSubType'] = subType;
-
-          const fileParts = fileData.name.split('/');
-          const fileName = fileParts[fileParts.length - 1];
-
-          stat('src/bulkFile/writeLocation/file.zip', async (error, stats) => {
-            if (error) {
-              this.logger.info(error.message);
-            } else {
-              const bulkFileMeta = new BulkFileMetadata();
-              bulkFileMeta.fileName = fileName;
-              bulkFileMeta.s3Path = fileData.name;
-              bulkFileMeta.metadata = JSON.stringify(meta);
-              bulkFileMeta.fileSize = stats.size;
-              bulkFileMeta.addDate = new Date(Date.now());
-              bulkFileMeta.lastUpdateDate = new Date(Date.now());
-
-              if (await this.repository.findOne(fileName)) {
-                await this.repository.update(fileName, bulkFileMeta);
-              } else {
-                await this.repository.insert(bulkFileMeta);
+              while (writing) {
+                await new Promise((f) => setTimeout(f, 1));
               }
-            }
-          });
 
-          await this.s3Client.putObject({
-            Bucket: process.env.EASEY_CAMD_SERVICES_S3_BUCKET,
-            Key: fileData.name,
-            Body: readFileSync('src/bulkFile/writeLocation/file.zip'),
-          });
-        }
-      } catch (err) {
-        await this.logError(err.message, id);
-        this.logger.info(err.message);
-      }
+              await new Promise((f) => setTimeout(f, 1000));
+
+              const meta = {
+                dataType: dataType,
+                year: fileData.year,
+              };
+
+              let description;
+
+              switch (subType) {
+                case 'Emissions':
+                  description = `Emissions file submitted by facility ID ${fileData.facilityId} for ${fileData.year} quarter ${fileData.quarter} under Part 75`;
+                  break;
+                case 'QA':
+                  description = `Quality Assurance file submitted by facility ID ${fileData.facilityId} for ${fileData.year} quarter ${fileData.quarter} under Part 75`;
+                  break;
+                case 'Monitoring Plan':
+                  description = `Monitoring plan file submitted by facility ID ${fileData.facilityId} under Part 75`;
+                  break;
+                default:
+                  description = `Electronic data reporting (EDR) file submitted by facility ID ${fileData.facilityId} for Part 75 reporting for ${fileData.year} quarter ${fileData.quarter}`;
+                  break;
+              }
+
+              meta['description'] = description;
+
+              if (fileData.stateCode) meta['stateCode'] = fileData.stateCode;
+              if (fileData.quarter) meta['quarter'] = fileData.quarter;
+              if (subType) meta['dataSubType'] = subType;
+
+              const fileParts = fileData.name.split('/');
+              const fileName = fileParts[fileParts.length - 1];
+
+              stat(
+                `src/bulkFile/writeLocation/${fileNameUid}.zip`,
+                async (error, stats) => {
+                  if (error) {
+                    this.logger.info(error.message);
+                  } else {
+                    const bulkFileMeta = new BulkFileMetadata();
+                    bulkFileMeta.fileName = fileName;
+                    bulkFileMeta.s3Path = fileData.name;
+                    bulkFileMeta.metadata = JSON.stringify(meta);
+                    bulkFileMeta.fileSize = stats.size;
+                    bulkFileMeta.addDate = new Date(Date.now());
+                    bulkFileMeta.lastUpdateDate = new Date(Date.now());
+
+                    if (await this.repository.findOne(fileName)) {
+                      await this.repository.update(fileName, bulkFileMeta);
+                    } else {
+                      await this.repository.insert(bulkFileMeta);
+                    }
+                  }
+                },
+              );
+
+              await this.s3Client.putObject({
+                Bucket: process.env.EASEY_CAMD_SERVICES_S3_BUCKET,
+                Key: fileData.name,
+                Body: readFileSync(
+                  `src/bulkFile/writeLocation/${fileNameUid}.zip`,
+                ),
+              });
+
+              unlink(`src/bulkFile/writeLocation/${fileNameUid}.zip`, () => {
+                this.logError('File Not Deleted: ' + fileNameUid, id);
+              });
+            }
+            resolve(true);
+          } catch (err) {
+            await this.logError(err.message, id);
+            this.logger.info(err.message);
+            resolve(false);
+          }
+        }),
+      );
     }
+
+    await Promise.all(promises);
   }
 
   public async generateFileData(lookupData, id) {
@@ -177,41 +202,50 @@ export class BulkFileGAFTPCopyService {
       const listItems = $('tbody tr td a');
 
       const zipFiles = [];
+      const promises = [];
       for (const el of listItems) {
-        const row = new BulkFileCopyFileGenerationDTO();
-        const name = $(el).text();
+        promises.push(
+          new Promise(async (resolve) => {
+            const row = new BulkFileCopyFileGenerationDTO();
+            const name = $(el).text();
 
-        const orisCode = parseInt(name.split('_')[0]);
+            const orisCode = parseInt(name.split('_')[0]);
 
-        if (!isNaN(orisCode)) {
-          const result = await entityManager.findOne(Plant, {
-            orisCode: orisCode,
-          });
+            if (!isNaN(orisCode)) {
+              const result = await entityManager.findOne(Plant, {
+                orisCode: orisCode,
+              });
 
-          if (!result) {
-            await this.logError(
-              `Missing Oris Code: ${orisCode} ${lookupData.year} ${lookupData.quarter}`,
-              id,
-            );
+              if (!result) {
+                await this.logError(
+                  `Missing Oris Code: ${orisCode} ${lookupData.year} ${lookupData.quarter}`,
+                  id,
+                );
 
-            this.logger.info(
-              `Missing Oris Code: ${orisCode} ${lookupData.year} ${lookupData.quarter}`,
-            );
-            continue;
-          }
+                this.logger.info(
+                  `Missing Oris Code: ${orisCode} ${lookupData.year} ${lookupData.quarter}`,
+                );
+              } else {
+                row.facilityId = orisCode;
 
-          row.facilityId = orisCode;
+                row.download = lookupData.url + name;
+                row.quarter = lookupData.quarter;
+                row.name = lookupData.fileNamePrefix + name;
+                row.year = lookupData.year;
 
-          row.download = lookupData.url + name;
-          row.quarter = lookupData.quarter;
-          row.name = lookupData.fileNamePrefix + name;
-          row.year = lookupData.year;
+                row.stateCode = result.stateCode;
 
-          row.stateCode = result.stateCode;
+                zipFiles.push(row);
+              }
+            }
 
-          zipFiles.push(row);
-        }
+            resolve(true);
+          }),
+        );
       }
+
+      await Promise.all(promises);
+
       return zipFiles;
     } catch (err) {
       this.logError(err.message, id);
