@@ -89,7 +89,7 @@ jobs:
           cf set-env $APP_NAME EASEY_CAMD_SERVICES_API_KEY $API_KEY
         env:
           S3_AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          S3_AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_ID }}
+          S3_AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           API_KEY: ${{ secrets.CAMD_SVCS_NON_PROD_API_KEY }}
       - name: Deployment
         run: devops/scripts/deploy.sh
@@ -135,7 +135,7 @@ jobs:
           cf set-env $APP_NAME EASEY_CAMD_SERVICES_API_KEY $API_KEY
         env:
           S3_AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          S3_AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_ID }}
+          S3_AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           API_KEY: ${{ secrets.CAMD_SVCS_NON_PROD_API_KEY }}
       - name: Deployment
         run: devops/scripts/deploy.sh
@@ -181,7 +181,7 @@ jobs:
           cf set-env $APP_NAME EASEY_CAMD_SERVICES_API_KEY $API_KEY
         env:
           S3_AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          S3_AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_ID }}
+          S3_AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           API_KEY: ${{ secrets.CAMD_SVCS_NON_PROD_API_KEY }}
       - name: Deployment
         run: devops/scripts/deploy.sh
@@ -227,7 +227,7 @@ jobs:
           cf set-env $APP_NAME EASEY_CAMD_SERVICES_API_KEY $API_KEY
         env:
           S3_AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          S3_AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_ID }}
+          S3_AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           API_KEY: ${{ secrets.CAMD_SVCS_NON_PROD_API_KEY }}
       - name: Deployment
         run: devops/scripts/deploy.sh
