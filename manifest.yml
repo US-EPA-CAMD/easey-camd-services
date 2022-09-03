@@ -21,6 +21,10 @@ applications:
       EASEY_CAMD_SERVICES_ENABLE_AUTH_TOKEN: false
       EASEY_CAMD_SERVICES_ENABLE_CLIENT_TOKEN: true
       EASEY_CAMD_SERVICES_ENABLE_GLOBAL_VALIDATION_PIPE: true
+      EASEY_CAMD_SERVICES_CAMPD_INBOX: ((campdInbox))
+      EASEY_CAMD_SERVICES_ECMPS_INBOX: ((ecmpsInbox))
+      EASEY_CAMD_SERVICES_S3_REGION: us-gov-west-1
+      EASEY_CAMD_SERVICES_S3_BUCKET: ((campdDatasetsS3Bucket))
     routes:
       - route: ((host))/((path))
     services:

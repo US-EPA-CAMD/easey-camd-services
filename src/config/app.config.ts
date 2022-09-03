@@ -42,6 +42,6 @@ export default registerAs('app', () => ({
     uri: process.env.EASEY_AUTH_API || 'https://localhost:8000/auth-mgmt',
   },
   apiKey: process.env.EASEY_CAMD_SERVICES_API_KEY,
-  camdInbox: process.env.EASEY_CAMD_SERVICES_CAMD_INBOX,
+  campdInbox: process.env.EASEY_CAMD_SERVICES_CAMPD_INBOX,
   ecmpsInbox: process.env.EASEY_CAMD_SERVICES_ECMPS_INBOX,
 }));

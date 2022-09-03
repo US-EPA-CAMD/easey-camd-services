@@ -1,7 +1,7 @@
 name: Build Package Workflow
 
 on:
-  workflow_dispatch
+  workflow_dispatch:
 
 jobs:
   Build-Package:
@@ -10,3 +10,21 @@ jobs:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       ARTIFACTS_STORAGE_ACCESS_KEY_ID: ${{ secrets.ARTIFACTS_STORAGE_ACCESS_KEY_ID }}
       ARTIFACTS_STORAGE_SECRET_ACCESS_KEY: ${{ secrets.ARTIFACTS_STORAGE_SECRET_ACCESS_KEY }}
+
+# FROM RELEASE/V1.0
+# name: Build Package Workflow
+
+# on:
+#   workflow_dispatch
+
+# jobs:
+#   Build-Package:
+#     uses: US-EPA-CAMD/devops/.github/workflows/reusable-build-workflow.yaml@master
+#     secrets:
+#       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+#       ARTIFACTS_STORAGE_ACCESS_KEY_ID: ${{ secrets.ARTIFACTS_STORAGE_ACCESS_KEY_ID }}
+#       ARTIFACTS_STORAGE_SECRET_ACCESS_KEY: ${{ secrets.ARTIFACTS_STORAGE_SECRET_ACCESS_KEY }}
+#   ZAP Scan:
+#     uses: US-EPA-CAMD/devops/.github/workflows/api-zap-scan.yml@master
+#     with:
+#       API: ${{ github.event.repository.name }}

@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { getManager } from 'typeorm';
 import { Logger } from '@us-epa-camd/easey-common/logger';
 import { ConfigService } from '@nestjs/config';
-import { Api } from '../entities/api.entity';
+import { ClientConfig } from '../entities/client-config.entity';
 import { ServerErrorDto } from '../dto/server-error.dto';
 
 @Injectable()
@@ -20,13 +20,13 @@ export class LoggingService {
     request: Request,
     errorDto: ServerErrorDto,
   ): Promise<void> {
-    const apiRecord = await this.returnManager().findOne(
-      Api,
+    const dbRecord = await this.returnManager().findOne(
+      ClientConfig,
       request.headers['x-client-id'],
     );
 
     this.logger.info(errorDto.errorMessage, {
-      appName: apiRecord.name,
+      appName: dbRecord.name,
       ...errorDto.metadata,
     });
   }

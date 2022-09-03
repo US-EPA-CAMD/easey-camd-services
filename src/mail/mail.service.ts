@@ -6,7 +6,7 @@ import { getManager } from 'typeorm';
 import { CreateMailDto } from '../dto/create-mail.dto';
 import { Logger } from '@us-epa-camd/easey-common/logger';
 import { ConfigService } from '@nestjs/config';
-import { Api } from '../entities/api.entity';
+import { ClientConfig } from '../entities/client-config.entity';
 import { LoggingException } from '@us-epa-camd/easey-common/exceptions';
 
 const nodeEmailer = require('nodemailer');
@@ -33,14 +33,14 @@ export class MailService {
     request: Request,
     createMailDTO: CreateMailDto,
   ): Promise<void> {
-    const apiRecord = await this.returnManager().findOne(
-      Api,
+    const dbRecord = await this.returnManager().findOne(
+      ClientConfig,
       request.headers['x-client-id'],
     );
 
     let toInbox;
-    if (apiRecord.name === 'campd-ui') {
-      toInbox = this.configService.get<string>('app.camdInbox');
+    if (dbRecord.name === 'campd-ui') {
+      toInbox = this.configService.get<string>('app.campdInbox');
     } else {
       toInbox = this.configService.get<string>('app.ecmpsInbox');
     }

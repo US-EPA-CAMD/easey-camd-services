@@ -2,3 +2,4 @@ instances: 2
 environment: beta
 host: api-easey-beta.app.cloud.gov
 apiHost: api.epa.gov/easey/beta
+campdDatasetsS3Bucket: cg-fad47021-99a0-4ae0-a73c-3d9b3dd9d44

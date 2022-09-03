@@ -2,12 +2,11 @@ name: Develop Branch Workflow
 
 on:
   push:
-    branches: [develop]
+    branches: [ develop ]
     paths-ignore:
-      - '**/*.md'
-      - 'LICENSE'
-      - '.github/**'
-      - '.gitignore'
+    - '**/*.md'
+    - 'LICENSE'
+    - '.gitignore'
 
 jobs:
   Build-Test-Deploy:
@@ -63,6 +62,6 @@ jobs:
         env:
           S3_AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           S3_AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_ID }}
-          API_KEY: ${{secrets.API_KEY}}
+          API_KEY: ${{ secrets.CAMD_SVCS_NON_PROD_API_KEY }}
       - name: Deploy
         run: devops/scripts/deploy.sh
