@@ -1,0 +1,1 @@
+Here so git properly keeps the writeLocation directory.
