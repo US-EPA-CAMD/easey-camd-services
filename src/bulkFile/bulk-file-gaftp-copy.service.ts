@@ -57,7 +57,13 @@ export class BulkFileGAFTPCopyService {
     await this.sftpRepository.update({ id: id }, { errors: logRecord.errors });
   }
 
-  public async uploadFilesToS3(fileInformation, dataType, subType, id) {
+  public async uploadFilesToS3(
+    fileInformation,
+    dataType,
+    subType,
+    id,
+    tries = 1,
+  ) {
     await this.sftpRepository.update(
       { id: id },
       {
@@ -66,6 +72,8 @@ export class BulkFileGAFTPCopyService {
     );
 
     const promises = [];
+
+    const filesToRetry = [];
 
     for (const fileData of fileInformation) {
       await new Promise((f) => setTimeout(f, 50));
@@ -168,7 +176,8 @@ export class BulkFileGAFTPCopyService {
             }
             resolve(true);
           } catch (err) {
-            await this.logError(err.message, id);
+            filesToRetry.push(fileData);
+            //await this.logError(err.message, id);
             this.logger.info(err.message);
             resolve(false);
           }
@@ -177,6 +186,16 @@ export class BulkFileGAFTPCopyService {
     }
 
     await Promise.all(promises);
+
+    if (filesToRetry.length > 0 && tries < 10) {
+      //Recursively load the files that did not complete
+      console.log(
+        filesToRetry.length +
+          ' Files did not get processed properly, retrying them',
+      );
+      await new Promise((f) => setTimeout(f, 1000));
+      await this.uploadFilesToS3(filesToRetry, dataType, subType, id, tries++);
+    }
   }
 
   public async generateFileData(lookupData, id) {
