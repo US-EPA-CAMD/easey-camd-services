@@ -2,11 +2,11 @@ name: Develop Branch Workflow
 
 on:
   push:
-    branches: [ develop ]
+    branches: [develop]
     paths-ignore:
-    - '**/*.md'
-    - 'LICENSE'
-    - '.gitignore'
+      - '**/*.md'
+      - 'LICENSE'
+      - '.gitignore'
 
 jobs:
   Build-Test-Deploy:
@@ -59,9 +59,11 @@ jobs:
           cf set-env $APP_NAME AWS_ACCESS_KEY_ID $S3_AWS_ACCESS_KEY_ID
           cf set-env $APP_NAME AWS_SECRET_ACCESS_KEY $S3_AWS_SECRET_ACCESS_KEY
           cf set-env $APP_NAME EASEY_CAMD_SERVICES_API_KEY $API_KEY
+          cf set-env $APP_NAME EASEY_CAMD_SERVICES_API_SECRET_TOKEN $API_SECRET_TOKEN
         env:
           S3_AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           S3_AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           API_KEY: ${{ secrets.CAMD_SVCS_NON_PROD_API_KEY }}
+          API_SECRET_TOKEN: ${{ secrets.API_SECRET_TOKEN }}
       - name: Deploy
         run: devops/scripts/deploy.sh
