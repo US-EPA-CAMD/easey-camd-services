@@ -23,11 +23,7 @@ import { MailModule } from './mail/mail.module';
     RouterModule.forRoutes(routes),
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [
-        s3Config,
-        dbConfig,
-        appConfig,
-      ],
+      load: [s3Config, dbConfig, appConfig],
     }),
     TypeOrmModule.forRootAsync({
       useClass: TypeOrmConfigService,

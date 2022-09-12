@@ -13,7 +13,7 @@ if (host == 'localhost') {
 }
 
 export default registerAs('app', () => ({
-  name: 'notifications-api',
+  name: 'camd-services',
   title:
     process.env.EASEY_CAMD_SERVICES_TITLE ||
     'CAMD Administrative & General Services',
