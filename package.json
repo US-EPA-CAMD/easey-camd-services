@@ -38,7 +38,7 @@
     "@nestjs/core": "^8.1.1",
     "@nestjs/platform-express": "^8.1.1",
     "@nestjs/swagger": "^5.1.2",
-    "@nestjs/typeorm": "^8.0.2",
+    "@nestjs/typeorm": "8.0.3",
     "@us-epa-camd/easey-common": "^6.4.2",
     "axios": "^0.27.2",
     "cheerio": "^1.0.0-rc.11",
@@ -56,6 +56,7 @@
     "rimraf": "^3.0.2",
     "rxjs": "^7.4.0",
     "swagger-ui-express": "^4.1.4",
+    "typeorm": "0.2.45",
     "uuidv4": "^6.2.13"
   },
   "devDependencies": {
