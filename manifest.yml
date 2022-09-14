@@ -25,6 +25,7 @@ applications:
       EASEY_CAMD_SERVICES_ECMPS_INBOX: ((ecmpsInbox))
       EASEY_CAMD_SERVICES_S3_REGION: us-gov-west-1
       EASEY_CAMD_SERVICES_S3_BUCKET: ((campdDatasetsS3Bucket))
+      EASEY_CAMD_SERVICES_ENABLE_SECRET_TOKEN: true
     routes:
       - route: ((host))/((path))
     services:
