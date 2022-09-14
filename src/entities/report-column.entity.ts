@@ -9,17 +9,17 @@ import {
 
 import { ReportDetail } from './report-detail.entity';
 
-@Entity({ name: 'camdecmpsaux.report_column' })
+@Entity({ name: 'camdecmpsaux.datacolumn' })
 export class ReportColumn extends BaseEntity {
   @PrimaryGeneratedColumn({
-    name: 'report_column_id',
+    name: 'datacolumn_id',
   })
   id: number;
 
   @Column({
-    name: 'sequence_number',
+    name: 'column_order',
   })
-  sequenceNumber: number;
+  columnOrder: number;
 
   @Column({
     name: 'name',
@@ -32,7 +32,7 @@ export class ReportColumn extends BaseEntity {
   displayName: string;
 
   @Column({
-    name: 'report_detail_id',
+    name: 'datatable_id',
   })
   reportDetailId: number;
 
@@ -40,6 +40,6 @@ export class ReportColumn extends BaseEntity {
     () => ReportDetail,
     o => o.columns,
   )
-  @JoinColumn({ name: 'report_detail_id' })
+  @JoinColumn({ name: 'datatable_id' })
   detail: ReportDetail;
 }

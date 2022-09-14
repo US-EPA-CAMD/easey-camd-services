@@ -8,7 +8,7 @@ import { ReportParameter } from '../entities/report-parameter.entity';
 export class ReportParameterMap extends BaseMap<ReportParameter, ReportParameterDTO> {
   public async one(entity: ReportParameter): Promise<ReportParameterDTO> {
     return {
-      position: entity.sequenceNumber,
+      position: entity.parameterOrder,
       name: entity.name,
       defaultValue: entity.defaultValue,
     };

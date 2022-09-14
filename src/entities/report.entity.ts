@@ -9,20 +9,20 @@ import {
 
 import { ReportDetail } from './report-detail.entity';
 
-@Entity({ name: 'camdecmpsaux.report' })
+@Entity({ name: 'camdecmpsaux.dataset' })
 export class Report extends BaseEntity {
   @PrimaryColumn({
-    name: 'report_cd',
+    name: 'dataset_cd',
   })
   code: string;
 
   @Column({
-    name: 'report_title',
+    name: 'display_name',
   })
   title: string;
 
   @Column({
-    name: 'report_template_cd',
+    name: 'template_cd',
   })
   templateCode: string;
 
@@ -35,6 +35,6 @@ export class Report extends BaseEntity {
     () => ReportDetail,
     o => o.report,
   )
-  @JoinColumn({ name: 'report_cd' })
+  @JoinColumn({ name: 'dataset_cd' })
   details: ReportDetail[];
 }

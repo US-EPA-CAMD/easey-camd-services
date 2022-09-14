@@ -27,7 +27,7 @@ export class ReportDetailMap extends BaseMap<ReportDetail, ReportDetailDTO> {
       : [];
 
     return {
-      position: entity.sequenceNumber,
+      position: entity.detailOrder,
       title: entity.title,
       sqlStatement: entity.sqlStatement,
       noResultsMessage: entity.noResultsMessage,

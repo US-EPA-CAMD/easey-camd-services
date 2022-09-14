@@ -8,7 +8,7 @@ import { ReportColumn } from '../entities/report-column.entity';
 export class ReportColumnMap extends BaseMap<ReportColumn, ReportColumnDTO> {
   public async one(entity: ReportColumn): Promise<ReportColumnDTO> {
     return {
-      position: entity.sequenceNumber,
+      position: entity.columnOrder,
       name: entity.name,
       displayName: entity.displayName,
     };

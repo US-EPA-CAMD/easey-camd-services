@@ -9,7 +9,7 @@ export class ReportRepository extends Repository<Report> {
       .innerJoinAndSelect('rd.columns', 'c')
       .innerJoinAndSelect('rd.parameters', 'p')
       .where('r.code = :reportCode', { reportCode })
-      .orderBy('rd.sequenceNumber, c.sequenceNumber, p.sequenceNumber')
+      .orderBy('rd.detailOrder, c.columnOrder, p.parameterOrder')
       .getOne();
   }
 }

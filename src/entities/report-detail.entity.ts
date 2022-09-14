@@ -12,25 +12,25 @@ import { Report } from './report.entity';
 import { ReportColumn } from './report-column.entity';
 import { ReportParameter } from './report-parameter.entity';
 
-@Entity({ name: 'camdecmpsaux.report_detail' })
+@Entity({ name: 'camdecmpsaux.datatable' })
 export class ReportDetail extends BaseEntity {
   @PrimaryGeneratedColumn({
-    name: 'report_detail_id',
+    name: 'datatable_id',
   })
   id: number;
 
   @Column({
-    name: 'report_cd',
+    name: 'dataset_cd',
   })
   reportCode: string;
 
   @Column({
-    name: 'sequence_number',
+    name: 'table_order',
   })
-  sequenceNumber: number;
+  detailOrder: number;
 
   @Column({
-    name: 'detail_title',
+    name: 'display_name',
   })
   title: string;
 
@@ -48,20 +48,20 @@ export class ReportDetail extends BaseEntity {
     () => Report,
     o => o.details,
   )
-  @JoinColumn({ name: 'report_cd' })
+  @JoinColumn({ name: 'dataset_cd' })
   report: Report;
 
   @OneToMany(
     () => ReportColumn,
     o => o.detail,
   )
-  @JoinColumn({ name: 'report_detail_id' })
+  @JoinColumn({ name: 'datatable_id' })
   columns: ReportColumn[];
 
   @OneToMany(
     () => ReportParameter,
     o => o.detail,
   )
-  @JoinColumn({ name: 'report_detail_id' })
+  @JoinColumn({ name: 'datatable_id' })
   parameters: ReportParameter[];
 }
