@@ -44,4 +44,8 @@ export default registerAs('app', () => ({
   apiKey: process.env.EASEY_CAMD_SERVICES_API_KEY,
   campdInbox: process.env.EASEY_CAMD_SERVICES_CAMPD_INBOX,
   ecmpsInbox: process.env.EASEY_CAMD_SERVICES_ECMPS_INBOX,
+  enableSecretToken: parseBool(
+    process.env.EASEY_CAMD_SERVICES_ENABLE_SECRET_TOKEN,
+    false,
+  ),
 }));
