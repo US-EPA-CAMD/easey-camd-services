@@ -15,6 +15,8 @@ import { S3, S3ClientConfig } from '@aws-sdk/client-s3';
 import { BulkFileGaftpCopyRepository } from './bulk-file-gaftp-copy.repository';
 import { Agent } from 'https';
 import { v4 } from 'uuid';
+import { MissingOris } from '../entities/missing-oris.entity';
+import { SftpFailure } from '../entities/sftp-failures.entity';
 
 axios.defaults.headers.common = {
   'x-api-key': process.env.EASEY_CAMD_SERVICES_API_KEY,
@@ -25,6 +27,7 @@ const quarterString = ['q1', 'q2', 'q3', 'q4'];
 @Injectable()
 export class BulkFileGAFTPCopyService {
   private s3Client;
+  private entityManager;
 
   constructor(
     @InjectRepository(BulkFileMetadataRepository)
@@ -39,6 +42,8 @@ export class BulkFileGAFTPCopyService {
     this.s3Client = new S3({
       region: process.env.EASEY_CAMD_SERVICES_S3_REGION,
     });
+
+    this.entityManager = getManager();
   }
 
   private async logError(error, id) {
@@ -55,6 +60,10 @@ export class BulkFileGAFTPCopyService {
     logRecord.errors = JSON.stringify(errors);
 
     await this.sftpRepository.update({ id: id }, { errors: logRecord.errors });
+  }
+
+  private async logMissingOris(oris: number) {
+    await this.entityManager.insert(MissingOris, { id: v4(), orisCode: oris });
   }
 
   public async uploadFilesToS3(
@@ -195,6 +204,13 @@ export class BulkFileGAFTPCopyService {
       );
       await new Promise((f) => setTimeout(f, 1000));
       await this.uploadFilesToS3(filesToRetry, dataType, subType, id, tries++);
+    } else if (filesToRetry.length > 0) {
+      for (const fileEntry of filesToRetry) {
+        const sftpFailure = new SftpFailure();
+        sftpFailure.id = v4();
+        sftpFailure.fileDescription = `${dataType}-${subType} : ${fileEntry.name}`;
+        await this.entityManager.insert(SftpFailure, sftpFailure);
+      }
     }
   }
 
@@ -236,6 +252,7 @@ export class BulkFileGAFTPCopyService {
               });
 
               if (!result) {
+                await this.logMissingOris(orisCode);
                 await this.logError(
                   `Missing Oris Code: ${orisCode} ${lookupData.year} ${lookupData.quarter}`,
                   id,
