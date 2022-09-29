@@ -39,15 +39,6 @@ export class BulkFileGAFTPCopyService {
     this.s3Client = new S3({
       region: process.env.EASEY_CAMD_SERVICES_S3_REGION,
     });
-
-    console.log('DEV S3 CREDS');
-
-    console.log(
-      process.env.AWS_ACCESS_KEY_ID,
-      process.env.AWS_SECRET_ACCESS_KEY,
-      process.env.EASEY_CAMD_SERVICES_S3_REGION,
-      process.env.EASEY_CAMD_SERVICES_S3_BUCKET,
-    );
   }
 
   private async logError(error, id) {
