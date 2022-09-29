@@ -44,7 +44,7 @@ export class BulkFileController {
   })
   @ApiBearerAuth('ClientToken')
   @ApiSecurity('ClientId')
-  @UseGuards(ClientTokenGuard)
+  //@UseGuards(ClientTokenGuard)
   async copyBulkFiles(@Query() params: BulkFileCopyParamsDTO) {
     const job_id = v4();
 
