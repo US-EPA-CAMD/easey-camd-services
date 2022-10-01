@@ -10,18 +10,18 @@ import { LoggingService } from './logging.service';
 import { ClientTokenGuard } from '@us-epa-camd/easey-common/guards';
 import { ServerErrorDto } from '../dto/server-error.dto';
 
-@ApiSecurity('APIKey')
-@ApiTags('Logging')
-@ApiBearerAuth('ClientToken')
-@ApiSecurity('ClientId')
-@UseGuards(ClientTokenGuard)
 @Controller()
+@ApiTags('Logging')
+@ApiSecurity('APIKey')
+@ApiSecurity('ClientId')
+@ApiBearerAuth('ClientToken')
+@UseGuards(ClientTokenGuard)
 export class LoggingController {
   constructor(private loggingService: LoggingService) {}
 
   @Post('error')
   @ApiOkResponse({
-    description: 'Client error message handler',
+    description: 'Logging services for CAMD applications',
   })
   @ApiInternalServerErrorResponse()
   async serverError(@Req() request, @Body() serverErrorDto: ServerErrorDto) {

@@ -2,7 +2,7 @@ import {
   ApiTags,
   ApiOkResponse,
   ApiSecurity,
-  ApiExtraModels,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 
 import {
@@ -11,31 +11,27 @@ import {
   Post,
   Body,
   Param,
+  UseGuards,
   ParseIntPipe,
 } from '@nestjs/common';
+import { ClientTokenGuard } from '@us-epa-camd/easey-common/guards';
 
-import {
-  BadRequestResponse,
-  NotFoundResponse,
-} from '../utils/swagger-decorator.const';
 import { BookmarkService } from './bookmark.service';
 import { BoomarkPayloadDTO } from '../dto/bookmark-payload.dto';
 import { BookmarkCreatedDTO } from '../dto/bookmark-created.dto';
 import { BookmarkDTO } from '../dto/bookmark.dto';
 
+@Controller()
 @ApiSecurity('APIKey')
 @ApiTags('Bookmarks')
-@ApiExtraModels(BookmarkCreatedDTO)
-@Controller()
 export class BookmarkController {
   constructor(private service: BookmarkService) {}
 
   @Get(':id')
   @ApiOkResponse({
-    description: 'Retrieves a bookmark by its id',
+    type: BookmarkDTO,
+    description: 'Retrieves a CAMD application bookmark by its id',
   })
-  @BadRequestResponse()
-  @NotFoundResponse()
   async getBookmarkById(
     @Param('id', ParseIntPipe) id: number,
   ): Promise<BookmarkDTO> {
@@ -43,8 +39,12 @@ export class BookmarkController {
   }
 
   @Post()
+  @ApiSecurity('ClientId')
+  @ApiBearerAuth('ClientToken')
+  @UseGuards(ClientTokenGuard)
   @ApiOkResponse({
-    description: 'Creates a bookmark record',
+    type: BookmarkCreatedDTO,
+    description: 'Creates a bookmark for CAMD applications',
   })
   async createBookmark(
     @Body() payload: BoomarkPayloadDTO,
