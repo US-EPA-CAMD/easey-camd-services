@@ -1,20 +1,24 @@
 import axios from 'axios';
-import { stat, createWriteStream, readFileSync, unlink } from 'fs';
+import { v4 } from 'uuid';
+import { Agent } from 'https';
 import { load } from 'cheerio';
+import { getManager } from 'typeorm';
+import { stat, createWriteStream, readFileSync, unlink } from 'fs';
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
+import { S3 } from '@aws-sdk/client-s3';
 import { Logger } from '@us-epa-camd/easey-common/logger';
+
+import { Plant } from '../entities/plant.entity';
+import { MissingOris } from '../entities/missing-oris.entity';
+import { SftpFailure } from '../entities/sftp-failures.entity';
 import { BulkFileMetadataRepository } from './bulk-file.repository';
 import { BulkFileCopyParamsDTO } from '../dto/bulk-file-copy.params.dto';
 import { BulkFileCopyDirectoryGenerationDTO } from '../dto/bulk-file-copy-directory-generation.dto';
 import { BulkFileCopyFileGenerationDTO } from '../dto/bulk-file-copy-file-generation.dto';
-import { getManager } from 'typeorm';
-import { Plant } from '../entities/plant.entity';
 import { BulkFileMetadata } from '../entities/bulk-file-metadata.entity';
-import { S3, S3ClientConfig } from '@aws-sdk/client-s3';
 import { BulkFileGaftpCopyRepository } from './bulk-file-gaftp-copy.repository';
-import { Agent } from 'https';
-import { v4 } from 'uuid';
 
 axios.defaults.headers.common = {
   'x-api-key': process.env.EASEY_CAMD_SERVICES_API_KEY,
@@ -25,20 +29,18 @@ const quarterString = ['q1', 'q2', 'q3', 'q4'];
 @Injectable()
 export class BulkFileGAFTPCopyService {
   private s3Client;
+  private entityManager;
 
   constructor(
     @InjectRepository(BulkFileMetadataRepository)
     private readonly repository: BulkFileMetadataRepository,
-
     @InjectRepository(BulkFileGaftpCopyRepository)
     private readonly sftpRepository: BulkFileGaftpCopyRepository,
-
+    private readonly configService: ConfigService,
     private readonly logger: Logger,
   ) {
-    const s: S3ClientConfig = {};
-    this.s3Client = new S3({
-      region: process.env.EASEY_CAMD_SERVICES_S3_REGION,
-    });
+    this.s3Client = new S3(this.configService.get('s3Config'));
+    this.entityManager = getManager();
   }
 
   private async logError(error, id) {
@@ -55,6 +57,10 @@ export class BulkFileGAFTPCopyService {
     logRecord.errors = JSON.stringify(errors);
 
     await this.sftpRepository.update({ id: id }, { errors: logRecord.errors });
+  }
+
+  private async logMissingOris(oris: number) {
+    await this.entityManager.insert(MissingOris, { id: v4(), orisCode: oris });
   }
 
   public async uploadFilesToS3(
@@ -146,7 +152,7 @@ export class BulkFileGAFTPCopyService {
                     this.logger.info(error.message);
                   } else {
                     const bulkFileMeta = new BulkFileMetadata();
-                    bulkFileMeta.fileName = fileName;
+                    bulkFileMeta.filename = fileName;
                     bulkFileMeta.s3Path = fileData.name;
                     bulkFileMeta.metadata = JSON.stringify(meta);
                     bulkFileMeta.fileSize = stats.size;
@@ -163,7 +169,7 @@ export class BulkFileGAFTPCopyService {
               );
 
               await this.s3Client.putObject({
-                Bucket: process.env.EASEY_CAMD_SERVICES_S3_BUCKET,
+                Bucket: this.configService.get('s3Config.bucket'),
                 Key: fileData.name,
                 Body: readFileSync(
                   `src/bulkFile/writeLocation/${fileNameUid}.zip`,
@@ -177,7 +183,6 @@ export class BulkFileGAFTPCopyService {
             resolve(true);
           } catch (err) {
             filesToRetry.push(fileData);
-            //await this.logError(err.message, id);
             this.logger.info(err.message);
             resolve(false);
           }
@@ -195,6 +200,13 @@ export class BulkFileGAFTPCopyService {
       );
       await new Promise((f) => setTimeout(f, 1000));
       await this.uploadFilesToS3(filesToRetry, dataType, subType, id, tries++);
+    } else if (filesToRetry.length > 0) {
+      for (const fileEntry of filesToRetry) {
+        const sftpFailure = new SftpFailure();
+        sftpFailure.id = v4();
+        sftpFailure.fileDescription = `${dataType}-${subType} : ${fileEntry.name}`;
+        await this.entityManager.insert(SftpFailure, sftpFailure);
+      }
     }
   }
 
@@ -236,6 +248,7 @@ export class BulkFileGAFTPCopyService {
               });
 
               if (!result) {
+                await this.logMissingOris(orisCode);
                 await this.logError(
                   `Missing Oris Code: ${orisCode} ${lookupData.year} ${lookupData.quarter}`,
                   id,

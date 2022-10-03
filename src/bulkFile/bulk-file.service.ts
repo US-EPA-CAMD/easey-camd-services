@@ -121,7 +121,7 @@ export class BulkFileService {
       const today = new Date();
       const databaseInput = new BulkFileMetadata();
 
-      databaseInput.fileName = bulkFileDTO.filename;
+      databaseInput.filename = bulkFileDTO.filename;
       databaseInput.s3Path = bulkFileDTO.s3Path;
       databaseInput.metadata = JSON.stringify(bulkFileDTO.metadata);
       databaseInput.fileSize = bulkFileDTO.bytes;
@@ -136,16 +136,16 @@ export class BulkFileService {
   }
 
   async updateBulkDataFile(
-    s3_path: string,
+    s3Path: string,
     bulkFileDTO: BulkFileInputDTO,
   ): Promise<BulkFileDTO> {
-    const databaseinput = await this.repository.findOne({ s3Path: s3_path });
-    databaseinput.fileName = bulkFileDTO.filename;
+    const databaseinput = await this.repository.findOne(s3Path);
+    databaseinput.filename = bulkFileDTO.filename;
     databaseinput.s3Path = bulkFileDTO.s3Path;
     databaseinput.metadata = JSON.stringify(bulkFileDTO.metadata);
     databaseinput.fileSize = bulkFileDTO.bytes;
     databaseinput.lastUpdateDate = new Date();
-    await this.repository.update(databaseinput.fileName, databaseinput);
+    await this.repository.update(databaseinput.filename, databaseinput);
 
     return this.map.one(databaseinput);
   }

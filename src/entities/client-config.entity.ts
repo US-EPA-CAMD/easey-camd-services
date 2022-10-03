@@ -16,4 +16,7 @@ export class ClientConfig extends BaseEntity {
 
   @Column({ name: 'encryption_key' })
   encryptionKey: string;
+
+  @Column({ name: 'support_email' })
+  supportEmail: string;
 }

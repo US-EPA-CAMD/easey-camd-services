@@ -35,6 +35,56 @@ Follow these [instructions](https://github.com/US-EPA-CAMD/devops/blob/master/GE
     $ yarn install
     ```
 
+## Configuration
+The Streaming Services uses a number of environment variables to properly configure the api. The following is the list of configureble values and their default setting.
+
+### APP VARIABLES
+| Typescript Var Name | Environment Var Name | Default Value | Comment |
+| :------------------ | :------------------- | :------------ | :------ |
+| name | N/A | camd-services | Fixed value |
+| host | EASEY_CAMD_SERVICES_HOST | localhost | Configurable
+| port | EASEY_CAMD_SERVICES_PORT | 8060 | Configurable |
+| path | EASEY_CAMD_SERVICES_PATH | camd-services | Configurable |
+| uri | N/A | N/A | Determined by host, port, & path |
+| title | EASEY_CAMD_SERVICES_TITLE | CAMD Administrative & General Services | Configurable |
+| description | EASEY_CAMD_SERVICES_DESCRIPTION | ??? | Configurable |
+| apiHost | EASEY_API_GATEWAY_HOST | api.epa.gov/easey/dev | Configurable |
+| env | EASEY_CAMD_SERVICES_ENV | local-dev | Configurable |
+| enableCors | EASEY_CAMD_SERVICES_ENABLE_CORS | true | Configurable |
+| enableApiKey | EASEY_CAMD_SERVICES_ENABLE_API_KEY | false | Configurable |
+| enableClientToken | EASEY_CAMD_SERVICES_ENABLE_CLIENT_TOKEN | false | Configurable |
+| enableGlobalValidationPipes | EASEY_CAMD_SERVICES_ENABLE_GLOBAL_VALIDATION_PIPE | true | Configurable |
+| version | EASEY_CAMD_SERVICES_VERSION | v0.0.0 | Dynamically set by CI/CD workflow |
+| published | EASEY_CAMD_SERVICES_PUBLISHED | local | Dynamically set by CI/CD workflow |
+| smtpHost | EASEY_CAMD_SERVICES_SMTP_HOST | smtp.epa.gov | Configurable |
+| smtpPort | EASEY_CAMD_SERVICES_SMTP_PORT | 25 | Configurable |
+| authApi.uri | EASEY_AUTH_API | https://api.epa.gov/easey/dev/auth-mgmt | Configurable |
+| secretToken | EASEY_CAMD_SERVICES_SECRET_TOKEN | N/A | Dynamically set by CI/CD workflow |
+| enableSecretToken | EASEY_CAMD_SERVICES_ENABLE_SECRET_TOKEN | false | Configurable |
+| enableDebug | EASEY_CAMD_SERVICES_ENABLE_DEBUG | false | Configurable |
+
+### CDX BYPASS VARIABLES
+| Typescript Var Name | Environment Var Name | Default Value | Comment |
+| :------------------ | :------------------- | :------------ | :------ |
+| bucket | EASEY_BULK_FILES_AWS_BUCKET | None | Configurable |
+| region | EASEY_BULK_FILES_AWS_REGION | us-gov-west-1 | Configurable |
+| accessKeyId | EASEY_BULK_FILES_AWS_ACCESS_KEY_ID | *** | Dynamically set by CI/CD workflow |
+| secretAccessKey | EASEY_BULK_FILES_AWS_SECRET_ACCESS_KEY | *** | Dynamically set by CI/CD workflow |
+
+## Environment Variables File
+Database credentials are injected into the cloud.gov environments as part of the CI/CD deployment process therefore they do not need to be configured. However, when running locally for local development the following environment variables are required to be configured using a local .env file in the root of the project. **PLEASE DO NOT commit the .env file to source control.**
+
+- EASEY_CAMD_SERVICES_ENABLE_DEBUG=true
+- EASEY_CAMD_SERVICES_ENABLE_API_KEY=false
+- EASEY_CAMD_SERVICES_ENABLE_SECRET_TOKEN=false
+
+**Please refer to our [Getting Started](https://github.com/US-EPA-CAMD/devops/blob/master/GETTING-STARTED.md) instructions on how to configure the following environment variables & connect to the database.**
+- EASEY_DB_HOST
+- EASEY_DB_PORT
+- EASEY_DB_NAME
+- EASEY_DB_USER
+- EASEY_DB_PWD
+
 ## Building, Testing, & Running the application
 From within the projects root directory run the following commands using the yarn command line interface
 

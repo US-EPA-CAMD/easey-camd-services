@@ -5,7 +5,7 @@ export class BulkFileMetadata extends BaseEntity {
   @PrimaryColumn({
     name: 'file_name',
   })
-  fileName: string;
+  filename: string;
 
   @Column({
     name: 's3_path',

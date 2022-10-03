@@ -8,7 +8,7 @@ import { BulkFileMetadata } from 'src/entities/bulk-file-metadata.entity';
 export class BulkFileMap extends BaseMap<BulkFileMetadata, BulkFileDTO> {
   public async one(entity: BulkFileMetadata): Promise<BulkFileDTO> {
     return {
-      filename: entity.fileName,
+      filename: entity.filename,
       s3Path: entity.s3Path,
       metadata: JSON.parse(entity.metadata),
       bytes: entity.fileSize,

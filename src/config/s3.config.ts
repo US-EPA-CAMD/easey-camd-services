@@ -1,8 +1,13 @@
 import { registerAs } from '@nestjs/config';
+import { getConfigValue } from '@us-epa-camd/easey-common/utilities';
+
+require('dotenv').config();
 
 export default registerAs('s3Config', () => ({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  region: process.env.EASEY_CAMD_SERVICES_S3_REGION,
-  bucket: process.env.EASEY_CAMD_SERVICES_S3_BUCKET,
+  bucket: getConfigValue('EASEY_BULK_FILES_AWS_BUCKET'),
+  region: getConfigValue('EASEY_BULK_FILES_AWS_REGION', 'us-gov-west-1'),
+  credentials: {
+    accessKeyId: getConfigValue('EASEY_BULK_FILES_AWS_ACCESS_KEY_ID'),
+    secretAccessKey: getConfigValue('EASEY_BULK_FILES_AWS_SECRET_ACCESS_KEY'),
+  }
 }));
