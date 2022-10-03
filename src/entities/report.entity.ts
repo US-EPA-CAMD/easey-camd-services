@@ -9,7 +9,7 @@ import {
 
 import { ReportDetail } from './report-detail.entity';
 
-@Entity({ name: 'camdecmpsaux.dataset' })
+@Entity({ name: 'camdaux.dataset' })
 export class Report extends BaseEntity {
   @PrimaryColumn({
     name: 'dataset_cd',
@@ -17,14 +17,14 @@ export class Report extends BaseEntity {
   code: string;
 
   @Column({
-    name: 'display_name',
-  })
-  title: string;
-
-  @Column({
     name: 'template_cd',
   })
   templateCode: string;
+
+  @Column({
+    name: 'display_name',
+  })
+  title: string;
 
   @Column({
     name: 'no_results_msg',

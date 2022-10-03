@@ -9,7 +9,7 @@ import {
 
 import { ReportDetail } from './report-detail.entity';
 
-@Entity({ name: 'camdecmpsaux.datacolumn' })
+@Entity({ name: 'camdaux.datacolumn' })
 export class ReportColumn extends BaseEntity {
   @PrimaryGeneratedColumn({
     name: 'datacolumn_id',

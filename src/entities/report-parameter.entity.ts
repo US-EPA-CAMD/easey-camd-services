@@ -9,7 +9,7 @@ import {
 
 import { ReportDetail } from './report-detail.entity';
 
-@Entity({ name: 'camdecmpsaux.datatable_parameter' })
+@Entity({ name: 'camdaux.dataparameter' })
 export class ReportParameter extends BaseEntity {
   @PrimaryGeneratedColumn({
     name: 'parameter_id',

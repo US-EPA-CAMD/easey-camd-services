@@ -1,5 +1,5 @@
 import { getManager } from 'typeorm';
-import { ConsoleLogger, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Logger } from '@us-epa-camd/easey-common/logger';
 
@@ -16,14 +16,10 @@ export class ReportService {
     private readonly repository: ReportRepository,
   ) {}
 
-  returnManager(): any {
-    return getManager();
-  }
-
   async getReport(params: ReportParamsDTO) {
     let plant = null;
     const promises = [];
-    const mgr = this.returnManager();
+    const mgr = getManager();
     const report = await this.map.one(
       await this.repository.getReport(params.reportCode),
     );
@@ -87,6 +83,7 @@ export class ReportService {
             schema,
           );
           const results = mgr.query(detail.sqlStatement, sqlParams);
+          delete detail.sqlStatement;
           resolve(results);
         }),
       );
