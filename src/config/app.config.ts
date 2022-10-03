@@ -23,6 +23,10 @@ export default registerAs('app', () => ({
   title: getConfigValue(
     'EASEY_CAMD_SERVICES_TITLE', 'CAMD Administrative & General Services',
   ),
+  description: getConfigValue(
+    'EASEY_CAMD_SERVICES_DESCRIPTION',
+    '',
+  ),
   apiHost: getConfigValue(
     'EASEY_API_GATEWAY_HOST', 'api.epa.gov/easey/dev',
   ),
@@ -42,8 +46,7 @@ export default registerAs('app', () => ({
     'EASEY_CAMD_SERVICES_ENABLE_CLIENT_TOKEN',
   ),
   enableGlobalValidationPipes: getConfigValueBoolean(
-    'EASEY_CAMD_SERVICES_ENABLE_GLOBAL_VALIDATION_PIPE',
-    true,
+    'EASEY_CAMD_SERVICES_ENABLE_GLOBAL_VALIDATION_PIPE', true,
   ),
   version: getConfigValue(
     'EASEY_CAMD_SERVICES_VERSION', 'v0.0.0',
@@ -62,6 +65,9 @@ export default registerAs('app', () => ({
       'EASEY_AUTH_API', 'https://api.epa.gov/easey/dev/auth-mgmt',
     ),
   },
+  secretToken: getConfigValue(
+    'EASEY_CAMD_SERVICES_SECRET_TOKEN',
+  ),
   enableSecretToken: getConfigValueBoolean(
     'EASEY_CAMD_SERVICES_ENABLE_SECRET_TOKEN',
   ),
