@@ -1,15 +1,15 @@
 #THIS FILE SHOULD CONTAIN DEV SETTINGS AND CI/CD WORKFLOW WILL CHANGE SETTINGS BASED ON ENV
-name: camd-services
-title: CAMD Administrative & General Services
-path: camd-services
-port: 8080
-memory: 1024
 disk: 1024
+memory: 1024
 instances: 1
-environment: development
+name: camd-services
 host: api-easey-dev.app.cloud.gov
-apiHost: api.epa.gov/easey/dev
-smtpPort: 25
+port: 8080
+path: camd-services
+title: CAMD Administrative & General Services
+description: 
+environment: development
 smtpHost: 'smtp.epa.gov'
-authApiPath: auth-mgmt
+smtpPort: 25
+apiHost: api.epa.gov/easey/dev
 campdDatasetsS3Bucket: cg-e7433599-fb63-4afa-9e14-652c10fa370a
