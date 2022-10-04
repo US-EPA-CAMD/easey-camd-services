@@ -7,22 +7,23 @@ applications:
       - nodejs_buildpack
     env:
       OPTIMIZE_MEMORY: true
-      EASEY_API_GATEWAY_HOST: ((apiHost))
-      EASEY_CAMD_SERVICES_TITLE: ((title))
       EASEY_CAMD_SERVICES_HOST: ((host))
       EASEY_CAMD_SERVICES_PORT: ((port))
       EASEY_CAMD_SERVICES_PATH: ((path))
+      EASEY_CAMD_SERVICES_TITLE: ((title))
+      EASEY_CAMD_SERVICES_DESCRIPTION: ((description))
       EASEY_CAMD_SERVICES_ENV: ((environment))
-      EASEY_CAMD_SERVICES_SMTP_PORT: ((smtpPort))
-      EASEY_CAMD_SERVICES_SMTP_HOST: ((smtpHost))
-      EASEY_AUTH_API: https://((apiHost))/((authApiPath))
-      EASEY_CAMD_SERVICES_ENABLE_CORS: true
       EASEY_CAMD_SERVICES_ENABLE_API_KEY: true
       EASEY_CAMD_SERVICES_ENABLE_CLIENT_TOKEN: true
       EASEY_CAMD_SERVICES_ENABLE_SECRET_TOKEN: true
+      EASEY_CAMD_SERVICES_ENABLE_CORS: true
       EASEY_CAMD_SERVICES_ENABLE_GLOBAL_VALIDATION_PIPE: true
+      EASEY_CAMD_SERVICES_SMTP_HOST: ((smtpHost))
+      EASEY_CAMD_SERVICES_SMTP_PORT: ((smtpPort))
       EASEY_BULK_FILES_AWS_REGION: us-gov-west-1
       EASEY_BULK_FILES_AWS_BUCKET: ((campdDatasetsS3Bucket))
+      EASEY_API_GATEWAY_HOST: ((apiHost))
+      EASEY_AUTH_API: https://((apiHost))/auth-mgmt
     routes:
       - route: ((host))/((path))
     services:
