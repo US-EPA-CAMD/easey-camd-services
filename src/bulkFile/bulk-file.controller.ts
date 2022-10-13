@@ -47,8 +47,8 @@ export class BulkFileController {
     curDate.setDate(curDate.getDate() + 1);
     curDate.setHours(8, 0, 0, 0);
     req.res.removeHeader('Pragma');
-    req.res.setHeader('Cache-Control', 'Public');    
-    req.res.setHeader('Expires', curDate.toUTCString());
+    req.res.setHeader('Cache-Control', 'Public');
+    req.res.setHeader('Expires', new Date(curDate).toUTCString());
     return this.service.getBulkDataFiles();
   }
 
