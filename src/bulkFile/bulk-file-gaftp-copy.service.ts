@@ -247,28 +247,25 @@ export class BulkFileGAFTPCopyService {
                 orisCode: orisCode,
               });
 
+              row.facilityId = orisCode;
+
+              row.download = lookupData.url + name;
+              row.quarter = lookupData.quarter;
+              row.name = lookupData.fileNamePrefix + name;
+              row.year = lookupData.year;
+
               if (!result) {
                 await this.logMissingOris(orisCode);
                 await this.logError(
                   `Missing Oris Code: ${orisCode} ${lookupData.year} ${lookupData.quarter}`,
                   id,
                 );
-
-                this.logger.info(
-                  `Missing Oris Code: ${orisCode} ${lookupData.year} ${lookupData.quarter}`,
-                );
+                row.stateCode = 'Missing';
               } else {
-                row.facilityId = orisCode;
-
-                row.download = lookupData.url + name;
-                row.quarter = lookupData.quarter;
-                row.name = lookupData.fileNamePrefix + name;
-                row.year = lookupData.year;
-
                 row.stateCode = result.stateCode;
-
-                zipFiles.push(row);
               }
+
+              zipFiles.push(row);
             }
 
             resolve(true);
