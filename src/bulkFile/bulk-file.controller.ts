@@ -30,19 +30,16 @@ import { BulkFileCopyParamsDTO } from '../dto/bulk-file-copy.params.dto';
 @ApiSecurity('APIKey')
 @ApiTags('Bulk Files')
 export class BulkFileController {
-  constructor(
-    private service: BulkFileService,
-  ) {}
+  constructor(private service: BulkFileService) {}
 
   @Get()
   @ApiOkResponse({
     isArray: true,
     type: BulkFileDTO,
-    description: 'Retrieves a list of bulk data files and their metadata from S3',
+    description:
+      'Retrieves a list of bulk data files and their metadata from S3',
   })
-  async getBulkFiles(
-    @Req() req: Request,
-  ): Promise<BulkFileDTO[]> {
+  async getBulkFiles(@Req() req: Request): Promise<BulkFileDTO[]> {
     const curDate = new Date();
     curDate.setDate(curDate.getDate() + 1);
     curDate.setHours(8, 0, 0, 0);
@@ -75,7 +72,7 @@ export class BulkFileController {
   @ApiBearerAuth('ClientToken')
   @UseGuards(ClientTokenGuard)
   async addBulkFile(
-    @Body() bulkDataFile: BulkFileInputDTO
+    @Body() bulkDataFile: BulkFileInputDTO,
   ): Promise<BulkFileDTO> {
     return this.service.addBulkDataFile(bulkDataFile);
   }
