@@ -255,12 +255,32 @@ export class BulkFileGAFTPCopyService {
               row.year = lookupData.year;
 
               if (!result) {
-                await this.logMissingOris(orisCode);
-                await this.logError(
-                  `Missing Oris Code: ${orisCode} ${lookupData.year} ${lookupData.quarter}`,
-                  id,
+                const orisCodeLookup = await this.entityManager.findOne(
+                  MissingOris,
+                  {
+                    orisCode: orisCode,
+                  },
                 );
-                row.stateCode = 'Missing';
+
+                if (orisCodeLookup) {
+                  if (
+                    orisCodeLookup.stateCd !== null &&
+                    orisCodeLookup.stateCd !== undefined &&
+                    orisCodeLookup.stateCd != ''
+                  ) {
+                    console.log(
+                      'Found Match In Database Using State Code: ',
+                      orisCodeLookup.stateCd,
+                    );
+                    row.stateCode = orisCodeLookup.stateCd;
+                  }
+                } else {
+                  await this.logMissingOris(orisCode);
+                  await this.logError(
+                    `Missing Oris Code: ${orisCode} ${lookupData.year} ${lookupData.quarter}`,
+                    id,
+                  );
+                }
               } else {
                 row.stateCode = result.stateCode;
               }
