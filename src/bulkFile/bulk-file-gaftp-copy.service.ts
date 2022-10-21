@@ -210,6 +210,82 @@ export class BulkFileGAFTPCopyService {
     }
   }
 
+  private compareCount(params, webSet, webUrl, s3Set = new Set()) {
+    this.s3Client
+      .listObjectsV2(params)
+      .then((data) => {
+        for (const content of data.Contents) {
+          const splits = content.Key.split('/');
+          s3Set.add(splits[splits.length - 1]);
+        }
+
+        if (data.IsTruncated) {
+          params.ContinuationToken = data.NextContinuationToken;
+          this.compareCount(params, webSet, webUrl, s3Set);
+        } else {
+          if (webSet.size != s3Set.size) {
+            console.log(`${webUrl} ====> ${webSet.size} : ${s3Set.size}`);
+            for (let key of webSet) {
+              if (!s3Set.has(key)) {
+                console.log('S3 Missing: ' + key);
+              }
+            }
+
+            for (let key of s3Set) {
+              if (!webSet.has(key)) {
+                console.log('SFTP Missing: ' + key);
+              }
+            }
+            console.log('====================');
+          }
+        }
+      })
+      .catch((e) => {
+        console.log(e);
+      });
+  }
+
+  public async compareObjects(lookupData, id) {
+    try {
+      // Get initial Edr landing page and parse out all years
+
+      await this.sftpRepository.update(
+        { id: id },
+        {
+          details: `Comparing File Data ${lookupData.year} ${lookupData.quarter} ${lookupData.fileNamePrefix}`,
+        },
+      );
+
+      const { data } = await axios.get(lookupData.url, {
+        httpsAgent: new Agent({
+          rejectUnauthorized: false,
+        }),
+      });
+
+      const $ = load(data);
+      const listItems = $('tbody tr td a').filter(function (i, el) {
+        return $(el).text().includes('.zip');
+      });
+
+      const webSet = new Set();
+      for (const item of listItems) {
+        webSet.add($(item).text());
+      }
+
+      this.compareCount(
+        {
+          Bucket: this.configService.get('s3Config').bucket,
+          Prefix: lookupData.fileNamePrefix,
+        },
+        webSet,
+        lookupData.url,
+      );
+    } catch (err) {
+      this.logError(err.message, id);
+      this.logger.info(err.message);
+    }
+  }
+
   public async generateFileData(lookupData, id) {
     const entityManager = getManager();
 
@@ -255,12 +331,32 @@ export class BulkFileGAFTPCopyService {
               row.year = lookupData.year;
 
               if (!result) {
-                await this.logMissingOris(orisCode);
-                await this.logError(
-                  `Missing Oris Code: ${orisCode} ${lookupData.year} ${lookupData.quarter}`,
-                  id,
+                const orisCodeLookup = await this.entityManager.findOne(
+                  MissingOris,
+                  {
+                    orisCode: orisCode,
+                  },
                 );
-                row.stateCode = 'Missing';
+
+                if (orisCodeLookup) {
+                  if (
+                    orisCodeLookup.stateCd !== null &&
+                    orisCodeLookup.stateCd !== undefined &&
+                    orisCodeLookup.stateCd != ''
+                  ) {
+                    console.log(
+                      'Found Match In Database Using State Code: ',
+                      orisCodeLookup.stateCd,
+                    );
+                    row.stateCode = orisCodeLookup.stateCd;
+                  }
+                } else {
+                  await this.logMissingOris(orisCode);
+                  await this.logError(
+                    `Missing Oris Code: ${orisCode} ${lookupData.year} ${lookupData.quarter}`,
+                    id,
+                  );
+                }
               } else {
                 row.stateCode = result.stateCode;
               }

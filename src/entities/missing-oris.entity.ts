@@ -13,4 +13,9 @@ export class MissingOris extends BaseEntity {
     transformer: new NumericColumnTransformer(),
   })
   orisCode: number;
+
+  @Column({
+    name: 'state_cd',
+  })
+  stateCd: string;
 }
