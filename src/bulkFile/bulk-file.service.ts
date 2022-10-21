@@ -58,6 +58,50 @@ export class BulkFileService {
     return this.map.many(await this.repository.find());
   }
 
+  async verifyBulkFiles(params: BulkFileCopyParamsDTO, id) {
+    this.logger.info(`Verifying ${params.type} data`);
+
+    const logRecord = new SftpLog();
+    logRecord.id = id;
+    logRecord.startDate = new Date();
+
+    await this.sftpRepository.insert(logRecord);
+
+    let directoryInfo;
+    const directory = directoryInformation[params.type];
+
+    if (params.type !== 'MP') {
+      directoryInfo = await this.bulkFileGaftpCopyService.generateSubUrls(
+        params,
+        directory.url,
+        directory.prefix,
+        id,
+      );
+    } else {
+      directoryInfo = [
+        {
+          url: 'https://gaftp.epa.gov/dmdnload/xml/mp/',
+          fileNamePrefix: 'xml/mp/',
+          quarter: null,
+          year: null,
+        },
+      ];
+    }
+
+    for (const row of directoryInfo) {
+      await this.bulkFileGaftpCopyService.compareObjects(row, id);
+    }
+
+    await this.sftpRepository.update(
+      { id: id },
+      { endDate: new Date(), statusCd: 'COMPLETE' },
+    );
+
+    this.logger.info(`Succesfully verified ${params.type} data to S3`);
+
+    return true;
+  }
+
   async copyBulkFiles(params: BulkFileCopyParamsDTO, id) {
     this.logger.info(`Copying ${params.type} data to S3`);
 

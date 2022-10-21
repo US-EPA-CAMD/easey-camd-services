@@ -63,6 +63,17 @@ export class BulkFileController {
     return job_id;
   }
 
+  @Post('gaftp-verify')
+  @ApiOkResponse({
+    description: 'Verifies all files from GAFTP have been moved to S3',
+  })
+  async verifyBulkFiles(@Query() params: BulkFileCopyParamsDTO) {
+    const job_id = v4();
+
+    this.service.verifyBulkFiles(params, job_id);
+    return job_id;
+  }
+
   @Post('metadata')
   @ApiOkResponse({
     type: BulkFileDTO,
