@@ -1,8 +1,8 @@
 import { Test } from '@nestjs/testing';
 import { LoggerModule } from '@us-epa-camd/easey-common/logger';
 
-import { ReportService } from './Report.service';
-import { ReportRepository } from './Report.repository';
+import { ReportService } from './report.service';
+import { ReportRepository } from './report.repository';
 import { ReportMap } from '../maps/report.map';
 import { ReportDetailMap } from '../maps/report-detail.map';
 import { ReportColumnMap } from '../maps/report-column.map';
