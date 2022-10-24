@@ -9,6 +9,8 @@ import { ReportColumnMap } from '../maps/report-column.map';
 import { ReportParameterMap } from '../maps/report-parameter.map';
 import { ReportParamsDTO } from '../dto/report-params.dto';
 import { ReportDTO } from '../dto/report.dto';
+import { createMock } from '@golevelup/ts-jest';
+import { EntityManager } from 'typeorm';
 
 const mockRepository = () => ({
   getReport: jest.fn(),
@@ -56,7 +58,7 @@ describe('-- Report Service --', () => {
       params.monitorPlanId = 'id';
       params.facilityId = null;
 
-      const mockedManager = {
+      const mockedManager = createMock<EntityManager>({
         query: jest.fn().mockResolvedValue([
           {
             orisCode: 1,
@@ -67,7 +69,7 @@ describe('-- Report Service --', () => {
             unitStack: 'unitStack',
           },
         ]),
-      };
+      });
 
       jest.spyOn(service, 'returnManager').mockImplementation(() => {
         return mockedManager;
@@ -81,7 +83,7 @@ describe('-- Report Service --', () => {
       params.monitorPlanId = null;
       params.facilityId = 1;
 
-      const mockedManager = {
+      const mockedManager = createMock<EntityManager>({
         query: jest.fn().mockResolvedValue({
           orisCode: 1,
           stateCode: '',
@@ -90,7 +92,7 @@ describe('-- Report Service --', () => {
           facilityName: '',
           unitStack: 'unitStack',
         }),
-      };
+      });
 
       jest.spyOn(service, 'returnManager').mockImplementation(() => {
         return mockedManager;

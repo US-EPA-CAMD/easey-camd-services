@@ -27,6 +27,7 @@ const mockGaftpService = () => ({
   generateSubUrls: jest.fn().mockResolvedValue([]),
   generateFileData: jest.fn(),
   uploadFilesToS3: jest.fn(),
+  compareObjects: jest.fn(),
 });
 
 const dto = new BulkFileDTO();
@@ -67,6 +68,20 @@ describe('-- Bulk File Controller --', () => {
   describe('getBulkDataFiles', () => {
     it('should return the proper data from map', async () => {
       expect(await bulkFileService.getBulkDataFiles()).toEqual('');
+    });
+  });
+
+  describe('verifyBulkFiles', () => {
+    it('should return true given MP param code', async () => {
+      const params = new BulkFileCopyParamsDTO();
+      params.type = 'MP';
+      expect(await bulkFileService.verifyBulkFiles(params, 0)).toBe(true);
+    });
+
+    it('should return true given non MP param code', async () => {
+      const params = new BulkFileCopyParamsDTO();
+      params.type = 'EDR';
+      expect(await bulkFileService.verifyBulkFiles(params, 0)).toBe(true);
     });
   });
 
