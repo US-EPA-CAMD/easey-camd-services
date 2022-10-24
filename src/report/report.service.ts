@@ -16,17 +16,22 @@ export class ReportService {
     private readonly repository: ReportRepository,
   ) {}
 
+  returnManager() {
+    return getManager();
+  }
+
   async getReport(params: ReportParamsDTO) {
     let plant = null;
     const promises = [];
-    const mgr = getManager();
+    const mgr = this.returnManager();
     const report = await this.map.one(
       await this.repository.getReport(params.reportCode),
     );
     const schema = params.workspace ? 'camdecmpswks' : 'camdecmps';
 
     if (params.monitorPlanId) {
-      const locations = await mgr.query(`
+      const locations = await mgr.query(
+        `
         SELECT
           p.fac_id AS "facilityId",
           p.oris_code AS "orisCode",
@@ -52,7 +57,8 @@ export class ReportService {
       plant = locations[0];
       report.unitStackInfo = locations.map((i) => i.unitStack).join(', ');
     } else if (params.facilityId) {
-      plant = await mgr.query(`
+      plant = await mgr.query(
+        `
         SELECT
           p.fac_id AS "facilityId",
           p.oris_code AS "orisCode",
