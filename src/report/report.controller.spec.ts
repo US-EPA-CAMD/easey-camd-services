@@ -8,7 +8,7 @@ import { ReportMap } from '../maps/report.map';
 import { ReportDetailMap } from '../maps/report-detail.map';
 import { ReportColumnMap } from '../maps/report-column.map';
 import { ReportParameterMap } from '../maps/report-parameter.map';
-import { ReportDTO } from '../dto/Report.dto';
+import { ReportDTO } from '../dto/report.dto';
 import { ReportParamsDTO } from '../dto/report-params.dto';
 
 describe('-- Report Controller --', () => {
