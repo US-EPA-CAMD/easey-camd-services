@@ -2,6 +2,7 @@ import { v4 } from 'uuid';
 import { Request } from 'express';
 
 import {
+  ApiExcludeEndpoint,
   ApiBearerAuth,
   ApiOkResponse,
   ApiSecurity,
@@ -53,6 +54,7 @@ export class BulkFileController {
   @ApiOkResponse({
     description: 'Copies files from GAFTP to S3',
   })
+  @ApiExcludeEndpoint()
   @ApiSecurity('ClientId')
   @ApiBearerAuth('ClientToken')
   @UseGuards(ClientTokenGuard)
@@ -67,6 +69,7 @@ export class BulkFileController {
   @ApiOkResponse({
     description: 'Verifies all files from GAFTP have been moved to S3',
   })
+  @ApiExcludeEndpoint()
   async verifyBulkFiles(@Query() params: BulkFileCopyParamsDTO) {
     const job_id = v4();
 
@@ -79,6 +82,7 @@ export class BulkFileController {
     type: BulkFileDTO,
     description: 'Creates metadata for bulk files store in S3',
   })
+  @ApiExcludeEndpoint()
   @ApiSecurity('ClientId')
   @ApiBearerAuth('ClientToken')
   @UseGuards(ClientTokenGuard)
@@ -93,6 +97,7 @@ export class BulkFileController {
     type: BulkFileDTO,
     description: 'Updates metadata for bulk files store in S3',
   })
+  @ApiExcludeEndpoint()
   @ApiSecurity('ClientId')
   @ApiBearerAuth('ClientToken')
   @UseGuards(ClientTokenGuard)
