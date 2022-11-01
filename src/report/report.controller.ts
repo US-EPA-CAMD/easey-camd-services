@@ -2,6 +2,7 @@ import {
   ApiTags,
   ApiSecurity,
   ApiOkResponse,
+  ApiExcludeController,
 } from '@nestjs/swagger';
 
 import {
@@ -16,6 +17,7 @@ import { ReportParamsDTO } from './../dto/report-params.dto';
 @Controller()
 @ApiTags('Reports')
 @ApiSecurity('APIKey')
+@ApiExcludeController()
 export class ReportController {
   
   constructor(
