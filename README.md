@@ -119,7 +119,7 @@ $ yarn start
 
 ## API Endpoints
 Please refer to the EASEY CAMD Services Swagger Documentation for descriptions of the endpoints.<br>
-[Dev Environment](https://api.epa.gov/easey/dev/camd-services/swagger/) | [Test Environment](https://api.epa.gov/easey/test/camd-services/swagger/) | [Beta Environment](https://api.epa.gov/easey/beta/camd-services/swagger/) | [Staging Environment](https://api.epa.gov/easey/staging/camd-services/swagger/)
+[Dev Environment](https://api.epa.gov/easey/dev/camd-services/swagger/) | [Test Environment](https://api.epa.gov/easey/test/camd-services/swagger/) | [Performance Environment](https://api.epa.gov/easey/perf/camd-services/swagger/) | [Beta Environment](https://api.epa.gov/easey/beta/camd-services/swagger/) | [Staging Environment](https://api.epa.gov/easey/staging/camd-services/swagger/)
 
 ## License & Contributing
 This project is licensed under the MIT License. We encourage you to read this project’s [License](LICENSE), [Contributing Guidelines](CONTRIBUTING.md), and [Code of Conduct](CODE-OF-CONDUCT.md).

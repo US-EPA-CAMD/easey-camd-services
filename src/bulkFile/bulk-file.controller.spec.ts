@@ -5,6 +5,8 @@ import { ConfigService } from '@nestjs/config';
 import { HttpModule } from '@nestjs/axios';
 import { BulkFileCopyParamsDTO } from '../dto/bulk-file-copy.params.dto';
 import { BulkFileInputDTO } from '../dto/bulk_file_input.dto';
+import { createMock } from '@golevelup/ts-jest';
+import { Request } from 'express';
 
 jest.mock('./bulk-file.service');
 
@@ -27,7 +29,11 @@ describe('-- Bulk File Controller --', () => {
 
   it('getBulkFiles', async () => {
     expect(async () => {
-      await bulkFileController.getBulkFiles();
+      await bulkFileController.getBulkFiles(
+        createMock<Request>({
+          res: { removeHeader: jest.fn(), setHeader: jest.fn() },
+        }),
+      );
     }).not.toThrowError();
   });
 

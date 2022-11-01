@@ -15,6 +15,7 @@ import { TypeOrmConfigService } from './config/typeorm.config';
 import { BulkFileModule } from './bulkFile/bulk-file.module';
 import { BookmarkModule } from './bookmark/bookmark.module';
 import { LoggingModule } from './logging/logging.module';
+import { ReportModule } from './report/report.module';
 import { MailModule } from './mail/mail.module';
 
 @Module({
@@ -22,11 +23,7 @@ import { MailModule } from './mail/mail.module';
     RouterModule.forRoutes(routes),
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [
-        s3Config,
-        dbConfig,
-        appConfig,
-      ],
+      load: [s3Config, dbConfig, appConfig],
     }),
     TypeOrmModule.forRootAsync({
       useClass: TypeOrmConfigService,
@@ -36,6 +33,7 @@ import { MailModule } from './mail/mail.module';
     BulkFileModule,
     BookmarkModule,
     LoggingModule,
+    ReportModule,
     MailModule,
   ],
 })
