@@ -4,6 +4,7 @@ import {
   ApiSecurity,
   ApiInternalServerErrorResponse,
   ApiBearerAuth,
+  ApiExcludeController,
 } from '@nestjs/swagger';
 import { Controller, Post, Body, Req, UseGuards } from '@nestjs/common';
 import { LoggingService } from './logging.service';
@@ -13,6 +14,7 @@ import { ServerErrorDto } from '../dto/server-error.dto';
 @Controller()
 @ApiTags('Logging')
 @ApiSecurity('APIKey')
+@ApiExcludeController()
 @ApiSecurity('ClientId')
 @ApiBearerAuth('ClientToken')
 @UseGuards(ClientTokenGuard)

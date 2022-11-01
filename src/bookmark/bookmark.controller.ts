@@ -3,6 +3,7 @@ import {
   ApiOkResponse,
   ApiSecurity,
   ApiBearerAuth,
+  ApiExcludeController,
 } from '@nestjs/swagger';
 
 import {
@@ -24,6 +25,7 @@ import { BookmarkDTO } from '../dto/bookmark.dto';
 @Controller()
 @ApiSecurity('APIKey')
 @ApiTags('Bookmarks')
+@ApiExcludeController()
 export class BookmarkController {
   constructor(private service: BookmarkService) {}
 

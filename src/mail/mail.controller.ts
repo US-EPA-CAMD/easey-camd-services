@@ -4,6 +4,7 @@ import {
   ApiSecurity,
   ApiInternalServerErrorResponse,
   ApiBearerAuth,
+  ApiExcludeController,
 } from '@nestjs/swagger';
 import { Controller, Post, Body, UseGuards } from '@nestjs/common';
 import { ClientTokenGuard } from '@us-epa-camd/easey-common/guards';
@@ -15,6 +16,7 @@ import { ClientId } from '../decorators/client-id.decorator';
 @Controller()
 @ApiTags('Support')
 @ApiSecurity('APIKey')
+@ApiExcludeController()
 @ApiSecurity('ClientId')
 @ApiBearerAuth('ClientToken')
 @UseGuards(ClientTokenGuard)
