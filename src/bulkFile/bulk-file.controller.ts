@@ -19,6 +19,7 @@ import {
   Param,
   Query,
   UseGuards,
+  Delete,
 } from '@nestjs/common';
 import { ClientTokenGuard } from '@us-epa-camd/easey-common/guards';
 
@@ -92,7 +93,7 @@ export class BulkFileController {
     return this.service.addBulkDataFile(bulkDataFile);
   }
 
-  @Put('metadata/:filePath')
+  @Put('metadata/:path')
   @ApiOkResponse({
     type: BulkFileDTO,
     description: 'Updates metadata for bulk files store in S3',
@@ -102,9 +103,23 @@ export class BulkFileController {
   @ApiBearerAuth('ClientToken')
   @UseGuards(ClientTokenGuard)
   async updateBulkFile(
-    @Param('s3Path') s3Path: string,
+    @Param('path') s3Path: string,
     @Body() bulkDataFile: BulkFileInputDTO,
   ): Promise<BulkFileDTO> {
     return this.service.updateBulkDataFile(s3Path, bulkDataFile);
+  }
+
+  @Delete('metadata/:path')
+  @ApiOkResponse({
+    description: 'Deletes metadata for bulk files store in S3',
+  })
+  @ApiExcludeEndpoint()
+  @ApiSecurity('ClientId')
+  @ApiBearerAuth('ClientToken')
+  @UseGuards(ClientTokenGuard)
+  async deleteBulkFile(
+    @Param('path') s3Path: string,
+  ): Promise<void> {
+    return this.service.deleteBulkDataFile(s3Path);
   }
 }

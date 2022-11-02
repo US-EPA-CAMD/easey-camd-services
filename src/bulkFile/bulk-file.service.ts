@@ -158,39 +158,50 @@ export class BulkFileService {
   }
 
   async addBulkDataFile(bulkFileDTO: BulkFileInputDTO): Promise<BulkFileDTO> {
-    const find = await this.repository.findOne({ s3Path: bulkFileDTO.s3Path });
-    if (find) {
-      return this.updateBulkDataFile(find.s3Path, bulkFileDTO);
-    } else {
-      const today = new Date();
-      const databaseInput = new BulkFileMetadata();
+    let record = await this.repository.findOne({ s3Path: bulkFileDTO.s3Path });
 
-      databaseInput.filename = bulkFileDTO.filename;
-      databaseInput.s3Path = bulkFileDTO.s3Path;
-      databaseInput.metadata = JSON.stringify(bulkFileDTO.metadata);
-      databaseInput.fileSize = bulkFileDTO.bytes;
-      databaseInput.addDate = today;
-      databaseInput.lastUpdateDate = today;
-
-      await this.repository.insert(databaseInput);
-      return this.map.one(
-        await this.repository.findOne({ s3Path: bulkFileDTO.s3Path }),
-      );
+    if (record) {
+      return this.updateBulkDataFile(record.s3Path, bulkFileDTO);
     }
+    
+    const today = new Date();
+    record = new BulkFileMetadata();
+
+    record.filename = bulkFileDTO.filename;
+    record.s3Path = bulkFileDTO.s3Path;
+    record.metadata = JSON.stringify(bulkFileDTO.metadata);
+    record.fileSize = bulkFileDTO.bytes;
+    record.addDate = today;
+    record.lastUpdateDate = today;
+
+    await this.repository.insert(record);
+    return this.map.one(record);
   }
 
   async updateBulkDataFile(
     s3Path: string,
     bulkFileDTO: BulkFileInputDTO,
   ): Promise<BulkFileDTO> {
-    const databaseinput = await this.repository.findOne(s3Path);
-    databaseinput.filename = bulkFileDTO.filename;
-    databaseinput.s3Path = bulkFileDTO.s3Path;
-    databaseinput.metadata = JSON.stringify(bulkFileDTO.metadata);
-    databaseinput.fileSize = bulkFileDTO.bytes;
-    databaseinput.lastUpdateDate = new Date();
-    await this.repository.update(databaseinput.filename, databaseinput);
+    const record = await this.repository.findOne({ s3Path });
 
-    return this.map.one(databaseinput);
+    if (record) {
+      record.filename = bulkFileDTO.filename;
+      record.s3Path = bulkFileDTO.s3Path;
+      record.metadata = JSON.stringify(bulkFileDTO.metadata);
+      record.fileSize = bulkFileDTO.bytes;
+      record.lastUpdateDate = new Date();
+      await this.repository.update(record.filename, record);
+      return this.map.one(record);
+    }
+
+    return this.addBulkDataFile(bulkFileDTO);
+  }
+
+  async deleteBulkDataFile(s3Path: string): Promise<void> {
+    const record = await this.repository.findOne({ s3Path });
+
+    if (record && record.s3Path === s3Path) {
+      await this.repository.delete(record);
+    }
   }
 }
