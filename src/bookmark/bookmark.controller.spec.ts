@@ -8,6 +8,9 @@ import { BookmarkCreatedDTO } from '../dto/bookmark-created.dto';
 import { BoomarkPayloadDTO } from '../dto/bookmark-payload.dto';
 import { BookmarkMap } from '../maps/bookmark.map';
 import { BookmarkDTO } from '../dto/bookmark.dto';
+import { ConfigService } from '@nestjs/config';
+
+jest.mock('@us-epa-camd/easey-common/guards');
 
 describe('-- Bookmark Controller --', () => {
   let controller: BookmarkController;
