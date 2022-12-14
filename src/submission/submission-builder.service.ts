@@ -6,6 +6,9 @@ import { CheckSession } from '../entities/check-session.entity';
 import { Submission } from '../entities/submission.entity';
 import { TestSummary } from '../entities/test-summary.entity';
 import { QaSuppData } from '../entities/qa-supp.entity';
+import { QaCertEvent } from '../entities/qa-cert-event.entity';
+import { QaTEE } from '../entities/qa-tee.entity';
+import { EmissionEvaluation } from '../entities/emission-evaluation.entity';
 
 @Injectable()
 export class SubmissionBuilder {
@@ -39,9 +42,10 @@ export class SubmissionBuilder {
         await this.returnManager().save(record);
       }
 
-      //CHECK FOR RPT_ID AND SET IT IF POSSIBLE
-
       const submission = new Submission();
+
+      // Check for sent in from period_abbreviation of front_end
+
       submission.addDate = new Date();
       submission.updateDate = new Date();
       submission.facId = facId;
@@ -95,20 +99,68 @@ export class SubmissionBuilder {
     facId: number,
     item: SubmissionItem,
   ) {
+    const toGenerate = [
+      {
+        values: item.testSumIds,
+        classRef: TestSummary,
+        submissionItemName: 'testSumId',
+      },
+      {
+        values: item.qceIds,
+        classRef: QaCertEvent,
+        submissionItemName: 'qaCertEventId',
+      },
+      {
+        values: item.teeIds,
+        classRef: QaTEE,
+        submissionItemName: 'testExtensionExemptionId',
+      },
+    ];
+
     const promises = [];
 
-    for (const testSummaryId of item.testSumIds) {
+    for (const set of toGenerate) {
+      const { values, classRef, submissionItemName } = set;
+
+      for (const dataId of values) {
+        promises.push(
+          this.createDynamicSubmissionRecord(
+            classRef,
+            { where: { id: dataId } },
+            setId,
+            userId,
+            facId,
+            item,
+            'QA',
+            dataId,
+            submissionItemName,
+          ),
+        );
+      }
+    }
+
+    return promises;
+  }
+
+  handleEmSubmission(
+    setId: number,
+    userId: string,
+    facId: number,
+    item: SubmissionItem,
+  ) {
+    const promises = [];
+
+    if (item.submitEmissions) {
+      const rptPeriodId = 115;
       promises.push(
         this.createDynamicSubmissionRecord(
-          TestSummary,
-          { where: { id: testSummaryId } },
+          EmissionEvaluation,
+          { where: { monPlanId: item.monPlanId, rptPeriodId: rptPeriodId } },
           setId,
           userId,
           facId,
           item,
-          'QA',
-          testSummaryId,
-          'testSumId',
+          'EM',
         ),
       );
     }
