@@ -14,7 +14,7 @@ import { CurrentUser } from '@us-epa-camd/easey-common/interfaces/current-user.i
 
 @Injectable()
 export class SubmissionBuilder {
-  returnManager() {
+  returnManager(): any {
     return getManager();
   }
 

@@ -16,7 +16,7 @@ export class SubmissionService {
     private readonly submissionBuilder: SubmissionBuilder,
   ) {}
 
-  returnManager() {
+  returnManager(): any {
     return getManager();
   }
 
