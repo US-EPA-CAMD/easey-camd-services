@@ -1,12 +1,15 @@
+export class IdQuarterPair {
+  id: string;
+  quarter: string;
+}
+
 export class SubmissionItem {
   monPlanId: string;
-  orisCode: number;
   submitMonPlan: boolean;
-  submitEmissions: boolean;
-  emissionsReportingPeriod: string;
-  testSumIds: string[];
-  qceIds: string[];
-  teeIds: string[];
+  testSumIds: IdQuarterPair[];
+  qceIds: IdQuarterPair[];
+  teeIds: IdQuarterPair[];
+  emissionsReportingPeriods: string[];
 }
 
 export class SubmissionsDTO {

@@ -10,4 +10,7 @@ export class MonitorPlan extends BaseEntity {
 
   @Column({ name: 'submission_availability_cd' })
   submissionAvailabilityCode: string;
+
+  @Column({ name: 'fac_id' })
+  facId: number;
 }
