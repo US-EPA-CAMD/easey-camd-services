@@ -17,6 +17,7 @@ import { BookmarkModule } from './bookmark/bookmark.module';
 import { LoggingModule } from './logging/logging.module';
 import { ReportModule } from './report/report.module';
 import { MailModule } from './mail/mail.module';
+import { SubmissionModule } from './submission/submission.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { MailModule } from './mail/mail.module';
     LoggingModule,
     ReportModule,
     MailModule,
+    SubmissionModule,
   ],
 })
 export class AppModule {}
