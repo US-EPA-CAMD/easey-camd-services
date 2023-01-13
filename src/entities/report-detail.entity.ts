@@ -9,6 +9,7 @@ import {
 } from 'typeorm';
 
 import { Report } from './report.entity';
+import { Template } from './template.entity';
 import { ReportColumn } from './report-column.entity';
 import { ReportParameter } from './report-parameter.entity';
 
@@ -25,6 +26,11 @@ export class ReportDetail extends BaseEntity {
   reportCode: string;
 
   @Column({
+    name: 'template_cd',
+  })
+  templateCode: string;
+
+  @Column({
     name: 'table_order',
   })
   detailOrder: number;
@@ -32,7 +38,7 @@ export class ReportDetail extends BaseEntity {
   @Column({
     name: 'display_name',
   })
-  title: string;
+  displayName: string;
 
   @Column({
     name: 'sql_statement',
@@ -50,6 +56,13 @@ export class ReportDetail extends BaseEntity {
   )
   @JoinColumn({ name: 'dataset_cd' })
   report: Report;
+
+  @ManyToOne(
+    () => Template,
+    o => o.details,
+  )
+  @JoinColumn({ name: 'template_cd' })
+  template: Template;
 
   @OneToMany(
     () => ReportColumn,

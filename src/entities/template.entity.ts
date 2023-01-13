@@ -9,10 +9,10 @@ import {
 
 import { ReportDetail } from './report-detail.entity';
 
-@Entity({ name: 'camdaux.dataset' })
-export class Report extends BaseEntity {
+@Entity({ name: 'camdaux.template_code' })
+export class Template extends BaseEntity {
   @PrimaryColumn({
-    name: 'dataset_cd',
+    name: 'template_cd',
   })
   code: string;
 
@@ -22,19 +22,19 @@ export class Report extends BaseEntity {
   groupCode: string;
 
   @Column({
+    name: 'template_type',
+  })
+  type: string;
+
+  @Column({
     name: 'display_name',
   })
   displayName: string;
 
-  @Column({
-    name: 'no_results_msg',
-  })
-  noResultsMessage: string;
-
   @OneToMany(
     () => ReportDetail,
-    o => o.report,
+    o => o.template,
   )
-  @JoinColumn({ name: 'dataset_cd' })
+  @JoinColumn({ name: 'template_cd' })
   details: ReportDetail[];
 }

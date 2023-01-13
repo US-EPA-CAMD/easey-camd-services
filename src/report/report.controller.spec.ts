@@ -4,10 +4,6 @@ import { LoggerModule } from '@us-epa-camd/easey-common/logger';
 import { ReportRepository } from './report.repository';
 import { ReportController } from './report.controller';
 import { ReportService } from './report.service';
-import { ReportMap } from '../maps/report.map';
-import { ReportDetailMap } from '../maps/report-detail.map';
-import { ReportColumnMap } from '../maps/report-column.map';
-import { ReportParameterMap } from '../maps/report-parameter.map';
 import { ReportDTO } from '../dto/report.dto';
 import { ReportParamsDTO } from '../dto/report-params.dto';
 
@@ -20,10 +16,6 @@ describe('-- Report Controller --', () => {
       imports: [LoggerModule],
       controllers: [ReportController],
       providers: [
-        ReportMap,
-        ReportDetailMap,
-        ReportColumnMap,
-        ReportParameterMap,
         ReportService,
         ReportRepository,
       ],
