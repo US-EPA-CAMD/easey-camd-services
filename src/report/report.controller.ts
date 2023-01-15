@@ -1,5 +1,6 @@
 import {
   ApiTags,
+  ApiQuery,
   ApiSecurity,
   ApiOkResponse,
 } from '@nestjs/swagger';
@@ -26,6 +27,7 @@ export class ReportController {
   @ApiOkResponse({
     description: 'Retrieves official data for various reports based on criteria',
   })
+  @ApiQuery({ style: 'pipeDelimited', name: 'testId', required: false, explode: false, })
   async getReport(
     @Query() params: ReportParamsDTO
   ) {

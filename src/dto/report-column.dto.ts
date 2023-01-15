@@ -4,15 +4,10 @@ export class ReportColumnDTO {
   @ApiProperty({
     description: 'NEED TO UPDATE DESCRIPTION',
   })
-  position: number;
+  code: string;
 
   @ApiProperty({
     description: 'NEED TO UPDATE DESCRIPTION',
   })
-  name: string;
-
-  @ApiProperty({
-    description: 'NEED TO UPDATE DESCRIPTION',
-  })
-  displayName: string;
+  values: any[];
 }

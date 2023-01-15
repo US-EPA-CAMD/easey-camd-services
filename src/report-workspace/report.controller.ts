@@ -1,5 +1,6 @@
 import {
   ApiTags,
+  ApiQuery,
   ApiSecurity,
   ApiOkResponse,
   ApiBearerAuth,
@@ -32,6 +33,7 @@ export class ReportWorkspaceController {
   @ApiOkResponse({
     description: 'Retrieves workspace data for various reports based on criteria',
   })
+  @ApiQuery({ style: 'pipeDelimited', name: 'testId', required: false, explode: false, })
   async getReport(
     @Query() params: ReportParamsDTO
   ) {

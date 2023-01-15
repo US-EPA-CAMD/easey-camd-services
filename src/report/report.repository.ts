@@ -4,7 +4,7 @@ import { Report } from '../entities/report.entity';
 @EntityRepository(Report)
 export class ReportRepository extends Repository<Report> {
 
-  async getReport(reportCode: string) {
+  async getReportDefinition(reportCode: string) {
     return this.createQueryBuilder('r')
       .innerJoinAndSelect('r.details', 'rd')
       .leftJoinAndSelect('rd.columns', 'c')
