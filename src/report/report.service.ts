@@ -112,7 +112,6 @@ export class ReportService {
               : detail.template.displayName;
             detailDto.templateCode = detail.template.code;
             detailDto.templateType = detail.template.type;
-            console.log(detail.sqlStatement, sqlParams);
             detailDto.results = await getManager().query(detail.sqlStatement, sqlParams);
 
             if (detailDto.results.length > 0) {

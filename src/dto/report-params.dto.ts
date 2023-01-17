@@ -25,4 +25,18 @@ export class ReportParamsDTO {
   })
   @Transform(({ value }) => value.split('|').map((item: string) => item.trim()))
   testId?: string[];
+
+  @ApiProperty({
+    //isArray: true,
+    description: 'NEED TO UPDATE DESCRIPTION',
+  })
+  //@Transform(({ value }) => value.split('|').map((item: string) => item.trim()))
+  qceId?: string;
+
+  @ApiProperty({
+    //isArray: true,
+    description: 'NEED TO UPDATE DESCRIPTION',
+  })
+  //@Transform(({ value }) => value.split('|').map((item: string) => item.trim()))
+  teeId?: string;
 }
