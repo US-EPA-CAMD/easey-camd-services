@@ -1,17 +1,21 @@
 import { Module } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
 
-import { ReportModule } from '../report/report.module';
+import { DataSetService } from '../dataset/dataset.service';
+import { DataSetModule } from '../dataset/dataset.module';
 import { ReportWorkspaceController } from './report.controller';
-import { ReportService } from '../report/report.service';
 
 @Module({
   imports: [
     HttpModule,
-    ReportModule,
+    DataSetModule
   ],
-  controllers: [ReportWorkspaceController],
-  providers: [ReportService],
+  controllers: [
+    ReportWorkspaceController
+  ],
+  providers: [
+    DataSetService
+  ],
   exports: [],
 })
 export class ReportWorkspaceModule {}

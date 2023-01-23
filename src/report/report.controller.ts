@@ -11,7 +11,7 @@ import {
   Controller,
 } from '@nestjs/common';
 
-import { ReportService } from './report.service';
+import { DataSetService } from '../dataset/dataset.service';
 import { ReportParamsDTO } from './../dto/report-params.dto';
 
 @Controller()
@@ -20,7 +20,7 @@ import { ReportParamsDTO } from './../dto/report-params.dto';
 export class ReportController {
   
   constructor(
-    private service: ReportService
+    private service: DataSetService
   ) { }
 
   @Get()
@@ -31,6 +31,6 @@ export class ReportController {
   async getReport(
     @Query() params: ReportParamsDTO
   ) {
-    return this.service.getReport(params);
+    return this.service.getDataSet(params);
   }
 }

@@ -2,33 +2,33 @@ import { getManager } from 'typeorm';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
-import { ReportDTO } from './../dto/report.dto';
-import { ReportRepository } from './report.repository';
-import { ReportParamsDTO } from './../dto/report-params.dto';
-import { ReportDetail } from './../entities/report-detail.entity';
-import { ReportDetailDTO } from './../dto/report-detail.dto';
-import { ReportColumnDTO } from './../dto/report-column.dto';
+import { ReportDTO } from '../dto/report.dto';
+import { DataSetRepository } from './dataset.repository';
+import { ReportParamsDTO } from '../dto/report-params.dto';
+import { DataTable } from '../entities/datatable.entity';
+import { ReportDetailDTO } from '../dto/report-detail.dto';
+import { ReportColumnDTO } from '../dto/report-column.dto';
 
 @Injectable()
-export class ReportService {
+export class DataSetService {
   private hasFacilityInfo: boolean;
   private reportColumns: ReportColumnDTO[];
 
   constructor(
-    @InjectRepository(ReportRepository)
-    private readonly repository: ReportRepository,
+    @InjectRepository(DataSetRepository)
+    private readonly repository: DataSetRepository,
   ) {}
 
-  async getReport(
-    params: ReportParamsDTO, 
+  async getDataSet(
+    params: ReportParamsDTO,
     isWorkspace: boolean = false
   ) {
     this.reportColumns = [];
     this.hasFacilityInfo = false;
     const report = new ReportDTO();
     const schema = isWorkspace ? 'camdecmpswks' : 'camdecmps';
-    const reportDef = await this.repository.getReportDefinition(params.reportCode);
-    report.displayName = reportDef.displayName;
+    const dataSet = await this.repository.getDataSet(params.reportCode);
+    report.displayName = dataSet.displayName;
 
     if (params.testId && params.testId.length > 0) {
       const promises = [];
@@ -44,9 +44,9 @@ export class ReportService {
       tests.forEach((test: { id: string, code: string }) => {
         promises.push(
           new Promise((resolve, _reject) => {
-            const detailDef = reportDef.details.filter(detail => 
-              detail.template.groupCode === "ALL" ||
-              detail.template.groupCode === test.code
+            const detailDef = dataSet.tables.filter(tbl => 
+              tbl.template.groupCode === "ALL" ||
+              tbl.template.groupCode === test.code
             );
             const details = this.getReportResults(
               schema,
@@ -68,7 +68,7 @@ export class ReportService {
     } else {
       report.details = await this.getReportResults(
         schema,
-        reportDef.details,
+        dataSet.tables,
         params,
       );
     }
@@ -83,23 +83,23 @@ export class ReportService {
 
   async getReportResults(
     schema: string,
-    details: ReportDetail[],
+    tables: DataTable[],
     params: ReportParamsDTO,
     testId?: string,
   ): Promise<ReportDetailDTO[]> {
     const promises = [];
     const FACINFO = 'FACINFO';
 
-    details.forEach(detail => {
-      if (!this.hasFacilityInfo || detail.templateCode !== FACINFO) {
+    tables.forEach(tbl => {
+      if (!this.hasFacilityInfo || tbl.templateCode !== FACINFO) {
         promises.push(
           new Promise(async (resolve, _reject) => {
-            detail.sqlStatement = detail.sqlStatement.replace(
+            tbl.sqlStatement = tbl.sqlStatement.replace(
               /{SCHEMA}/,
               schema,
             );
 
-            const sqlParams = detail.parameters.map((param) => {
+            const sqlParams = tbl.parameters.map((param) => {
               if (param.name === 'testId') {
                 return testId;
               }
@@ -107,22 +107,24 @@ export class ReportService {
             });
 
             const detailDto = new ReportDetailDTO();
-            detailDto.displayName = detail.displayName
-              ? detail.displayName
-              : detail.template.displayName;
-            detailDto.templateCode = detail.template.code;
-            detailDto.templateType = detail.template.type;
-            detailDto.results = await getManager().query(detail.sqlStatement, sqlParams);
+            detailDto.displayName = tbl.displayName
+              ? tbl.displayName
+              : tbl.template.displayName;
+            detailDto.templateCode = tbl.template.code;
+            detailDto.templateType = tbl.template.type;
+            detailDto.results = await getManager().query(
+              tbl.sqlStatement, sqlParams
+            );
 
             if (detailDto.results.length > 0) {
               let columnDto = this.reportColumns.find(column =>
-                column.code === detail.templateCode
+                column.code === tbl.templateCode
               );
 
               if (!columnDto) {
                 columnDto = new ReportColumnDTO();
-                columnDto.code = detail.templateCode;
-                columnDto.values = detail.columns.map(column => {
+                columnDto.code = tbl.templateCode;
+                columnDto.values = tbl.columns.map(column => {
                   return {
                     name: column.name,
                     displayName: column.displayName,
@@ -135,7 +137,7 @@ export class ReportService {
             resolve(detailDto);
           })
         );
-        if (!this.hasFacilityInfo && detail.templateCode === FACINFO) {
+        if (!this.hasFacilityInfo && tbl.templateCode === FACINFO) {
           this.hasFacilityInfo = true;
         }
       }

@@ -15,7 +15,7 @@ import {
 
 import { AuthGuard } from '@us-epa-camd/easey-common/guards';
 
-import { ReportService } from '../report/report.service';
+import { DataSetService } from '../dataset/dataset.service';
 import { ReportParamsDTO } from '../dto/report-params.dto';
 
 @Controller()
@@ -24,7 +24,7 @@ import { ReportParamsDTO } from '../dto/report-params.dto';
 export class ReportWorkspaceController {
   
   constructor(
-    private service: ReportService
+    private service: DataSetService
   ) { }
 
   @Get()
@@ -37,6 +37,6 @@ export class ReportWorkspaceController {
   async getReport(
     @Query() params: ReportParamsDTO
   ) {
-    return this.service.getReport(params, true);
+    return this.service.getDataSet(params, true);
   }
 }

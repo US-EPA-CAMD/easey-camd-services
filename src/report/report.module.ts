@@ -1,18 +1,13 @@
 import { Module } from '@nestjs/common';
-import { HttpModule } from '@nestjs/axios';
-import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { ReportRepository } from './report.repository';
+import { DataSetService } from '../dataset/dataset.service';
+import { DataSetModule } from '../dataset/dataset.module';
 import { ReportController } from './report.controller';
-import { ReportService } from './report.service';
 
 @Module({
-  imports: [
-    HttpModule,
-    TypeOrmModule.forFeature([ReportRepository])
-  ],
+  imports: [DataSetModule],
   controllers: [ReportController],
-  providers: [ReportService],
-  exports: [TypeOrmModule],
+  providers: [DataSetService],
+  exports: [],
 })
 export class ReportModule {}

@@ -1,5 +1,9 @@
 export enum ReportCodes {
   MPP,
+  TEEP,
+  QCEP,
   MP_EVAL,
-  TEST_EVAL,
+  QA_EVAL,
+  EM_EVAL,
+  TEST_DETAIL,
 }

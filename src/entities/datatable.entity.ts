@@ -8,13 +8,13 @@ import {
   PrimaryGeneratedColumn
 } from 'typeorm';
 
-import { Report } from './report.entity';
+import { DataSet } from './dataset.entity';
 import { Template } from './template.entity';
-import { ReportColumn } from './report-column.entity';
-import { ReportParameter } from './report-parameter.entity';
+import { DataColumn } from './datacolumn.entity';
+import { DataParameter } from './dataparameter.entity';
 
 @Entity({ name: 'camdaux.datatable' })
-export class ReportDetail extends BaseEntity {
+export class DataTable extends BaseEntity {
   @PrimaryGeneratedColumn({
     name: 'datatable_id',
   })
@@ -23,7 +23,7 @@ export class ReportDetail extends BaseEntity {
   @Column({
     name: 'dataset_cd',
   })
-  reportCode: string;
+  dataSetCode: string;
 
   @Column({
     name: 'template_cd',
@@ -33,7 +33,7 @@ export class ReportDetail extends BaseEntity {
   @Column({
     name: 'table_order',
   })
-  detailOrder: number;
+  tableOrder: number;
 
   @Column({
     name: 'display_name',
@@ -51,30 +51,30 @@ export class ReportDetail extends BaseEntity {
   noResultsMessage: string;
 
   @ManyToOne(
-    () => Report,
-    o => o.details,
+    () => DataSet,
+    o => o.tables,
   )
   @JoinColumn({ name: 'dataset_cd' })
-  report: Report;
+  dataSet: DataSet;
 
   @ManyToOne(
     () => Template,
-    o => o.details,
+    o => o.dataTables,
   )
   @JoinColumn({ name: 'template_cd' })
   template: Template;
 
   @OneToMany(
-    () => ReportColumn,
-    o => o.detail,
+    () => DataColumn,
+    o => o.dataTable,
   )
   @JoinColumn({ name: 'datatable_id' })
-  columns: ReportColumn[];
+  columns: DataColumn[];
 
   @OneToMany(
-    () => ReportParameter,
-    o => o.detail,
+    () => DataParameter,
+    o => o.dataTable,
   )
   @JoinColumn({ name: 'datatable_id' })
-  parameters: ReportParameter[];
+  parameters: DataParameter[];
 }

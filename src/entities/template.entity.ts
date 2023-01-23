@@ -7,7 +7,7 @@ import {
   PrimaryColumn
 } from 'typeorm';
 
-import { ReportDetail } from './report-detail.entity';
+import { DataTable } from './datatable.entity';
 
 @Entity({ name: 'camdaux.template_code' })
 export class Template extends BaseEntity {
@@ -32,9 +32,9 @@ export class Template extends BaseEntity {
   displayName: string;
 
   @OneToMany(
-    () => ReportDetail,
+    () => DataTable,
     o => o.template,
   )
   @JoinColumn({ name: 'template_cd' })
-  details: ReportDetail[];
+  dataTables: DataTable[];
 }

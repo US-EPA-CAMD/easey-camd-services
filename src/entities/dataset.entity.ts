@@ -7,10 +7,10 @@ import {
   PrimaryColumn
 } from 'typeorm';
 
-import { ReportDetail } from './report-detail.entity';
+import { DataTable } from './datatable.entity';
 
 @Entity({ name: 'camdaux.dataset' })
-export class Report extends BaseEntity {
+export class DataSet extends BaseEntity {
   @PrimaryColumn({
     name: 'dataset_cd',
   })
@@ -32,9 +32,9 @@ export class Report extends BaseEntity {
   noResultsMessage: string;
 
   @OneToMany(
-    () => ReportDetail,
-    o => o.report,
+    () => DataTable,
+    o => o.dataSet,
   )
   @JoinColumn({ name: 'dataset_cd' })
-  details: ReportDetail[];
+  tables: DataTable[];
 }

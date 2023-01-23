@@ -1,26 +1,30 @@
 import { Test } from '@nestjs/testing';
+import { HttpModule } from '@nestjs/axios';
+import { ConfigService } from '@nestjs/config';
 
 import { DataSetService } from '../dataset/dataset.service';
-import { ReportController } from './report.controller';
+import { ReportWorkspaceController } from './report.controller';
 import { DataSetRepository } from '../dataset/dataset.repository';
 
 import { ReportDTO } from '../dto/report.dto';
 import { ReportParamsDTO } from '../dto/report-params.dto';
 
 describe('-- Report Controller --', () => {
-  let controller: ReportController;
+  let controller: ReportWorkspaceController;
   let service: DataSetService;
 
   beforeAll(async () => {
     const module = await Test.createTestingModule({
-      controllers: [ReportController],
+      imports: [HttpModule],
+      controllers: [ReportWorkspaceController],
       providers: [
+        ConfigService,
         DataSetService,
         DataSetRepository
       ],
     }).compile();
 
-    controller = module.get(ReportController);
+    controller = module.get(ReportWorkspaceController);
     service = module.get(DataSetService);
   });
 
