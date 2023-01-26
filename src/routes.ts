@@ -6,6 +6,7 @@ import { LoggingModule } from './logging/logging.module';
 import { ReportModule } from './report/report.module';
 import { MailModule } from './mail/mail.module';
 import { SubmissionModule } from './submission/submission.module';
+import { ErrorSuppressionsModule } from './error-suppressions/error-suppressions.module';
 
 const routes: Routes = [
   {
@@ -31,6 +32,10 @@ const routes: Routes = [
   {
     path: '/submit',
     module: SubmissionModule,
+  },
+  {
+    path: '/error-suppressions',
+    module: ErrorSuppressionsModule,
   },
 ];
 
