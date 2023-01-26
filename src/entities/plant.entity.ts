@@ -1,5 +1,6 @@
-import { BaseEntity, Entity, Column, PrimaryColumn } from 'typeorm';
+import { BaseEntity, Entity, Column, PrimaryColumn, OneToMany } from 'typeorm';
 import { NumericColumnTransformer } from '@us-epa-camd/easey-common/transforms';
+import { EsSpec } from './es-spec.entity';
 
 @Entity({ name: 'camd.plant' })
 export class Plant extends BaseEntity {
@@ -19,4 +20,7 @@ export class Plant extends BaseEntity {
     name: 'state',
   })
   stateCode: string;
+
+  @OneToMany(() => EsSpec, (es) => es.plant)
+  esSpec: EsSpec[];
 }
