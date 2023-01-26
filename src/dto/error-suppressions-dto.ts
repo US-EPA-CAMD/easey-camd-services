@@ -13,10 +13,10 @@ export class ErrorSuppressionsDTO {
   matchTimeTypeCode: string;
   matchTimeBeginValue: Date;
   matchTimeEndValue: Date;
-  matchHistoricalIndicator: Boolean;
+  matchHistoricalIndicator: boolean;
   reasonCode: string;
   note: string;
-  active: Boolean;
+  active: boolean;
   userId: string;
   addDate: Date;
   updateDate: Date;

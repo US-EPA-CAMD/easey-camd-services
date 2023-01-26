@@ -1,7 +1,7 @@
 import { Regex } from '@us-epa-camd/easey-common/utilities';
 
 export class QueryBuilderHelper {
-  public static dateHrQtr(dateHrQtrValue: string, beginDate: Boolean) {
+  public static dateHrQtr(dateHrQtrValue: string, beginDate: boolean) {
     if (String(dateHrQtrValue).match(/^\d{4}\sQ[1-4]$/) != null) {
       const dateValue = dateHrQtrValue.split(' Q');
       const month = beginDate
