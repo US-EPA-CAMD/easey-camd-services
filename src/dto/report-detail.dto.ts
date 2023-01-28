@@ -1,33 +1,24 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from "@nestjs/swagger";
+import {
+  DataDictionary,
+  OverrideKeys,
+  PropertyKeys
+} from '@us-epa-camd/easey-common/data-dictionary';
 
 export class ReportDetailDTO {
-  @ApiProperty({
-    description: 'NEED TO UPDATE DESCRIPTION',
-  })
+  @ApiProperty(
+    DataDictionary.getMetadata(
+      PropertyKeys.DISPLAY_NAME,
+      OverrideKeys.REPORT_DETAIL,
+  ))
   displayName: string;
 
-  @ApiProperty({
-    description: 'NEED TO UPDATE DESCRIPTION',
-  })
+  @ApiProperty()
   templateCode: string;
 
-  @ApiProperty({
-    description: 'NEED TO UPDATE DESCRIPTION',
-  })
+  @ApiProperty()
   templateType: string;
 
-  @ApiProperty({
-    description: 'NEED TO UPDATE DESCRIPTION',
-  })
-  sqlStatement: string;
-
-  // @ApiProperty({
-  //   description: 'NEED TO UPDATE DESCRIPTION',
-  // })
-  // noResultsMessage: string;
-
-  @ApiProperty({
-    description: 'NEED TO UPDATE DESCRIPTION',
-  })
+  @ApiProperty()
   results: any[];
 }

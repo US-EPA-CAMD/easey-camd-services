@@ -1,42 +1,35 @@
 import { Transform } from 'class-transformer';
-import { ApiProperty } from '@nestjs/swagger';
-import { ReportCodes } from '../enums/report-codes.enum';
+import { ApiProperty } from "@nestjs/swagger";
+import {
+  DataDictionary,
+  OverrideKeys,
+  PropertyKeys
+} from '@us-epa-camd/easey-common/data-dictionary';
 
 export class ReportParamsDTO {
-  @ApiProperty({
-    enum: ReportCodes,
-    description: 'NEED TO UPDATE DESCRIPTION',
-  })
+  @ApiProperty(
+    DataDictionary.getMetadata(
+      PropertyKeys.CODE,
+      OverrideKeys.REPORT,
+      true,
+  ))
   reportCode: string;
 
-  @ApiProperty({
-    description: 'NEED TO UPDATE DESCRIPTION',
-  })
+  @ApiProperty()
   facilityId?: number;
 
-  @ApiProperty({
-    description: 'NEED TO UPDATE DESCRIPTION',
-  })
+  @ApiProperty()
   monitorPlanId?: string;
 
-  @ApiProperty({
-    isArray: true,
-    description: 'NEED TO UPDATE DESCRIPTION',
-  })
+  @ApiProperty({ isArray: true })
   @Transform(({ value }) => value.split('|').map((item: string) => item.trim()))
   testId?: string[];
 
-  @ApiProperty({
-    //isArray: true,
-    description: 'NEED TO UPDATE DESCRIPTION',
-  })
+  @ApiProperty()
   //@Transform(({ value }) => value.split('|').map((item: string) => item.trim()))
   qceId?: string;
 
-  @ApiProperty({
-    //isArray: true,
-    description: 'NEED TO UPDATE DESCRIPTION',
-  })
+  @ApiProperty()
   //@Transform(({ value }) => value.split('|').map((item: string) => item.trim()))
   teeId?: string;
 }

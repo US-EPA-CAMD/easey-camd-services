@@ -1,0 +1,358 @@
+{
+  "abbreviation": {
+    "label": "Abbreviation",
+    "description": "Abreviated identifier for a record.",
+    "example": "TX",
+    "overrides": {
+      "reportingPeriod": {
+        "value": "periodAbbreviation",
+        "example": "2023 Q1"
+      }
+    }
+  },  
+  "addDate": {
+    "label": "Add Date",
+    "description": "Date and time in which a record was added.",
+    "example": "2021-01-01 12:34:56"
+  },
+  "beginDate": {
+    "label": "Begin Date",
+    "description": "Date in which information became effective or activity started.",
+    "example": "2020-07-25"
+  },
+  "beginHour": {
+    "label": "Begin Hour",
+    "description": "Hour in which information became effective or activity started.",
+    "example": 12
+  },
+  "beginMinute": {
+    "label": "Begin Minute",
+    "description": "Minute in which information became effective or activity started.",
+    "example": 8
+  },
+  "code": {
+    "label": "Code",
+    "description": "Code used to uniquely identify datacolumns used in a report.",
+    "examples": ["FACINFO", "ANLYZRNG", "CYCSUM", "LINSTAT", "MONMTHD"],
+    "overrides": {
+      "accountType": {
+        "label": "Account Type Code",
+        "value": "accountTypeCode",
+        "description": "Code for the type of allowance account.",
+        "example": "RESERVE"
+      },
+      "ceParam": {
+        "label": "CE Parameter Code",
+        "value": "controlEquipParamCode",
+        "description": "Code for the pollutant minimized by the respective control equipment or method.",
+        "example": "PART"
+      },
+      "controlTechnology": {
+        "label": "Control Code",
+        "value": "controlCode",
+        "description": "Code for the method or equipment used by the combustion unit to minimize emissions for the particular pollutant.",
+        "example": "B"
+      },
+      "dataSet": {
+        "label": "Dataset Code",
+        "value": "dataSetCode",
+        "description": "Code used to uniquely identify a dataset. Use /list methods for full list available.",
+        "examples": ["MPP", "method-codes", "test-summaries", "DAILYCAL"]
+      },
+      "fuelType": {
+        "label": "Fuel Type Code",
+        "value": "fuelTypeCode",
+        "description": "Code for the type of fuel combusted by the unit.",
+        "example": "C"
+      },
+      "masterData": {
+        "label": "Dataset Code",
+        "value": "dataSetCode",
+        "description": "Primary indentifier of a dataset for Master Data codes & descriptions. Use /list method for full list available.",
+        "examples": ["aps-codes", "basis-codes", "equation-codes", "method-codes"]
+      },
+      "relationships": {
+        "label": "Dataset Code",
+        "value": "dataSetCode",
+        "description": "Primary indentifier of a dataset for Master Data relationships. Use /list method for full list available.",
+        "examples": ["defaults", "formulas", "loads", "test-summaries"]
+      },
+      "report": {
+        "label": "Report Code",
+        "value": "reportCode",
+        "description": "Code used to uniquely identify a report dataset.",
+        "examples": ["MPP", "MP_EVAL", "TEST_DETAIL", "TEST_EVAL", "QCE", "QCE_EVAL", "TEE", "TEE_EVAL"]
+      },
+      "program": {
+        "label": "Program Code",
+        "value": "programCode",
+        "description": "Code for statutory or regulatory based options for tracking and reducing air pollution emissions.",
+        "example": "CAIRNOX"
+      },
+      "unitType": {
+        "label": "Unit Type Code",
+        "value": "unitTypeCode",
+        "description": "Code for the unit or boiler type.",
+        "example": "AF"
+      }
+    }
+  },
+  "dataType": {
+    "label": "Data Type",
+    "description": "The type of data being requested.",
+    "examples": ["Allowance", "Compliance", "Emissions", "Facility", "Mercury and Air Toxics Emissions (MATS)"]
+  },
+  "dataSubType": {
+    "label": "Data Subtype",
+    "description": "The subtype of emissions data being requested.",
+    "examples": ["Daily", "Hourly"]
+  },
+  "description": {
+    "label": "Description",
+    "description": "Description for master data records.",
+    "overrides": {
+      "accountType": {
+        "label": "Account Type Description",
+        "value": "accountTypeDescription",
+        "description": "Full description for the type of allowance account.",
+        "example": "EPA Reserve Account"
+      },
+      "ceParam": {
+        "label": "CE Parameter Description",
+        "value": "controlEquipParamDescription",
+        "description": "Full description for the pollutant minimized by the respective control equipment or method.",
+        "example": "Particulates (Opacity)"
+      },
+      "controlTechnology": {
+        "label": "Control Description",
+        "value": "controlDescription",
+        "description": "Full description of method or equipment used by the combustion unit to minimize emissions for the particular pollutant.",
+        "example": "Baghouse"
+      },
+      "fuelType": {
+        "label": "Fuel Type Description",
+        "value": "fuelTypeDescription",
+        "description": "Full description for the type of fuel combusted by the unit.",
+        "example": "Coal"
+      },
+      "program": {
+        "label": "Program Description",
+        "value": "programDescription",
+        "description": "Full description for statutory or regulatory based options for tracking and reducing air pollution emissions.",
+        "example": "CAIR NOx Annual Program"
+      },
+      "reportingPeriod": {
+        "value": "periodDescription",
+        "description": "Year and Quarter description for a reporting period.",        
+        "example": "2023 QTR 1"
+      },
+      "unitType": {
+        "label": "Unit Type Description",
+        "value": "unitTypeDescription",
+        "description": "Full description for the unit or boiler type.",
+        "example": "Arch-fired boiler"
+      }
+    }
+  },
+  "displayName": {
+    "label": "Display Name",
+    "description": "The displayed name of a data record.",
+    "overrides": {
+      "dataSet": {
+        "description": "The displayed name of a dataset record.",
+        "example": "Monitor Plan Printout Report"
+      },
+      "dataTable": {
+        "description": "The displayed name of a datatable record.",
+        "example": "Monitor Location Attributes"
+      },
+      "dataColumn": {
+        "description": "The displayed name of a datacolumn record.",
+        "example": "Unit/Stack"
+      }
+    }
+  },
+  "endDate": {
+    "label": "End Date",
+    "description": "Date in which information is no longer effective or activity ended.",
+    "example": "2020-07-25"
+  },
+  "endHour": {
+    "label": "End Hour",
+    "description": "Hour in which information is no longer effective or activity ended.",
+    "example": 12
+  },
+  "endMinute": {
+    "label": "End Minute",
+    "description": "Minute in which information is no longer effective or activity ended.",
+    "example": 8
+  },
+  "exclude": {
+    "label": "Exclude",
+    "description": "Parameter used to exclude records containg data for the selected values.",
+    "overrides": {
+      "accountType": {
+        "description": "Parameter used to exclude the selected Account Type codes from the response.",
+        "example": "GENERAL"
+      },
+      "program": {
+        "description": "Parameter used to exclude the selected Program codes from the response.",
+        "example": "CAIRNOX"
+      }
+    }
+  },
+  "groupCode": {
+    "label": "Group Code",
+    "description": "Code for the group the data is associated with.",
+    "example": "REPORT",
+    "overrides": {
+      "accountType": {
+        "label": "Account Type Group Code",
+        "value": "accountTypeGroupCode",
+        "description": "Code for the group to which the allowance account belongs.",
+        "example": "RESERVE"
+      },
+      "fuelType": {
+        "label": "Fuel Group Code",
+        "value": "fuelGroupCode",
+        "description": "Code for the fuel group for the type of fuel combusted by the unit.",
+        "example": "COAL"
+      },
+      "program": {
+        "label": "Program Group Code",
+        "value": "programGroupCode",
+        "description": "Code for the group to which the program belongs.",
+        "example": "CAIR"
+      },
+      "unitType": {
+        "label": "Unit Type Group Code",
+        "value": "unitTypeGroupCode",
+        "description": "Code for the unit or boiler type group.",
+        "example": "B"
+      }
+    }
+  },
+  "groupDescription": {
+    "label": "Group Description",
+    "description": "Description of the group for which master data records are associated.",
+    "overrides": {
+      "accountType": {
+        "label": "Account Type Group Description",
+        "value": "accountTypeGroupDescription",
+        "description": "Full description for the group to which the allowance account belongs.",
+        "example": "Reserve"
+      },
+      "fuelType": {
+        "label": "Fuel Group Description",
+        "value": "fuelGroupDescription",
+        "description": "Full description for the fuel group for the type of fuel combusted by the unit.",
+        "example": "All Coal"
+      },
+      "program": {
+        "label": "Program Group Description",
+        "value": "programGroupDescription",
+        "description": "Full description for the group to which the program belongs.",
+        "example": "Clean Air Interstate Rule"
+      },
+      "unitType": {
+        "label": "Unit Type Group Description",
+        "value": "unitTypeGroupDescription",
+        "description": "Full description for the unit or boiler group.",
+        "example": "Boilers"
+      }
+    }
+  },
+  "id": {
+    "label": "Record Id",
+    "description": "Primary unique identifier of a record.",
+    "example": "ff4ac3cd-0960-4370-ad5a-afc3835de17b",
+    "overrides": {
+      "bookmark": {
+        "label": "Bookmark Id",
+        "value": "bookmarkId",
+        "description": "Primary unique identifier of a CAMPD bookmark query.",
+        "example": 147653
+      },
+      "reportingPeriod": {
+        "example": 116
+      },
+      "submission": {
+        "label": "Activity Id",
+        "value": "activityId",
+        "description": "CDX Activity Id of a CROMMER signed & submitted dataset.",
+        "example": "_7ea572d5-087c-43e1-bc00-6a163e4482a3"
+      }
+    }
+  },
+  "name": {
+    "label": "Name",
+    "description": "The name or identifier of a data record.",
+    "overrides": {
+      "account": {
+        "label": "Account Name",
+        "value": "accountName",
+        "description": "The name of the account in which allowances are held.",
+        "example": "Barry"
+      },
+      "bulkFile": {
+        "label": "Filename",
+        "value": "filename",
+        "description": "The filename of a bulk file dataset in S3 for the CAMPD application.",
+        "example": "emissions-hourly-2023-q1.csv"
+      },
+      "dataColumn": {
+        "description": "The name of a column used in a master data query.",
+        "example": "unit_stack"
+      }
+    }
+  },
+  "noResultsMessage": {
+    "label": "No Results Message",
+    "description": "The message to be displayed when no results are returned.",
+    "example": "Data does not exist for the provided criteria.",
+    "overrides": {
+      "dataSet": {
+        "example": "Monitor Plan data does not exist for the provided criteria."
+      },
+      "dataTable": {
+        "example": "Location Attribute does not exist for this monitor plan."
+      }
+    }
+  },
+  "order": {
+    "label": "Order",
+    "description": "The order in which records are sorted and returned.",
+    "example": 1,
+    "overrides": {
+      "dataColumn": {
+        "value": "columnOrder"
+      },
+      "dataTable": {
+        "value": "tableOrder"
+      },
+      "reportParameter": {
+        "value": "position"
+      }
+    }
+  },
+  "quarter": {
+    "label": "Quarter",
+    "description": "The calendar quarter data became effective, was collected, or associated with.",
+    "example": 4
+  },
+  "updateDate": {
+    "label": "Update Date",
+    "description": "Date and time in which a record was last updated.",
+    "example": "2021-01-01 12:34:56"
+  },
+  "year": {
+    "label": "Year",
+    "description": "The calendar year data became effective, was collected, or associated with.",
+    "example": 2023,
+    "overrides": {
+      "reportingPeriod": {
+        "value": "calendarYear"
+      }
+    }
+  }
+}

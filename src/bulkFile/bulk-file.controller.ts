@@ -1,11 +1,11 @@
 import { Request } from 'express';
 
 import {
-  ApiExcludeEndpoint,
-  ApiBearerAuth,
+  ApiTags,
   ApiOkResponse,
   ApiSecurity,
-  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 
 import {
@@ -21,6 +21,7 @@ import { ClientTokenGuard } from '@us-epa-camd/easey-common/guards';
 import { BulkFileDTO } from '../dto/bulk_file.dto';
 import { BulkFileService } from './bulk-file.service';
 import { BulkFileInputDTO } from '../dto/bulk_file_input.dto';
+import { ApiExcludeEndpointByEnv } from '../utilities/swagger-decorator.const';
 
 @Controller()
 @ApiSecurity('APIKey')
@@ -32,8 +33,10 @@ export class BulkFileController {
   @ApiOkResponse({
     isArray: true,
     type: BulkFileDTO,
-    description:
-      'Retrieves a list of bulk data files and their metadata from S3',
+    description: 'Data retrieved successfully',
+  })
+  @ApiOperation({
+    description: "Retrieves a list of bulk data files and their metadata from S3."
   })
   async getBulkFiles(@Req() req: Request): Promise<BulkFileDTO[]> {
     const curDate = new Date();
@@ -50,10 +53,10 @@ export class BulkFileController {
     type: BulkFileDTO,
     description: 'Creates metadata for bulk files store in S3',
   })
-  @ApiExcludeEndpoint()
   @ApiSecurity('ClientId')
   @ApiBearerAuth('ClientToken')
   @UseGuards(ClientTokenGuard)
+  @ApiExcludeEndpointByEnv()
   async addBulkFile(
     @Body() bulkDataFile: BulkFileInputDTO,
   ): Promise<BulkFileDTO> {
