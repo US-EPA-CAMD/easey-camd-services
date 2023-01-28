@@ -12,7 +12,7 @@ import { ClientTokenGuard } from '@us-epa-camd/easey-common/guards';
 import { MailService } from './mail.service';
 import { CreateMailDto } from './../dto/create-mail.dto';
 import { ClientId } from '../decorators/client-id.decorator';
-import { ApiExcludeControllerByEnv } from 'src/utilities/swagger-decorator.const';
+import { ApiExcludeControllerByEnv } from '../utilities/swagger-decorator.const';
 
 @Controller()
 @ApiTags('Support')

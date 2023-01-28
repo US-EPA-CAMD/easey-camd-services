@@ -11,7 +11,7 @@ import { SubmissionsDTO } from '../dto/submission.dto';
 import { AuthGuard } from '@us-epa-camd/easey-common/guards';
 import { CurrentUser } from '@us-epa-camd/easey-common/interfaces';
 import { User } from '@us-epa-camd/easey-common/decorators';
-import { ApiExcludeControllerByEnv } from 'src/utilities/swagger-decorator.const';
+import { ApiExcludeControllerByEnv } from '../utilities/swagger-decorator.const';
 
 @Controller()
 @ApiTags('Submission')

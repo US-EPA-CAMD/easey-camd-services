@@ -16,7 +16,7 @@ import {
 
 import { AuthGuard } from '@us-epa-camd/easey-common/guards';
 
-import { ReportDTO } from 'src/dto/report.dto';
+import { ReportDTO } from '../dto/report.dto';
 import { DataSetService } from '../dataset/dataset.service';
 import { ReportParamsDTO } from '../dto/report-params.dto';
 import { ApiExcludeControllerByEnv } from '../utilities/swagger-decorator.const';
