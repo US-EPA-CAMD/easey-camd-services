@@ -31,6 +31,19 @@ export class ReportWorkspaceController {
     private service: DataSetService
   ) { }
 
+  @Get('list')
+  @ApiOkResponse({
+    type: ReportDTO,
+    description: 'Data retrieved successfully',
+  })
+  @ApiOperation({
+    description: 'Retrieves list of workspace reports available.'
+  })
+  async getAvailableReports() {
+    return this.service.getAvailableReports(true);
+  }
+
+
   @Get()
   @UseGuards(AuthGuard)
   @ApiBearerAuth('Token')
