@@ -8,12 +8,17 @@ import { ErrorSuppressionsParamsDTO } from '../dto/error-suppressions.params.dto
 import { genErrorSuppressions } from '../../test/object-generators/error-suppressions';
 import { ErrorSuppressionsDTO } from '../dto/error-suppressions-dto';
 import { ErrorSuppressionsMap } from '../../src/maps/error-suppressions.map';
+import { EsSpec } from '../entities/es-spec.entity';
+import { LoggingException } from '@us-epa-camd/easey-common/exceptions';
 
 const mockRepository = () => ({
   getErrorSuppressions: jest.fn(),
+  findOne: jest.fn(),
+  save: jest.fn(),
 });
 const mockMap = () => ({
   many: jest.fn(),
+  one: jest.fn(),
 });
 
 describe('-- Error Suppressions Service --', () => {
@@ -52,4 +57,21 @@ describe('-- Error Suppressions Service --', () => {
       expect(result).toEqual(mockedValues);
     });
   });
+
+  describe('deactivateErrorSuppression', () => {
+    it('successfully deactivates an Error Suppression record', async () => {
+      const mockedDto = genErrorSuppressions<ErrorSuppressionsDTO>()[0];
+      map.one.mockResolvedValue(mockedDto);
+      repository.findOne.mockResolvedValue(new EsSpec());
+      const result = await service.deactivateErrorSuppression(mockedDto.id);
+      expect(result).toEqual(mockedDto);
+    })
+
+    it('throws an exception when a record with then given id is not found', async () => {
+      const mockedDto = genErrorSuppressions<ErrorSuppressionsDTO>()[0];
+      map.one.mockResolvedValue(mockedDto);
+      repository.findOne.mockResolvedValue(null);
+      expect(service.deactivateErrorSuppression(mockedDto.id)).rejects.toThrow(LoggingException);
+    })
+  })
 });
