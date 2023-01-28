@@ -19,6 +19,19 @@ export class DataSetService {
     private readonly repository: DataSetRepository,
   ) {}
 
+  async getAvailableReports(isWorkspace: boolean = false) {
+    const results = await this.repository.find({
+      where: { groupCode: 'REPORT' },
+    });
+
+    return results.map(e => {
+      return {
+        code: e.code,
+        name: e.displayName,
+      };
+    });
+  }
+
   async getDataSet(
     params: ReportParamsDTO,
     isWorkspace: boolean = false

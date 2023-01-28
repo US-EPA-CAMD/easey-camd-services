@@ -27,6 +27,18 @@ export class ReportController {
     private service: DataSetService
   ) { }
 
+  @Get('list')
+  @ApiOkResponse({
+    type: ReportDTO,
+    description: 'Data retrieved successfully',
+  })
+  @ApiOperation({
+    description: 'Retrieves list of official reports available.'
+  })
+  async getAvailableReports() {
+    return this.service.getAvailableReports();
+  }
+
   @Get()
   @ApiOkResponse({
     type: ReportDTO,
