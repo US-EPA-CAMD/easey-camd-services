@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 
 import { BaseMap } from '@us-epa-camd/easey-common/maps';
-import { BulkFileDTO } from 'src/dto/bulk_file.dto';
-import { BulkFileMetadata } from 'src/entities/bulk-file-metadata.entity';
+import { BulkFileDTO } from '../dto/bulk_file.dto';
+import { BulkFileMetadata } from '../entities/bulk-file-metadata.entity';
 
 @Injectable()
 export class BulkFileMap extends BaseMap<BulkFileMetadata, BulkFileDTO> {

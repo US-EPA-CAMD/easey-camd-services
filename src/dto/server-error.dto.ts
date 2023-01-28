@@ -1,13 +1,14 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from "@nestjs/swagger";
+import {
+  DataDictionary,
+  OverrideKeys,
+  PropertyKeys
+} from '@us-epa-camd/easey-common/data-dictionary';
 
 export class ServerErrorDto {
-  @ApiProperty({
-    description: 'Error message to log',
-  })
+  @ApiProperty()
   errorMessage: string;
 
-  @ApiProperty({
-    description: 'Metadata, key value pair of additional information to log',
-  })
+  @ApiProperty()
   metadata: object;
 }

@@ -7,14 +7,19 @@ import {
   PrimaryGeneratedColumn
 } from 'typeorm';
 
-import { ReportDetail } from './report-detail.entity';
+import { DataTable } from './datatable.entity';
 
 @Entity({ name: 'camdaux.datacolumn' })
-export class ReportColumn extends BaseEntity {
+export class DataColumn extends BaseEntity {
   @PrimaryGeneratedColumn({
     name: 'datacolumn_id',
   })
   id: number;
+
+  @Column({
+    name: 'datatable_id',
+  })
+  dataTableId: number;  
 
   @Column({
     name: 'column_order',
@@ -27,19 +32,19 @@ export class ReportColumn extends BaseEntity {
   name: string;
 
   @Column({
+    name: 'alias',
+  })
+  alias: string;
+
+  @Column({
     name: 'display_name',
   })
   displayName: string;
 
-  @Column({
-    name: 'datatable_id',
-  })
-  reportDetailId: number;
-
   @ManyToOne(
-    () => ReportDetail,
+    () => DataTable,
     o => o.columns,
   )
   @JoinColumn({ name: 'datatable_id' })
-  detail: ReportDetail;
+  dataTable: DataTable;
 }

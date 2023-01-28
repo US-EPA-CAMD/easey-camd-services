@@ -2,7 +2,7 @@ import { EntityRepository, Repository } from 'typeorm';
 
 import { EsSpec } from '../entities/es-spec.entity';
 import { ErrorSuppressionsParamsDTO } from '../dto/error-suppressions.params.dto';
-import { QueryBuilderHelper } from '../utils/query-builder.helper';
+import { QueryBuilderHelper } from '../utilities/query-builder.helper';
 
 @EntityRepository(EsSpec)
 export class ErrorSuppressionsRepository extends Repository<EsSpec> {
