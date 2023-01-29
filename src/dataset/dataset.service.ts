@@ -43,7 +43,7 @@ export class DataSetService {
     const dataSet = await this.repository.getDataSet(params.reportCode);
     report.displayName = dataSet.displayName;
 
-    if (params.testId && params.testId.length > 0) {
+    if (params.testId && params.testId.length > 1) {
       const promises = [];
       const tests = await getManager().query(`
         SELECT
@@ -114,7 +114,8 @@ export class DataSetService {
 
             const sqlParams = tbl.parameters.map((param) => {
               if (param.name === 'testId') {
-                return testId;
+                if (params.testId.length > 1) return testId;
+                else return params.testId[0];
               }
               return params[param.name] ?? param.defaultValue;
             });
