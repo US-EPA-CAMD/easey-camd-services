@@ -19,14 +19,14 @@ import { AuthGuard } from '@us-epa-camd/easey-common/guards';
 import { ReportDTO } from '../dto/report.dto';
 import { DataSetService } from '../dataset/dataset.service';
 import { ReportParamsDTO } from '../dto/report-params.dto';
-import { ApiExcludeControllerByEnv } from '../utilities/swagger-decorator.const';
 
 @Controller()
 @ApiTags('Reports')
 @ApiSecurity('APIKey')
-@ApiExcludeControllerByEnv()
+@UseGuards(AuthGuard)
+@ApiBearerAuth('Token')
 export class ReportWorkspaceController {
-  
+
   constructor(
     private service: DataSetService
   ) { }
@@ -43,10 +43,7 @@ export class ReportWorkspaceController {
     return this.service.getAvailableReports(true);
   }
 
-
   @Get()
-  @UseGuards(AuthGuard)
-  @ApiBearerAuth('Token')
   @ApiOkResponse({
     type: ReportDTO,
     description: 'Data retrieved successfully',
