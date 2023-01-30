@@ -15,7 +15,7 @@ export class ErrorSuppressionsService {
     @InjectRepository(ErrorSuppressionsRepository)
     private readonly repository: ErrorSuppressionsRepository,
     private readonly map: ErrorSuppressionsMap,
-  ) { }
+  ) {}
 
   async getErrorSuppressions(
     params: ErrorSuppressionsParamsDTO,
@@ -33,11 +33,20 @@ export class ErrorSuppressionsService {
     let recordToUpdate: EsSpec;
 
     try {
-      recordToUpdate = await this.repository.findOne({ id });
+      recordToUpdate = await this.repository.findOne(id, {
+        relations: [
+          'checkCatalogResult',
+          'plant',
+          'checkCatalogResult.checkCatalog',
+        ],
+      });
       if (!recordToUpdate)
-        throw new LoggingException(`Record with id ${id} not found`, HttpStatus.NOT_FOUND);
+        throw new LoggingException(
+          `Record with id ${id} not found`,
+          HttpStatus.NOT_FOUND,
+        );
 
-      recordToUpdate.activeInd = 0;
+      recordToUpdate.active = 0;
       await this.repository.save(recordToUpdate);
     } catch (e) {
       throw new LoggingException(e.message, e.status);
@@ -45,7 +54,7 @@ export class ErrorSuppressionsService {
 
     return this.map.one(recordToUpdate);
   }
-  async createErrorSuppressions(
+  async createErrorSuppression(
     payload: ErrorSuppressionsPayloadDTO,
     userId?: string,
   ): Promise<ErrorSuppressionsDTO> {
@@ -60,7 +69,7 @@ export class ErrorSuppressionsService {
       });
 
       await this.repository.save(entity);
-      const errorSuppression = await this.repository.findOne(entity.id, {
+      const errorSuppression = await this.repository.findOne(entity?.id, {
         relations: [
           'checkCatalogResult',
           'plant',
