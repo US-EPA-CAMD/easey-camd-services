@@ -26,7 +26,6 @@ export class ErrorSuppressionsParamsDTO {
   @ApiProperty()
   facilityId?: number;
 
-  @ApiProperty({ isArray: true })
   @IsOptional()
   @ApiProperty({ isArray: true })
   @Transform(({ value }) => value.split('|').map((item) => item.trim()))

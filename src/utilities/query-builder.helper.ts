@@ -43,9 +43,9 @@ export class QueryBuilderHelper {
         const regex = Regex.commaDelimited(locations[i].toUpperCase());
 
         if (i === 0) {
-          string += `(UPPER(${alias}.locationNameList) ~* ${regex}) `;
+          string += `(UPPER(${alias}.locations) ~* ${regex}) `;
         } else {
-          string += `OR (UPPER(${alias}.locationNameList) ~* ${regex}) `;
+          string += `OR (UPPER(${alias}.locations) ~* ${regex}) `;
         }
       }
 

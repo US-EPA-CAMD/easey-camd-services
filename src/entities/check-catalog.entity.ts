@@ -22,7 +22,7 @@ export class CheckCatalog extends BaseEntity {
   @Column({ name: 'check_description' })
   checkDescription: string;
 
-  @Column({ name: 'check_prodcedure' })
+  @Column({ name: 'check_procedure' })
   checkProcedure: string;
 
   @Column({ name: 'old_check_name' })

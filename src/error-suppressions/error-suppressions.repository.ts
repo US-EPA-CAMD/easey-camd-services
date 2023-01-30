@@ -31,16 +31,16 @@ export class ErrorSuppressionsRepository extends Repository<EsSpec> {
         'es.severityCode',
         'es.facilityId',
         'p.orisCode',
-        'es.locationNameList',
+        'es.locations',
         'es.matchDataTypeCode',
         'es.matchDataValue',
         'es.matchTimeTypeCode',
         'es.matchTimeBeginValue',
         'es.matchTimeEndValue',
-        'es.matchHistoricalInd',
+        'es.matchHistoricalIndicator',
         'es.reasonCode',
         'es.note',
-        'es.activeInd',
+        'es.active',
         'es.userId',
         'es.addDate',
         'es.updateDate',
@@ -90,11 +90,11 @@ export class ErrorSuppressionsRepository extends Repository<EsSpec> {
     }
 
     if (String(active) === String(true)) {
-      query.andWhere('es.activeInd = 1', {
+      query.andWhere('es.active = 1', {
         active: active,
       });
     } else if (String(active) === String(false)) {
-      query.andWhere('es.activeInd = 0', {
+      query.andWhere('es.active = 0', {
         active: active,
       });
     }

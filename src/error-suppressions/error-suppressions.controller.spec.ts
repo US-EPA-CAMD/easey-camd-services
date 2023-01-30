@@ -6,14 +6,23 @@ import { ErrorSuppressionsService } from './error-suppressions.service';
 import { ErrorSuppressionsRepository } from './error-suppressions.repository';
 import { ErrorSuppressionsParamsDTO } from '../dto/error-suppressions.params.dto';
 import { genErrorSuppressions } from '../../test/object-generators/error-suppressions';
-import { ErrorSuppressionsDTO } from '../dto/error-suppressions-dto';
+import { ErrorSuppressionsDTO } from '../dto/error-suppressions.dto';
 import { ErrorSuppressionsMap } from '../maps/error-suppressions.map';
+import { ErrorSuppressionsPayloadDTO } from '../dto/error-suppressions-payload.dto';
 
 jest.mock('@us-epa-camd/easey-common/guards');
 
 describe('-- Error Suppressions Controller --', () => {
   let controller: ErrorSuppressionsController;
   let service: ErrorSuppressionsService;
+  const currentUser = {
+    userId: '',
+    sessionId: '',
+    expiration: '',
+    clientIp: '',
+    isAdmin: true,
+    permissionSet: [],
+  };
 
   beforeAll(async () => {
     const module = await Test.createTestingModule({
@@ -47,18 +56,22 @@ describe('-- Error Suppressions Controller --', () => {
     });
   });
 
+  describe('* createErrorSuppression', () => {
+    it('calls ErrorSuppressionsService.createErrorSuppression() and creates an Error Suppression record', async () => {
+      const mockedValue = genErrorSuppressions<ErrorSuppressionsDTO>()[0];
+      const payload = new ErrorSuppressionsPayloadDTO();
+      jest
+        .spyOn(service, 'createErrorSuppression')
+        .mockResolvedValue(mockedValue);
+      expect(
+        await controller.createErrorSuppression(payload, currentUser),
+      ).toBe(mockedValue);
+    });
+  });
+
   describe('* deactivateErrorSuppression', () => {
     it('calls ErrorSuppressionsService.deactivateErrorSuppression() and returns updated row', async () => {
       const mockedValue = genErrorSuppressions<ErrorSuppressionsDTO>()[0];
-
-      const currentUser = {
-        userId: "",
-        sessionId: "",
-        expiration: "",
-        clientIp: "",
-        isAdmin: true,
-        permissionSet: []
-      }
 
       jest
         .spyOn(service, 'deactivateErrorSuppression')
@@ -68,5 +81,4 @@ describe('-- Error Suppressions Controller --', () => {
       );
     });
   });
-
 });

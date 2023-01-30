@@ -1,7 +1,9 @@
-import { Controller } from '@nestjs/common';
-import { Get, Param, Put, Query, UseGuards } from '@nestjs/common/decorators';
+import { Controller, UseGuards } from '@nestjs/common';
+import { Body, Get, Param, Put, Post, Query } from '@nestjs/common/decorators';
 import {
   ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiExtraModels,
   ApiOkResponse,
   ApiOperation,
   ApiQuery,
@@ -10,10 +12,11 @@ import {
 } from '@nestjs/swagger';
 import { CurrentUser } from '@us-epa-camd/easey-common/interfaces';
 import { User } from '@us-epa-camd/easey-common/decorators';
-import { AuthGuard } from '@us-epa-camd/easey-common/guards';
 import { ErrorSuppressionsService } from './error-suppressions.service';
-import { ErrorSuppressionsDTO } from '../dto/error-suppressions-dto';
+import { ErrorSuppressionsDTO } from '../dto/error-suppressions.dto';
 import { ErrorSuppressionsParamsDTO } from '../dto/error-suppressions.params.dto';
+import { AuthGuard } from '@us-epa-camd/easey-common/guards';
+import { ErrorSuppressionsPayloadDTO } from '../dto/error-suppressions-payload.dto';
 import {
   ApiExcludeControllerByEnv,
   BadRequestResponse,
@@ -25,7 +28,7 @@ import {
 @ApiTags('Error Suppressions')
 @ApiExcludeControllerByEnv()
 export class ErrorSuppressionsController {
-  constructor(private service: ErrorSuppressionsService) { }
+  constructor(private service: ErrorSuppressionsService) {}
 
   @Get()
   @ApiOkResponse({
@@ -54,12 +57,23 @@ export class ErrorSuppressionsController {
   @UseGuards(AuthGuard)
   @ApiBearerAuth('Token')
   @ApiOkResponse({
-    description: 'Deactivates the Error Suppression Record'
+    description: 'Deactivates the Error Suppression Record',
   })
-  deactivateErrorSuppression(@Param('id') id: number, @User() user: CurrentUser): Promise<ErrorSuppressionsDTO> {
+  deactivateErrorSuppression(
+    @Param('id') id: number,
+    @User() user: CurrentUser,
+  ): Promise<ErrorSuppressionsDTO> {
     return this.service.deactivateErrorSuppression(id);
   }
 
+  @Post()
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth('Token')
+  @ApiCreatedResponse({ description: 'Creates an Error Suppression Record' })
+  async createErrorSuppression(
+    @Body() payload: ErrorSuppressionsPayloadDTO,
+    @User() user: CurrentUser,
+  ) {
+    return this.service.createErrorSuppression(payload, user.userId);
+  }
 }
-
-
