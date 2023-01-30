@@ -21,13 +21,13 @@ export async function bootstrap() {
   const server = await app.listen(appPort);
   server.setTimeout(1800000);
 
-  //if (enableDebug) {
-  console.log('config: ', configService.get('app'));
-  console.log('s3Config: ', configService.get('s3Config'));
-  console.log(
-    `Application is running on: ${await app.getUrl()}/${appPath}/swagger`,
-  );
-  //}
+  if (enableDebug) {
+    console.log('config: ', configService.get('app'));
+    console.log('s3Config: ', configService.get('s3Config'));
+    console.log(
+      `Application is running on: ${await app.getUrl()}/${appPath}/swagger`,
+    );
+  }
 }
 
 bootstrap();

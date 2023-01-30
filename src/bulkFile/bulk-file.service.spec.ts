@@ -4,10 +4,7 @@ import { Test } from '@nestjs/testing';
 import { LoggerModule } from '@us-epa-camd/easey-common/logger';
 import { BulkFileDTO } from '../dto/bulk_file.dto';
 import { BulkFileInputDTO } from '../dto/bulk_file_input.dto';
-import { BulkFileCopyParamsDTO } from '../dto/bulk-file-copy.params.dto';
 import { BulkFileMap } from '../maps/bulk-file-map';
-import { BulkFileGaftpCopyRepository } from './bulk-file-gaftp-copy.repository';
-import { BulkFileGAFTPCopyService } from './bulk-file-gaftp-copy.service';
 import { BulkFileMetadataRepository } from './bulk-file.repository';
 import { BulkFileService } from './bulk-file.service';
 
@@ -16,18 +13,6 @@ const mockRepository = () => ({
   findOne: jest.fn(),
   insert: jest.fn(),
   update: jest.fn(),
-});
-
-const mockCopyRepository = () => ({
-  insert: jest.fn(),
-  update: jest.fn(),
-});
-
-const mockGaftpService = () => ({
-  generateSubUrls: jest.fn().mockResolvedValue([]),
-  generateFileData: jest.fn(),
-  uploadFilesToS3: jest.fn(),
-  compareObjects: jest.fn(),
 });
 
 const dto = new BulkFileDTO();
@@ -47,13 +32,8 @@ describe('-- Bulk File Controller --', () => {
       providers: [
         ConfigService,
         BulkFileService,
-        { provide: BulkFileGAFTPCopyService, useFactory: mockGaftpService },
         { provide: BulkFileMap, useFactory: mockMap },
         { provide: BulkFileMetadataRepository, useFactory: mockRepository },
-        {
-          provide: BulkFileGaftpCopyRepository,
-          useFactory: mockCopyRepository,
-        },
       ],
     }).compile();
 
@@ -71,34 +51,6 @@ describe('-- Bulk File Controller --', () => {
     });
   });
 
-  describe('verifyBulkFiles', () => {
-    it('should return true given MP param code', async () => {
-      const params = new BulkFileCopyParamsDTO();
-      params.type = 'MP';
-      expect(await bulkFileService.verifyBulkFiles(params, 0)).toBe(true);
-    });
-
-    it('should return true given non MP param code', async () => {
-      const params = new BulkFileCopyParamsDTO();
-      params.type = 'EDR';
-      expect(await bulkFileService.verifyBulkFiles(params, 0)).toBe(true);
-    });
-  });
-
-  describe('copyBulkFiles', () => {
-    it('should return true given MP param code', async () => {
-      const params = new BulkFileCopyParamsDTO();
-      params.type = 'MP';
-      expect(await bulkFileService.copyBulkFiles(params, 0)).toBe(true);
-    });
-
-    it('should return true given non MP param code', async () => {
-      const params = new BulkFileCopyParamsDTO();
-      params.type = 'EDR';
-      expect(await bulkFileService.copyBulkFiles(params, 0)).toBe(true);
-    });
-  });
-
   describe('addBulkDataFile', () => {
     it('should add metadata for repo successfully given a found record', async () => {
       const params = new BulkFileInputDTO();
@@ -113,8 +65,7 @@ describe('-- Bulk File Controller --', () => {
       const params = new BulkFileInputDTO();
 
       bulkFileRepo.findOne = jest.fn().mockResolvedValue(null);
-      expect(
-        await (
+      expect((
           await bulkFileService.addBulkDataFile(params)
         ).filename,
       ).toEqual('Test');

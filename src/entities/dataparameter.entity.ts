@@ -7,14 +7,19 @@ import {
   PrimaryGeneratedColumn
 } from 'typeorm';
 
-import { ReportDetail } from './report-detail.entity';
+import { DataTable } from './datatable.entity';
 
 @Entity({ name: 'camdaux.dataparameter' })
-export class ReportParameter extends BaseEntity {
+export class DataParameter extends BaseEntity {
   @PrimaryGeneratedColumn({
     name: 'parameter_id',
   })
   id: number;
+
+  @Column({
+    name: 'datatable_id',
+  })
+  dataTableId: number;
 
   @Column({
     name: 'parameter_order',
@@ -37,9 +42,9 @@ export class ReportParameter extends BaseEntity {
   reportDetailId: number;
 
   @ManyToOne(
-    () => ReportDetail,
+    () => DataTable,
     o => o.parameters,
   )
   @JoinColumn({ name: 'datatable_id' })
-  detail: ReportDetail;
+  dataTable: DataTable;
 }

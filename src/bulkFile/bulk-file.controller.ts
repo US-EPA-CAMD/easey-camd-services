@@ -1,12 +1,11 @@
-import { v4 } from 'uuid';
 import { Request } from 'express';
 
 import {
-  ApiExcludeEndpoint,
-  ApiBearerAuth,
+  ApiTags,
   ApiOkResponse,
   ApiSecurity,
-  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 
 import {
@@ -14,19 +13,15 @@ import {
   Get,
   Req,
   Post,
-  Put,
   Body,
-  Param,
-  Query,
   UseGuards,
-  Delete,
 } from '@nestjs/common';
 import { ClientTokenGuard } from '@us-epa-camd/easey-common/guards';
 
 import { BulkFileDTO } from '../dto/bulk_file.dto';
 import { BulkFileService } from './bulk-file.service';
 import { BulkFileInputDTO } from '../dto/bulk_file_input.dto';
-import { BulkFileCopyParamsDTO } from '../dto/bulk-file-copy.params.dto';
+import { ApiExcludeEndpointByEnv } from '../utilities/swagger-decorator.const';
 
 @Controller()
 @ApiSecurity('APIKey')
@@ -38,8 +33,10 @@ export class BulkFileController {
   @ApiOkResponse({
     isArray: true,
     type: BulkFileDTO,
-    description:
-      'Retrieves a list of bulk data files and their metadata from S3',
+    description: 'Data retrieved successfully',
+  })
+  @ApiOperation({
+    description: "Retrieves a list of bulk data files and their metadata from S3."
   })
   async getBulkFiles(@Req() req: Request): Promise<BulkFileDTO[]> {
     const curDate = new Date();
@@ -51,75 +48,18 @@ export class BulkFileController {
     return this.service.getBulkDataFiles();
   }
 
-  @Post('gaftp-copy')
-  @ApiOkResponse({
-    description: 'Copies files from GAFTP to S3',
-  })
-  @ApiExcludeEndpoint()
-  @ApiSecurity('ClientId')
-  @ApiBearerAuth('ClientToken')
-  @UseGuards(ClientTokenGuard)
-  async copyBulkFiles(@Query() params: BulkFileCopyParamsDTO) {
-    const job_id = v4();
-
-    this.service.copyBulkFiles(params, job_id);
-    return job_id;
-  }
-
-  @Post('gaftp-verify')
-  @ApiOkResponse({
-    description: 'Verifies all files from GAFTP have been moved to S3',
-  })
-  @ApiExcludeEndpoint()
-  async verifyBulkFiles(@Query() params: BulkFileCopyParamsDTO) {
-    const job_id = v4();
-
-    this.service.verifyBulkFiles(params, job_id);
-    return job_id;
-  }
-
   @Post('metadata')
   @ApiOkResponse({
     type: BulkFileDTO,
     description: 'Creates metadata for bulk files store in S3',
   })
-  @ApiExcludeEndpoint()
   @ApiSecurity('ClientId')
   @ApiBearerAuth('ClientToken')
   @UseGuards(ClientTokenGuard)
+  @ApiExcludeEndpointByEnv()
   async addBulkFile(
     @Body() bulkDataFile: BulkFileInputDTO,
   ): Promise<BulkFileDTO> {
     return this.service.addBulkDataFile(bulkDataFile);
-  }
-
-  @Put('metadata/:path')
-  @ApiOkResponse({
-    type: BulkFileDTO,
-    description: 'Updates metadata for bulk files store in S3',
-  })
-  @ApiExcludeEndpoint()
-  @ApiSecurity('ClientId')
-  @ApiBearerAuth('ClientToken')
-  @UseGuards(ClientTokenGuard)
-  async updateBulkFile(
-    @Param('path') s3Path: string,
-    @Body() bulkDataFile: BulkFileInputDTO,
-  ): Promise<BulkFileDTO> {
-    return this.service.updateBulkDataFile(s3Path, bulkDataFile);
-  }
-
-  @Delete('metadata/:path')
-  @ApiOkResponse({
-    description: 'Deletes metadata for bulk files store in S3',
-  })
-  @ApiExcludeEndpoint()
-  @ApiSecurity('ClientId')
-  @ApiBearerAuth('ClientToken')
-  @UseGuards(ClientTokenGuard)
-  async deleteBulkFile(
-    @Param('path') s3Path: string,
-  ): Promise<void> {
-    return this.service.deleteBulkDataFile(s3Path);
   }
 }

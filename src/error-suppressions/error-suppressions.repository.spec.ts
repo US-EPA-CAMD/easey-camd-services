@@ -3,9 +3,9 @@ import { SelectQueryBuilder } from 'typeorm';
 
 import { ErrorSuppressionsParamsDTO } from '../dto/error-suppressions.params.dto';
 import { ErrorSuppressionsRepository } from './error-suppressions.repository';
-import { QueryBuilderHelper } from '../utils/query-builder.helper';
+import { QueryBuilderHelper } from '../utilities/query-builder.helper';
 
-jest.mock('../utils/query-builder.helper');
+jest.mock('../utilities/query-builder.helper');
 
 const mockQueryBuilder = () => ({
   andWhere: jest.fn(),

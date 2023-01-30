@@ -6,24 +6,24 @@ import { SeverityCodes } from '../enums/severity-codes.enum';
 import { ReasonCodes } from '../enums/reason-codes.enum';
 
 export class ErrorSuppressionsParamsDTO {
-  @ApiProperty()
   @IsNotEmpty()
+  @ApiProperty()
   checkTypeCode: string;
 
-  @ApiProperty()
   @IsNotEmpty()
+  @ApiProperty()
   checkNumber: number;
 
-  @ApiProperty()
   @IsNotEmpty()
+  @ApiProperty()
   checkResult: string;
 
-  @ApiProperty({ enum: SeverityCodes })
   @IsOptional()
+  @ApiProperty({ enum: SeverityCodes })
   severityCode?: string;
 
-  @ApiProperty()
   @IsOptional()
+  @ApiProperty()
   facilityId?: number;
 
   @ApiProperty()
@@ -32,22 +32,23 @@ export class ErrorSuppressionsParamsDTO {
 
   @ApiProperty({ isArray: true })
   @IsOptional()
+  @ApiProperty({ isArray: true })
   @Transform(({ value }) => value.split('|').map((item) => item.trim()))
   locations?: string[];
 
-  @ApiProperty({ enum: ReasonCodes })
   @IsOptional()
+  @ApiProperty({ enum: ReasonCodes })
   reasonCode?: string;
 
-  @ApiProperty()
   @IsOptional()
+  @ApiProperty()
   beginDateHrQtr?: string;
 
-  @ApiProperty()
   @IsOptional()
+  @ApiProperty()
   endDateHrQtr?: string;
 
-  @ApiProperty()
   @IsOptional()
+  @ApiProperty()
   active?: boolean;
 }
