@@ -26,10 +26,6 @@ export class ErrorSuppressionsParamsDTO {
   @ApiProperty()
   facilityId?: number;
 
-  @ApiProperty()
-  @IsOptional()
-  esId?: number;
-
   @ApiProperty({ isArray: true })
   @IsOptional()
   @ApiProperty({ isArray: true })

@@ -50,7 +50,6 @@ describe('-- Error Suppressions Controller --', () => {
   describe('* deactivateErrorSuppression', () => {
     it('calls ErrorSuppressionsService.deactivateErrorSuppression() and returns updated row', async () => {
       const mockedValue = genErrorSuppressions<ErrorSuppressionsDTO>()[0];
-      const paramsDto = new ErrorSuppressionsParamsDTO();
 
       const currentUser = {
         userId: "",
@@ -64,7 +63,7 @@ describe('-- Error Suppressions Controller --', () => {
       jest
         .spyOn(service, 'deactivateErrorSuppression')
         .mockResolvedValue(mockedValue);
-      expect(await controller.deactivateErrorSuppression(paramsDto.esId, currentUser)).toBe(
+      expect(await controller.deactivateErrorSuppression(7, currentUser)).toBe(
         mockedValue,
       );
     });
