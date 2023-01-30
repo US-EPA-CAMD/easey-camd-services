@@ -1,22 +1,17 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from "@nestjs/swagger";
+import {
+  DataDictionary,
+  OverrideKeys,
+  PropertyKeys
+} from '@us-epa-camd/easey-common/data-dictionary';
 
 export class CreateMailDto {
-  @ApiProperty({
-    description: 'Email address of sender',
-    example: 'noreply@epa.gov',
-    name: 'fromEmail',
-  })
+  @ApiProperty()
   fromEmail: string;
 
-  @ApiProperty({
-    description: 'Subject of email message',
-    name: 'subject',
-  })
+  @ApiProperty()
   subject: string;
 
-  @ApiProperty({
-    description: 'Content of email message',
-    name: 'message',
-  })
+  @ApiProperty()
   message: string;
 }

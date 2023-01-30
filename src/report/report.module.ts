@@ -1,24 +1,13 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { ReportParameterMap } from 'src/maps/report-parameter.map';
-import { ReportDetailMap } from './../maps/report-detail.map';
-import { ReportColumnMap } from 'src/maps/report-column.map';
-import { ReportRepository } from './report.repository';
+import { DataSetService } from '../dataset/dataset.service';
+import { DataSetModule } from '../dataset/dataset.module';
 import { ReportController } from './report.controller';
-import { ReportService } from './report.service';
-import { ReportMap } from './../maps/report.map';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([ReportRepository])],
+  imports: [DataSetModule],
   controllers: [ReportController],
-  providers: [
-    ReportMap,
-    ReportService,
-    ReportDetailMap,
-    ReportColumnMap,
-    ReportParameterMap,    
-  ],
-  exports: [TypeOrmModule],
+  providers: [DataSetService],
+  exports: [],
 })
 export class ReportModule {}

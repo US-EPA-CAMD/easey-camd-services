@@ -1,5 +1,6 @@
 # never include npm's package-lock.json when using yarn
 package-lock.json
+data-dictionary.json
 
 # dependencies
 /node_modules

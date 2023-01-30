@@ -6,6 +6,7 @@ import { ErrorSuppressionsRepository } from './error-suppressions.repository';
 import { ErrorSuppressionsParamsDTO } from '../dto/error-suppressions.params.dto';
 import { ErrorSuppressionsDTO } from '../dto/error-suppressions.dto';
 import { ErrorSuppressionsMap } from '../maps/error-suppressions.map';
+import { EsSpec } from '../entities/es-spec.entity';
 import { ErrorSuppressionsPayloadDTO } from '../dto/error-suppressions-payload.dto';
 
 @Injectable()
@@ -14,7 +15,7 @@ export class ErrorSuppressionsService {
     @InjectRepository(ErrorSuppressionsRepository)
     private readonly repository: ErrorSuppressionsRepository,
     private readonly map: ErrorSuppressionsMap,
-  ) {}
+  ) { }
 
   async getErrorSuppressions(
     params: ErrorSuppressionsParamsDTO,
@@ -28,6 +29,22 @@ export class ErrorSuppressionsService {
     return this.map.many(query);
   }
 
+  async deactivateErrorSuppression(id: number): Promise<ErrorSuppressionsDTO> {
+    let recordToUpdate: EsSpec;
+
+    try {
+      recordToUpdate = await this.repository.findOne({ id });
+      if (!recordToUpdate)
+        throw new LoggingException(`Record with id ${id} not found`, HttpStatus.NOT_FOUND);
+
+      recordToUpdate.activeInd = 0;
+      await this.repository.save(recordToUpdate);
+    } catch (e) {
+      throw new LoggingException(e.message, e.status);
+    }
+
+    return this.map.one(recordToUpdate);
+  }
   async createErrorSuppressions(
     payload: ErrorSuppressionsPayloadDTO,
     userId?: string,

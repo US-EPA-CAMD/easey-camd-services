@@ -9,6 +9,8 @@ import { genErrorSuppressions } from '../../test/object-generators/error-suppres
 import { ErrorSuppressionsDTO } from '../dto/error-suppressions.dto';
 import { ErrorSuppressionsMap } from '../maps/error-suppressions.map';
 
+jest.mock('@us-epa-camd/easey-common/guards');
+
 describe('-- Error Suppressions Controller --', () => {
   let controller: ErrorSuppressionsController;
   let service: ErrorSuppressionsService;
@@ -44,4 +46,27 @@ describe('-- Error Suppressions Controller --', () => {
       );
     });
   });
+
+  describe('* deactivateErrorSuppression', () => {
+    it('calls ErrorSuppressionsService.deactivateErrorSuppression() and returns updated row', async () => {
+      const mockedValue = genErrorSuppressions<ErrorSuppressionsDTO>()[0];
+
+      const currentUser = {
+        userId: "",
+        sessionId: "",
+        expiration: "",
+        clientIp: "",
+        isAdmin: true,
+        permissionSet: []
+      }
+
+      jest
+        .spyOn(service, 'deactivateErrorSuppression')
+        .mockResolvedValue(mockedValue);
+      expect(await controller.deactivateErrorSuppression(7, currentUser)).toBe(
+        mockedValue,
+      );
+    });
+  });
+
 });
