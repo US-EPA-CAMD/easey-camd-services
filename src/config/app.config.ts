@@ -58,6 +58,9 @@ export default registerAs('app', () => ({
   smtpPort: getConfigValueNumber('EASEY_CAMD_SERVICES_SMTP_PORT', 25),
   // ENABLES DEBUG CONSOLE LOGS
   enableDebug: getConfigValueBoolean('EASEY_CAMD_SERVICES_ENABLE_DEBUG'),
+  currentUser: getConfigValue(
+    'EASEY_CAMD_SERVICES_CURRENT_USER',
+  ),
   apiHost: apiHost,
   authApi: {
     uri: getConfigValue('EASEY_AUTH_API', `https://${apiHost}/auth-mgmt`),

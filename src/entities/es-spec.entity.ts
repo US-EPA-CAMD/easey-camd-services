@@ -5,16 +5,15 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
-  PrimaryColumn,
+  PrimaryGeneratedColumn,
 } from 'typeorm';
 import { CheckCatalogResult } from './check-catalog-result.entity';
 import { Plant } from './plant.entity';
 
 @Entity({ name: 'camdecmpsaux.es_spec' })
 export class EsSpec extends BaseEntity {
-  @PrimaryColumn({
+  @PrimaryGeneratedColumn({
     name: 'es_spec_id',
-    transformer: new NumericColumnTransformer(),
   })
   id: number;
 
@@ -31,7 +30,7 @@ export class EsSpec extends BaseEntity {
   facilityId: number;
 
   @Column({ name: 'location_name_list' })
-  locationNameList: string;
+  locations: string;
 
   @Column({ name: 'es_match_data_type_cd' })
   matchDataTypeCode: string;
@@ -46,7 +45,7 @@ export class EsSpec extends BaseEntity {
     name: 'match_historical_ind',
     transformer: new NumericColumnTransformer(),
   })
-  matchHistoricalInd: number;
+  matchHistoricalIndicator: number;
 
   @Column({ name: 'match_time_begin_value' })
   matchTimeBeginValue: Date;
@@ -64,7 +63,7 @@ export class EsSpec extends BaseEntity {
   note: string;
 
   @Column({ name: 'active_ind', transformer: new NumericColumnTransformer() })
-  activeInd: number;
+  active: number;
 
   @Column({ name: 'userid' })
   userId: string;

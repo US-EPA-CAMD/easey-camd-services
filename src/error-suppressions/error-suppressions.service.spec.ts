@@ -6,7 +6,7 @@ import { ErrorSuppressionsService } from './error-suppressions.service';
 import { ErrorSuppressionsRepository } from './error-suppressions.repository';
 import { ErrorSuppressionsParamsDTO } from '../dto/error-suppressions.params.dto';
 import { genErrorSuppressions } from '../../test/object-generators/error-suppressions';
-import { ErrorSuppressionsDTO } from '../dto/error-suppressions-dto';
+import { ErrorSuppressionsDTO } from '../dto/error-suppressions.dto';
 import { ErrorSuppressionsMap } from '../../src/maps/error-suppressions.map';
 
 const mockRepository = () => ({
