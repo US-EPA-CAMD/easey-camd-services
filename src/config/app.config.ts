@@ -17,62 +17,79 @@ if (host == 'localhost') {
   uri = `http://localhost:${port}/${path}`;
 }
 
-const apiHost = getConfigValue('EASEY_API_GATEWAY_HOST', 'api.epa.gov/easey/dev');
+const apiHost = getConfigValue(
+  'EASEY_API_GATEWAY_HOST',
+  'api.epa.gov/easey/dev',
+);
 
 export default registerAs('app', () => ({
   name: 'camd-services',
-  host, port, path, uri,
+  host,
+  port,
+  path,
+  uri,
   title: getConfigValue(
-    'EASEY_CAMD_SERVICES_TITLE', 'CAMD Administrative & General Services',
+    'EASEY_CAMD_SERVICES_TITLE',
+    'CAMD Administrative & General Services',
   ),
   description: getConfigValue(
     'EASEY_CAMD_SERVICES_DESCRIPTION',
-    '',
+    'Provides administrative & general services for CAMD applications.',
   ),
   env: getConfigValue(
-    'EASEY_CAMD_SERVICES_ENV', 'local-dev',
+    'EASEY_CAMD_SERVICES_ENV', 'local-dev'
   ),
   apiKey: getConfigValue(
-    'EASEY_CAMD_SERVICES_API_KEY',
+    'EASEY_CAMD_SERVICES_API_KEY'
   ),
   enableApiKey: getConfigValueBoolean(
-    'EASEY_CAMD_SERVICES_ENABLE_API_KEY',
+    'EASEY_CAMD_SERVICES_ENABLE_API_KEY'
   ),
   enableClientToken: getConfigValueBoolean(
     'EASEY_CAMD_SERVICES_ENABLE_CLIENT_TOKEN',
   ),
+  enableAuthToken: getConfigValueBoolean(
+    'EASEY_CAMD_SERVICES_ENABLE_AUTH_TOKEN',
+    true,
+  ),
   secretToken: getConfigValue(
-    'EASEY_CAMD_SERVICES_SECRET_TOKEN',
+    'EASEY_CAMD_SERVICES_SECRET_TOKEN'
   ),
   enableSecretToken: getConfigValueBoolean(
     'EASEY_CAMD_SERVICES_ENABLE_SECRET_TOKEN',
   ),
   enableCors: getConfigValueBoolean(
-    'EASEY_CAMD_SERVICES_ENABLE_CORS', true,
+    'EASEY_CAMD_SERVICES_ENABLE_CORS', true
   ),
   enableGlobalValidationPipes: getConfigValueBoolean(
-    'EASEY_CAMD_SERVICES_ENABLE_GLOBAL_VALIDATION_PIPE', true,
+    'EASEY_CAMD_SERVICES_ENABLE_GLOBAL_VALIDATION_PIPE',
+    true,
   ),
   version: getConfigValue(
-    'EASEY_CAMD_SERVICES_VERSION', 'v0.0.0',
+    'EASEY_CAMD_SERVICES_VERSION', 'v0.0.0'
   ),
   published: getConfigValue(
-    'EASEY_CAMD_SERVICES_PUBLISHED', 'local',
+    'EASEY_CAMD_SERVICES_PUBLISHED', 'local'
   ),
   smtpHost: getConfigValue(
-    'EASEY_CAMD_SERVICES_SMTP_HOST', 'smtp.epa.gov',
+    'EASEY_CAMD_SERVICES_SMTP_HOST', 'smtp.epa.gov'
   ),
   smtpPort: getConfigValueNumber(
-    'EASEY_CAMD_SERVICES_SMTP_PORT', 25,
+    'EASEY_CAMD_SERVICES_SMTP_PORT', 25
   ),
   // ENABLES DEBUG CONSOLE LOGS
   enableDebug: getConfigValueBoolean(
-    'EASEY_CAMD_SERVICES_ENABLE_DEBUG',
+    'EASEY_CAMD_SERVICES_ENABLE_DEBUG'
+  ),
+  // NEEDS TO BE SET IN .ENV FILE FOR LOCAL DEVELOPMENT
+  // FORMAT: { "userId": "", "roles": [ { "orisCode": 3, "role": "P" } ] }
+  currentUser: getConfigValue(
+    'EASEY_CAMD_SERVICES_CURRENT_USER',
   ),
   apiHost: apiHost,
   authApi: {
     uri: getConfigValue(
-      'EASEY_AUTH_API', `https://${apiHost}/auth-mgmt`,
+      'EASEY_AUTH_API', `https://${apiHost}/auth-mgmt`
     ),
   },
 }));

@@ -1,16 +1,19 @@
 import {
   ApiTags,
+  ApiQuery,
   ApiSecurity,
   ApiOkResponse,
+  ApiOperation,
 } from '@nestjs/swagger';
 
 import {
   Get,
   Query,
-  Controller
+  Controller,
 } from '@nestjs/common';
 
-import { ReportService } from './report.service';
+import { ReportDTO } from './../dto/report.dto';
+import { DataSetService } from '../dataset/dataset.service';
 import { ReportParamsDTO } from './../dto/report-params.dto';
 
 @Controller()
@@ -19,14 +22,33 @@ import { ReportParamsDTO } from './../dto/report-params.dto';
 export class ReportController {
   
   constructor(
-    private service: ReportService
+    private service: DataSetService
   ) { }
+
+  @Get('list')
+  @ApiOkResponse({
+    type: ReportDTO,
+    description: 'Data retrieved successfully',
+  })
+  @ApiOperation({
+    description: 'Retrieves list of official reports available.'
+  })
+  async getAvailableReports() {
+    return this.service.getAvailableReports();
+  }
 
   @Get()
   @ApiOkResponse({
-    description: 'Retrieves data for various reports based on criteria',
+    type: ReportDTO,
+    description: 'Data retrieved successfully',
   })
-  async getReport(@Query() params: ReportParamsDTO) {
-    return this.service.getReport(params);
+  @ApiOperation({
+    description: 'Retrieves official data for various reports based on criteria.'
+  })
+  @ApiQuery({ style: 'pipeDelimited', name: 'testId', required: false, explode: false, })
+  async getReport(
+    @Query() params: ReportParamsDTO
+  ) {
+    return this.service.getDataSet(params);
   }
 }

@@ -1,41 +1,24 @@
-import { ApiProperty } from '@nestjs/swagger';
-
-import { ReportColumnDTO } from './report-column.dto';
-import { ReportParameterDTO } from './report-parameter.dto';
+import { ApiProperty } from "@nestjs/swagger";
+import {
+  DataDictionary,
+  OverrideKeys,
+  PropertyKeys
+} from '@us-epa-camd/easey-common/data-dictionary';
 
 export class ReportDetailDTO {
-  @ApiProperty({
-    description: 'NEED TO UPDATE DESCRIPTION',
-  })
-  position: number;
+  @ApiProperty(
+    DataDictionary.getMetadata(
+      PropertyKeys.DISPLAY_NAME,
+      OverrideKeys.REPORT_DETAIL,
+  ))
+  displayName: string;
 
-  @ApiProperty({
-    description: 'NEED TO UPDATE DESCRIPTION',
-  })
-  title: string;
+  @ApiProperty()
+  templateCode: string;
 
-  @ApiProperty({
-    description: 'NEED TO UPDATE DESCRIPTION',
-  })
-  sqlStatement: string;
+  @ApiProperty()
+  templateType: string;
 
-  @ApiProperty({
-    description: 'NEED TO UPDATE DESCRIPTION',
-  })
-  noResultsMessage: string;
-
-  @ApiProperty({
-    description: 'NEED TO UPDATE DESCRIPTION',
-  })
-  columns: ReportColumnDTO[];
-
-  @ApiProperty({
-    description: 'NEED TO UPDATE DESCRIPTION',
-  })
-  parameters: ReportParameterDTO[];
-
-  @ApiProperty({
-    description: 'NEED TO UPDATE DESCRIPTION',
-  })
+  @ApiProperty()
   results: any[];
 }

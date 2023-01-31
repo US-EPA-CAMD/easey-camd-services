@@ -9,5 +9,5 @@ export default registerAs('s3Config', () => ({
   credentials: {
     accessKeyId: getConfigValue('EASEY_BULK_FILES_AWS_ACCESS_KEY_ID'),
     secretAccessKey: getConfigValue('EASEY_BULK_FILES_AWS_SECRET_ACCESS_KEY'),
-  }
+  },
 }));
