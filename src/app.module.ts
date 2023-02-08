@@ -18,8 +18,8 @@ import { LoggingModule } from './logging/logging.module';
 import { ReportModule } from './report/report.module';
 import { ReportWorkspaceModule } from './report-workspace/report.module';
 import { MailModule } from './mail/mail.module';
-import { SubmissionModule } from './submission/submission.module';
 import { ErrorSuppressionsModule } from './error-suppressions/error-suppressions.module';
+import { EvaluationModule } from './evaluation/evaluation.module';
 
 @Module({
   imports: [
@@ -39,8 +39,8 @@ import { ErrorSuppressionsModule } from './error-suppressions/error-suppressions
     ReportModule,
     ReportWorkspaceModule,
     MailModule,
-    SubmissionModule,
     ErrorSuppressionsModule,
+    EvaluationModule,
   ],
 })
 export class AppModule {}

@@ -21,6 +21,11 @@ export class Plant extends BaseEntity {
   })
   stateCode: string;
 
+  @Column({
+    name: 'facility_name',
+  })
+  facilityName: string;
+
   @OneToMany(() => EsSpec, (es) => es.plant)
   esSpec: EsSpec[];
 }
