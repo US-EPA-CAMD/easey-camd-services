@@ -8,14 +8,7 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 
-import {
-  Controller,
-  Get,
-  Req,
-  Post,
-  Body,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Req, Post, Body, UseGuards } from '@nestjs/common';
 import { ClientTokenGuard } from '@us-epa-camd/easey-common/guards';
 
 import { BulkFileDTO } from '../dto/bulk_file.dto';
@@ -36,7 +29,8 @@ export class BulkFileController {
     description: 'Data retrieved successfully',
   })
   @ApiOperation({
-    description: "Retrieves a list of bulk data files and their metadata from S3."
+    description:
+      'Retrieves a list of bulk data files and their metadata from S3.',
   })
   async getBulkFiles(@Req() req: Request): Promise<BulkFileDTO[]> {
     const curDate = new Date();

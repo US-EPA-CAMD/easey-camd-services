@@ -1347,7 +1347,7 @@
   resolved "https://registry.yarnpkg.com/@faker-js/faker/-/faker-7.6.0.tgz#9ea331766084288634a9247fcd8b84f16ff4ba07"
   integrity sha512-XK6BTq1NDMo9Xqw/YkYyGjSsg44fbNwYRx7QK2CuoQgyy+f1rrTDHoExVM5PsyXCtfl2vs2vVJ0MN0yN6LppRw==
 
-"@golevelup/ts-jest@^0.3.3":
+"@golevelup/ts-jest@^0.3.3", "@golevelup/ts-jest@^0.3.4":
   version "0.3.4"
   resolved "https://registry.yarnpkg.com/@golevelup/ts-jest/-/ts-jest-0.3.4.tgz#b1da56344136f9d4ebce03676c099b5214bb7c29"
   integrity sha512-UXas4+20gNmYfVR7DTJ9iRppy00o0ElqQrRQyn9cF3Gq90iM1Xx1lKvipTEe5NniHDD9FiMZNweOfB+9ebZRZA==
@@ -2120,11 +2120,12 @@
     "@typescript-eslint/types" "5.1.0"
     eslint-visitor-keys "^3.0.0"
 
-"@us-epa-camd/easey-common@14.0.1":
-  version "14.0.1"
-  resolved "https://npm.pkg.github.com/download/@US-EPA-CAMD/easey-common/14.0.1/a17a3428370d6b837f00bde069fee94f35c9bb67#a17a3428370d6b837f00bde069fee94f35c9bb67"
-  integrity sha512-L0i06QR9prH0cHSCLbswd+w/cV8qFMNKHmHEgFwVsGfm8zoHew/OhWWUm4vQgH6N/+a8jys3d8YPBh0mHlg7VQ==
+"@us-epa-camd/easey-common@14.2.2":
+  version "14.2.2"
+  resolved "https://npm.pkg.github.com/download/@US-EPA-CAMD/easey-common/14.2.2/5693038fecfc42f9236880652ca0ddd962bde099#5693038fecfc42f9236880652ca0ddd962bde099"
+  integrity sha512-oN6nQigrJu7T83OM8jliBAveaL4U1ZzTJP/1B6KQxn3HwOBfqFaNsEIHbKdpNEe85rhMXF7zD9o+5iCOzU9HMg==
   dependencies:
+    "@golevelup/ts-jest" "^0.3.4"
     "@nestjs/axios" "0.0.3"
     "@nestjs/common" "^8.1.1"
     "@nestjs/config" "^1.0.2"
