@@ -7,11 +7,11 @@ import { EvaluationSet } from '../entities/evaluation-set.entity';
 import { MonitorPlan } from '../entities/monitor-plan.entity';
 import { Plant } from '../entities/plant.entity';
 import { Evaluation } from '../entities/evaluation.entity';
-import { TestSummary } from 'src/entities/test-summary.entity';
-import { QaCertEvent } from 'src/entities/qa-cert-event.entity';
-import { QaTee } from 'src/entities/qa-tee.entity';
-import { ReportingPeriod } from 'src/entities/reporting-period.entity';
-import { EmissionEvaluation } from 'src/entities/emission-evaluation.entity';
+import { TestSummary } from '../entities/test-summary.entity';
+import { QaCertEvent } from '../entities/qa-cert-event.entity';
+import { QaTee } from '../entities/qa-tee.entity';
+import { ReportingPeriod } from '../entities/reporting-period.entity';
+import { EmissionEvaluation } from '../entities/emission-evaluation.entity';
 
 @Injectable()
 export class EvaluationService {
@@ -39,7 +39,7 @@ export class EvaluationService {
             evaluationSet.submittedOn = currentTime;
 
             const locationAttributes = (
-              await getManager().query(
+              await this.returnManager().query(
                 `SELECT ml.mon_loc_id, u.unit_id, u.unitid, sp.stack_pipe_id, sp.stack_name
                   FROM camdecmpswks.monitor_location ml
                   JOIN camdecmpswks.monitor_plan_location USING(mon_loc_id)
@@ -60,12 +60,12 @@ export class EvaluationService {
               evaluationSet.configuration = locationAttributes['stack_name'];
             }
 
-            const mp: MonitorPlan = await getManager().findOne(
+            const mp: MonitorPlan = await this.returnManager().findOne(
               MonitorPlan,
               item.monPlanId,
             );
 
-            const facility: Plant = await getManager().findOne(
+            const facility: Plant = await this.returnManager().findOne(
               Plant,
               mp.facIdentifier,
             );
@@ -73,7 +73,7 @@ export class EvaluationService {
             evaluationSet.facIdentifier = facility.orisCode;
             evaluationSet.facName = facility.facilityName;
 
-            await getManager().insert(EvaluationSet, evaluationSet);
+            await this.returnManager().insert(EvaluationSet, evaluationSet);
 
             if (item.submitMonPlan === true) {
               //Create monitor plan queue record
@@ -85,12 +85,12 @@ export class EvaluationService {
               mpRecord.statusCode = 'QUEUED';
               mpRecord.submittedOn = currentTime;
 
-              await getManager().insert(Evaluation, mpRecord);
-              await getManager().update(MonitorPlan, mp, mp);
+              await this.returnManager().insert(Evaluation, mpRecord);
+              await this.returnManager().update(MonitorPlan, mp, mp);
             }
 
             for (const id of item.testSumIds) {
-              const ts = await getManager().findOne(TestSummary, id);
+              const ts = await this.returnManager().findOne(TestSummary, id);
               ts.evalStatusCode = 'INQ';
 
               const tsRecord = new Evaluation();
@@ -106,12 +106,12 @@ export class EvaluationService {
               tsRecord.testSumIdentifier = id;
               tsRecord.submittedOn = currentTime;
 
-              await getManager().update(TestSummary, ts, ts);
-              await getManager().insert(Evaluation, tsRecord);
+              await this.returnManager().update(TestSummary, ts, ts);
+              await this.returnManager().insert(Evaluation, tsRecord);
             }
 
             for (const id of item.qceIds) {
-              const qce = await getManager().findOne(QaCertEvent, id);
+              const qce = await this.returnManager().findOne(QaCertEvent, id);
               qce.evalStatusCode = 'INQ';
 
               const qceRecord = new Evaluation();
@@ -127,12 +127,12 @@ export class EvaluationService {
               qceRecord.qaCertEventIdentifier = id;
               qceRecord.submittedOn = currentTime;
 
-              await getManager().update(QaCertEvent, qce, qce);
-              await getManager().insert(Evaluation, qceRecord);
+              await this.returnManager().update(QaCertEvent, qce, qce);
+              await this.returnManager().insert(Evaluation, qceRecord);
             }
 
             for (const id of item.teeIds) {
-              const tee = await getManager().findOne(QaTee, id);
+              const tee = await this.returnManager().findOne(QaTee, id);
               tee.evalStatusCode = 'INQ';
 
               const teeRecord = new Evaluation();
@@ -148,21 +148,24 @@ export class EvaluationService {
               teeRecord.testExtensionExemptionIdentifier = id;
               teeRecord.submittedOn = currentTime;
 
-              await getManager().update(QaTee, tee, tee);
-              await getManager().insert(Evaluation, teeRecord);
+              await this.returnManager().update(QaTee, tee, tee);
+              await this.returnManager().insert(Evaluation, teeRecord);
             }
 
             for (const periodAbr of item.emissionsReportingPeriods) {
-              const rp = await getManager().findOne(ReportingPeriod, {
+              const rp = await this.returnManager().findOne(ReportingPeriod, {
                 where: { periodAbbreviation: periodAbr },
               });
 
-              const ee = await getManager().findOne(EmissionEvaluation, {
-                where: {
-                  monPlanIdentifier: item.monPlanId,
-                  rptPeriodIdentifier: rp.rptPeriodIdentifier,
+              const ee = await this.returnManager().findOne(
+                EmissionEvaluation,
+                {
+                  where: {
+                    monPlanIdentifier: item.monPlanId,
+                    rptPeriodIdentifier: rp.rptPeriodIdentifier,
+                  },
                 },
-              });
+              );
 
               ee.evalStatusCode = 'INQ';
 
@@ -183,8 +186,8 @@ export class EvaluationService {
               emissionRecord.rptPeriodIdentifier = rp.rptPeriodIdentifier;
               emissionRecord.submittedOn = currentTime;
 
-              await getManager().update(EmissionEvaluation, ee, ee);
-              await getManager().insert(Evaluation, emissionRecord);
+              await this.returnManager().update(EmissionEvaluation, ee, ee);
+              await this.returnManager().insert(Evaluation, emissionRecord);
             }
 
             resolve(true);
