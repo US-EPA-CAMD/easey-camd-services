@@ -75,13 +75,11 @@ describe('-- Evaluation Controller --', () => {
         return false;
       }),
 
-      insert: mockInsertion,
-
-      update: jest.fn(),
+      save: mockInsertion,
     });
 
     await service.queueEvaluationRecords(payloadDto);
 
-    expect(mockInsertion).toHaveBeenCalledTimes(14);
+    expect(mockInsertion).toHaveBeenCalledTimes(26);
   });
 });

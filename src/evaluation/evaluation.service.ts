@@ -73,7 +73,7 @@ export class EvaluationService {
             evaluationSet.facIdentifier = facility.orisCode;
             evaluationSet.facName = facility.facilityName;
 
-            await this.returnManager().insert(EvaluationSet, evaluationSet);
+            await this.returnManager().save(EvaluationSet, evaluationSet);
 
             if (item.submitMonPlan === true) {
               //Create monitor plan queue record
@@ -85,8 +85,8 @@ export class EvaluationService {
               mpRecord.statusCode = 'QUEUED';
               mpRecord.submittedOn = currentTime;
 
-              await this.returnManager().insert(Evaluation, mpRecord);
-              await this.returnManager().update(MonitorPlan, mp, mp);
+              await this.returnManager().save(mpRecord);
+              await this.returnManager().save(mp);
             }
 
             for (const id of item.testSumIds) {
@@ -106,8 +106,8 @@ export class EvaluationService {
               tsRecord.testSumIdentifier = id;
               tsRecord.submittedOn = currentTime;
 
-              await this.returnManager().update(TestSummary, ts, ts);
-              await this.returnManager().insert(Evaluation, tsRecord);
+              await this.returnManager().save(ts);
+              await this.returnManager().save(tsRecord);
             }
 
             for (const id of item.qceIds) {
@@ -127,8 +127,8 @@ export class EvaluationService {
               qceRecord.qaCertEventIdentifier = id;
               qceRecord.submittedOn = currentTime;
 
-              await this.returnManager().update(QaCertEvent, qce, qce);
-              await this.returnManager().insert(Evaluation, qceRecord);
+              await this.returnManager().save(qce);
+              await this.returnManager().save(qceRecord);
             }
 
             for (const id of item.teeIds) {
@@ -148,8 +148,8 @@ export class EvaluationService {
               teeRecord.testExtensionExemptionIdentifier = id;
               teeRecord.submittedOn = currentTime;
 
-              await this.returnManager().update(QaTee, tee, tee);
-              await this.returnManager().insert(Evaluation, teeRecord);
+              await this.returnManager().save(tee);
+              await this.returnManager().save(teeRecord);
             }
 
             for (const periodAbr of item.emissionsReportingPeriods) {
@@ -186,8 +186,8 @@ export class EvaluationService {
               emissionRecord.rptPeriodIdentifier = rp.rptPeriodIdentifier;
               emissionRecord.submittedOn = currentTime;
 
-              await this.returnManager().update(EmissionEvaluation, ee, ee);
-              await this.returnManager().insert(Evaluation, emissionRecord);
+              await this.returnManager().save(ee);
+              await this.returnManager().save(emissionRecord);
             }
 
             resolve(true);
