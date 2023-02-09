@@ -14,20 +14,20 @@ export class Evaluation extends BaseEntity {
   processCode: string;
 
   @Column({ name: 'test_sum_id' })
-  testSumIdentifier: string;
+  testSumIdentifier?: string;
 
   @Column({ name: 'qa_cert_event_id' })
-  qaCertEventIdentifier: string;
+  qaCertEventIdentifier?: string;
 
   @Column({ name: 'test_extension_exemption_id' })
-  testExtensionExemptionIdentifier: string;
+  testExtensionExemptionIdentifier?: string;
 
   @Column({
     name: 'rpt_period_id',
     type: 'numeric',
     transformer: new NumericColumnTransformer(),
   })
-  rptPeriodIdentifier: number;
+  rptPeriodIdentifier?: number;
 
   @Column({ name: 'severity_cd' })
   severityCode: string;

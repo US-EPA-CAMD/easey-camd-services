@@ -2,7 +2,7 @@ import { getManager } from 'typeorm';
 import { Injectable } from '@nestjs/common';
 import { Logger } from '@us-epa-camd/easey-common/logger';
 import { EvaluationDTO } from '../dto/evaluation.dto';
-import { uuid } from 'uuidv4';
+import { v4 as uuidv4 } from 'uuid';
 import { EvaluationSet } from '../entities/evaluation-set.entity';
 import { MonitorPlan } from '../entities/monitor-plan.entity';
 import { Plant } from '../entities/plant.entity';
@@ -29,7 +29,7 @@ export class EvaluationService {
         new Promise(async (resolve) => {
           try {
             const currentTime = new Date();
-            const set_id = uuid();
+            const set_id = uuidv4();
 
             const evaluationSet = new EvaluationSet();
             evaluationSet.evaluationSetIdentifier = set_id;
@@ -111,9 +111,7 @@ export class EvaluationService {
             }
 
             for (const id of item.qceIds) {
-              const qce = await getManager().findOne(QaCertEvent, {
-                where: { qaCertEventIdentifier: id },
-              });
+              const qce = await getManager().findOne(QaCertEvent, id);
               qce.evalStatusCode = 'INQ';
 
               const qceRecord = new Evaluation();
@@ -129,7 +127,7 @@ export class EvaluationService {
               qceRecord.qaCertEventIdentifier = id;
               qceRecord.submittedOn = currentTime;
 
-              await getManager().update(TestSummary, qce, qce);
+              await getManager().update(QaCertEvent, qce, qce);
               await getManager().insert(Evaluation, qceRecord);
             }
 
@@ -150,7 +148,7 @@ export class EvaluationService {
               teeRecord.testExtensionExemptionIdentifier = id;
               teeRecord.submittedOn = currentTime;
 
-              await getManager().update(TestSummary, tee, tee);
+              await getManager().update(QaTee, tee, tee);
               await getManager().insert(Evaluation, teeRecord);
             }
 
@@ -161,8 +159,8 @@ export class EvaluationService {
 
               const ee = await getManager().findOne(EmissionEvaluation, {
                 where: {
-                  monPlanId: item.monPlanId,
-                  rptPeriodId: rp.rptPeriodIdentifier,
+                  monPlanIdentifier: item.monPlanId,
+                  rptPeriodIdentifier: rp.rptPeriodIdentifier,
                 },
               });
 
