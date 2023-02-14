@@ -7,7 +7,7 @@ export class EmissionEvaluation extends BaseEntity {
   @PrimaryColumn({ name: 'mon_plan_id' })
   monPlanIdentifier: string;
 
-  @Column({
+  @PrimaryColumn({
     name: 'rpt_period_id',
     type: 'numeric',
     transformer: new NumericColumnTransformer(),
