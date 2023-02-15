@@ -44,7 +44,7 @@
     "@nestjs/platform-express": "^8.1.1",
     "@nestjs/swagger": "5.1.2",
     "@nestjs/typeorm": "8.0.3",
-    "@us-epa-camd/easey-common": "14.0.1",
+    "@us-epa-camd/easey-common": "14.2.2",
     "axios": "^0.27.2",
     "cheerio": "^1.0.0-rc.11",
     "class-transformer": "0.4.0",
@@ -60,7 +60,7 @@
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
     "rxjs": "^7.4.0",
-    "swagger-ui-express": "4.1.4",
+    "swagger-ui-express": "^4.6.0",
     "typeorm": "0.2.45",
     "uuidv4": "^6.2.13"
   },
