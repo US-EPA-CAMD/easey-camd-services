@@ -1,6 +1,6 @@
 import { Routes } from 'nest-router';
 
-import { BulkFileModule } from './bulkFile/bulk-file.module';
+import { BulkFileModule } from './bulk-file/bulk-file.module';
 import { BookmarkModule } from './bookmark/bookmark.module';
 import { LoggingModule } from './logging/logging.module';
 import { ReportModule } from './report/report.module';
