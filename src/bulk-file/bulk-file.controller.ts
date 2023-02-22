@@ -74,7 +74,7 @@ export class BulkFileController {
     await this.massService.generateQuarterApportionedEmissions(params);
   }
 
-  @Post('apportioned-emissions/facility')
+  @Post('facility')
   @ApiSecurity('ClientId')
   @ApiBearerAuth('ClientToken')
   @UseGuards(ClientTokenGuard)
@@ -83,7 +83,7 @@ export class BulkFileController {
     await this.massService.generateFacility(params);
   }
 
-  @Post('apportioned-emissions/emissions-compliance')
+  @Post('emissions-compliance')
   @ApiSecurity('ClientId')
   @ApiBearerAuth('ClientToken')
   @UseGuards(ClientTokenGuard)
@@ -92,7 +92,7 @@ export class BulkFileController {
     await this.massService.generateEmissionsCompliance();
   }
 
-  @Post('apportioned-emissions/allowance-holdings')
+  @Post('allowance-holdings')
   @ApiSecurity('ClientId')
   @ApiBearerAuth('ClientToken')
   @UseGuards(ClientTokenGuard)
@@ -103,7 +103,7 @@ export class BulkFileController {
     await this.massService.generateAllowanceHoldings(params);
   }
 
-  @Post('apportioned-emissions/allowance-compliance')
+  @Post('allowance-compliance')
   @ApiSecurity('ClientId')
   @ApiBearerAuth('ClientToken')
   @UseGuards(ClientTokenGuard)
@@ -114,7 +114,7 @@ export class BulkFileController {
     await this.massService.generateAllowanceCompliance(params);
   }
 
-  @Post('apportioned-emissions/allowance-transactions')
+  @Post('allowance-transactions')
   @ApiSecurity('ClientId')
   @ApiBearerAuth('ClientToken')
   @UseGuards(ClientTokenGuard)
