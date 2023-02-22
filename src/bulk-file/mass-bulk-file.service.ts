@@ -12,7 +12,6 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 import { ConfigService } from '@nestjs/config';
 import { ProgramCode } from '../entities/program-code.entity';
-import { url } from 'inspector';
 
 interface QuarterDates {
   beginDate: string;
@@ -26,10 +25,17 @@ export class MassBulkFileService {
     private readonly logger: Logger,
   ) {}
 
+  returnManager(): any {
+    return getManager();
+  }
+
   async getStateCodes(stateCodes: string[]) {
     if (stateCodes.length === 0 || stateCodes[0] === '*') {
       // Return all of the state codes
-      return (await getManager().find(StateCode)).map((item) => item.stateCode);
+
+      return (await this.returnManager().find(StateCode)).map(
+        (item) => item.stateCode,
+      );
     }
     return stateCodes;
   }
@@ -38,13 +44,13 @@ export class MassBulkFileService {
     if (programCodes.length === 0 || programCodes[0] === '*') {
       // Return all of the state codes
       return (
-        await getManager().find(ProgramCode, { where: { active: 1 } })
+        await this.returnManager().find(ProgramCode, { where: { active: 1 } })
       ).map((item) => item.prgCode);
     }
     return programCodes;
   }
 
-  getQuarterList(quarters: number[]) {
+  getQuarterList(quarters: number[]): number[] {
     if (quarters.length === 0) {
       return [1, 2, 3, 4];
     }
@@ -72,11 +78,9 @@ export class MassBulkFileService {
     return qd;
   }
 
-  createBasicJobLog(jobClass: string, jobName: string) {
+  createBasicJobLog(jobName: string) {
     const jobLog = new JobLog();
     jobLog.jobIdentifier = uuidv4();
-    jobLog.jobSystem = 'Quartz';
-    jobLog.jobClass = jobClass;
     jobLog.jobName = jobName;
     return jobLog;
   }
@@ -99,18 +103,18 @@ export class MassBulkFileService {
           promises.push(
             new Promise(async (resolve) => {
               const jobLog = this.createBasicJobLog(
-                'Emissions',
                 `${subType}-Apportioned-Emissions-${stateCd}-${currentYear}`,
               );
               jobLog.year = currentYear;
               jobLog.stateCode = stateCd;
+              jobLog.dataType = 'Emissions';
               jobLog.subType = subType;
               jobLog.url = `${this.configService.get<string>(
                 'app.streamingApiUrl',
               )}/emissions/apportioned/${subType.toLowerCase()}?${urlParams}`;
               jobLog.fileName = `emissions/${subType.toLowerCase()}/state/emissions-${subType.toLowerCase()}-${currentYear}-${stateCd.toLowerCase()}.csv`;
 
-              await getManager().insert(JobLog, jobLog);
+              await this.returnManager().insert(JobLog, jobLog);
               resolve(true);
             }),
           );
@@ -123,9 +127,9 @@ export class MassBulkFileService {
             promises.push(
               new Promise(async (resolve) => {
                 const jobLog = this.createBasicJobLog(
-                  'Mercury and Air Toxics Emissions (MATS)',
                   `${subType}-MATS-${stateCd}-${currentYear}`,
                 );
+                jobLog.dataType = 'Mercury and Air Toxics Emissions (MATS)';
                 jobLog.year = currentYear;
                 jobLog.stateCode = stateCd;
                 jobLog.subType = subType;
@@ -134,7 +138,7 @@ export class MassBulkFileService {
                 )}/emissions/apportioned/mats/hourly?${urlParams}`;
                 jobLog.fileName = `mats/hourly/state/mats-hourly-${currentYear}-${stateCd.toLowerCase()}.csv`;
 
-                await getManager().insert(JobLog, jobLog);
+                await this.returnManager().insert(JobLog, jobLog);
                 resolve(true);
               }),
             );
@@ -168,18 +172,18 @@ export class MassBulkFileService {
           promises.push(
             new Promise(async (resolve) => {
               const jobLog = this.createBasicJobLog(
-                'Emissions',
                 `${subType}-Apportioned-Emissions-Q${quarter}-${currentYear}`,
               );
               jobLog.year = currentYear;
               jobLog.quarter = quarter;
               jobLog.subType = subType;
+              jobLog.dataType = 'Emissions';
               jobLog.url = `${this.configService.get<string>(
                 'app.streamingApiUrl',
               )}/emissions/apportioned/${subType.toLowerCase()}?${urlParams}`;
               jobLog.fileName = `emissions/${subType.toLowerCase()}/quarter/emissions-${subType.toLowerCase()}-${currentYear}-q${quarter}.csv`;
 
-              await getManager().insert(JobLog, jobLog);
+              await this.returnManager().insert(JobLog, jobLog);
               resolve(true);
             }),
           );
@@ -192,18 +196,18 @@ export class MassBulkFileService {
             promises.push(
               new Promise(async (resolve) => {
                 const jobLog = this.createBasicJobLog(
-                  'Mercury and Air Toxics Emissions (MATS)',
-                  `${subType}-MATS-q${quarter}-${currentYear}`,
+                  `${subType}-MATS-Q${quarter}-${currentYear}`,
                 );
                 jobLog.year = currentYear;
                 jobLog.quarter = quarter;
                 jobLog.subType = subType;
+                jobLog.dataType = 'Mercury and Air Toxics Emissions (MATS)';
                 jobLog.url = `${this.configService.get<string>(
                   'app.streamingApiUrl',
                 )}/emissions/apportioned/mats/hourly?${urlParams}`;
                 jobLog.fileName = `mats/hourly/quarter/mats-hourly-${currentYear}-q${quarter}.csv`;
 
-                await getManager().insert(JobLog, jobLog);
+                await this.returnManager().insert(JobLog, jobLog);
                 resolve(true);
               }),
             );
@@ -221,30 +225,26 @@ export class MassBulkFileService {
       currentYear <= params.to;
       currentYear++
     ) {
-      const jobLog = this.createBasicJobLog(
-        'Facility',
-        `Facility-${currentYear}`,
-      );
+      const jobLog = this.createBasicJobLog(`Facility-${currentYear}`);
+      jobLog.dataType = 'Facility';
       jobLog.year = currentYear;
       jobLog.url = `${this.configService.get<string>(
         'app.streamingApiUrl',
       )}/facilities/attributes?year=${currentYear}`;
       jobLog.fileName = `facility/facility-${currentYear}.csv`;
-      await getManager().insert(JobLog, jobLog);
+      await this.returnManager().insert(JobLog, jobLog);
     }
   }
 
   async generateEmissionsCompliance(): Promise<void> {
-    const jobLog = this.createBasicJobLog(
-      'Compliance',
-      `Emissions-Compliance-ARPNOX`,
-    );
+    const jobLog = this.createBasicJobLog(`Emissions-Compliance-ARPNOX`);
     jobLog.url = `${this.configService.get<string>(
       'app.streamingApiUrl',
     )}/emissions-compliance`;
+    jobLog.dataType = 'Compliance';
     jobLog.fileName = `compliance/compliance-arpnox.csv`;
     jobLog.programCode = 'ARP';
-    await getManager().insert(JobLog, jobLog);
+    await this.returnManager().insert(JobLog, jobLog);
   }
 
   async generateAllowanceHoldings(params: ProgramCodeDTO): Promise<void> {
@@ -253,17 +253,15 @@ export class MassBulkFileService {
     for (const cd of programCodes) {
       const urlParams = `programCodeInfo=${cd}`;
 
-      const jobLog = this.createBasicJobLog(
-        'Allowance',
-        `Allowance-Holdings-${cd}`,
-      );
+      const jobLog = this.createBasicJobLog(`Allowance-Holdings-${cd}`);
       jobLog.url = `${this.configService.get<string>(
         'app.streamingApiUrl',
       )}/allowance-holdings?${urlParams}`;
 
+      jobLog.dataType = 'Allowance';
       jobLog.fileName = `allowance/holdings-${cd.toLowerCase()}.csv`;
       jobLog.programCode = cd;
-      await getManager().insert(JobLog, jobLog);
+      await this.returnManager().insert(JobLog, jobLog);
     }
   }
 
@@ -273,17 +271,15 @@ export class MassBulkFileService {
     for (const cd of programCodes) {
       const urlParams = `programCodeInfo=${cd}`;
 
-      const jobLog = this.createBasicJobLog(
-        'Compliance',
-        `Allowance-Compliance-${cd}`,
-      );
+      const jobLog = this.createBasicJobLog(`Allowance-Compliance-${cd}`);
+      jobLog.dataType = 'Compliance';
       jobLog.url = `${this.configService.get<string>(
         'app.streamingApiUrl',
       )}/allowance-compliance?${urlParams}`;
 
       jobLog.fileName = `compliance/compliance-${cd.toLowerCase()}.csv`;
       jobLog.programCode = cd;
-      await getManager().insert(JobLog, jobLog);
+      await this.returnManager().insert(JobLog, jobLog);
     }
   }
 
@@ -294,10 +290,8 @@ export class MassBulkFileService {
     for (const cd of programCodes) {
       const urlParams = `transactionBeginDate=1993-03-23&transactionEndDate=${year}-12-31&programCodeInfo=${cd}`;
 
-      const jobLog = this.createBasicJobLog(
-        'Allowance',
-        `Allowance-Transactions-${cd}`,
-      );
+      const jobLog = this.createBasicJobLog(`Allowance-Transactions-${cd}`);
+      jobLog.dataType = 'Allowance';
       jobLog.url = `${this.configService.get<string>(
         'app.streamingApiUrl',
       )}/allowance-transactions?${urlParams}`;
@@ -305,7 +299,7 @@ export class MassBulkFileService {
       jobLog.fileName = `allowance/transactions-${cd.toLowerCase()}.csv`;
       jobLog.programCode = cd;
       jobLog.year = year;
-      await getManager().insert(JobLog, jobLog);
+      await this.returnManager().insert(JobLog, jobLog);
     }
   }
 }

@@ -1,15 +1,9 @@
 import { BaseEntity, Column, Entity, PrimaryColumn } from 'typeorm';
 
-@Entity({ name: 'camdaux.job_log_test' })
+@Entity({ name: 'camdaux.bulk_file_queue' })
 export class JobLog extends BaseEntity {
   @PrimaryColumn({ name: 'job_id' })
   jobIdentifier: string;
-
-  @Column({ name: 'job_system' })
-  jobSystem: string;
-
-  @Column({ name: 'job_class' })
-  jobClass: string;
 
   @Column({ name: 'job_name' })
   jobName: string;

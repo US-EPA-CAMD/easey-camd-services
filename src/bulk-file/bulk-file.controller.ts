@@ -53,9 +53,9 @@ export class BulkFileController {
   }
 
   @Post('apportioned-emissions/state')
-  //@ApiSecurity('ClientId')
-  //@ApiBearerAuth('ClientToken')
-  //@UseGuards(ClientTokenGuard)
+  @ApiSecurity('ClientId')
+  @ApiBearerAuth('ClientToken')
+  @UseGuards(ClientTokenGuard)
   @ApiExcludeEndpointByEnv()
   async massBulkFileState(
     @Body() params: ApportionedEmissionsStateDTO,
@@ -64,9 +64,9 @@ export class BulkFileController {
   }
 
   @Post('apportioned-emissions/quarter')
-  //@ApiSecurity('ClientId')
-  //@ApiBearerAuth('ClientToken')
-  //@UseGuards(ClientTokenGuard)
+  @ApiSecurity('ClientId')
+  @ApiBearerAuth('ClientToken')
+  @UseGuards(ClientTokenGuard)
   @ApiExcludeEndpointByEnv()
   async massBulkFileQuarter(
     @Body() params: ApportionedEmissionsQuarterlyDTO,
@@ -75,27 +75,27 @@ export class BulkFileController {
   }
 
   @Post('apportioned-emissions/facility')
-  //@ApiSecurity('ClientId')
-  //@ApiBearerAuth('ClientToken')
-  //@UseGuards(ClientTokenGuard)
+  @ApiSecurity('ClientId')
+  @ApiBearerAuth('ClientToken')
+  @UseGuards(ClientTokenGuard)
   @ApiExcludeEndpointByEnv()
   async massBulkFileFacility(@Body() params: TimePeriodDTO): Promise<void> {
     await this.massService.generateFacility(params);
   }
 
   @Post('apportioned-emissions/emissions-compliance')
-  //@ApiSecurity('ClientId')
-  //@ApiBearerAuth('ClientToken')
-  //@UseGuards(ClientTokenGuard)
+  @ApiSecurity('ClientId')
+  @ApiBearerAuth('ClientToken')
+  @UseGuards(ClientTokenGuard)
   @ApiExcludeEndpointByEnv()
   async massBulkFileEmissionsCompliance(): Promise<void> {
     await this.massService.generateEmissionsCompliance();
   }
 
   @Post('apportioned-emissions/allowance-holdings')
-  //@ApiSecurity('ClientId')
-  //@ApiBearerAuth('ClientToken')
-  //@UseGuards(ClientTokenGuard)
+  @ApiSecurity('ClientId')
+  @ApiBearerAuth('ClientToken')
+  @UseGuards(ClientTokenGuard)
   @ApiExcludeEndpointByEnv()
   async massBulkFileAllowanceHoldings(
     @Body() params: ProgramCodeDTO,
@@ -104,9 +104,9 @@ export class BulkFileController {
   }
 
   @Post('apportioned-emissions/allowance-compliance')
-  //@ApiSecurity('ClientId')
-  //@ApiBearerAuth('ClientToken')
-  //@UseGuards(ClientTokenGuard)
+  @ApiSecurity('ClientId')
+  @ApiBearerAuth('ClientToken')
+  @UseGuards(ClientTokenGuard)
   @ApiExcludeEndpointByEnv()
   async massBulkFileAllowanceCompliance(
     @Body() params: ProgramCodeDTO,
@@ -115,9 +115,9 @@ export class BulkFileController {
   }
 
   @Post('apportioned-emissions/allowance-transactions')
-  //@ApiSecurity('ClientId')
-  //@ApiBearerAuth('ClientToken')
-  //@UseGuards(ClientTokenGuard)
+  @ApiSecurity('ClientId')
+  @ApiBearerAuth('ClientToken')
+  @UseGuards(ClientTokenGuard)
   @ApiExcludeEndpointByEnv()
   async massBulkFileAllowanceTransactions(
     @Body() params: ProgramCodeDTO,
