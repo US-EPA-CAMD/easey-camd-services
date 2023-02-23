@@ -3,27 +3,15 @@ import { HttpModule } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { BulkFileMap } from '../maps/bulk-file-map';
-import { BulkFileGAFTPCopyService } from './bulk-file-gaftp-copy.service';
 import { BulkFileMetadataRepository } from './bulk-file.repository';
 import { BulkFileService } from './bulk-file.service';
 import { BulkFileController } from './bulk-file.controller';
-import { BulkFileGaftpCopyRepository } from './bulk-file-gaftp-copy.repository';
+import { MassBulkFileService } from './mass-bulk-file.service';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([
-      BulkFileMetadataRepository,
-      BulkFileGaftpCopyRepository,
-    ]),
-    HttpModule,
-  ],
+  imports: [TypeOrmModule.forFeature([BulkFileMetadataRepository]), HttpModule],
   controllers: [BulkFileController],
-  providers: [
-    ConfigService,
-    BulkFileMap,
-    BulkFileGAFTPCopyService,
-    BulkFileService,
-  ],
+  providers: [ConfigService, BulkFileMap, BulkFileService, MassBulkFileService],
   exports: [TypeOrmModule],
 })
 export class BulkFileModule {}

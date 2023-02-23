@@ -6,6 +6,7 @@ import { LoggerModule } from '@us-epa-camd/easey-common/logger';
 import { CreateMailDto } from '../dto/create-mail.dto';
 import { MailController } from './mail.controller';
 import { MailService } from './mail.service';
+import { Request } from 'express';
 
 const mockMailService = () => ({
   sendEmail: jest.fn(),
@@ -34,7 +35,7 @@ describe('Mail Controller', () => {
   });
 
   it('should call the service', () => {
-    controller.send(createMock<Request>(), new CreateMailDto());
+    controller.send(new CreateMailDto(), '');
 
     expect(service.sendEmail).toHaveBeenCalled();
   });

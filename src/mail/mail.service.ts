@@ -1,7 +1,4 @@
-import {
-  HttpStatus,
-  Injectable,
-} from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { getManager } from 'typeorm';
 import { CreateMailDto } from '../dto/create-mail.dto';
 import { Logger } from '@us-epa-camd/easey-common/logger';
@@ -25,12 +22,15 @@ export class MailService {
     });
   }
 
-  async sendEmail(
-    clientId: string,
-    payload: CreateMailDto,
-  ): Promise<void> {
-    const dbRecord = await getManager()
-      .findOne<ClientConfig>(ClientConfig, clientId);
+  returnManager() {
+    return getManager();
+  }
+
+  async sendEmail(clientId: string, payload: CreateMailDto): Promise<void> {
+    const dbRecord = await this.returnManager().findOne<ClientConfig>(
+      ClientConfig,
+      clientId,
+    );
     console.log(dbRecord);
 
     try {
