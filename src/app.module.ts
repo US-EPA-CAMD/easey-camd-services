@@ -12,7 +12,7 @@ import s3Config from './config/s3.config';
 import appConfig from './config/app.config';
 import { TypeOrmConfigService } from './config/typeorm.config';
 
-import { BulkFileModule } from './bulkFile/bulk-file.module';
+import { BulkFileModule } from './bulk-file/bulk-file.module';
 import { BookmarkModule } from './bookmark/bookmark.module';
 import { LoggingModule } from './logging/logging.module';
 import { MailModule } from './mail/mail.module';
@@ -22,11 +22,7 @@ import { MailModule } from './mail/mail.module';
     RouterModule.forRoutes(routes),
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [
-        s3Config,
-        dbConfig,
-        appConfig,
-      ],
+      load: [s3Config, dbConfig, appConfig],
     }),
     TypeOrmModule.forRootAsync({
       useClass: TypeOrmConfigService,

@@ -8,6 +8,8 @@ import { BookmarkCreatedDTO } from '../dto/bookmark-created.dto';
 import { BoomarkPayloadDTO } from '../dto/bookmark-payload.dto';
 import { BookmarkMap } from '../maps/bookmark.map';
 import { BookmarkDTO } from '../dto/bookmark.dto';
+import { ConfigService } from '@nestjs/config';
+import { HttpModule } from '@nestjs/axios';
 
 describe('-- Bookmark Controller --', () => {
   let controller: BookmarkController;
@@ -15,9 +17,14 @@ describe('-- Bookmark Controller --', () => {
 
   beforeAll(async () => {
     const module = await Test.createTestingModule({
-      imports: [LoggerModule],
+      imports: [LoggerModule, HttpModule],
       controllers: [BookmarkController],
-      providers: [BookmarkMap, BookmarkRepository, BookmarkService],
+      providers: [
+        BookmarkMap,
+        BookmarkRepository,
+        BookmarkService,
+        ConfigService,
+      ],
     }).compile();
 
     controller = module.get(BookmarkController);
