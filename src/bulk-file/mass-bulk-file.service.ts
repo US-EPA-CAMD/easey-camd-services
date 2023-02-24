@@ -20,10 +20,14 @@ interface QuarterDates {
 
 @Injectable()
 export class MassBulkFileService {
+  private parentId;
+
   constructor(
     private readonly configService: ConfigService,
     private readonly logger: Logger,
-  ) {}
+  ) {
+    this.parentId = uuidv4();
+  }
 
   returnManager(): any {
     return getManager();
@@ -81,6 +85,7 @@ export class MassBulkFileService {
   createBasicJobLog(jobName: string) {
     const jobLog = new JobLog();
     jobLog.jobIdentifier = uuidv4();
+    jobLog.parentJobIdentifier = this.parentId;
     jobLog.jobName = jobName;
     return jobLog;
   }
