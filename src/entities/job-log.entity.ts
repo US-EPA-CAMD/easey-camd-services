@@ -5,6 +5,9 @@ export class JobLog extends BaseEntity {
   @PrimaryColumn({ name: 'job_id' })
   jobIdentifier: string;
 
+  @Column({ name: 'parent_job_id' })
+  parentJobIdentifier: string;
+
   @Column({ name: 'job_name' })
   jobName: string;
 
