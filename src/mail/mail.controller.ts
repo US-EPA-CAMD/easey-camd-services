@@ -29,13 +29,24 @@ export class MailController {
     description: 'Data sent successfully',
   })
   @ApiOperation({
-    description: "Sends an email to a CAMD support inbox determined by the Client Id."
+    description:
+      'Sends an email to a CAMD support inbox determined by the Client Id.',
   })
   @ApiInternalServerErrorResponse()
-  async send(
-    @Body() payload: CreateMailDto,
-    @ClientId() clientId: string,
-  ) {
-    await this.mailService.sendEmail(clientId, payload);
+  async send(@Body() payload: CreateMailDto, @ClientId() clientId: string) {
+    //await this.mailService.sendEmail(clientId, payload);
+  }
+
+  @Post('email/mass-eval')
+  @ApiOkResponse({
+    description: 'Data sent successfully',
+  })
+  @ApiOperation({
+    description:
+      'Sends an email to a CAMD support inbox determined by the Client Id.',
+  })
+  @ApiInternalServerErrorResponse()
+  async sendMassEval() {
+    this.mailService.sendMassEvalEmail('239d5752-14a1-451f-ab34-7a850dff407f');
   }
 }
