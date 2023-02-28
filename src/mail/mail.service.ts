@@ -36,24 +36,20 @@ export class MailService {
       clientId,
     );
 
-    try {
-      this.mailerService
-        .sendMail({
-          from: payload.fromEmail,
-          to: dbRecord.supportEmail, // List of receivers email address
-          subject: payload.subject, // Subject line
-          context: { message: payload.message },
-          template: 'default',
-        })
-        .then((success) => {
-          console.log(success);
-        })
-        .catch((err) => {
-          console.log(err);
-        });
-    } catch (e) {
-      throw new LoggingException(e.message, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
+    this.mailerService
+      .sendMail({
+        from: payload.fromEmail,
+        to: dbRecord.supportEmail, // List of receivers email address
+        subject: payload.subject, // Subject line
+        context: { message: payload.message },
+        template: 'default',
+      })
+      .then((success) => {
+        console.log(success);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
 
     this.logger.info('Successfully sent an email', {
       from: payload.fromEmail,
@@ -368,23 +364,19 @@ export class MailService {
       mpRecord.monPlanIdentifier,
     );
 
-    try {
-      this.mailerService
-        .sendMail({
-          to: params.toEmail, // List of receivers email address
-          from: params.fromEmail,
-          subject: `ECMPS Evaluation Report | ${this.displayCurrentDate()}`, // Subject line
-          template: 'massEvaluationTemplate',
-          context: templateContext,
-        })
-        .then((success) => {
-          console.log(success);
-        })
-        .catch((err) => {
-          console.log(err);
-        });
-    } catch (e) {
-      throw new LoggingException(e.message, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
+    this.mailerService
+      .sendMail({
+        to: params.toEmail, // List of receivers email address
+        from: params.fromEmail,
+        subject: `ECMPS Evaluation Report | ${this.displayCurrentDate()}`, // Subject line
+        template: 'massEvaluationTemplate',
+        context: templateContext,
+      })
+      .then((success) => {
+        console.log(success);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
   }
 }
