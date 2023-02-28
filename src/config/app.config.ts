@@ -22,6 +22,16 @@ const apiHost = getConfigValue(
   'api.epa.gov/easey/dev',
 );
 
+export const smtpHost = getConfigValue(
+  'EASEY_CAMD_SERVICES_SMTP_HOST',
+  'smtp.epa.gov',
+);
+
+export const smtpPort = getConfigValueNumber(
+  'EASEY_CAMD_SERVICES_SMTP_PORT',
+  25,
+);
+
 export default registerAs('app', () => ({
   name: 'camd-services',
   host,
@@ -61,8 +71,6 @@ export default registerAs('app', () => ({
   ),
   version: getConfigValue('EASEY_CAMD_SERVICES_VERSION', 'v0.0.0'),
   published: getConfigValue('EASEY_CAMD_SERVICES_PUBLISHED', 'local'),
-  smtpHost: getConfigValue('EASEY_CAMD_SERVICES_SMTP_HOST', 'smtp.epa.gov'),
-  smtpPort: getConfigValueNumber('EASEY_CAMD_SERVICES_SMTP_PORT', 25),
   // ENABLES DEBUG CONSOLE LOGS
   enableDebug: getConfigValueBoolean('EASEY_CAMD_SERVICES_ENABLE_DEBUG'),
   // NEEDS TO BE SET IN .ENV FILE FOR LOCAL DEVELOPMENT

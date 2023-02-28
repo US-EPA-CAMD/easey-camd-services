@@ -1,15 +1,15 @@
-import { createMock } from '@golevelup/ts-jest';
 import { HttpModule } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import { LoggerModule } from '@us-epa-camd/easey-common/logger';
+import { MassEvalParamsDTO } from '../dto/mass-eval-params.dto';
 import { CreateMailDto } from '../dto/create-mail.dto';
 import { MailController } from './mail.controller';
 import { MailService } from './mail.service';
-import { Request } from 'express';
 
 const mockMailService = () => ({
   sendEmail: jest.fn(),
+  sendMassEvalEmail: jest.fn(),
 });
 
 describe('Mail Controller', () => {
@@ -34,9 +34,15 @@ describe('Mail Controller', () => {
     expect(controller).toBeDefined();
   });
 
-  it('should call the service', () => {
+  it('should call the basic service', () => {
     controller.send(new CreateMailDto(), '');
 
     expect(service.sendEmail).toHaveBeenCalled();
+  });
+
+  it('should call the mass eval service', () => {
+    controller.sendMassEval(new MassEvalParamsDTO());
+
+    expect(service.sendMassEvalEmail).toHaveBeenCalled();
   });
 });

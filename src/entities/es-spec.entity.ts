@@ -83,7 +83,8 @@ export class EsSpec extends BaseEntity {
   ])
   checkCatalogResult: CheckCatalogResult;
 
-  @ManyToOne(() => Plant, (p) => p.esSpec)
+  //TODO: Sejal\
+  @ManyToOne(() => Plant, (p) => p.facIdentifier)
   @JoinColumn([
     {
       name: 'fac_id',
