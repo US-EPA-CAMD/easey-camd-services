@@ -12,7 +12,6 @@ import { ClientTokenGuard } from '@us-epa-camd/easey-common/guards';
 import { MailService } from './mail.service';
 import { CreateMailDto } from './../dto/create-mail.dto';
 import { ClientId } from '../decorators/client-id.decorator';
-import { ApiExcludeControllerByEnv } from '../utilities/swagger-decorator.const';
 import { MassEvalParamsDTO } from '../dto/mass-eval-params.dto';
 
 @Controller()
@@ -21,14 +20,10 @@ import { MassEvalParamsDTO } from '../dto/mass-eval-params.dto';
 @ApiSecurity('ClientId')
 @ApiBearerAuth('ClientToken')
 @UseGuards(ClientTokenGuard)
-@ApiExcludeControllerByEnv()
 export class MailController {
   constructor(private mailService: MailService) {}
 
   @Post('email')
-  @ApiSecurity('ClientId')
-  @ApiBearerAuth('ClientToken')
-  @UseGuards(ClientTokenGuard)
   @ApiOkResponse({
     description: 'Data sent successfully',
   })
@@ -42,9 +37,6 @@ export class MailController {
   }
 
   @Post('email/mass-eval')
-  @ApiSecurity('ClientId')
-  @ApiBearerAuth('ClientToken')
-  @UseGuards(ClientTokenGuard)
   @ApiOkResponse({
     description: 'Data sent successfully',
   })
