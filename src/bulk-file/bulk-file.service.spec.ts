@@ -22,7 +22,7 @@ const mockMap = () => ({
   one: jest.fn().mockResolvedValue(dto),
 });
 
-describe('-- Bulk File Controller --', () => {
+describe('-- Bulk File Service --', () => {
   let bulkFileService: BulkFileService;
   let bulkFileRepo: BulkFileMetadataRepository;
 
@@ -65,10 +65,9 @@ describe('-- Bulk File Controller --', () => {
       const params = new BulkFileInputDTO();
 
       bulkFileRepo.findOne = jest.fn().mockResolvedValue(null);
-      expect((
-          await bulkFileService.addBulkDataFile(params)
-        ).filename,
-      ).toEqual('Test');
+      expect((await bulkFileService.addBulkDataFile(params)).filename).toEqual(
+        'Test',
+      );
     });
   });
 
