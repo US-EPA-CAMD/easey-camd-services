@@ -26,6 +26,9 @@ export class MailController {
   constructor(private mailService: MailService) {}
 
   @Post('email')
+  @ApiSecurity('ClientId')
+  @ApiBearerAuth('ClientToken')
+  @UseGuards(ClientTokenGuard)
   @ApiOkResponse({
     description: 'Data sent successfully',
   })
@@ -39,6 +42,9 @@ export class MailController {
   }
 
   @Post('email/mass-eval')
+  @ApiSecurity('ClientId')
+  @ApiBearerAuth('ClientToken')
+  @UseGuards(ClientTokenGuard)
   @ApiOkResponse({
     description: 'Data sent successfully',
   })
