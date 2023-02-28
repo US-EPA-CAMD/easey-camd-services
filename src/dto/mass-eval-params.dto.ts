@@ -1,12 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class CreateMailDto {
+export class MassEvalParamsDTO {
   @ApiProperty()
   fromEmail: string;
 
   @ApiProperty()
-  subject: string;
+  toEmail: string;
 
   @ApiProperty()
-  message: string;
+  evaluationSetId: string;
 }

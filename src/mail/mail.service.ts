@@ -2,27 +2,26 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { getManager } from 'typeorm';
 import { CreateMailDto } from '../dto/create-mail.dto';
 import { Logger } from '@us-epa-camd/easey-common/logger';
-import { ConfigService } from '@nestjs/config';
 import { ClientConfig } from '../entities/client-config.entity';
 import { LoggingException } from '@us-epa-camd/easey-common/exceptions';
 import { MailerService } from '@nestjs-modules/mailer';
-import { join } from 'path';
 import { Evaluation } from '../entities/evaluation.entity';
 import { EvaluationSet } from '../entities/evaluation-set.entity';
-import { MonitorPlan } from 'src/entities/monitor-plan.entity';
-import { Plant } from 'src/entities/plant.entity';
-import { TestSummary } from 'src/entities/test-summary.entity';
-import { MonitorSystem } from 'src/entities/monitor-system.entity';
-import { Component } from 'src/entities/component.entity';
-import { CountyCode } from 'src/entities/county-code.entity';
-import { QaCertEvent } from 'src/entities/qa-cert-event.entity';
-import { QaTee } from 'src/entities/qa-tee.entity';
-import { ReportingPeriod } from 'src/entities/reporting-period.entity';
+import { MonitorPlan } from '../entities/monitor-plan.entity';
+import { Plant } from '../entities/plant.entity';
+import { TestSummary } from '../entities/test-summary.entity';
+import { MonitorSystem } from '../entities/monitor-system.entity';
+import { Component } from '../entities/component.entity';
+import { CountyCode } from '../entities/county-code.entity';
+import { QaCertEvent } from '../entities/qa-cert-event.entity';
+import { QaTee } from '../entities/qa-tee.entity';
+import { ReportingPeriod } from '../entities/reporting-period.entity';
+import { EmissionEvaluation } from '../entities/emission-evaluation.entity';
+import { MassEvalParamsDTO } from '../dto/mass-eval-params.dto';
 
 @Injectable()
 export class MailService {
   constructor(
-    private readonly configService: ConfigService,
     private readonly logger: Logger,
     private readonly mailerService: MailerService,
   ) {}
@@ -31,39 +30,52 @@ export class MailService {
     return getManager();
   }
 
-  /*
   async sendEmail(clientId: string, payload: CreateMailDto): Promise<void> {
     const dbRecord = await this.returnManager().findOne<ClientConfig>(
       ClientConfig,
       clientId,
     );
-    console.log(dbRecord);
 
     try {
-      await transporter.sendMail({
-        from: payload.fromEmail, // sender address
-        to: dbRecord.supportEmail, // list of receivers
-        subject: payload.subject, // Subject line
-        text: payload.message,
-      });
+      this.mailerService
+        .sendMail({
+          from: payload.fromEmail,
+          to: dbRecord.supportEmail, // List of receivers email address
+          subject: payload.subject, // Subject line
+          context: { message: payload.message },
+          template: 'default',
+        })
+        .then((success) => {
+          console.log(success);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
     } catch (e) {
       throw new LoggingException(e.message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
+
     this.logger.info('Successfully sent an email', {
       from: payload.fromEmail,
     });
   }
-  */
+
+  getReportColor(evalStatusCd: string) {
+    if (evalStatusCd !== 'PASS' && evalStatusCd !== 'INFO') {
+      return '#FF6862';
+    }
+    return '#90EE90';
+  }
 
   async getSystemComponentIdentifier(
     monitorSystem: string,
     componentId: string,
   ) {
-    const ms = await getManager().findOne(MonitorSystem, monitorSystem);
+    const ms = await this.returnManager().findOne(MonitorSystem, monitorSystem);
     if (ms && ms.systemIdentifier) {
       return ms.systemIdentifier;
     }
-    const c = await getManager().findOne(Component, componentId);
+    const c = await this.returnManager().findOne(Component, componentId);
     return c.componentIdentifier;
   }
 
@@ -84,7 +96,7 @@ export class MailService {
       };
       for (const testRecord of records) {
         const newItem: any = {};
-        const testSumRecord = await getManager().findOne(
+        const testSumRecord: TestSummary = await this.returnManager().findOne(
           TestSummary,
           testRecord.testSumIdentifier,
         );
@@ -99,6 +111,9 @@ export class MailService {
         newItem['Test Reason'] = testSumRecord.testReasonCode;
         newItem['Test Result'] = testSumRecord.testResultCode;
         newItem['evalStatusCode'] = testSumRecord.evalStatusCode;
+        newItem['reportColor'] = this.getReportColor(
+          testSumRecord.evalStatusCode,
+        );
 
         newItem[
           'reportUrl'
@@ -125,7 +140,7 @@ export class MailService {
       };
       for (const certRecord of records) {
         const newItem: any = {};
-        const certEventRecord: QaCertEvent = await getManager().findOne(
+        const certEventRecord: QaCertEvent = await this.returnManager().findOne(
           QaCertEvent,
           certRecord.qaCertEventIdentifier,
         );
@@ -138,6 +153,9 @@ export class MailService {
         newItem['Cert Event Code'] = certEventRecord.qaCertEventCode;
         newItem['Required Test Code'] = certEventRecord.requiredTestCode;
         newItem['evalStatusCode'] = certEventRecord.evalStatusCode;
+        newItem['reportColor'] = this.getReportColor(
+          certEventRecord.evalStatusCode,
+        );
 
         newItem[
           'reportUrl'
@@ -168,11 +186,11 @@ export class MailService {
 
       for (const tee of records) {
         const newItem: any = {};
-        const teeRecord: QaTee = await getManager().findOne(
+        const teeRecord: QaTee = await this.returnManager().findOne(
           QaTee,
           tee.testExtensionExemptionIdentifier,
         );
-        const reportPeriodInfo = await getManager().findOne(
+        const reportPeriodInfo = await this.returnManager().findOne(
           ReportingPeriod,
           teeRecord.rptPeriodIdentifier,
         );
@@ -188,6 +206,7 @@ export class MailService {
         newItem['Hours Used'] = teeRecord.hoursUsed;
         newItem['Span Scale Code'] = teeRecord.spanScaleCode;
         newItem['evalStatusCode'] = teeRecord.evalStatusCode;
+        newItem['reportColor'] = this.getReportColor(teeRecord.evalStatusCode);
 
         newItem[
           'reportUrl'
@@ -199,7 +218,56 @@ export class MailService {
     return templateContext;
   }
 
-  async sendMassEvalEmail(evalSetId: string) {
+  async formatEmissionsContext(templateContext, records, monitorPlanId) {
+    const emissionsKeys = ['Year / Quarter', 'Evaluation Status Code'];
+
+    if (records.length > 0) {
+      templateContext['emissions'] = {
+        keys: emissionsKeys,
+        items: [],
+      };
+
+      for (const em of records) {
+        const newItem: any = {};
+        const emissionsRecord: EmissionEvaluation =
+          await this.returnManager().findOne(EmissionEvaluation, {
+            where: {
+              monPlanIdentifier: monitorPlanId,
+              rptPeriodIdentifier: em.rptPeriodIdentifier,
+            },
+          });
+        const reportPeriodInfo = await this.returnManager().findOne(
+          ReportingPeriod,
+          emissionsRecord.rptPeriodIdentifier,
+        );
+
+        newItem['Year / Quarter'] = reportPeriodInfo.periodAbbreviation;
+        newItem['evalStatusCode'] = emissionsRecord.evalStatusCode;
+        newItem['reportColor'] = this.getReportColor(
+          emissionsRecord.evalStatusCode,
+        );
+
+        newItem['reportUrl'] = `https://google.com`;
+
+        templateContext['emissions'].items.push(newItem);
+      }
+    }
+    return templateContext;
+  }
+
+  displayCurrentDate = () => {
+    const date = new Date();
+
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: 'numeric',
+    });
+  };
+
+  async sendMassEvalEmail(params: MassEvalParamsDTO) {
     const mpKeys = [
       'Facility Name',
       'Configuration',
@@ -210,32 +278,31 @@ export class MailService {
       'Latitude',
     ];
 
-    const records = await getManager().find(Evaluation, {
-      where: { evaluationSetIdentifier: evalSetId },
+    const records = await this.returnManager().find(Evaluation, {
+      where: { evaluationSetIdentifier: params.evaluationSetId },
     });
-
-    //TODO: Move to Listener
-    if (records.find((r) => r.statusCode !== 'COMPLETE')) {
-      // There are still records to process do not send the email yet
-      return;
-    }
 
     // Build the context for our email --------------------------------------
     let templateContext: any = {};
-    templateContext['dateEvaluated'] = new Date().toISOString();
-    templateContext['logo'] = join(
-      __dirname,
-      'templates/images/epa-logo-blue.svg',
-    );
+    templateContext['dateEvaluated'] = this.displayCurrentDate();
 
     // Create Monitor Plan Section of Email
-    const setRecord = await getManager().findOne(EvaluationSet, evalSetId);
-    const mpRecord = await getManager().findOne(
+    const setRecord = await this.returnManager().findOne(
+      EvaluationSet,
+      params.evaluationSetId,
+    );
+    const mpRecord = await this.returnManager().findOne(
       MonitorPlan,
       setRecord.monPlanIdentifier,
     );
-    const plant = await getManager().findOne(Plant, mpRecord.facIdentifier);
-    const county = await getManager().findOne(CountyCode, plant.countyCode);
+    const plant = await this.returnManager().findOne(
+      Plant,
+      mpRecord.facIdentifier,
+    );
+    const county = await this.returnManager().findOne(
+      CountyCode,
+      plant.countyCode,
+    );
 
     templateContext['monitorPlan'] = {
       keys: mpKeys,
@@ -256,6 +323,9 @@ export class MailService {
     if (mpChildRecord) {
       templateContext['monitorPlan'].items['evalStatus'] =
         mpRecord.evalStatusCode;
+      templateContext['monitorPlan'].items['reportColor'] = this.getReportColor(
+        mpRecord.evalStatusCode,
+      );
       templateContext['monitorPlan'].items[
         'reportUrl'
       ] = `https://ecmps-dev.app.cloud.gov/workspace/reports?reportCode=MP_EVAL&facilityId=${plant.orisCode}&monitoPlanId=${mpRecord.monPlanIdentifier}`;
@@ -290,11 +360,20 @@ export class MailService {
       plant.orisCode,
     );
 
+    //Create Emissions Section of Email
+    const emissionsChildRecords = records.filter((r) => r.processCode === 'EM');
+    templateContext = await this.formatEmissionsContext(
+      templateContext,
+      emissionsChildRecords,
+      mpRecord.monPlanIdentifier,
+    );
+
     try {
       this.mailerService
         .sendMail({
-          to: 'kyleherceg@gmail.com', // List of receivers email address
-          subject: 'Testing Nest MailerModule ✔', // Subject line
+          to: params.toEmail, // List of receivers email address
+          from: params.fromEmail,
+          subject: `ECMPS Evaluation Report | ${this.displayCurrentDate()}`, // Subject line
           template: 'massEvaluationTemplate',
           context: templateContext,
         })
