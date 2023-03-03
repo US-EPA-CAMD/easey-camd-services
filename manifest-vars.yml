@@ -7,7 +7,7 @@ host: api-easey-dev.app.cloud.gov
 port: 8080
 path: camd-services
 title: CAMD Administrative & General Services
-description: 
+description: Provides administrative & general services for CAMD applications
 environment: development
 smtpHost: 'smtp.epa.gov'
 smtpPort: 25
