@@ -32,7 +32,10 @@ export default registerAs('app', () => ({
     'EASEY_CAMD_SERVICES_TITLE',
     'CAMD Administrative & General Services',
   ),
-  description: getConfigValue('EASEY_CAMD_SERVICES_DESCRIPTION', ''),
+  description: getConfigValue(
+    'EASEY_CAMD_SERVICES_DESCRIPTION',
+    'Provides administrative & general services for CAMD applications'
+  ),
   env: getConfigValue('EASEY_CAMD_SERVICES_ENV', 'local-dev'),
   apiKey: getConfigValue('EASEY_CAMD_SERVICES_API_KEY'),
   enableApiKey: getConfigValueBoolean('EASEY_CAMD_SERVICES_ENABLE_API_KEY'),
