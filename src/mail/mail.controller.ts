@@ -12,7 +12,7 @@ import { ClientTokenGuard } from '@us-epa-camd/easey-common/guards';
 import { MailService } from './mail.service';
 import { CreateMailDto } from './../dto/create-mail.dto';
 import { ClientId } from '../decorators/client-id.decorator';
-import { ApiExcludeControllerByEnv } from '../utilities/swagger-decorator.const';
+import { MassEvalParamsDTO } from '../dto/mass-eval-params.dto';
 
 @Controller()
 @ApiTags('Support')
@@ -20,7 +20,6 @@ import { ApiExcludeControllerByEnv } from '../utilities/swagger-decorator.const'
 @ApiSecurity('ClientId')
 @ApiBearerAuth('ClientToken')
 @UseGuards(ClientTokenGuard)
-@ApiExcludeControllerByEnv()
 export class MailController {
   constructor(private mailService: MailService) {}
 
@@ -29,13 +28,24 @@ export class MailController {
     description: 'Data sent successfully',
   })
   @ApiOperation({
-    description: "Sends an email to a CAMD support inbox determined by the Client Id."
+    description:
+      'Sends an email to a CAMD support inbox determined by the Client Id.',
   })
   @ApiInternalServerErrorResponse()
-  async send(
-    @Body() payload: CreateMailDto,
-    @ClientId() clientId: string,
-  ) {
+  async send(@Body() payload: CreateMailDto, @ClientId() clientId: string) {
     await this.mailService.sendEmail(clientId, payload);
+  }
+
+  @Post('email/mass-eval')
+  @ApiOkResponse({
+    description: 'Data sent successfully',
+  })
+  @ApiOperation({
+    description:
+      'Sends an email to a CAMD support inbox determined by the Client Id.',
+  })
+  @ApiInternalServerErrorResponse()
+  async sendMassEval(@Body() payload: MassEvalParamsDTO) {
+    this.mailService.sendMassEvalEmail(payload);
   }
 }

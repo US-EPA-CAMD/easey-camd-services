@@ -22,6 +22,16 @@ const apiHost = getConfigValue(
   'api.epa.gov/easey/dev',
 );
 
+export const smtpHost = getConfigValue(
+  'EASEY_CAMD_SERVICES_SMTP_HOST',
+  'smtp.epa.gov',
+);
+
+export const smtpPort = getConfigValueNumber(
+  'EASEY_CAMD_SERVICES_SMTP_PORT',
+  25,
+);
+
 export default registerAs('app', () => ({
   name: 'camd-services',
   host,
@@ -34,13 +44,21 @@ export default registerAs('app', () => ({
   ),
   description: getConfigValue(
     'EASEY_CAMD_SERVICES_DESCRIPTION',
-    'Provides administrative & general services for CAMD applications'
+    'Provides administrative & general services for CAMD applications.',
   ),
   env: getConfigValue('EASEY_CAMD_SERVICES_ENV', 'local-dev'),
   apiKey: getConfigValue('EASEY_CAMD_SERVICES_API_KEY'),
   enableApiKey: getConfigValueBoolean('EASEY_CAMD_SERVICES_ENABLE_API_KEY'),
   enableClientToken: getConfigValueBoolean(
     'EASEY_CAMD_SERVICES_ENABLE_CLIENT_TOKEN',
+  ),
+  enableRoleGuard: getConfigValueBoolean(
+    'EASEY_CAMD_SERVICES_ENABLE_ROLE_GUARD',
+    true,
+  ),
+  enableAuthToken: getConfigValueBoolean(
+    'EASEY_CAMD_SERVICES_ENABLE_AUTH_TOKEN',
+    true,
   ),
   secretToken: getConfigValue('EASEY_CAMD_SERVICES_SECRET_TOKEN'),
   enableSecretToken: getConfigValueBoolean(
@@ -53,10 +71,11 @@ export default registerAs('app', () => ({
   ),
   version: getConfigValue('EASEY_CAMD_SERVICES_VERSION', 'v0.0.0'),
   published: getConfigValue('EASEY_CAMD_SERVICES_PUBLISHED', 'local'),
-  smtpHost: getConfigValue('EASEY_CAMD_SERVICES_SMTP_HOST', 'smtp.epa.gov'),
-  smtpPort: getConfigValueNumber('EASEY_CAMD_SERVICES_SMTP_PORT', 25),
   // ENABLES DEBUG CONSOLE LOGS
   enableDebug: getConfigValueBoolean('EASEY_CAMD_SERVICES_ENABLE_DEBUG'),
+  // NEEDS TO BE SET IN .ENV FILE FOR LOCAL DEVELOPMENT
+  // FORMAT: { "userId": "", "roles": [ { "orisCode": 3, "role": "P" } ] }
+  currentUser: getConfigValue('EASEY_CAMD_SERVICES_CURRENT_USER'),
   apiHost: apiHost,
   authApi: {
     uri: getConfigValue('EASEY_AUTH_API', `https://${apiHost}/auth-mgmt`),

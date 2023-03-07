@@ -11,6 +11,8 @@ import { BookmarkDTO } from '../dto/bookmark.dto';
 import { ConfigService } from '@nestjs/config';
 import { HttpModule } from '@nestjs/axios';
 
+jest.mock('@us-epa-camd/easey-common/guards');
+
 describe('-- Bookmark Controller --', () => {
   let controller: BookmarkController;
   let service: BookmarkService;

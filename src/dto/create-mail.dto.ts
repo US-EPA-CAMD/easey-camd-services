@@ -1,22 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateMailDto {
-  @ApiProperty({
-    description: 'Email address of sender',
-    example: 'noreply@epa.gov',
-    name: 'fromEmail',
-  })
+  @ApiProperty()
   fromEmail: string;
 
-  @ApiProperty({
-    description: 'Subject of email message',
-    name: 'subject',
-  })
+  @ApiProperty()
   subject: string;
 
-  @ApiProperty({
-    description: 'Content of email message',
-    name: 'message',
-  })
+  @ApiProperty()
   message: string;
 }
