@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 import { IsNotEmpty, IsOptional } from 'class-validator';
 
 import { SeverityCodes } from '../enums/severity-codes.enum';
@@ -27,6 +28,7 @@ export class ErrorSuppressionsParamsDTO {
 
   @IsOptional()
   @ApiProperty({ isArray: true })
+  @Transform(({ value }) => value.split('|').map((item) => item.trim()))
   locations?: string[];
 
   @IsOptional()

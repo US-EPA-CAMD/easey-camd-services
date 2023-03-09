@@ -1,4 +1,3 @@
-import { Regex } from '@us-epa-camd/easey-common/utilities';
 
 export class QueryBuilderHelper {
   public static dateHrQtr(dateHrQtrValue: string, beginDate: boolean) {
