@@ -255,6 +255,7 @@ export class MailService {
     const date = new Date();
 
     return date.toLocaleDateString('en-US', {
+      timeZone: 'America/New_York',
       year: 'numeric',
       month: 'long',
       day: 'numeric',
