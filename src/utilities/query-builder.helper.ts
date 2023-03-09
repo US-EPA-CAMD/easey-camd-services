@@ -34,25 +34,4 @@ export class QueryBuilderHelper {
     query.andWhere('es.matchTimeEndValue <= :endDate', { endDate: endDate });
     return query;
   }
-
-  public static whereLocations(query: any, locations: string[], alias: string) {
-    if (locations) {
-      let string = '(';
-
-      for (let i = 0; i < locations.length; i++) {
-        const regex = Regex.commaDelimited(locations[i].toUpperCase());
-
-        if (i === 0) {
-          string += `(UPPER(${alias}.locations) ~* ${regex}) `;
-        } else {
-          string += `OR (UPPER(${alias}.locations) ~* ${regex}) `;
-        }
-      }
-
-      string += ')';
-      query.andWhere(string);
-    }
-
-    return query;
-  }
 }

@@ -75,7 +75,10 @@ export class ErrorSuppressionsRepository extends Repository<EsSpec> {
       });
     }
     if (locations) {
-      query = QueryBuilderHelper.whereLocations(query, locations, 'es');
+      query.andWhere(
+        `string_to_array(es.locations, ',') && string_to_array(:locations, '|')`,
+        { locations: locations },
+      );
     }
     if (reasonCode) {
       query.andWhere('UPPER(es.reasonCode) = :reasonCode', {

@@ -45,8 +45,6 @@ describe('ErrorSuppressionsRepository', () => {
     repository = module.get(ErrorSuppressionsRepository);
     queryBuilder = module.get(SelectQueryBuilder);
 
-    QueryBuilderHelper.whereLocations = jest.fn().mockReturnValue(queryBuilder);
-
     QueryBuilderHelper.beginDateHrQtr = jest.fn().mockReturnValue(queryBuilder);
 
     QueryBuilderHelper.endDateHrQtr = jest.fn().mockReturnValue(queryBuilder);
