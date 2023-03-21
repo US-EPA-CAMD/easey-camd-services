@@ -1,4 +1,3 @@
-import { Regex } from '@us-epa-camd/easey-common/utilities';
 
 export class QueryBuilderHelper {
   public static dateHrQtr(dateHrQtrValue: string, beginDate: boolean) {
@@ -32,27 +31,6 @@ export class QueryBuilderHelper {
   public static endDateHrQtr(query: any, dateHrQtrValue: string) {
     const endDate = this.dateHrQtr(dateHrQtrValue, false);
     query.andWhere('es.matchTimeEndValue <= :endDate', { endDate: endDate });
-    return query;
-  }
-
-  public static whereLocations(query: any, locations: string[], alias: string) {
-    if (locations) {
-      let string = '(';
-
-      for (let i = 0; i < locations.length; i++) {
-        const regex = Regex.commaDelimited(locations[i].toUpperCase());
-
-        if (i === 0) {
-          string += `(UPPER(${alias}.locations) ~* ${regex}) `;
-        } else {
-          string += `OR (UPPER(${alias}.locations) ~* ${regex}) `;
-        }
-      }
-
-      string += ')';
-      query.andWhere(string);
-    }
-
     return query;
   }
 }
