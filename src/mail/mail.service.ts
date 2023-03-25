@@ -1,9 +1,8 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { getManager } from 'typeorm';
 import { CreateMailDto } from '../dto/create-mail.dto';
 import { Logger } from '@us-epa-camd/easey-common/logger';
 import { ClientConfig } from '../entities/client-config.entity';
-import { LoggingException } from '@us-epa-camd/easey-common/exceptions';
 import { MailerService } from '@nestjs-modules/mailer';
 import { Evaluation } from '../entities/evaluation.entity';
 import { EvaluationSet } from '../entities/evaluation-set.entity';
@@ -325,7 +324,7 @@ export class MailService {
       );
       templateContext['monitorPlan'].items[
         'reportUrl'
-      ] = `https://ecmps-dev.app.cloud.gov/workspace/reports?reportCode=MP_EVAL&facilityId=${plant.orisCode}&monitoPlanId=${mpRecord.monPlanIdentifier}`;
+      ] = `https://ecmps-dev.app.cloud.gov/workspace/reports?reportCode=MP_EVAL&facilityId=${plant.orisCode}&monitorPlanId=${mpRecord.monPlanIdentifier}`;
     }
 
     //Create QA Section of Email ----------------------------------------
