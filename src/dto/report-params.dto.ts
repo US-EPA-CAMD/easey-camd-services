@@ -1,3 +1,4 @@
+import { IsNotEmpty } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { ApiProperty } from "@nestjs/swagger";
 import {
@@ -13,10 +14,12 @@ export class ReportParamsDTO {
       OverrideKeys.REPORT,
       true,
   ))
+  @IsNotEmpty({ message: 'Report Code is required' })
   reportCode: string;
 
   @ApiProperty()
-  facilityId?: number;
+  @IsNotEmpty({ message: 'Facility Id is required' })
+  facilityId: number;
 
   @ApiProperty()
   monitorPlanId?: string;
@@ -26,10 +29,14 @@ export class ReportParamsDTO {
   testId?: string[];
 
   @ApiProperty()
-  //@Transform(({ value }) => value.split('|').map((item: string) => item.trim()))
   qceId?: string;
 
   @ApiProperty()
-  //@Transform(({ value }) => value.split('|').map((item: string) => item.trim()))
   teeId?: string;
+
+  @ApiProperty()
+  year?: number;
+
+  @ApiProperty()
+  quarter?: number;  
 }
