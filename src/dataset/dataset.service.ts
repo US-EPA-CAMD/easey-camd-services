@@ -1,6 +1,7 @@
 import { getManager } from 'typeorm';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { BadRequestException } from '@nestjs/common/exceptions';
 
 import { ReportDTO } from '../dto/report.dto';
 import { DataSetRepository } from './dataset.repository';
@@ -41,6 +42,11 @@ export class DataSetService {
     const report = new ReportDTO();
     const schema = isWorkspace ? 'camdecmpswks' : 'camdecmps';
     const dataSet = await this.repository.getDataSet(params.reportCode);
+
+    if (!dataSet) {
+      throw new BadRequestException('Invalid report code');
+    }
+
     report.displayName = dataSet.displayName;
 
     if (params.testId && params.testId.length > 1) {
