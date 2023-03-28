@@ -17,6 +17,7 @@ import { QaTee } from '../entities/qa-tee.entity';
 import { ReportingPeriod } from '../entities/reporting-period.entity';
 import { EmissionEvaluation } from '../entities/emission-evaluation.entity';
 import { MassEvalParamsDTO } from '../dto/mass-eval-params.dto';
+import { report } from 'process';
 
 @Injectable()
 export class MailService {
@@ -213,7 +214,12 @@ export class MailService {
     return templateContext;
   }
 
-  async formatEmissionsContext(templateContext, records, monitorPlanId) {
+  async formatEmissionsContext(
+    templateContext,
+    records,
+    monitorPlanId,
+    orisCode,
+  ) {
     const emissionsKeys = ['Year / Quarter', 'Evaluation Status Code'];
 
     if (records.length > 0) {
@@ -242,7 +248,9 @@ export class MailService {
           emissionsRecord.evalStatusCode,
         );
 
-        newItem['reportUrl'] = `https://google.com`;
+        newItem[
+          'reportUrl'
+        ] = `https://ecmps-dev.app.cloud.gov/workspace/reports?reportCode=EM_EVAL&facilityId=${orisCode}&monitorPlanId=${monitorPlanId}&year=${reportPeriodInfo.calendarYear}&quarter=${reportPeriodInfo.quarter}`;
 
         templateContext['emissions'].items.push(newItem);
       }
@@ -362,6 +370,7 @@ export class MailService {
       templateContext,
       emissionsChildRecords,
       mpRecord.monPlanIdentifier,
+      plant.orisCode,
     );
 
     this.mailerService

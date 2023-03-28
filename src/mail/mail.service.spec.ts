@@ -209,7 +209,7 @@ describe('Mail Service', () => {
       .mockResolvedValue('MOCK');
     jest.spyOn(service, 'getReportColor').mockReturnValue('#FF6862');
     jest.spyOn(service, 'returnManager').mockReturnValue(mockManager);
-    const result = await service.formatEmissionsContext({}, mockEvalList, 3);
+    const result = await service.formatEmissionsContext({}, mockEvalList, 3, 1);
     expect(result['emissions'].items.length).toEqual(3);
     expect(result['emissions'].items[0]['Year / Quarter']).toEqual('MOCK');
   });
