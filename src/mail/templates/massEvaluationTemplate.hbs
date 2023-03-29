@@ -1,0 +1,121 @@
+<html>
+  <head>
+    <meta charset='utf-8' />
+    <title></title>
+  </head>
+
+  <style>
+    h2 {background-color: #005ea2; color: white; padding: 5px} div
+    {border-bottom: 1px solid grey; padding:20px} img {padding: 10px}; body
+    {margin: 10px}; table { font-family: Arial, Helvetica, sans-serif;
+    border-collapse: collapse; width: 100%; } table td, table th { border: 1px
+    solid #ddd; padding: 8px; } table tr:nth-child(even){background-color:
+    #f2f2f2;} table th { padding-top: 12px; padding-bottom: 12px; text-align:
+    left; background-color: white; color: black; } a{padding: 5px;}
+  </style>
+
+  <body>
+    <div>
+      <h1> Evaluation Report </h1>
+      <h4> {{dateEvaluated}} </h4>
+    </div>
+    <div>
+      <h2> Monitoring Plan </h2>
+      <table>
+        {{#each monitorPlan.keys}}
+          <th> {{this}} </th>
+        {{/each}}
+        {{#each monitorPlan.items}}
+          <tr>
+            {{#each ../monitorPlan.keys}}
+              <td> {{lookup .. this}} </td>
+            {{/each}}
+          </tr>
+        {{/each}}
+      </table>
+      {{#if monitorPlan.items.evalStatus}}
+        <h3> Evaluation Status Code: <a style="background-color: {{monitorPlan.items.reportColor}};" href="{{monitorPlan.items.reportUrl}}"> {{monitorPlan.items.evalStatus}} </a> </h3>
+      {{/if}}
+    </div>
+    {{#if testData}}
+      <div>
+        <h2> Test Data </h2>
+        <table>
+          {{#each testData.keys}}
+            <th> {{this}} </th>
+          {{/each}}
+          {{#each testData.items}}
+            <tr>
+              {{#each ../testData.keys}}
+                {{#if (notEquals this "Evaluation Status Code")}}
+                  <td> {{lookup .. this}} </td>
+                {{/if}}
+              {{/each}}
+              <td> <a style="background-color: {{this.reportColor}};" href="{{this.reportUrl}}"> {{this.evalStatusCode}} </a> </td>
+            </tr>
+          {{/each}}
+        </table>
+      </div>
+    {{/if}}
+    {{#if certEvents}}
+      <div>
+        <h2> QA Certification Events </h2>
+        <table>
+          {{#each certEvents.keys}}
+            <th> {{this}} </th>
+          {{/each}}
+          {{#each certEvents.items}}
+            <tr>
+              {{#each ../certEvents.keys}}
+                {{#if (notEquals this "Evaluation Status Code")}}
+                  <td> {{lookup .. this}} </td>
+                {{/if}}
+              {{/each}}
+              <td> <a style="background-color: {{this.reportColor}};" href="{{this.reportUrl}}"> {{this.evalStatusCode}} </a> </td>
+            </tr>
+          {{/each}}
+        </table>
+      </div>
+    {{/if}}
+    {{#if teeEvents}}
+      <div>
+        <h2> Test Extension Exemptions Data </h2>
+        <table>
+          {{#each teeEvents.keys}}
+            <th> {{this}} </th>
+          {{/each}}
+          {{#each teeEvents.items}}
+            <tr>
+              {{#each ../teeEvents.keys}}
+                {{#if (notEquals this "Evaluation Status Code")}}
+                  <td> {{lookup .. this}} </td>
+                {{/if}}
+              {{/each}}
+              <td> <a style="background-color: {{this.reportColor}};" href="{{this.reportUrl}}"> {{this.evalStatusCode}} </a> </td>
+            </tr>
+          {{/each}}
+        </table>
+      </div>
+    {{/if}}
+    {{#if emissions}}
+      <div>
+        <h2> Emissions </h2>
+        <table>
+          {{#each emissions.keys}}
+            <th> {{this}} </th>
+          {{/each}}
+          {{#each emissions.items}}
+            <tr>
+              {{#each ../emissions.keys}}
+                {{#if (notEquals this "Evaluation Status Code")}}
+                  <td> {{lookup .. this}} </td>
+                {{/if}}
+              {{/each}}
+              <td> <a style="background-color: {{this.reportColor}};" href="{{this.reportUrl}}"> {{this.evalStatusCode}} </a> </td>
+            </tr>
+          {{/each}}
+        </table>
+      </div>
+    {{/if}}
+  </body>
+</html>
