@@ -9,19 +9,20 @@ import { genErrorSuppressions } from '../../test/object-generators/error-suppres
 import { ErrorSuppressionsDTO } from '../dto/error-suppressions.dto';
 import { ErrorSuppressionsMap } from '../maps/error-suppressions.map';
 import { ErrorSuppressionsPayloadDTO } from '../dto/error-suppressions-payload.dto';
+import { CurrentUser } from '@us-epa-camd/easey-common/interfaces';
 
 jest.mock('@us-epa-camd/easey-common/guards');
 
 describe('-- Error Suppressions Controller --', () => {
   let controller: ErrorSuppressionsController;
   let service: ErrorSuppressionsService;
-  const currentUser = {
+  const currentUser: CurrentUser = {
     userId: '',
     sessionId: '',
     expiration: '',
     clientIp: '',
-    isAdmin: true,
-    permissionSet: [],
+    facilities: [],
+    roles: [],
   };
 
   beforeAll(async () => {
