@@ -1,8 +1,8 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty } from '@nestjs/swagger';
 import {
   DataDictionary,
   OverrideKeys,
-  PropertyKeys
+  PropertyKeys,
 } from '@us-epa-camd/easey-common/data-dictionary';
 
 export class IdQuarterPair {
@@ -10,10 +10,8 @@ export class IdQuarterPair {
   id: string;
 
   @ApiProperty(
-    DataDictionary.getMetadata(
-      PropertyKeys.QUARTER,
-      OverrideKeys.SUBMISSION,
-  ))
+    DataDictionary.getMetadata(PropertyKeys.QUARTER, OverrideKeys.SUBMISSION),
+  )
   quarter: string;
 }
 
@@ -39,10 +37,8 @@ export class SubmissionItem {
 
 export class SubmissionsDTO {
   @ApiProperty(
-    DataDictionary.getMetadata(
-      PropertyKeys.ID,
-      OverrideKeys.SUBMISSION,
-  ))
+    DataDictionary.getMetadata(PropertyKeys.ID, OverrideKeys.SUBMISSION),
+  )
   activityId: string;
 
   @ApiProperty()
