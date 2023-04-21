@@ -17,13 +17,14 @@ import { QaTee } from '../entities/qa-tee.entity';
 import { ReportingPeriod } from '../entities/reporting-period.entity';
 import { EmissionEvaluation } from '../entities/emission-evaluation.entity';
 import { MassEvalParamsDTO } from '../dto/mass-eval-params.dto';
-import { report } from 'process';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class MailService {
   constructor(
     private readonly logger: Logger,
     private readonly mailerService: MailerService,
+    private readonly configService: ConfigService,
   ) {}
 
   returnManager() {
@@ -111,9 +112,11 @@ export class MailService {
           testSumRecord.evalStatusCode,
         );
 
-        newItem[
-          'reportUrl'
-        ] = `https://ecmps-dev.app.cloud.gov/workspace/reports?reportCode=TEST_EVAL&facilityId=${orisCode}&testId=${testSumRecord.testSumIdentifier}`;
+        newItem['reportUrl'] = `${this.configService.get<string>(
+          'app.ecmpsHost',
+        )}/workspace/reports?reportCode=TEST_EVAL&facilityId=${orisCode}&testId=${
+          testSumRecord.testSumIdentifier
+        }`;
 
         templateContext['testData'].items.push(newItem);
       }
@@ -153,9 +156,11 @@ export class MailService {
           certEventRecord.evalStatusCode,
         );
 
-        newItem[
-          'reportUrl'
-        ] = `https://ecmps-dev.app.cloud.gov/workspace/reports?reportCode=QCE_EVAL&facilityId=${orisCode}&qceId=${certEventRecord.qaCertEventIdentifier}`;
+        newItem['reportUrl'] = `${this.configService.get<string>(
+          'app.ecmpsHost',
+        )}/workspace/reports?reportCode=QCE_EVAL&facilityId=${orisCode}&qceId=${
+          certEventRecord.qaCertEventIdentifier
+        }`;
 
         templateContext['certEvents'].items.push(newItem);
       }
@@ -204,9 +209,11 @@ export class MailService {
         newItem['evalStatusCode'] = teeRecord.evalStatusCode;
         newItem['reportColor'] = this.getReportColor(teeRecord.evalStatusCode);
 
-        newItem[
-          'reportUrl'
-        ] = `https://ecmps-dev.app.cloud.gov/workspace/reports?reportCode=TEE_EVAL&facilityId=${orisCode}&teeId=${teeRecord.testExtensionExemptionIdentifier}`;
+        newItem['reportUrl'] = `${this.configService.get<string>(
+          'app.ecmpsHost',
+        )}/workspace/reports?reportCode=TEE_EVAL&facilityId=${orisCode}&teeId=${
+          teeRecord.testExtensionExemptionIdentifier
+        }`;
 
         templateContext['teeEvents'].items.push(newItem);
       }
@@ -248,9 +255,11 @@ export class MailService {
           emissionsRecord.evalStatusCode,
         );
 
-        newItem[
-          'reportUrl'
-        ] = `https://ecmps-dev.app.cloud.gov/workspace/reports?reportCode=EM_EVAL&facilityId=${orisCode}&monitorPlanId=${monitorPlanId}&year=${reportPeriodInfo.calendarYear}&quarter=${reportPeriodInfo.quarter}`;
+        newItem['reportUrl'] = `${this.configService.get<string>(
+          'app.ecmpsHost',
+        )}/workspace/reports?reportCode=EM_EVAL&facilityId=${orisCode}&monitorPlanId=${monitorPlanId}&year=${
+          reportPeriodInfo.calendarYear
+        }&quarter=${reportPeriodInfo.quarter}`;
 
         templateContext['emissions'].items.push(newItem);
       }
@@ -332,7 +341,11 @@ export class MailService {
       );
       templateContext['monitorPlan'].items[
         'reportUrl'
-      ] = `https://ecmps-dev.app.cloud.gov/workspace/reports?reportCode=MP_EVAL&facilityId=${plant.orisCode}&monitorPlanId=${mpRecord.monPlanIdentifier}`;
+      ] = `${this.configService.get<string>(
+        'app.ecmpsHost',
+      )}/workspace/reports?reportCode=MP_EVAL&facilityId=${
+        plant.orisCode
+      }&monitorPlanId=${mpRecord.monPlanIdentifier}`;
     }
 
     //Create QA Section of Email ----------------------------------------

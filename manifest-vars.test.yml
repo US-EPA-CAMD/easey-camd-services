@@ -3,3 +3,4 @@ environment: testing
 host: api-easey-tst.app.cloud.gov
 apiHost: api.epa.gov/easey/test
 campdDatasetsS3Bucket: cg-fceefece-417a-4e3d-8fd4-6943acd8ea55
+ecmpsHost: https://ecmps-tst.app.cloud.gov
