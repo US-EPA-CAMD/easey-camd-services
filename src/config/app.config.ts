@@ -69,6 +69,10 @@ export default registerAs('app', () => ({
     'EASEY_CAMD_SERVICES_ENABLE_GLOBAL_VALIDATION_PIPE',
     true,
   ),
+  enableRoleGuardCheckoutCheck: getConfigValueBoolean(
+    'EASEY_MONITOR_PLAN_API_ENABLE_ROLE_GUARD_CHECKOUT',
+    true,
+  ),
   ecmpsHost: getConfigValue('EASEY_CAMD_SERVICES_ECMPS_HOST'),
   version: getConfigValue('EASEY_CAMD_SERVICES_VERSION', 'v0.0.0'),
   published: getConfigValue('EASEY_CAMD_SERVICES_PUBLISHED', 'local'),
