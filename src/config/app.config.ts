@@ -70,7 +70,7 @@ export default registerAs('app', () => ({
     true,
   ),
   enableRoleGuardCheckoutCheck: getConfigValueBoolean(
-    'EASEY_MONITOR_PLAN_API_ENABLE_ROLE_GUARD_CHECKOUT',
+    'EASEY_CAMD_SERVICES_ENABLE_ROLE_GUARD_CHECKOUT',
     true,
   ),
   ecmpsHost: getConfigValue('EASEY_CAMD_SERVICES_ECMPS_HOST'),
