@@ -19,6 +19,7 @@ import { MonitorPlan } from '../entities/monitor-plan.entity';
 import { Plant } from '../entities/plant.entity';
 import { CountyCode } from '../entities/county-code.entity';
 import { MassEvalParamsDTO } from '../dto/mass-eval-params.dto';
+import { ConfigService } from '@nestjs/config';
 
 const mockEvalList = [new Evaluation(), new Evaluation(), new Evaluation()];
 
@@ -37,6 +38,7 @@ describe('Mail Service', () => {
             sendMail: jest.fn().mockResolvedValue({}),
           }),
         },
+        ConfigService,
       ],
     }).compile();
 
