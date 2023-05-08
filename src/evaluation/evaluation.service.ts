@@ -38,27 +38,27 @@ export class EvaluationService {
             evaluationSet.userEmail = params.userEmail;
             evaluationSet.submittedOn = currentTime;
 
-            const locationAttributes = (
-              await this.returnManager().query(
-                `SELECT ml.mon_loc_id, u.unit_id, u.unitid, sp.stack_pipe_id, sp.stack_name
+            const locationAttributes = await this.returnManager().query(
+              `SELECT ml.mon_loc_id, u.unit_id, u.unitid, sp.stack_pipe_id, sp.stack_name
                   FROM camdecmpswks.monitor_location ml
                   JOIN camdecmpswks.monitor_plan_location USING(mon_loc_id)
                   LEFT JOIN camd.unit u ON ml.unit_id = u.unit_id
                   LEFT JOIN camdecmpswks.stack_pipe sp ON ml.stack_pipe_id = sp.stack_pipe_id
                     WHERE mon_plan_id = $1
                     ORDER BY unitId, stack_name`,
-                [item.monPlanId],
-              )
-            )[0];
+              [item.monPlanId],
+            );
 
-            if (
-              locationAttributes['unitid'] !== null &&
-              locationAttributes['unitid'] !== ''
-            ) {
-              evaluationSet.configuration = locationAttributes['unitid'];
-            } else {
-              evaluationSet.configuration = locationAttributes['stack_name'];
+            const locationParts = [];
+            for (const loc of locationAttributes) {
+              if (loc['unitid'] !== null && loc['unitid'] !== '') {
+                locationParts.push(loc['unitid']);
+              } else {
+                locationParts.push(loc['stack_name']);
+              }
             }
+
+            evaluationSet.configuration = locationParts.join(', ');
 
             const mp: MonitorPlan = await this.returnManager().findOne(
               MonitorPlan,
