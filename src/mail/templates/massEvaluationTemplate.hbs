@@ -6,12 +6,13 @@
 
   <style>
     h2 {background-color: #005ea2; color: white; padding: 5px} div
-    {border-bottom: 1px solid grey; padding:20px} img {padding: 10px}; body
+    {border-bottom: 1px solid grey; padding:40px} img {padding: 10px}; body
     {margin: 10px}; table { font-family: Arial, Helvetica, sans-serif;
     border-collapse: collapse; width: 100%; } table td, table th { border: 1px
     solid #ddd; padding: 8px; } table tr:nth-child(even){background-color:
     #f2f2f2;} table th { padding-top: 12px; padding-bottom: 12px; text-align:
-    left; background-color: white; color: black; } a{padding: 5px;}
+    left; background-color: white; color: black; } a{padding: 5px; border-left: .5rem solid; font-size: 1.06rem; line-height: 1.5;}
+    h3{margin-top: 25px;}
   </style>
 
   <body>
@@ -34,7 +35,7 @@
         {{/each}}
       </table>
       {{#if monitorPlan.items.evalStatus}}
-        <h3> Evaluation Status Code: <a style="background-color: {{monitorPlan.items.reportColor}};" href="{{monitorPlan.items.reportUrl}}"> {{monitorPlan.items.evalStatus}} </a> </h3>
+        <h3> Evaluation Status Code: <a style="background-color: {{monitorPlan.items.reportColor}}; border-left-color: {{monitorPlan.items.reportLineColor}};" href="{{monitorPlan.items.reportUrl}}"> {{monitorPlan.items.evalStatus}} </a> </h3>
       {{/if}}
     </div>
     {{#if testData}}
@@ -51,7 +52,7 @@
                   <td> {{lookup .. this}} </td>
                 {{/if}}
               {{/each}}
-              <td> <a style="background-color: {{this.reportColor}};" href="{{this.reportUrl}}"> {{this.evalStatusCode}} </a> </td>
+              <td> <a style="background-color: {{this.reportColor}}; border-left-color: {{this.reportLineColor}};" href="{{this.reportUrl}}"> {{this.evalStatusCode}} </a> </td>
             </tr>
           {{/each}}
         </table>
@@ -71,7 +72,7 @@
                   <td> {{lookup .. this}} </td>
                 {{/if}}
               {{/each}}
-              <td> <a style="background-color: {{this.reportColor}};" href="{{this.reportUrl}}"> {{this.evalStatusCode}} </a> </td>
+              <td> <a style="background-color: {{this.reportColor}}; border-left-color: {{this.reportLineColor}};" href="{{this.reportUrl}}"> {{this.evalStatusCode}} </a> </td>
             </tr>
           {{/each}}
         </table>
@@ -91,7 +92,7 @@
                   <td> {{lookup .. this}} </td>
                 {{/if}}
               {{/each}}
-              <td> <a style="background-color: {{this.reportColor}};" href="{{this.reportUrl}}"> {{this.evalStatusCode}} </a> </td>
+              <td> <a style="background-color: {{this.reportColor}}; border-left-color: {{this.reportLineColor}};" href="{{this.reportUrl}}"> {{this.evalStatusCode}} </a> </td>
             </tr>
           {{/each}}
         </table>
@@ -111,7 +112,7 @@
                   <td> {{lookup .. this}} </td>
                 {{/if}}
               {{/each}}
-              <td> <a style="background-color: {{this.reportColor}};" href="{{this.reportUrl}}"> {{this.evalStatusCode}} </a> </td>
+              <td> <a style="background-color: {{this.reportColor}}; border-left-color: {{this.reportLineColor}};" href="{{this.reportUrl}}"> {{this.evalStatusCode}} </a> </td>
             </tr>
           {{/each}}
         </table>

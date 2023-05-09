@@ -57,11 +57,11 @@ export class MailService {
     });
   }
 
-  getReportColor(evalStatusCd: string) {
+  getReportColors(evalStatusCd: string) {
     if (evalStatusCd !== 'PASS' && evalStatusCd !== 'INFO') {
-      return '#FF6862';
+      return ['#faf3d1', '#ffbe2e'];
     }
-    return '#90EE90';
+    return ['#ecf3ec', '#00a91c'];
   }
 
   async getSystemComponentIdentifier(
@@ -76,7 +76,12 @@ export class MailService {
     return c.componentIdentifier;
   }
 
-  async formatTestDataContext(templateContext, records, orisCode) {
+  async formatTestDataContext(
+    templateContext,
+    records,
+    orisCode,
+    mappedStatusCodes,
+  ) {
     const testDataKeys = [
       'System / Component Id',
       'Test Number',
@@ -107,10 +112,12 @@ export class MailService {
         newItem['Test Type'] = testSumRecord.testTypeCode;
         newItem['Test Reason'] = testSumRecord.testReasonCode;
         newItem['Test Result'] = testSumRecord.testResultCode;
-        newItem['evalStatusCode'] = testSumRecord.evalStatusCode;
-        newItem['reportColor'] = this.getReportColor(
+        newItem['evalStatusCode'] = mappedStatusCodes.get(
           testSumRecord.evalStatusCode,
         );
+        const colors = this.getReportColors(testSumRecord.evalStatusCode);
+        newItem['reportColor'] = colors[0];
+        newItem['reportLineColor'] = colors[1];
 
         newItem['reportUrl'] = `${this.configService.get<string>(
           'app.ecmpsHost',
@@ -124,7 +131,12 @@ export class MailService {
     return templateContext;
   }
 
-  async formatCertEventsContext(templateContext, records, orisCode) {
+  async formatCertEventsContext(
+    templateContext,
+    records,
+    orisCode,
+    mappedStatusCodes,
+  ) {
     const certEventKeys = [
       'System / Component Id',
       'Cert Event Code',
@@ -151,10 +163,12 @@ export class MailService {
           );
         newItem['Cert Event Code'] = certEventRecord.qaCertEventCode;
         newItem['Required Test Code'] = certEventRecord.requiredTestCode;
-        newItem['evalStatusCode'] = certEventRecord.evalStatusCode;
-        newItem['reportColor'] = this.getReportColor(
+        newItem['evalStatusCode'] = mappedStatusCodes.get(
           certEventRecord.evalStatusCode,
         );
+        const colors = this.getReportColors(certEventRecord.evalStatusCode);
+        newItem['reportColor'] = colors[0];
+        newItem['reportLineColor'] = colors[1];
 
         newItem['reportUrl'] = `${this.configService.get<string>(
           'app.ecmpsHost',
@@ -168,7 +182,12 @@ export class MailService {
     return templateContext;
   }
 
-  async formatTeeContext(templateContext, records, orisCode) {
+  async formatTeeContext(
+    templateContext,
+    records,
+    orisCode,
+    mappedStatusCodes,
+  ) {
     const teeKeys = [
       'System / Component Id',
       'Year / Quarter',
@@ -206,8 +225,12 @@ export class MailService {
         newItem['Extension Exemption Code'] = teeRecord.extensExemptCode;
         newItem['Hours Used'] = teeRecord.hoursUsed;
         newItem['Span Scale Code'] = teeRecord.spanScaleCode;
-        newItem['evalStatusCode'] = teeRecord.evalStatusCode;
-        newItem['reportColor'] = this.getReportColor(teeRecord.evalStatusCode);
+        newItem['evalStatusCode'] = mappedStatusCodes.get(
+          teeRecord.evalStatusCode,
+        );
+        const colors = this.getReportColors(teeRecord.evalStatusCode);
+        newItem['reportColor'] = colors[0];
+        newItem['reportLineColor'] = colors[1];
 
         newItem['reportUrl'] = `${this.configService.get<string>(
           'app.ecmpsHost',
@@ -226,6 +249,7 @@ export class MailService {
     records,
     monitorPlanId,
     orisCode,
+    mappedStatusCodes,
   ) {
     const emissionsKeys = ['Year / Quarter', 'Evaluation Status Code'];
 
@@ -250,10 +274,12 @@ export class MailService {
         );
 
         newItem['Year / Quarter'] = reportPeriodInfo.periodAbbreviation;
-        newItem['evalStatusCode'] = emissionsRecord.evalStatusCode;
-        newItem['reportColor'] = this.getReportColor(
+        newItem['evalStatusCode'] = mappedStatusCodes.get(
           emissionsRecord.evalStatusCode,
         );
+        const colors = this.getReportColors(emissionsRecord.evalStatusCode);
+        newItem['reportColor'] = colors[0];
+        newItem['reportLineColor'] = colors[1];
 
         newItem['reportUrl'] = `${this.configService.get<string>(
           'app.ecmpsHost',
@@ -281,6 +307,18 @@ export class MailService {
   };
 
   async sendMassEvalEmail(params: MassEvalParamsDTO) {
+    //Create our lookup map of eval codes to descriptions
+    const statusCodes = await this.returnManager().query(
+      'SELECT * FROM camdecmpsmd.eval_status_code',
+    );
+    const mappedStatusCodes = new Map<string, string>();
+    statusCodes.forEach((cd) => {
+      mappedStatusCodes.set(
+        cd['eval_status_cd'],
+        cd['eval_status_cd_description'],
+      );
+    });
+
     const mpKeys = [
       'Facility Name',
       'Configuration',
@@ -334,11 +372,12 @@ export class MailService {
 
     const mpChildRecord = records.find((r) => r.processCode === 'MP');
     if (mpChildRecord) {
+      const colors = this.getReportColors(mpRecord.evalStatusCode);
       templateContext['monitorPlan'].items['evalStatus'] =
-        mpRecord.evalStatusCode;
-      templateContext['monitorPlan'].items['reportColor'] = this.getReportColor(
-        mpRecord.evalStatusCode,
-      );
+        mappedStatusCodes.get(mpRecord.evalStatusCode);
+      templateContext['monitorPlan'].items['reportColor'] = colors[0];
+      templateContext['monitorPlan'].items['reportLineColor'] = colors[1];
+
       templateContext['monitorPlan'].items[
         'reportUrl'
       ] = `${this.configService.get<string>(
@@ -356,6 +395,7 @@ export class MailService {
       templateContext,
       testDataChildRecords,
       plant.orisCode,
+      mappedStatusCodes,
     );
 
     const certChildRecords = records.filter(
@@ -365,6 +405,7 @@ export class MailService {
       templateContext,
       certChildRecords,
       plant.orisCode,
+      mappedStatusCodes,
     );
 
     const teeChildRecords = records.filter(
@@ -375,6 +416,7 @@ export class MailService {
       templateContext,
       teeChildRecords,
       plant.orisCode,
+      mappedStatusCodes,
     );
 
     //Create Emissions Section of Email
@@ -384,6 +426,7 @@ export class MailService {
       emissionsChildRecords,
       mpRecord.monPlanIdentifier,
       plant.orisCode,
+      mappedStatusCodes,
     );
 
     this.mailerService

@@ -52,6 +52,7 @@ describe('Mail Service', () => {
             return new ClientConfig();
         }
       }),
+      query: jest.fn().mockResolvedValue([]),
     } as any as EntityManager;
 
     jest.spyOn(service, 'returnManager').mockReturnValue(mockManager);
@@ -67,15 +68,11 @@ describe('Mail Service', () => {
   });
 
   it('get report color red', async () => {
-    expect(service.getReportColor('ERR')).toEqual('#FF6862');
+    expect(service.getReportColors('ERR')[0]).toEqual('#faf3d1');
   });
 
   it('get report color green', async () => {
-    expect(service.getReportColor('PASS')).toEqual('#90EE90');
-  });
-
-  it('get report color green', async () => {
-    expect(service.getReportColor('PASS')).toEqual('#90EE90');
+    expect(service.getReportColors('PASS')[0]).toEqual('#ecf3ec');
   });
 
   it('get system / component id correctly with just system present', async () => {
@@ -132,9 +129,16 @@ describe('Mail Service', () => {
     jest
       .spyOn(service, 'getSystemComponentIdentifier')
       .mockResolvedValue('MOCK');
-    jest.spyOn(service, 'getReportColor').mockReturnValue('#FF6862');
+    jest
+      .spyOn(service, 'getReportColors')
+      .mockReturnValue(['#FF6862', '#FF6862']);
     jest.spyOn(service, 'returnManager').mockReturnValue(mockManager);
-    const result = await service.formatTestDataContext({}, mockEvalList, 3);
+    const result = await service.formatTestDataContext(
+      {},
+      mockEvalList,
+      3,
+      new Map(),
+    );
     expect(result['testData'].items.length).toEqual(3);
     expect(result['testData'].items[0]['System / Component Id']).toEqual(
       'MOCK',
@@ -155,9 +159,16 @@ describe('Mail Service', () => {
     jest
       .spyOn(service, 'getSystemComponentIdentifier')
       .mockResolvedValue('MOCK');
-    jest.spyOn(service, 'getReportColor').mockReturnValue('#FF6862');
+    jest
+      .spyOn(service, 'getReportColors')
+      .mockReturnValue(['#FF6862', '#FF6862']);
     jest.spyOn(service, 'returnManager').mockReturnValue(mockManager);
-    const result = await service.formatCertEventsContext({}, mockEvalList, 3);
+    const result = await service.formatCertEventsContext(
+      {},
+      mockEvalList,
+      3,
+      new Map(),
+    );
     expect(result['certEvents'].items.length).toEqual(3);
     expect(result['certEvents'].items[0]['System / Component Id']).toEqual(
       'MOCK',
@@ -180,9 +191,16 @@ describe('Mail Service', () => {
     jest
       .spyOn(service, 'getSystemComponentIdentifier')
       .mockResolvedValue('MOCK');
-    jest.spyOn(service, 'getReportColor').mockReturnValue('#FF6862');
+    jest
+      .spyOn(service, 'getReportColors')
+      .mockReturnValue(['#FF6862', '#FF6862']);
     jest.spyOn(service, 'returnManager').mockReturnValue(mockManager);
-    const result = await service.formatTeeContext({}, mockEvalList, 3);
+    const result = await service.formatTeeContext(
+      {},
+      mockEvalList,
+      3,
+      new Map(),
+    );
     expect(result['teeEvents'].items.length).toEqual(3);
     expect(result['teeEvents'].items[0]['System / Component Id']).toEqual(
       'MOCK',
@@ -209,9 +227,17 @@ describe('Mail Service', () => {
     jest
       .spyOn(service, 'getSystemComponentIdentifier')
       .mockResolvedValue('MOCK');
-    jest.spyOn(service, 'getReportColor').mockReturnValue('#FF6862');
+    jest
+      .spyOn(service, 'getReportColors')
+      .mockReturnValue(['#FF6862', '#FF6862']);
     jest.spyOn(service, 'returnManager').mockReturnValue(mockManager);
-    const result = await service.formatEmissionsContext({}, mockEvalList, 3, 1);
+    const result = await service.formatEmissionsContext(
+      {},
+      mockEvalList,
+      3,
+      1,
+      new Map(),
+    );
     expect(result['emissions'].items.length).toEqual(3);
     expect(result['emissions'].items[0]['Year / Quarter']).toEqual('MOCK');
   });
@@ -239,6 +265,7 @@ describe('Mail Service', () => {
             return [mockMpRecord];
         }
       }),
+      query: jest.fn().mockResolvedValue([]),
     } as any as EntityManager;
     jest.spyOn(service, 'returnManager').mockReturnValue(mockManager);
 
