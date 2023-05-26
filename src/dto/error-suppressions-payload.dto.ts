@@ -81,11 +81,6 @@ export class ErrorSuppressionsPayloadDTO {
   @IsOptional()
   matchDataValue?: string;
 
-  @IsNotEmpty({
-    message: () => {
-      return ErrorMessages.RequiredProperty();
-    },
-  })
   @IsString()
   @IsValidCode(EsMatchTimeTypeCode, {
     message: (args: ValidationArguments) => {
