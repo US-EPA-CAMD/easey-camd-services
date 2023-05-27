@@ -161,7 +161,7 @@ export class ErrorSuppressionsParamsDTO {
     },
     {
       message: (args: ValidationArguments) => {
-        return `You have reported invalid locations for the facilityId [${args.object['facilityId']}].`;
+        return `The locations not valid for the facilityId [${args.object['facilityId']}].`;
       },
     },
   )
