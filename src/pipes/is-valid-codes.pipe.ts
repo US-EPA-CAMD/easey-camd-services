@@ -6,7 +6,6 @@ import {
 
 import { FindManyOptions, getManager } from 'typeorm';
 
-// TODO: MOVE TO COMMON PIPES
 export function IsValidCodes(
   type: any,
   findOption: (ValidationArguments: ValidationArguments) => FindManyOptions,
