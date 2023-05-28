@@ -21,8 +21,17 @@ export function IsValidCodes(
         async validate(value: any, args: ValidationArguments) {
           if (value) {
             const manager = getManager();
-            const found = await manager.findOne(type, findOption(args));
-            return found != null;
+
+            if (typeof args.value !== 'string') {
+              args.value = args.value.join();
+            }
+
+            const found = await manager.find(type, findOption(args));
+
+            args.value = args.value.split(',').map((item) => item.trim());
+            if (args.value.length !== found.length) {
+              return false;
+            }
           }
           return true;
         },

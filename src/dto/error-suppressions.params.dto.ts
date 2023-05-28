@@ -18,7 +18,7 @@ import { SeverityCode } from '../entities/severity-code.entity';
 import { CheckCatalogService } from '@us-epa-camd/easey-common/check-catalog';
 import { IsDateHrQtrFormat } from '../pipes/is-date-hr-qtr-format.pipe';
 import { FindOneOptions } from 'typeorm/find-options/FindOneOptions';
-import { In } from 'typeorm';
+import { FindManyOptions, FindOperator, In, Like } from 'typeorm';
 import { CheckCatalog } from '../entities/check-catalog.entity';
 import { CheckCatalogResult } from '../entities/check-catalog-result.entity';
 import { Plant } from '../entities/plant.entity';
@@ -28,7 +28,7 @@ import { EsReasonCode } from '../entities/es-reason-code.entity';
 
 const msgA =
   'The [property] is not valid refer to the list of available [property]s for valid values';
-const msgB = `Ensure [property] are in the following formats Date Range - YYYY-mm-dd /Hour Range- YYYY-mm-dd hh/Quarter Range – YYYY Q1`;
+const msgB = `Ensure [property] are in the following formats Date Range - YYYY-mm-dd /Hour Range- YYYY-mm-dd hh/Quarter Range – YYYY Q1/Q2/Q3/Q4`;
 
 export class ErrorSuppressionsParamsDTO {
   @IsNotEmpty()
@@ -139,32 +139,38 @@ export class ErrorSuppressionsParamsDTO {
   @ApiProperty({ isArray: true })
   @Transform(({ value }) => value.split('|').map((item) => item.trim()))
   @IsArray()
-  @IsValidCodes(
-    MonitorLocation,
-    (args: ValidationArguments): FindOneOptions<MonitorLocation> => {
-      return {
-        where: {
-          unit: {
-            plant: {
-              orisCode: args.object['facilityId'],
-            },
-          },
-          stackPipe: {
-            plant: {
-              orisCode: args.object['facilityId'],
-            },
-          },
-          monLocIdentifier: In(args.value),
-        },
-        relations: ['unit', 'stackPipe'],
-      };
-    },
-    {
-      message: (args: ValidationArguments) => {
-        return `The locations not valid for the facilityId [${args.object['facilityId']}].`;
-      },
-    },
-  )
+  // @IsValidCodes(
+  //   MonitorLocation,
+  //   (args: ValidationArguments): FindManyOptions<MonitorLocation> => {
+  //     return {
+  //       where: [
+  //         {
+  //           unit: {
+  //             plant: {
+  //               orisCode: args.object['facilityId'],
+  //             },
+  //             name: In(args.value),
+  //           },
+  //         },
+  //         {
+  //           stackPipe: {
+  //             plant: {
+  //               orisCode: args.object['facilityId'],
+  //             },
+  //             name: In(args.value),
+  //           },
+  //         },
+  //       ],
+  //       relations: ['unit', 'stackPipe'],
+  //       loadEagerRelations: true,
+  //     };
+  //   },
+  //   {
+  //     message: (args: ValidationArguments) => {
+  //       return `You have entered invalid locations of [${args.value}] for the facilityId [${args.object['facilityId']}].`;
+  //     },
+  //   },
+  // )
   locations?: string[];
 
   @IsOptional()
