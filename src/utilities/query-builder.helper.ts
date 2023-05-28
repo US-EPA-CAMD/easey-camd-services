@@ -1,4 +1,3 @@
-
 export class QueryBuilderHelper {
   public static dateHrQtr(dateHrQtrValue: string, beginDate: boolean) {
     if (String(dateHrQtrValue).match(/^\d{4}\sQ[1-4]$/) != null) {

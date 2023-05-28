@@ -3,7 +3,7 @@ import {
   ApiOkResponse,
   ApiSecurity,
   ApiOperation,
-  ApiParam,  
+  ApiParam,
   ApiBearerAuth,
 } from '@nestjs/swagger';
 
@@ -21,7 +21,7 @@ import { ClientTokenGuard } from '@us-epa-camd/easey-common/guards';
 import {
   DataDictionary,
   OverrideKeys,
-  PropertyKeys
+  PropertyKeys,
 } from '@us-epa-camd/easey-common/data-dictionary';
 
 import { BookmarkService } from './bookmark.service';
@@ -43,15 +43,12 @@ export class BookmarkController {
     description: 'Data retrieved successfully',
   })
   @ApiOperation({
-    description: "Retrieves a CAMPD application bookmark by its id."
+    description: 'Retrieves a CAMPD application bookmark by its id.',
   })
   @ApiParam({
     name: 'id',
-    ...DataDictionary.getMetadata(
-      PropertyKeys.ID,
-      OverrideKeys.BOOKMARK,
-      true,
-  )})
+    ...DataDictionary.getMetadata(PropertyKeys.ID, OverrideKeys.BOOKMARK, true),
+  })
   async getBookmarkById(
     @Param('id', ParseIntPipe) id: number,
   ): Promise<BookmarkDTO> {
@@ -67,7 +64,7 @@ export class BookmarkController {
     description: 'Data created successfully',
   })
   @ApiOperation({
-    description: "Creates a CAMPD application bookmark."
+    description: 'Creates a CAMPD application bookmark.',
   })
   async createBookmark(
     @Body() payload: BoomarkPayloadDTO,

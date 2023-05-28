@@ -4,8 +4,8 @@ import {
   Entity,
   JoinColumn,
   OneToMany,
-  ManyToOne,  
-  PrimaryGeneratedColumn
+  ManyToOne,
+  PrimaryGeneratedColumn,
 } from 'typeorm';
 
 import { DataSet } from './dataset.entity';
@@ -50,31 +50,19 @@ export class DataTable extends BaseEntity {
   })
   noResultsMessage: string;
 
-  @ManyToOne(
-    () => DataSet,
-    o => o.tables,
-  )
+  @ManyToOne(() => DataSet, (o) => o.tables)
   @JoinColumn({ name: 'dataset_cd' })
   dataSet: DataSet;
 
-  @ManyToOne(
-    () => Template,
-    o => o.dataTables,
-  )
+  @ManyToOne(() => Template, (o) => o.dataTables)
   @JoinColumn({ name: 'template_cd' })
   template: Template;
 
-  @OneToMany(
-    () => DataColumn,
-    o => o.dataTable,
-  )
+  @OneToMany(() => DataColumn, (o) => o.dataTable)
   @JoinColumn({ name: 'datatable_id' })
   columns: DataColumn[];
 
-  @OneToMany(
-    () => DataParameter,
-    o => o.dataTable,
-  )
+  @OneToMany(() => DataParameter, (o) => o.dataTable)
   @JoinColumn({ name: 'datatable_id' })
   parameters: DataParameter[];
 }

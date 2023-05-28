@@ -26,7 +26,7 @@ export class BulkFileService {
     if (record) {
       return this.updateBulkDataFile(record.s3Path, bulkFileDTO);
     }
-    
+
     const today = new Date();
     record = new BulkFileMetadata();
 

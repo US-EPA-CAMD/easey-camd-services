@@ -1,19 +1,16 @@
 import { IsNotEmpty } from 'class-validator';
 import { Transform } from 'class-transformer';
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty } from '@nestjs/swagger';
 import {
   DataDictionary,
   OverrideKeys,
-  PropertyKeys
+  PropertyKeys,
 } from '@us-epa-camd/easey-common/data-dictionary';
 
 export class ReportParamsDTO {
   @ApiProperty(
-    DataDictionary.getMetadata(
-      PropertyKeys.CODE,
-      OverrideKeys.REPORT,
-      true,
-  ))
+    DataDictionary.getMetadata(PropertyKeys.CODE, OverrideKeys.REPORT, true),
+  )
   @IsNotEmpty({ message: 'Report Code is required' })
   reportCode: string;
 
@@ -38,5 +35,5 @@ export class ReportParamsDTO {
   year?: number;
 
   @ApiProperty()
-  quarter?: number;  
+  quarter?: number;
 }

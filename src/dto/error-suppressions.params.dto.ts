@@ -139,38 +139,6 @@ export class ErrorSuppressionsParamsDTO {
   @ApiProperty({ isArray: true })
   @Transform(({ value }) => value.split('|').map((item) => item.trim()))
   @IsArray()
-  // @IsValidCodes(
-  //   MonitorLocation,
-  //   (args: ValidationArguments): FindManyOptions<MonitorLocation> => {
-  //     return {
-  //       where: [
-  //         {
-  //           unit: {
-  //             plant: {
-  //               orisCode: args.object['facilityId'],
-  //             },
-  //             name: In(args.value),
-  //           },
-  //         },
-  //         {
-  //           stackPipe: {
-  //             plant: {
-  //               orisCode: args.object['facilityId'],
-  //             },
-  //             name: In(args.value),
-  //           },
-  //         },
-  //       ],
-  //       relations: ['unit', 'stackPipe'],
-  //       loadEagerRelations: true,
-  //     };
-  //   },
-  //   {
-  //     message: (args: ValidationArguments) => {
-  //       return `You have entered invalid locations of [${args.value}] for the facilityId [${args.object['facilityId']}].`;
-  //     },
-  //   },
-  // )
   locations?: string[];
 
   @IsOptional()

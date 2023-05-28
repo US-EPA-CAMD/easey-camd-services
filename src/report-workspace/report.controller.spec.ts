@@ -17,11 +17,7 @@ describe('-- Report Controller --', () => {
     const module = await Test.createTestingModule({
       imports: [HttpModule],
       controllers: [ReportWorkspaceController],
-      providers: [
-        ConfigService,
-        DataSetService,
-        DataSetRepository
-      ],
+      providers: [ConfigService, DataSetService, DataSetRepository],
     }).compile();
 
     controller = module.get(ReportWorkspaceController);

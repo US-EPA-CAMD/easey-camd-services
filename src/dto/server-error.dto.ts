@@ -1,8 +1,8 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty } from '@nestjs/swagger';
 import {
   DataDictionary,
   OverrideKeys,
-  PropertyKeys
+  PropertyKeys,
 } from '@us-epa-camd/easey-common/data-dictionary';
 
 export class ServerErrorDto {

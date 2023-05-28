@@ -1,16 +1,14 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty } from '@nestjs/swagger';
 import {
   DataDictionary,
   OverrideKeys,
-  PropertyKeys
+  PropertyKeys,
 } from '@us-epa-camd/easey-common/data-dictionary';
 
 export class ReportColumnDTO {
   @ApiProperty(
-    DataDictionary.getMetadata(
-      PropertyKeys.CODE,
-      OverrideKeys.REPORT_COLUMN,
-  ))
+    DataDictionary.getMetadata(PropertyKeys.CODE, OverrideKeys.REPORT_COLUMN),
+  )
   code: string;
 
   @ApiProperty()
