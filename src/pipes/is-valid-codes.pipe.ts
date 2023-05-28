@@ -22,13 +22,11 @@ export function IsValidCodes(
           if (value) {
             const manager = getManager();
 
-            if (typeof args.value !== 'string') {
-              args.value = args.value.join();
-            }
-
             const found = await manager.find(type, findOption(args));
 
-            args.value = args.value.split(',').map((item) => item.trim());
+            if (typeof args.value === 'string') {
+              args.value = args.value.split(',').map((item) => item.trim());
+            }
             if (args.value.length !== found.length) {
               return false;
             }
