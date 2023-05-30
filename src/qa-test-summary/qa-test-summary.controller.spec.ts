@@ -6,6 +6,8 @@ import { HttpModule } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { QaCertMaintParamsDto } from '../dto/qa-cert-maint-params.dto';
 import { EntityManager } from 'typeorm';
+import { QaTestSummaryMaintView } from '../entities/qa-test-summary-maint-vw.entity';
+import { CurrentUser } from '@us-epa-camd/easey-common/interfaces';
 
 describe('QaTestSummaryController', () => {
   let controller: QaTestSummaryController;
@@ -32,5 +34,20 @@ describe('QaTestSummaryController', () => {
     expect(
       await controller.getQaTestSummaryViewData(new QaCertMaintParamsDto()),
     ).toEqual([]);
+  });
+
+  it('should return data for updateSubmissionStatus controller method', async () => {
+    const record = new QaTestSummaryMaintView();
+    const user: CurrentUser = {
+      userId: 'testUser',
+      sessionId: '',
+      expiration: '',
+      clientIp: '',
+      facilities: [],
+      roles: [],
+    };
+    jest.spyOn(service, 'updateSubmissionStatus').mockResolvedValue(record);
+
+    expect(await controller.updateSubmissionStatus('id', user)).toEqual(record);
   });
 });

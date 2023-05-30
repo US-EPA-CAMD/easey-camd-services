@@ -6,6 +6,8 @@ import { LoggerModule } from '@us-epa-camd/easey-common/logger';
 import { HttpModule } from '@nestjs/axios';
 import { QaCertMaintParamsDto } from '../dto/qa-cert-maint-params.dto';
 import { EntityManager } from 'typeorm';
+import { QaCertEventMaintView } from '../entities/qa-cert-event-maint-vw.entity';
+import { CurrentUser } from '@us-epa-camd/easey-common/interfaces';
 
 describe('QaCertEventController', () => {
   let controller: QaCertEventController;
@@ -32,5 +34,20 @@ describe('QaCertEventController', () => {
     expect(
       await controller.getQaCertEventViewData(new QaCertMaintParamsDto()),
     ).toEqual([]);
+  });
+
+  it('should return data for updateSubmissionStatus controller method', async () => {
+    const record = new QaCertEventMaintView();
+    const user: CurrentUser = {
+      userId: 'testUser',
+      sessionId: '',
+      expiration: '',
+      clientIp: '',
+      facilities: [],
+      roles: [],
+    };
+    jest.spyOn(service, 'updateSubmissionStatus').mockResolvedValue(record);
+
+    expect(await controller.updateSubmissionStatus('id', user)).toEqual(record);
   });
 });

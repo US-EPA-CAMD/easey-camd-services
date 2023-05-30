@@ -27,4 +27,12 @@ describe('QaTestExtensionExemptionService', () => {
     const result = await service.getQaTeeViewData(1, '');
     expect(result).toEqual([]);
   });
+
+  it('should successfully update and return data', async () => {
+    jest.spyOn(entityManager, 'query').mockResolvedValue([[], 1]);
+    jest.spyOn(entityManager, 'findOne').mockResolvedValue({});
+
+    const result = await service.updateSubmissionStatus('id', 'userId');
+    expect(result).toEqual({});
+  });
 });
