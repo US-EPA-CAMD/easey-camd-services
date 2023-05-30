@@ -17,7 +17,7 @@ import { SeverityCode } from '../entities/severity-code.entity';
 import { EsMatchDataTypeCode } from '../entities/es-match-data-type-code.entity';
 import { EsMatchTimeTypeCode } from '../entities/es-match-time-type-code.entity';
 
-const msgA = `You reported an invalid [value] of [property]`;
+const msgA = `You reported an invalid [property] of [value]`;
 
 export class ErrorSuppressionsPayloadDTO {
   @IsNotEmpty({
