@@ -1,10 +1,10 @@
-import { BaseEntity, ViewColumn, ViewEntity } from 'typeorm';
+import { BaseEntity, PrimaryColumn, ViewColumn, ViewEntity } from 'typeorm';
 
 import { NumericColumnTransformer } from '@us-epa-camd/easey-common/transforms';
 
 @ViewEntity({ name: 'camdecmps.vw_qa_test_summary_maintenance' })
 export class QaTestSummaryMaintView extends BaseEntity {
-  @ViewColumn({
+  @PrimaryColumn({
     name: 'test_sum_id',
   })
   testSumId: string;

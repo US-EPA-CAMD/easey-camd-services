@@ -1,5 +1,5 @@
 import { Controller, UseGuards } from '@nestjs/common';
-import { Get, Put, Delete, Query } from '@nestjs/common/decorators';
+import { Get, Put, Delete, Query, Param } from '@nestjs/common/decorators';
 import {
   ApiBearerAuth,
   ApiOkResponse,
@@ -15,7 +15,8 @@ import { AuthGuard } from '@us-epa-camd/easey-common/guards';
 import { QaTestSummaryService } from './qa-test-summary.service';
 import { QaTestSummaryMaintView } from '../entities/qa-test-summary-maint-vw.entity';
 import { QaCertMaintParamsDto } from '../dto/qa-cert-maint-params.dto';
-
+import { User } from '@us-epa-camd/easey-common/decorators';
+import { CurrentUser } from '@us-epa-camd/easey-common/interfaces';
 @Controller()
 @ApiSecurity('APIKey')
 @ApiTags('QA Test Data Maintenance')
@@ -48,8 +49,11 @@ export class QaTestSummaryController {
   @ApiOkResponse({
     description: 'Changes submission status to resubmit',
   })
-  updateSubmissionStatus(): Promise<void> {
-    return Promise.resolve();
+  updateSubmissionStatus(
+    @Param('id') id: string,
+    @User() user: CurrentUser,
+  ): Promise<QaTestSummaryMaintView> {
+    return this.service.updateSubmissionStatus(id, user.userId);
   }
 
   @Delete(':id')

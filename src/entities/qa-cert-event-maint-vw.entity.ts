@@ -1,9 +1,9 @@
 import { NumericColumnTransformer } from '@us-epa-camd/easey-common/transforms';
-import { BaseEntity, ViewColumn, ViewEntity } from 'typeorm';
+import { BaseEntity, PrimaryColumn, ViewColumn, ViewEntity } from 'typeorm';
 
 @ViewEntity({ name: 'camdecmps.vw_qa_cert_event_maintenance' })
 export class QaCertEventMaintView extends BaseEntity {
-  @ViewColumn({
+  @PrimaryColumn({
     name: 'cert_event_id',
   })
   certEventId: string;
@@ -83,6 +83,7 @@ export class QaCertEventMaintView extends BaseEntity {
     name: 'severity_cd',
   })
   severityCode: string;
+  
   @ViewColumn({
     name: 'severity_description',
   })
