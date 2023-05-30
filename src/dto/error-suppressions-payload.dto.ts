@@ -20,7 +20,7 @@ import { IsValidCodes } from '../pipes/is-valid-codes.pipe';
 import { MonitorLocation } from '../entities/monitor-location.entity';
 import { FindOneOptions, In } from 'typeorm';
 
-const msgA = `You reported an invalid [value] of [property]`;
+const msgA = `You reported an invalid [property] of [value]`;
 
 export class ErrorSuppressionsPayloadDTO {
   @IsNotEmpty({
