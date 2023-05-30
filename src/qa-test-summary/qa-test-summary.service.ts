@@ -66,4 +66,33 @@ export class QaTestSummaryService {
 
     return recordToUpdate;
   }
+
+  async deleteQATestSummaryData(id: string): Promise<any> {
+    try {
+      // DELETE FROM OFFICIAL TABLE
+      await this.manager.query(
+        `DELETE FROM camdecmps.test_summary 
+        WHERE test_sum_id = $1`,
+        [id],
+      );
+      await this.manager.query(
+        `DELETE FROM camdecmps.qa_supp_data 
+        WHERE test_sum_id = $1`,
+        [id],
+      );
+
+      // DELETE FROM WORKSPACE TABLE
+      await this.manager.query(
+        `DELETE FROM camdecmpswks.qa_supp_data 
+        WHERE test_sum_id = $1`,
+        [id],
+      );
+    } catch (e) {
+      throw new LoggingException(e.message, e.status);
+    }
+
+    return {
+      message: `Record with id ${id} has been successfully deleted.`,
+    };
+  }
 }

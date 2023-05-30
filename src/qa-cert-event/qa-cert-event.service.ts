@@ -55,4 +55,21 @@ export class QaCertEventService {
 
     return recordToUpdate;
   }
+
+  async deleteQACertEventData(id: string): Promise<any> {
+    try {
+      // DELETE FROM OFFICIAL TABLE
+      await this.manager.query(
+        `DELETE FROM camdecmps.qa_cert_event 
+        WHERE qa_cert_event_id = $1`,
+        [id],
+      );
+    } catch (e) {
+      throw new LoggingException(e.message, e.status);
+    }
+
+    return {
+      message: `Record with id ${id} has been successfully deleted.`,
+    };
+  }
 }

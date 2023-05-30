@@ -50,4 +50,10 @@ describe('QaTestSummaryController', () => {
 
     expect(await controller.updateSubmissionStatus('id', user)).toEqual(record);
   });
+
+  it('should return data for deleteQATestSummaryData controller method', async () => {
+    jest.spyOn(service, 'deleteQATestSummaryData').mockResolvedValue('');
+
+    expect(await controller.deleteQATestSummaryData('id')).toEqual('');
+  });
 });
