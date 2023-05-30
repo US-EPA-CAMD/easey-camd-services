@@ -83,7 +83,7 @@ export class QaCertEventMaintView extends BaseEntity {
     name: 'severity_cd',
   })
   severityCode: string;
-  
+
   @ViewColumn({
     name: 'severity_description',
   })
