@@ -16,6 +16,9 @@ import { CheckCatalogResult } from '../entities/check-catalog-result.entity';
 import { SeverityCode } from '../entities/severity-code.entity';
 import { EsMatchDataTypeCode } from '../entities/es-match-data-type-code.entity';
 import { EsMatchTimeTypeCode } from '../entities/es-match-time-type-code.entity';
+import { IsValidCodes } from '../pipes/is-valid-codes.pipe';
+import { MonitorLocation } from '../entities/monitor-location.entity';
+import { FindOneOptions, In } from 'typeorm';
 
 const msgA = `You reported an invalid [property] of [value]`;
 
@@ -63,6 +66,33 @@ export class ErrorSuppressionsPayloadDTO {
 
   @IsString()
   @IsOptional()
+  @IsValidCodes(
+    MonitorLocation,
+    (args: ValidationArguments): FindOneOptions<MonitorLocation> => {
+      const locations = args.value.split(',').map((item) => item.trim());
+      return {
+        where: {
+          unit: {
+            plant: {
+              orisCode: args.object['facilityId'],
+            },
+          },
+          stackPipe: {
+            plant: {
+              orisCode: args.object['facilityId'],
+            },
+          },
+          monLocIdentifier: In(locations),
+        },
+        relations: ['unit', 'stackPipe'],
+      };
+    },
+    {
+      message: (args: ValidationArguments) => {
+        return `You have reported invalid locations for the facilityId [${args.object['facilityId']}].`;
+      },
+    },
+  )
   locations?: string;
 
   @IsString()
