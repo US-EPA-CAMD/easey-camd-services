@@ -46,7 +46,7 @@ describe('QaCertEventService', () => {
     let errored = false;
     try {
       await service.updateSubmissionStatus('id', 'userId');
-    } catch (e) {
+    } catch {
       errored = true;
     }
     expect(errored).toEqual(true);
@@ -69,7 +69,7 @@ describe('QaCertEventService', () => {
     let errored = false;
     try {
       await service.deleteQACertEventData('1');
-    } catch (e) {
+    } catch {
       errored = true;
     }
     expect(errored).toEqual(true);

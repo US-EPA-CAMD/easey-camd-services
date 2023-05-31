@@ -47,7 +47,7 @@ describe('QaTestExtensionExemptionService', () => {
     let errored = false;
     try {
       await service.updateSubmissionStatus('id', 'userId');
-    } catch (e) {
+    } catch {
       errored = true;
     }
     expect(errored).toEqual(true);
@@ -70,7 +70,7 @@ describe('QaTestExtensionExemptionService', () => {
     let errored = false;
     try {
       await service.deleteQACertTeeData('1');
-    } catch (e) {
+    } catch {
       errored = true;
     }
     expect(errored).toEqual(true);
