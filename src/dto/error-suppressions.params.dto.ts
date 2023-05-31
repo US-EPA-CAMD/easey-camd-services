@@ -133,7 +133,7 @@ export class ErrorSuppressionsParamsDTO {
         return `The ${args.property} is not valid. Refer to the list of available facilityIds for valid values '/facilities-mgmt/facilities'`;
       },
     },
-    (args: ValidationArguments): FindOneOptions<CheckCatalogResult> => {
+    (args: ValidationArguments): FindOneOptions<Plant> => {
       return {
         where: {
           orisCode: args.value,
