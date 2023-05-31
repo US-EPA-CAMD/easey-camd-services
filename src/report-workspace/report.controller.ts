@@ -7,12 +7,7 @@ import {
   ApiOperation,
 } from '@nestjs/swagger';
 
-import {
-  Get,
-  Query,
-  Controller,
-  UseGuards,
-} from '@nestjs/common';
+import { Get, Query, Controller, UseGuards } from '@nestjs/common';
 
 import { AuthGuard } from '@us-epa-camd/easey-common/guards';
 
@@ -26,10 +21,7 @@ import { ReportParamsDTO } from '../dto/report-params.dto';
 @UseGuards(AuthGuard)
 @ApiBearerAuth('Token')
 export class ReportWorkspaceController {
-
-  constructor(
-    private service: DataSetService
-  ) { }
+  constructor(private service: DataSetService) {}
 
   @Get('list')
   @ApiOkResponse({
@@ -37,7 +29,7 @@ export class ReportWorkspaceController {
     description: 'Data retrieved successfully',
   })
   @ApiOperation({
-    description: 'Retrieves list of workspace reports available.'
+    description: 'Retrieves list of workspace reports available.',
   })
   async getAvailableReports() {
     return this.service.getAvailableReports(true);
@@ -49,12 +41,16 @@ export class ReportWorkspaceController {
     description: 'Data retrieved successfully',
   })
   @ApiOperation({
-    description: 'Retrieves workspace data for various reports based on criteria.'
+    description:
+      'Retrieves workspace data for various reports based on criteria.',
   })
-  @ApiQuery({ style: 'pipeDelimited', name: 'testId', required: false, explode: false, })
-  async getReport(
-    @Query() params: ReportParamsDTO
-  ) {
+  @ApiQuery({
+    style: 'pipeDelimited',
+    name: 'testId',
+    required: false,
+    explode: false,
+  })
+  async getReport(@Query() params: ReportParamsDTO) {
     return this.service.getDataSet(params, true);
   }
 }

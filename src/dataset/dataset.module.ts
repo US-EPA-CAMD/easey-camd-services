@@ -5,16 +5,9 @@ import { DataSetRepository } from './dataset.repository';
 import { DataSetService } from './dataset.service';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([DataSetRepository]),
-  ],
+  imports: [TypeOrmModule.forFeature([DataSetRepository])],
   controllers: [],
-  providers: [
-    DataSetService
-  ],
-  exports: [
-    TypeOrmModule,
-    DataSetService
-  ],
+  providers: [DataSetService],
+  exports: [TypeOrmModule, DataSetService],
 })
 export class DataSetModule {}
