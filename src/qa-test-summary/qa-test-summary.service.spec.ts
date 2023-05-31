@@ -27,7 +27,8 @@ describe('QaTestSummaryService', () => {
     expect(result).toEqual([]);
   });
   it('should successfully update and return data', async () => {
-    jest.spyOn(entityManager, 'query').mockResolvedValue([[], 1]);
+    jest.spyOn(entityManager, 'transaction').mockResolvedValue([[], 1]);
+    // jest.spyOn(entityManager, 'query').mockResolvedValue([[], 1]);
     jest.spyOn(entityManager, 'findOne').mockResolvedValue({});
 
     const result = await service.updateSubmissionStatus('id', 'userId');
@@ -35,7 +36,7 @@ describe('QaTestSummaryService', () => {
   });
 
   it('should throw error while updating data', async () => {
-    jest.spyOn(entityManager, 'query').mockResolvedValue([[], 1]);
+    jest.spyOn(entityManager, 'transaction').mockResolvedValue([[], 1]);
 
     jest
       .spyOn(entityManager, 'findOne')
@@ -51,7 +52,7 @@ describe('QaTestSummaryService', () => {
   });
 
   it('should successfully delete data', async () => {
-    jest.spyOn(entityManager, 'query').mockResolvedValue([[], 1]);
+    jest.spyOn(entityManager, 'transaction').mockResolvedValue([[], 1]);
 
     const result = await service.deleteQATestSummaryData('1');
     expect(result).toEqual({
@@ -61,7 +62,7 @@ describe('QaTestSummaryService', () => {
 
   it('should throw error while deleting data', async () => {
     jest
-      .spyOn(entityManager, 'query')
+      .spyOn(entityManager, 'transaction')
       .mockRejectedValue(new LoggingException('Error', 500));
 
     let errored = false;

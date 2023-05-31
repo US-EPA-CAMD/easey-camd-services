@@ -54,11 +54,9 @@ export class QaTestSummaryService {
             WHERE test_sum_id = $1;`,
           [id, 'REQUIRE', userId, currentDateTime()],
         );
-        recordToUpdate = await transactionalEntityManager.findOne(
-          QaTestSummaryMaintView,
-          id,
-        );
       });
+
+      recordToUpdate = await this.manager.findOne(QaTestSummaryMaintView, id);
 
       if (!recordToUpdate)
         throw new LoggingException(
