@@ -12,12 +12,13 @@ import {
   NotFoundResponse,
 } from '../utilities/swagger-decorator.const';
 import { AuthGuard } from '@us-epa-camd/easey-common/guards';
+import { QaTestDataService } from './qa-test-data.service';
 
 @Controller()
 @ApiSecurity('APIKey')
 @ApiTags('QA Test Data Maintenance')
 export class QaTestDataController {
-  constructor() {}
+  constructor(private service: QaTestDataService) {}
 
   @Get()
   @NotFoundResponse()

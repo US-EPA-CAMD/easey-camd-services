@@ -12,12 +12,13 @@ import {
   NotFoundResponse,
 } from '../utilities/swagger-decorator.const';
 import { AuthGuard } from '@us-epa-camd/easey-common/guards';
+import { QaCertEventService } from './qa-cert-event.service';
 
 @Controller()
 @ApiSecurity('APIKey')
 @ApiTags('QA Cert Event Maintenance')
 export class QaCertEventController {
-  constructor() {}
+  constructor(private service: QaCertEventService) {}
 
   @Get()
   @NotFoundResponse()
