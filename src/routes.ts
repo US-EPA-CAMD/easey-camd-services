@@ -48,23 +48,23 @@ const routes: Routes = [
         children: [
           {
             path: '/test-data',
-            module: QaTestDataModule
+            module: QaTestDataModule,
           },
           {
             path: '/cert-events',
-            module: QaCertEventModule
+            module: QaCertEventModule,
           },
           {
             path: '/extension-exemptions',
-            module: QaTestExtensionExemptionModule
+            module: QaTestExtensionExemptionModule,
           },
-        ]
+        ],
       },
       {
         path: '/error-suppressions',
         module: ErrorSuppressionsModule,
       },
-    ]
+    ],
   },
 ];
 

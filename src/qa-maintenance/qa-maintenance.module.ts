@@ -4,8 +4,12 @@ import { QaTestExtensionExemptionModule } from '../qa-test-extension-exemption/q
 import { QaTestDataModule } from '../qa-test-data/qa-test-data.module';
 
 @Module({
-    imports: [QaTestDataModule, QaCertEventModule, QaTestExtensionExemptionModule],
-    controllers: [],
-    providers: [],
+  imports: [
+    QaTestDataModule,
+    QaCertEventModule,
+    QaTestExtensionExemptionModule,
+  ],
+  controllers: [],
+  providers: [],
 })
-export class QaMaintenanceModule { }
+export class QaMaintenanceModule {}

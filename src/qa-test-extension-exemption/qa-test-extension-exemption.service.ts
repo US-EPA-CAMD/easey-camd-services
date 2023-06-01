@@ -1,6 +1,4 @@
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
-export class QaTestExtensionExemptionService {
-
-}
+export class QaTestExtensionExemptionService {}

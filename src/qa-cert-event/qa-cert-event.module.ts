@@ -4,8 +4,8 @@ import { QaCertEventController } from './qa-cert-event.controller';
 import { HttpModule } from '@nestjs/axios';
 
 @Module({
-  imports:[HttpModule],
+  imports: [HttpModule],
   controllers: [QaCertEventController],
-  providers: [QaCertEventService]
+  providers: [QaCertEventService],
 })
 export class QaCertEventModule {}

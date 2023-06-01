@@ -9,7 +9,9 @@ describe('QaTestExtensionExemptionService', () => {
       providers: [QaTestExtensionExemptionService],
     }).compile();
 
-    service = module.get<QaTestExtensionExemptionService>(QaTestExtensionExemptionService);
+    service = module.get<QaTestExtensionExemptionService>(
+      QaTestExtensionExemptionService,
+    );
   });
 
   it('should be defined', () => {

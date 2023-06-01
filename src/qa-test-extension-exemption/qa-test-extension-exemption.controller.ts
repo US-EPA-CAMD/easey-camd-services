@@ -24,15 +24,16 @@ export class QaTestExtensionExemptionController {
   @NotFoundResponse()
   @BadRequestResponse()
   @ApiOperation({
-    description: 'Retrieves QA Test Extension Exemption maintenance recorcds per filter criteria.',
+    description:
+      'Retrieves QA Test Extension Exemption maintenance recorcds per filter criteria.',
   })
   @ApiOkResponse({
     isArray: true,
     type: Number,
     description: 'Data retrieved successfully',
   })
-  getQaTestData():Promise<number[]> {
-    return Promise.resolve([1,2,3]);
+  getQaTestData(): Promise<number[]> {
+    return Promise.resolve([1, 2, 3]);
   }
 
   @Put(':id')
@@ -41,13 +42,14 @@ export class QaTestExtensionExemptionController {
   @ApiOkResponse({
     description: 'Changes submission status to resubmit',
   })
-  updateSubmissionStatus(): Promise<void>{
+  updateSubmissionStatus(): Promise<void> {
     return Promise.resolve();
   }
 
   @Delete(':id')
   @ApiOkResponse({
-    description: 'Deletes a QA Test Extension Exemption maintenance record from global',
+    description:
+      'Deletes a QA Test Extension Exemption maintenance record from global',
   })
   async delete(): Promise<void> {
     return Promise.resolve();

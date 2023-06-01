@@ -15,7 +15,9 @@ describe('QaTestExtensionExemptionController', () => {
       providers: [QaTestExtensionExemptionService, ConfigService],
     }).compile();
 
-    controller = module.get<QaTestExtensionExemptionController>(QaTestExtensionExemptionController);
+    controller = module.get<QaTestExtensionExemptionController>(
+      QaTestExtensionExemptionController,
+    );
   });
 
   it('should be defined', () => {

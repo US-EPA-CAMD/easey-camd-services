@@ -4,8 +4,8 @@ import { QaTestDataController } from './qa-test-data.controller';
 import { HttpModule } from '@nestjs/axios';
 
 @Module({
-  imports:[HttpModule],
+  imports: [HttpModule],
   controllers: [QaTestDataController],
-  providers: [QaTestDataService]
+  providers: [QaTestDataService],
 })
 export class QaTestDataModule {}

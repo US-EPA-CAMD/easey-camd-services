@@ -10,7 +10,7 @@ describe('QaCertEventController', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      imports:[LoggerModule, HttpModule],
+      imports: [LoggerModule, HttpModule],
       controllers: [QaCertEventController],
       providers: [QaCertEventService, ConfigService],
     }).compile();

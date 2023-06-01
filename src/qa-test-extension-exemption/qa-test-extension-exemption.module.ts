@@ -6,6 +6,6 @@ import { HttpModule } from '@nestjs/axios';
 @Module({
   imports: [HttpModule],
   controllers: [QaTestExtensionExemptionController],
-  providers: [QaTestExtensionExemptionService]
+  providers: [QaTestExtensionExemptionService],
 })
 export class QaTestExtensionExemptionModule {}

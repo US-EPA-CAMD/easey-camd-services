@@ -1,5 +1,5 @@
 import { Controller, UseGuards } from '@nestjs/common';
-import {Get, Put, Delete } from '@nestjs/common/decorators';
+import { Get, Put, Delete } from '@nestjs/common/decorators';
 import {
   ApiBearerAuth,
   ApiOkResponse,
@@ -24,15 +24,16 @@ export class QaCertEventController {
   @NotFoundResponse()
   @BadRequestResponse()
   @ApiOperation({
-    description: 'Retrieves QA Cert Event maintenance data per filter criteria.',
+    description:
+      'Retrieves QA Cert Event maintenance data per filter criteria.',
   })
   @ApiOkResponse({
     isArray: true,
     type: Number,
     description: 'Data retrieved successfully',
   })
-  getQaTestData():Promise<number[]> {
-    return Promise.resolve([1,2,3]);
+  getQaTestData(): Promise<number[]> {
+    return Promise.resolve([1, 2, 3]);
   }
 
   @Put(':id')
@@ -41,7 +42,7 @@ export class QaCertEventController {
   @ApiOkResponse({
     description: 'Changes submission status to resubmit',
   })
-  updateSubmissionStatus(): Promise<void>{
+  updateSubmissionStatus(): Promise<void> {
     return Promise.resolve();
   }
 
