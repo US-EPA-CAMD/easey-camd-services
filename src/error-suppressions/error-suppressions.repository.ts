@@ -14,7 +14,7 @@ export class ErrorSuppressionsRepository extends Repository<EsSpec> {
       checkNumber,
       checkResult,
       severityCode,
-      facilityId,
+      orisCode,
       locations,
       reasonCode,
       beginDateHrQtr,
@@ -69,9 +69,9 @@ export class ErrorSuppressionsRepository extends Repository<EsSpec> {
         severityCode: severityCode.toUpperCase(),
       });
     }
-    if (facilityId) {
-      query.andWhere('p.orisCode = :facilityId', {
-        facilityId: facilityId,
+    if (orisCode) {
+      query.andWhere('p.orisCode = :orisCode', {
+        orisCode,
       });
     }
     if (locations) {
