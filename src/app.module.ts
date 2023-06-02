@@ -20,6 +20,10 @@ import { ReportWorkspaceModule } from './report-workspace/report.module';
 import { MailModule } from './mail/mail.module';
 import { ErrorSuppressionsModule } from './error-suppressions/error-suppressions.module';
 import { EvaluationModule } from './evaluation/evaluation.module';
+import { AdminModule } from './admin/admin.module';
+import { QaTestExtensionExemptionModule } from './qa-test-extension-exemption/qa-test-extension-exemption.module';
+import { QaCertEventModule } from './qa-cert-event/qa-cert-event.module';
+import { QaTestSummaryModule } from './qa-test-summary/qa-test-summary.module';
 
 @Module({
   imports: [
@@ -41,6 +45,10 @@ import { EvaluationModule } from './evaluation/evaluation.module';
     MailModule,
     ErrorSuppressionsModule,
     EvaluationModule,
+    AdminModule,
+    QaTestExtensionExemptionModule,
+    QaCertEventModule,
+    QaTestSummaryModule,
   ],
 })
 export class AppModule {}
