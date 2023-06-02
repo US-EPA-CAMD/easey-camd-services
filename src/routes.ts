@@ -43,7 +43,7 @@ const routes: Routes = [
     module: AdminModule,
     children: [
       {
-        path: '/qa-certification',
+        path: '/qa-maintenance',
         module: QaMaintenanceModule,
         children: [
           {
