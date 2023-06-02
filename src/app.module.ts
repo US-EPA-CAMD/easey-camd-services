@@ -23,7 +23,7 @@ import { EvaluationModule } from './evaluation/evaluation.module';
 import { AdminModule } from './admin/admin.module';
 import { QaTestExtensionExemptionModule } from './qa-test-extension-exemption/qa-test-extension-exemption.module';
 import { QaCertEventModule } from './qa-cert-event/qa-cert-event.module';
-import { QaTestDataModule } from './qa-test-data/qa-test-data.module';
+import { QaTestSummaryModule } from './qa-test-summary/qa-test-summary.module';
 
 @Module({
   imports: [
@@ -48,7 +48,7 @@ import { QaTestDataModule } from './qa-test-data/qa-test-data.module';
     AdminModule,
     QaTestExtensionExemptionModule,
     QaCertEventModule,
-    QaTestDataModule,
+    QaTestSummaryModule,
   ],
 })
 export class AppModule {}

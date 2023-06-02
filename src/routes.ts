@@ -9,7 +9,7 @@ import { MailModule } from './mail/mail.module';
 import { ErrorSuppressionsModule } from './error-suppressions/error-suppressions.module';
 import { AdminModule } from './admin/admin.module';
 import { QaMaintenanceModule } from './qa-maintenance/qa-maintenance.module';
-import { QaTestDataModule } from './qa-test-data/qa-test-data.module';
+import { QaTestSummaryModule } from './qa-test-summary/qa-test-summary.module';
 import { QaCertEventModule } from './qa-cert-event/qa-cert-event.module';
 import { QaTestExtensionExemptionModule } from './qa-test-extension-exemption/qa-test-extension-exemption.module';
 
@@ -47,8 +47,8 @@ const routes: Routes = [
         module: QaMaintenanceModule,
         children: [
           {
-            path: '/test-data',
-            module: QaTestDataModule,
+            path: '/test-summary',
+            module: QaTestSummaryModule,
           },
           {
             path: '/cert-events',

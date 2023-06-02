@@ -12,20 +12,20 @@ import {
   NotFoundResponse,
 } from '../utilities/swagger-decorator.const';
 import { AuthGuard } from '@us-epa-camd/easey-common/guards';
-import { QaTestDataService } from './qa-test-data.service';
+import { QaTestSummaryService } from './qa-test-summary.service';
 
 @Controller()
 @ApiSecurity('APIKey')
 @ApiTags('QA Test Data Maintenance')
-export class QaTestDataController {
-  constructor(private service: QaTestDataService) {}
+export class QaTestSummaryController {
+  constructor(private service: QaTestSummaryService) {}
 
   @Get()
   @NotFoundResponse()
   @BadRequestResponse()
   @ApiOperation({
     description:
-      'Retrieves QA test data maintenance recorcds per filter criteria.',
+      'Retrieves QA test maintenance records per filter criteria.',
   })
   @ApiOkResponse({
     isArray: true,
