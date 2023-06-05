@@ -53,6 +53,11 @@ export class ErrorSuppressionsParamsDTO {
   )
   checkTypeCode: string;
 
+  @IsNotEmpty({
+    message: () => {
+      return ErrorMessages.RequiredProperty();
+    },
+  })
   @ApiProperty()
   @Allow()
   @IsValidCode(
