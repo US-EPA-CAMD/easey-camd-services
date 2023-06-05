@@ -1,5 +1,5 @@
 import { Controller, UseGuards } from '@nestjs/common';
-import { Get, Put, Delete, Query } from '@nestjs/common/decorators';
+import { Get, Put, Delete, Query, Param } from '@nestjs/common/decorators';
 import {
   ApiBearerAuth,
   ApiOkResponse,
@@ -15,6 +15,8 @@ import { AuthGuard } from '@us-epa-camd/easey-common/guards';
 import { QaCertEventService } from './qa-cert-event.service';
 import { QaCertMaintParamsDto } from '../dto/qa-cert-maint-params.dto';
 import { QaCertEventMaintView } from '../entities/qa-cert-event-maint-vw.entity';
+import { User } from '@us-epa-camd/easey-common/decorators';
+import { CurrentUser } from '@us-epa-camd/easey-common/interfaces';
 
 @Controller()
 @ApiSecurity('APIKey')
@@ -49,8 +51,11 @@ export class QaCertEventController {
   @ApiOkResponse({
     description: 'Changes submission status to resubmit',
   })
-  updateSubmissionStatus(): Promise<void> {
-    return Promise.resolve();
+  updateSubmissionStatus(
+    @Param('id') id: string,
+    @User() user: CurrentUser,
+  ): Promise<QaCertEventMaintView> {
+    return this.service.updateSubmissionStatus(id, user.userId);
   }
 
   @Delete(':id')
