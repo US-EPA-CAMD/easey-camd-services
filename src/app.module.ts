@@ -20,6 +20,7 @@ import { ReportWorkspaceModule } from './report-workspace/report.module';
 import { MailModule } from './mail/mail.module';
 import { ErrorSuppressionsModule } from './error-suppressions/error-suppressions.module';
 import { EvaluationModule } from './evaluation/evaluation.module';
+import { EmSubmissionAccessModule } from './em-submission-access/em-submission-access.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { EvaluationModule } from './evaluation/evaluation.module';
     MailModule,
     ErrorSuppressionsModule,
     EvaluationModule,
+    EmSubmissionAccessModule,
   ],
 })
 export class AppModule {}

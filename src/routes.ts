@@ -7,6 +7,7 @@ import { ReportModule } from './report/report.module';
 import { ReportWorkspaceModule } from './report-workspace/report.module';
 import { MailModule } from './mail/mail.module';
 import { ErrorSuppressionsModule } from './error-suppressions/error-suppressions.module';
+import { EmSubmissionAccessModule } from './em-submission-access/em-submission-access.module';
 
 const routes: Routes = [
   {
@@ -36,6 +37,10 @@ const routes: Routes = [
   {
     path: '/error-suppressions',
     module: ErrorSuppressionsModule,
+  },
+  {
+    path: '/em-submission-access',
+    module: EmSubmissionAccessModule,
   },
 ];
 
