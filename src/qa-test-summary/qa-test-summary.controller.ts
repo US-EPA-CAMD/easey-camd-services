@@ -1,5 +1,5 @@
 import { Controller, UseGuards } from '@nestjs/common';
-import { Get, Put, Delete } from '@nestjs/common/decorators';
+import { Get, Put, Delete, Query } from '@nestjs/common/decorators';
 import {
   ApiBearerAuth,
   ApiOkResponse,
@@ -13,6 +13,8 @@ import {
 } from '../utilities/swagger-decorator.const';
 import { AuthGuard } from '@us-epa-camd/easey-common/guards';
 import { QaTestSummaryService } from './qa-test-summary.service';
+import { QaTestSummaryMaintView } from '../entities/qa-test-summary-maint-vw.entity';
+import { QaCertMaintParamsDto } from '../dto/qa-cert-maint-params.dto';
 
 @Controller()
 @ApiSecurity('APIKey')
@@ -24,16 +26,20 @@ export class QaTestSummaryController {
   @NotFoundResponse()
   @BadRequestResponse()
   @ApiOperation({
-    description:
-      'Retrieves QA test maintenance records per filter criteria.',
+    description: 'Retrieves QA test maintenance records per filter criteria.',
   })
   @ApiOkResponse({
     isArray: true,
     type: Number,
     description: 'Data retrieved successfully',
   })
-  getQaTestData(): Promise<number[]> {
-    return Promise.resolve([1, 2, 3]);
+  getQaTestSummaryViewData(
+    @Query() params: QaCertMaintParamsDto,
+  ): Promise<QaTestSummaryMaintView[]> {
+    return this.service.getQaTestSummaryViewData(
+      params.orisCode,
+      params.unitStack,
+    );
   }
 
   @Put(':id')
