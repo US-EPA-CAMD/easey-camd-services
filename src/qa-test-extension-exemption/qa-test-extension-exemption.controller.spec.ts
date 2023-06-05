@@ -15,23 +15,31 @@ describe('QaTestExtensionExemptionController', () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [HttpModule, LoggerModule],
       controllers: [QaTestExtensionExemptionController],
-      providers: [QaTestExtensionExemptionService, ConfigService, EntityManager],
+      providers: [
+        QaTestExtensionExemptionService,
+        ConfigService,
+        EntityManager,
+      ],
     }).compile();
 
     controller = module.get<QaTestExtensionExemptionController>(
       QaTestExtensionExemptionController,
     );
 
-    service = module.get<QaTestExtensionExemptionService>(QaTestExtensionExemptionService);
+    service = module.get<QaTestExtensionExemptionService>(
+      QaTestExtensionExemptionService,
+    );
   });
 
   it('should be defined', () => {
     expect(controller).toBeDefined();
   });
 
-  it('should return data for getQaTeeViewData controller method', async ()=>{
+  it('should return data for getQaTeeViewData controller method', async () => {
     jest.spyOn(service, 'getQaTeeViewData').mockResolvedValue([]);
 
-    expect(await controller.getQaTeeViewData(new QaCertMaintParamsDto)).toEqual([])
-  })
+    expect(
+      await controller.getQaTeeViewData(new QaCertMaintParamsDto()),
+    ).toEqual([]);
+  });
 });

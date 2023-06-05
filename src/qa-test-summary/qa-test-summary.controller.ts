@@ -16,7 +16,6 @@ import { QaTestSummaryService } from './qa-test-summary.service';
 import { QaTestSummaryMaintView } from '../entities/qa-test-summary-maint-vw.entity';
 import { QaCertMaintParamsDto } from '../dto/qa-cert-maint-params.dto';
 
-
 @Controller()
 @ApiSecurity('APIKey')
 @ApiTags('QA Test Data Maintenance')
@@ -27,8 +26,7 @@ export class QaTestSummaryController {
   @NotFoundResponse()
   @BadRequestResponse()
   @ApiOperation({
-    description:
-      'Retrieves QA test maintenance records per filter criteria.',
+    description: 'Retrieves QA test maintenance records per filter criteria.',
   })
   @ApiOkResponse({
     isArray: true,
@@ -36,9 +34,12 @@ export class QaTestSummaryController {
     description: 'Data retrieved successfully',
   })
   getQaTestSummaryViewData(
-    @Query() params: QaCertMaintParamsDto
+    @Query() params: QaCertMaintParamsDto,
   ): Promise<QaTestSummaryMaintView[]> {
-    return this.service.getQaTestSummaryViewData(params.orisCode, params.unitStack);
+    return this.service.getQaTestSummaryViewData(
+      params.orisCode,
+      params.unitStack,
+    );
   }
 
   @Put(':id')

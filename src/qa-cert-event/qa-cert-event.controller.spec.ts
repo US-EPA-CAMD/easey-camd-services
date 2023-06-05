@@ -20,17 +20,17 @@ describe('QaCertEventController', () => {
 
     controller = module.get<QaCertEventController>(QaCertEventController);
     service = module.get<QaCertEventService>(QaCertEventService);
-
   });
 
   it('should be defined', () => {
     expect(controller).toBeDefined();
   });
 
-  it('should return data for getQaCertEventViewData controller method', async ()=>{
+  it('should return data for getQaCertEventViewData controller method', async () => {
     jest.spyOn(service, 'getQaCertEventViewData').mockResolvedValue([]);
 
-    expect(await controller.getQaCertEventViewData(new QaCertMaintParamsDto)).toEqual([])
-  })
-
+    expect(
+      await controller.getQaCertEventViewData(new QaCertMaintParamsDto()),
+    ).toEqual([]);
+  });
 });

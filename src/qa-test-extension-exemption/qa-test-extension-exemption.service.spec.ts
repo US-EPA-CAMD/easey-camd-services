@@ -14,18 +14,17 @@ describe('QaTestExtensionExemptionService', () => {
     service = module.get<QaTestExtensionExemptionService>(
       QaTestExtensionExemptionService,
     );
-    entityManager = module.get<EntityManager>(EntityManager)
+    entityManager = module.get<EntityManager>(EntityManager);
   });
 
   it('should be defined', () => {
     expect(service).toBeDefined();
   });
 
-  it('should successfully return data', async ()=>{
+  it('should successfully return data', async () => {
     jest.spyOn(entityManager, 'find').mockResolvedValue([]);
 
-    const result = await service.getQaTeeViewData(1, "")
-    expect(result).toEqual([])
-  })
-
+    const result = await service.getQaTeeViewData(1, '');
+    expect(result).toEqual([]);
+  });
 });

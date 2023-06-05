@@ -13,7 +13,7 @@ describe('QaTestSummaryController', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      imports: [LoggerModule, HttpModule,],
+      imports: [LoggerModule, HttpModule],
       controllers: [QaTestSummaryController],
       providers: [QaTestSummaryService, ConfigService, EntityManager],
     }).compile();
@@ -26,9 +26,11 @@ describe('QaTestSummaryController', () => {
     expect(controller).toBeDefined();
   });
 
-  it('should return data for getQaTestSummaryViewData controller method', async ()=>{
+  it('should return data for getQaTestSummaryViewData controller method', async () => {
     jest.spyOn(service, 'getQaTestSummaryViewData').mockResolvedValue([]);
 
-    expect(await controller.getQaTestSummaryViewData(new QaCertMaintParamsDto)).toEqual([])
-  })
+    expect(
+      await controller.getQaTestSummaryViewData(new QaCertMaintParamsDto()),
+    ).toEqual([]);
+  });
 });

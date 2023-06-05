@@ -35,7 +35,7 @@ export class QaTestExtensionExemptionController {
     description: 'Data retrieved successfully',
   })
   getQaTeeViewData(
-    @Query() params: QaCertMaintParamsDto
+    @Query() params: QaCertMaintParamsDto,
   ): Promise<QaTeeMaintView[]> {
     return this.service.getQaTeeViewData(params.orisCode, params.unitStack);
   }

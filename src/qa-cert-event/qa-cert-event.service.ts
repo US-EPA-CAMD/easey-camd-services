@@ -5,21 +5,24 @@ import { QaCertEventMaintView } from '../entities/qa-cert-event-maint-vw.entity'
 
 @Injectable()
 export class QaCertEventService {
-    constructor(
-        @InjectEntityManager()
-        private readonly manager: EntityManager
-    ){}
+  constructor(
+    @InjectEntityManager()
+    private readonly manager: EntityManager,
+  ) {}
 
-  getQaCertEventViewData(orisCode: number, unitStack: string): Promise<QaCertEventMaintView[]> {
+  getQaCertEventViewData(
+    orisCode: number,
+    unitStack: string,
+  ): Promise<QaCertEventMaintView[]> {
     const where = {
-        orisCode
+      orisCode,
     } as any;
 
     if (unitStack !== null && unitStack !== undefined)
-        where.unitStack = unitStack;
+      where.unitStack = unitStack;
 
     return this.manager.find(QaCertEventMaintView, {
-        where
+      where,
     });
   }
 }

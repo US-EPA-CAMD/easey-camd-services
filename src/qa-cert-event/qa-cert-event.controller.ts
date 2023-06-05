@@ -35,9 +35,12 @@ export class QaCertEventController {
     description: 'Data retrieved successfully',
   })
   getQaCertEventViewData(
-    @Query() params: QaCertMaintParamsDto
+    @Query() params: QaCertMaintParamsDto,
   ): Promise<QaCertEventMaintView[]> {
-    return this.service.getQaCertEventViewData(params.orisCode, params.unitStack);
+    return this.service.getQaCertEventViewData(
+      params.orisCode,
+      params.unitStack,
+    );
   }
 
   @Put(':id')
