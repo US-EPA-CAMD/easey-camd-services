@@ -4,9 +4,11 @@ import { QaTestSummaryService } from './qa-test-summary.service';
 import { LoggerModule } from '@us-epa-camd/easey-common/logger';
 import { HttpModule } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
+import { QaCertMaintParamsDto } from '../dto/qa-cert-maint-params.dto';
 
 describe('QaTestSummaryController', () => {
   let controller: QaTestSummaryController;
+  let service: QaTestSummaryService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -16,9 +18,16 @@ describe('QaTestSummaryController', () => {
     }).compile();
 
     controller = module.get<QaTestSummaryController>(QaTestSummaryController);
+    service = module.get<QaTestSummaryService>(QaTestSummaryService);
   });
 
   it('should be defined', () => {
     expect(controller).toBeDefined();
   });
+
+  it('should return data for GET method', async ()=>{
+    jest.spyOn(service, 'getQaTestSummaryData').mockResolvedValue([]);
+
+    expect(await controller.getQaTestSummaryData(new QaCertMaintParamsDto)).toEqual([])
+  })
 });
