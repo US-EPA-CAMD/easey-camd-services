@@ -15,6 +15,12 @@ export class QaTeeMaintView extends BaseEntity {
     locationId: string;
 
     @ViewColumn({
+        name: 'oris_code',
+        transformer: new NumericColumnTransformer(),
+    })
+    orisCode: number;
+
+    @ViewColumn({
         name: 'unit_stack',
     })
     unitStack: string;

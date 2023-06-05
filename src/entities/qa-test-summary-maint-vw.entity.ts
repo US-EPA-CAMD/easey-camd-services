@@ -1,126 +1,112 @@
-import { BaseEntity, Column, Entity, PrimaryColumn } from 'typeorm';
+import { BaseEntity, ViewColumn, ViewEntity, PrimaryColumn } from 'typeorm';
 
 import { NumericColumnTransformer } from '@us-epa-camd/easey-common/transforms';
 
-@Entity({ name: 'camdecmps.vw_qa_test_summary_maintenance' })
+@ViewEntity({ name: 'camdecmps.vw_qa_test_summary_maintenance' })
 export class QaTestSummaryMaintView extends BaseEntity {
-    @Column({
-        name: 'rpt_period_id',
-        type: 'string',
+    @ViewColumn({
+        name: 'test_sum_id',
     })
     testSumId: string;
 
-    @Column({
+    @ViewColumn({
         name: 'location_id',
-        type: 'varchar'
     })
     locationId: string;
 
-    @Column({
+    @ViewColumn({
+        name: 'oris_code',
+        transformer: new NumericColumnTransformer(),
+    })
+    orisCode: number;
+
+
+    @ViewColumn({
         name: 'unit_stack',
-        type: 'varchar'
     })
     unitStack: string;
 
-    @Column({
+    @ViewColumn({
         name: 'system_identifier',
-        type: 'varchar'
     })
     systemIdentifier: string;
 
-    @Column({
+    @ViewColumn({
         name: 'component_identifier',
-        type: 'varchar'
     })
     componentIdentifier: string;
 
-    @Column({
+    @ViewColumn({
         name: 'test_number',
-        type: 'varchar'
     })
     testNumber: string;
 
-    @Column({
+    @ViewColumn({
         name: 'grace_period_indicator',
-        type: 'numeric',
         transformer: new NumericColumnTransformer(),
     })
     gracePeriodIndicator: number;
 
-    @Column({
+    @ViewColumn({
         name: 'test_type_cd',
-        type: 'varchar'
     })
     testTypeCode: string;
 
-    @Column({
-        name: 'test reason_cd',
-        type: 'varchar'
+    @ViewColumn({
+        name: 'test_reason_cd',
     })
     testReasonCode: string;
 
-    @Column({
+    @ViewColumn({
         name: 'test_result_cd',
-        type: 'varchar'
     })
     testResultCode: string;
 
-    @Column({
+    @ViewColumn({
         name: 'year_quarter',
-        type: 'varchar'
     })
     yearQuarter: string;
 
-    @Column({
+    @ViewColumn({
         name: 'test_description',
-        type: 'varchar'
     })
     testDescription: string;
 
-    @Column({
+    @ViewColumn({
         name: 'begin_date_time',
-        type: 'varchar'
     })
     beginDateTime: string;
 
-    @Column({
+    @ViewColumn({
         name: 'end_date_time',
-        type: 'varchar'
     })
     endDateTime: string;
-    @Column({
+    @ViewColumn({
         name: 'test_comment',
-        type: 'varchar'
     })
     testComment: string;
-    @Column({
+    @ViewColumn({
         name: 'span_scale_cd',
-        type: 'varchar'
     })
     spanScaleCode: string;
-    @Column({
+    @ViewColumn({
         name: 'injection_protocol_cd',
-        type: 'varchar'
     })
     injectionProtocolCode: string;
-    @Column({
+    @ViewColumn({
         name: 'submission_availability_cd',
-        type: 'varchar'
     })
     submissionAvailabilityCode: string;
-    @Column({
+    @ViewColumn({
         name: 'submission_availability_description',
-        type: 'varchar'
     })
     submissionAvailabilityDescription: string;
-    @Column({
+    @ViewColumn({
         name: 'severity_cd',
-        type: 'varchar'
     })
     severityCode: string;
-    @Column({
+    @ViewColumn({
         name: 'severity_description',
-        type: 'varchar'
     })
     severityDescription: string;
 

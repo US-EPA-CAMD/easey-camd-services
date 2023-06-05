@@ -1,3 +1,4 @@
+import { NumericColumnTransformer } from '@us-epa-camd/easey-common/transforms';
 import { BaseEntity, ViewColumn, ViewEntity } from 'typeorm';
 
 @ViewEntity({ name: 'camdecmps.vw_qa_cert_event_maintenance' })
@@ -11,6 +12,12 @@ export class QaCertEventMaintView extends BaseEntity {
         name: 'location_id',
     })
     locationId: string;
+
+    @ViewColumn({
+        name: 'oris_code',
+        transformer: new NumericColumnTransformer(),
+    })
+    orisCode: number;
 
     @ViewColumn({
         name: 'unit_stack',
