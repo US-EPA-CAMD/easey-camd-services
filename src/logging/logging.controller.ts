@@ -27,7 +27,7 @@ export class LoggingController {
     description: 'Data created successfully',
   })
   @ApiOperation({
-    description: "Logging services for CAMD applications."
+    description: 'Logging services for CAMD applications.',
   })
   @ApiInternalServerErrorResponse()
   async serverError(@Req() request, @Body() serverErrorDto: ServerErrorDto) {

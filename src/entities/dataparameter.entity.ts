@@ -4,7 +4,7 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
-  PrimaryGeneratedColumn
+  PrimaryGeneratedColumn,
 } from 'typeorm';
 
 import { DataTable } from './datatable.entity';
@@ -41,10 +41,7 @@ export class DataParameter extends BaseEntity {
   })
   reportDetailId: number;
 
-  @ManyToOne(
-    () => DataTable,
-    o => o.parameters,
-  )
+  @ManyToOne(() => DataTable, (o) => o.parameters)
   @JoinColumn({ name: 'datatable_id' })
   dataTable: DataTable;
 }

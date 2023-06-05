@@ -18,7 +18,7 @@ import { EsMatchDataTypeCode } from '../entities/es-match-data-type-code.entity'
 import { EsMatchTimeTypeCode } from '../entities/es-match-time-type-code.entity';
 import { IsValidCodes } from '../pipes/is-valid-codes.pipe';
 import { MonitorLocation } from '../entities/monitor-location.entity';
-import { FindOneOptions, In } from 'typeorm';
+import { FindManyOptions, In } from 'typeorm';
 
 const msgA = `You reported an invalid [property] of [value]`;
 
@@ -68,28 +68,37 @@ export class ErrorSuppressionsPayloadDTO {
   @IsOptional()
   @IsValidCodes(
     MonitorLocation,
-    (args: ValidationArguments): FindOneOptions<MonitorLocation> => {
+    (args: ValidationArguments): FindManyOptions<MonitorLocation> => {
+      if (typeof args.value !== 'string') {
+        return null;
+      }
       const locations = args.value.split(',').map((item) => item.trim());
       return {
-        where: {
-          unit: {
-            plant: {
-              orisCode: args.object['facilityId'],
+        where: [
+          {
+            unit: {
+              plant: {
+                facIdentifier: args.object['facilityId'],
+              },
+              name: In(locations),
             },
           },
-          stackPipe: {
-            plant: {
-              orisCode: args.object['facilityId'],
+          {
+            stackPipe: {
+              plant: {
+                facIdentifier: args.object['facilityId'],
+              },
+              name: In(locations),
             },
           },
-          monLocIdentifier: In(locations),
-        },
+        ],
         relations: ['unit', 'stackPipe'],
+        loadEagerRelations: true,
       };
     },
     {
       message: (args: ValidationArguments) => {
-        return `You have reported invalid locations for the facilityId [${args.object['facilityId']}].`;
+        return `You have reported invalid locations of [${args.value}] for the facilityId [${args.object['facilityId']}].`;
       },
     },
   )

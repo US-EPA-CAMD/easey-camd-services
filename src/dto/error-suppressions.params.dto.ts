@@ -18,20 +18,23 @@ import { SeverityCode } from '../entities/severity-code.entity';
 import { CheckCatalogService } from '@us-epa-camd/easey-common/check-catalog';
 import { IsDateHrQtrFormat } from '../pipes/is-date-hr-qtr-format.pipe';
 import { FindOneOptions } from 'typeorm/find-options/FindOneOptions';
-import { In } from 'typeorm';
 import { CheckCatalog } from '../entities/check-catalog.entity';
 import { CheckCatalogResult } from '../entities/check-catalog-result.entity';
 import { Plant } from '../entities/plant.entity';
-import { IsValidCodes } from '../pipes/is-valid-codes.pipe';
-import { MonitorLocation } from '../entities/monitor-location.entity';
 import { EsReasonCode } from '../entities/es-reason-code.entity';
+import { ErrorMessages } from '@us-epa-camd/easey-common/constants';
+import { IsPropertyExists } from '../pipes/is-property-exists.pipe';
 
 const msgA =
   'The [property] is not valid refer to the list of available [property]s for valid values';
-const msgB = `Ensure [property] are in the following formats Date Range - YYYY-mm-dd /Hour Range- YYYY-mm-dd hh/Quarter Range – YYYY Q1`;
+const msgB = `Ensure [property] are in the following formats Date Range - YYYY-mm-dd /Hour Range- YYYY-mm-dd hh/Quarter Range – YYYY Q1/Q2/Q3/Q4`;
 
 export class ErrorSuppressionsParamsDTO {
-  @IsNotEmpty()
+  @IsNotEmpty({
+    message: () => {
+      return ErrorMessages.RequiredProperty();
+    },
+  })
   @ApiProperty()
   @IsString()
   @IsValidCode(
@@ -50,6 +53,11 @@ export class ErrorSuppressionsParamsDTO {
   )
   checkTypeCode: string;
 
+  @IsNotEmpty({
+    message: () => {
+      return ErrorMessages.RequiredProperty();
+    },
+  })
   @ApiProperty()
   @Allow()
   @IsValidCode(
@@ -73,7 +81,11 @@ export class ErrorSuppressionsParamsDTO {
   )
   checkNumber: number;
 
-  @IsNotEmpty()
+  @IsNotEmpty({
+    message: () => {
+      return ErrorMessages.RequiredProperty();
+    },
+  })
   @ApiProperty()
   @IsString()
   @IsValidCode(
@@ -133,38 +145,12 @@ export class ErrorSuppressionsParamsDTO {
   @IsNumber()
   @IsOptional()
   @Type(() => Number)
-  facilityId?: number;
+  orisCode?: number;
 
   @IsOptional()
   @ApiProperty({ isArray: true })
   @Transform(({ value }) => value.split('|').map((item) => item.trim()))
   @IsArray()
-  @IsValidCodes(
-    MonitorLocation,
-    (args: ValidationArguments): FindOneOptions<MonitorLocation> => {
-      return {
-        where: {
-          unit: {
-            plant: {
-              orisCode: args.object['facilityId'],
-            },
-          },
-          stackPipe: {
-            plant: {
-              orisCode: args.object['facilityId'],
-            },
-          },
-          monLocIdentifier: In(args.value),
-        },
-        relations: ['unit', 'stackPipe'],
-      };
-    },
-    {
-      message: (args: ValidationArguments) => {
-        return `The locations not valid for the facilityId [${args.object['facilityId']}].`;
-      },
-    },
-  )
   locations?: string[];
 
   @IsOptional()
@@ -200,6 +186,11 @@ export class ErrorSuppressionsParamsDTO {
       return CheckCatalogService.formatMessage(msgB, {
         property: args.property,
       });
+    },
+  })
+  @IsPropertyExists('beginDateHrQtr', {
+    message: (args: ValidationArguments) => {
+      return `beginDateHrQtr cannot be null, undefined, or empty if ${args.property} is filled`;
     },
   })
   endDateHrQtr?: string;

@@ -25,7 +25,7 @@ export class DataSetService {
       where: { groupCode: 'REPORT' },
     });
 
-    return results.map(e => {
+    return results.map((e) => {
       return {
         code: e.code,
         name: e.displayName,
@@ -33,10 +33,7 @@ export class DataSetService {
     });
   }
 
-  async getDataSet(
-    params: ReportParamsDTO,
-    isWorkspace: boolean = false
-  ) {
+  async getDataSet(params: ReportParamsDTO, isWorkspace: boolean = false) {
     this.reportColumns = [];
     this.hasFacilityInfo = false;
     const report = new ReportDTO();
@@ -51,21 +48,23 @@ export class DataSetService {
 
     if (params.testId && params.testId.length > 1) {
       const promises = [];
-      const tests = await getManager().query(`
+      const tests = await getManager().query(
+        `
         SELECT
           test_sum_id AS "id",
           test_type_cd AS  "code"
         FROM ${schema}.test_summary
         WHERE test_sum_id = ANY($1);`,
-        [params.testId]
+        [params.testId],
       );
 
-      tests.forEach((test: { id: string, code: string }) => {
+      tests.forEach((test: { id: string; code: string }) => {
         promises.push(
           new Promise((resolve, _reject) => {
-            const detailDef = dataSet.tables.filter(tbl => 
-              tbl.template.groupCode === "ALL" ||
-              tbl.template.groupCode === test.code
+            const detailDef = dataSet.tables.filter(
+              (tbl) =>
+                tbl.template.groupCode === 'ALL' ||
+                tbl.template.groupCode === test.code,
             );
             const details = this.getReportResults(
               schema,
@@ -74,7 +73,7 @@ export class DataSetService {
               test.id,
             );
             resolve(details);
-          })
+          }),
         );
       });
 
@@ -82,7 +81,7 @@ export class DataSetService {
 
       report.details = [];
       for (const details of promises) {
-        report.details.push(...await details);
+        report.details.push(...(await details));
       }
     } else {
       report.details = await this.getReportResults(
@@ -94,7 +93,7 @@ export class DataSetService {
 
     report.columns = this.reportColumns;
     report.details = report.details.filter(
-      detail => detail.results.length > 0
+      (detail) => detail.results.length > 0,
     );
 
     return report;
@@ -109,14 +108,11 @@ export class DataSetService {
     const promises = [];
     const FACINFO = 'FACINFO';
 
-    tables.forEach(tbl => {
+    tables.forEach((tbl) => {
       if (!this.hasFacilityInfo || tbl.templateCode !== FACINFO) {
         promises.push(
           new Promise(async (resolve, _reject) => {
-            tbl.sqlStatement = tbl.sqlStatement.replace(
-              /{SCHEMA}/,
-              schema,
-            );
+            tbl.sqlStatement = tbl.sqlStatement.replace(/{SCHEMA}/, schema);
 
             const sqlParams = tbl.parameters.map((param) => {
               if (param.name === 'testId') {
@@ -133,18 +129,19 @@ export class DataSetService {
             detailDto.templateCode = tbl.template.code;
             detailDto.templateType = tbl.template.type;
             detailDto.results = await getManager().query(
-              tbl.sqlStatement, sqlParams
+              tbl.sqlStatement,
+              sqlParams,
             );
 
             if (detailDto.results.length > 0) {
-              let columnDto = this.reportColumns.find(column =>
-                column.code === tbl.templateCode
+              let columnDto = this.reportColumns.find(
+                (column) => column.code === tbl.templateCode,
               );
 
               if (!columnDto) {
                 columnDto = new ReportColumnDTO();
                 columnDto.code = tbl.templateCode;
-                columnDto.values = tbl.columns.map(column => {
+                columnDto.values = tbl.columns.map((column) => {
                   return {
                     name: column.name,
                     displayName: column.displayName,
@@ -155,7 +152,7 @@ export class DataSetService {
             }
 
             resolve(detailDto);
-          })
+          }),
         );
         if (!this.hasFacilityInfo && tbl.templateCode === FACINFO) {
           this.hasFacilityInfo = true;

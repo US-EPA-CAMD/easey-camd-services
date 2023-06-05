@@ -20,7 +20,7 @@ describe('DataSetRepository', () => {
         DataSetRepository,
         {
           provide: SelectQueryBuilder,
-          useFactory: mockQueryBuilder
+          useFactory: mockQueryBuilder,
         },
       ],
     }).compile();
@@ -28,9 +28,7 @@ describe('DataSetRepository', () => {
     repository = module.get(DataSetRepository);
     queryBuilder = module.get(SelectQueryBuilder);
 
-    repository.createQueryBuilder = jest
-      .fn()
-      .mockReturnValue(queryBuilder);
+    repository.createQueryBuilder = jest.fn().mockReturnValue(queryBuilder);
 
     queryBuilder.innerJoinAndSelect.mockReturnValue(queryBuilder);
     queryBuilder.where.mockReturnValue(queryBuilder);
@@ -44,7 +42,6 @@ describe('DataSetRepository', () => {
   });
 
   describe('getDataSet', () => {
-
     it('should return a dataset', async () => {
       const result = await repository.getDataSet('');
       expect(queryBuilder.innerJoinAndSelect).toHaveBeenCalled();
@@ -53,6 +50,5 @@ describe('DataSetRepository', () => {
       expect(queryBuilder.getOne).toHaveBeenCalled();
       expect(result).toEqual({});
     });
-
   });
 });
