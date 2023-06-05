@@ -1,4 +1,4 @@
-import { BaseEntity, ViewColumn, ViewEntity, PrimaryColumn } from 'typeorm';
+import { BaseEntity, ViewColumn, ViewEntity } from 'typeorm';
 
 import { NumericColumnTransformer } from '@us-epa-camd/easey-common/transforms';
 
