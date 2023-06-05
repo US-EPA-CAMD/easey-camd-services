@@ -5,6 +5,7 @@ import { LoggerModule } from '@us-epa-camd/easey-common/logger';
 import { HttpModule } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { QaCertMaintParamsDto } from '../dto/qa-cert-maint-params.dto';
+import { EntityManager } from 'typeorm';
 
 describe('QaTestSummaryController', () => {
   let controller: QaTestSummaryController;
@@ -12,9 +13,9 @@ describe('QaTestSummaryController', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      imports: [LoggerModule, HttpModule],
+      imports: [LoggerModule, HttpModule,],
       controllers: [QaTestSummaryController],
-      providers: [QaTestSummaryService, ConfigService],
+      providers: [QaTestSummaryService, ConfigService, EntityManager],
     }).compile();
 
     controller = module.get<QaTestSummaryController>(QaTestSummaryController);
@@ -25,9 +26,9 @@ describe('QaTestSummaryController', () => {
     expect(controller).toBeDefined();
   });
 
-  it('should return data for GET method', async ()=>{
-    jest.spyOn(service, 'getQaTestSummaryData').mockResolvedValue([]);
+  it('should return data for getQaTestSummaryViewData controller method', async ()=>{
+    jest.spyOn(service, 'getQaTestSummaryViewData').mockResolvedValue([]);
 
-    expect(await controller.getQaTestSummaryData(new QaCertMaintParamsDto)).toEqual([])
+    expect(await controller.getQaTestSummaryViewData(new QaCertMaintParamsDto)).toEqual([])
   })
 });

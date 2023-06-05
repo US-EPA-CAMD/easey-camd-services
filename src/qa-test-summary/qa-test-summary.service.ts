@@ -10,8 +10,8 @@ export class QaTestSummaryService {
         @InjectEntityManager()
         private readonly manager: EntityManager
     ){}
-    async getQaTestSummaryData(orisCode: number, unitStack: string): Promise<QaTestSummaryMaintView[]> {
-        // const manager = getManager();
+    
+    async getQaTestSummaryViewData(orisCode: number, unitStack: string): Promise<QaTestSummaryMaintView[]> {
 
         const where = {
             orisCode

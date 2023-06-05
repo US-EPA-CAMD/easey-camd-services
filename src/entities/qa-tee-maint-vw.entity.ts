@@ -5,7 +5,7 @@ import { NumericColumnTransformer } from '@us-epa-camd/easey-common/transforms';
 @ViewEntity({ name: 'camdecmps.vw_qa_test_extens_exempt_maintenance' })
 export class QaTeeMaintView extends BaseEntity {
     @ViewColumn({
-        name: 'rpt_period_id',
+        name: 'test_extension_exemption_id',
     })
     testExtensionExemptionId: string;
 

@@ -35,10 +35,10 @@ export class QaTestSummaryController {
     type: Number,
     description: 'Data retrieved successfully',
   })
-  getQaTestSummaryData(
+  getQaTestSummaryViewData(
     @Query() params: QaCertMaintParamsDto
   ): Promise<QaTestSummaryMaintView[]> {
-    return this.service.getQaTestSummaryData(params.orisCode, params.unitStack);
+    return this.service.getQaTestSummaryViewData(params.orisCode, params.unitStack);
   }
 
   @Put(':id')

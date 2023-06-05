@@ -1,5 +1,5 @@
 import { Controller, UseGuards } from '@nestjs/common';
-import { Get, Put, Delete } from '@nestjs/common/decorators';
+import { Get, Put, Delete, Query } from '@nestjs/common/decorators';
 import {
   ApiBearerAuth,
   ApiOkResponse,
@@ -13,6 +13,8 @@ import {
 } from '../utilities/swagger-decorator.const';
 import { AuthGuard } from '@us-epa-camd/easey-common/guards';
 import { QaCertEventService } from './qa-cert-event.service';
+import { QaCertMaintParamsDto } from '../dto/qa-cert-maint-params.dto';
+import { QaCertEventMaintView } from '../entities/qa-cert-event-maint-vw.entity';
 
 @Controller()
 @ApiSecurity('APIKey')
@@ -32,8 +34,10 @@ export class QaCertEventController {
     type: Number,
     description: 'Data retrieved successfully',
   })
-  getQaTestData(): Promise<number[]> {
-    return Promise.resolve([1, 2, 3]);
+  getQaCertEventViewData(
+    @Query() params: QaCertMaintParamsDto
+  ): Promise<QaCertEventMaintView[]> {
+    return this.service.getQaCertEventViewData(params.orisCode, params.unitStack);
   }
 
   @Put(':id')

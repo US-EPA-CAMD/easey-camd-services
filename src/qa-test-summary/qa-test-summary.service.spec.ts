@@ -22,7 +22,7 @@ describe('QaTestSummaryService', () => {
   it('should successfully return data', async ()=>{
     jest.spyOn(entityManager, 'find').mockResolvedValue([]);
 
-    const result = await service.getQaTestSummaryData(1, "")
+    const result = await service.getQaTestSummaryViewData(1, "")
     expect(result).toEqual([])
   })
 });
