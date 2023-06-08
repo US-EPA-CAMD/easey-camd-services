@@ -50,4 +50,10 @@ describe('QaCertEventController', () => {
 
     expect(await controller.updateSubmissionStatus('id', user)).toEqual(record);
   });
+
+  it('should return data for deleteQACertEventData controller method', async () => {
+    jest.spyOn(service, 'deleteQACertEventData').mockResolvedValue('');
+
+    expect(await controller.deleteQACertEventData('id')).toEqual('');
+  });
 });

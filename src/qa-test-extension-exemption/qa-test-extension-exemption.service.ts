@@ -56,4 +56,21 @@ export class QaTestExtensionExemptionService {
 
     return recordToUpdate;
   }
+
+  async deleteQACertTeeData(id: string): Promise<any> {
+    try {
+      // DELETE FROM OFFICIAL TABLE
+      await this.manager.query(
+        `DELETE FROM camdecmps.test_extension_exemption 
+        WHERE test_extension_exemption_id = $1`,
+        [id],
+      );
+    } catch (e) {
+      throw new LoggingException(e.message, e.status);
+    }
+
+    return {
+      message: `Record with id ${id} has been successfully deleted.`,
+    };
+  }
 }
