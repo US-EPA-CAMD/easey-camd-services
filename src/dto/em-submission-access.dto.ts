@@ -80,7 +80,7 @@ export class EmSubmissionAccessCreateDTO extends EmSubmissionAccessUpdateDTO {
   @IsIsoFormat({
     message: (args: ValidationArguments) => {
       return CheckCatalogService.formatMessage(
-        `Ensure [fieldname] is a valid ISO date format of YYYY-MM-DD..`,
+        `Ensure [fieldname] is a valid ISO date format of YYYY-MM-DD.`,
         {
           fieldname: args.property,
         },

@@ -1,5 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional, ValidationArguments, IsEnum } from 'class-validator';
+import {
+  IsOptional,
+  ValidationArguments,
+  IsEnum,
+  Length,
+} from 'class-validator';
 
 import { Status } from '../enums/status.enum';
 import { Type } from 'class-transformer';
@@ -7,7 +12,6 @@ import { Plant } from '../entities/plant.entity';
 import { IsValidCode, IsInRange } from '@us-epa-camd/easey-common/pipes';
 import { MonitorPlan } from '../entities/monitor-plan.entity';
 import { CheckCatalogService } from '@us-epa-camd/easey-common/check-catalog';
-import { currentDateTime } from '@us-epa-camd/easey-common/utilities/functions';
 
 export class EmSubmissionAccessParamsDTO {
   @IsOptional()
@@ -36,10 +40,10 @@ export class EmSubmissionAccessParamsDTO {
 
   @IsOptional()
   @ApiProperty()
-  @IsInRange(1930, currentDateTime().getFullYear(), {
+  @Length(4, 4, {
     message: (args: ValidationArguments) => {
       return CheckCatalogService.formatMessage(
-        `You reported an invalid year of [value]. Year must be a numeric number from 1930 to ${currentDateTime().getFullYear()}.`,
+        `Ensure the year format is YYYY.`,
         {
           value: args.value,
         },
@@ -54,7 +58,7 @@ export class EmSubmissionAccessParamsDTO {
   @IsInRange(1, 4, {
     message: (args: ValidationArguments) => {
       return CheckCatalogService.formatMessage(
-        `You reported an invalid quarter of [value]. Quarter must be a numeric number from 1 to 4.`,
+        `Ensure that the Quarter value is a number from 1 to 4.`,
         {
           value: args.value,
         },
@@ -69,7 +73,7 @@ export class EmSubmissionAccessParamsDTO {
   @IsEnum(Status, {
     message: () => {
       return CheckCatalogService.formatMessage(
-        `You reported an invalid status. Status must be OPEN,PENDING or CLOSED,`,
+        `The status must have a value of OPEN,PENDING or CLOSED,`,
       );
     },
   })
