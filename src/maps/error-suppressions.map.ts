@@ -19,6 +19,7 @@ export class ErrorSuppressionsMap extends BaseMap<
       checkResultCode: entity.checkCatalogResult?.checkResult ?? null,
       severityCode: entity.severityCode,
       facilityId: entity.facilityId,
+      facilityName: entity?.plant?.facilityName ?? null,
       orisCode: entity?.plant?.orisCode ?? null,
       locations: entity.locations,
       matchDataTypeCode: entity.matchDataTypeCode,

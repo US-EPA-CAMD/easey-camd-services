@@ -37,6 +37,10 @@ export class ErrorSuppressionsDTO {
   facilityId: number;
 
   @ApiProperty()
+  @IsString()
+  facilityName: string;
+
+  @ApiProperty()
   @IsNumber()
   orisCode: number;
 
