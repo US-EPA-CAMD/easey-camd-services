@@ -2,6 +2,7 @@ import { Controller, UseGuards } from '@nestjs/common';
 import { Get, Query, Post, Put, Body, Param } from '@nestjs/common/decorators';
 import {
   ApiBearerAuth,
+  ApiCreatedResponse,
   ApiOkResponse,
   ApiOperation,
   ApiSecurity,
@@ -20,8 +21,8 @@ import {
 } from '../dto/em-submission-access.dto';
 import { EmSubmissionAccessParamsDTO } from '../dto/em-submission-access.params.dto';
 import { AuthGuard } from '@us-epa-camd/easey-common/guards';
-import { CurrentUser } from '@us-epa-camd/easey-common/interfaces';
 import { User } from '@us-epa-camd/easey-common/decorators';
+import { CurrentUser } from '@us-epa-camd/easey-common/interfaces';
 
 @Controller()
 @ApiSecurity('APIKey')
@@ -39,7 +40,8 @@ export class EmSubmissionAccessController {
   @NotFoundResponse()
   @BadRequestResponse()
   @ApiOperation({
-    description: 'Retrieves Em Submission Access Data per filter criteria.',
+    description:
+      'Retrieves Emission Submission Access Data per filter criteria.',
   })
   getEmSubmissionAccess(
     @Query() emSubmissionAccessParamsDTO: EmSubmissionAccessParamsDTO,
@@ -50,14 +52,18 @@ export class EmSubmissionAccessController {
   @Post()
   @UseGuards(AuthGuard)
   @ApiBearerAuth('Token')
-  @ApiOkResponse({
-    description: 'Creates a Em Submission Access record.',
+  @ApiCreatedResponse({
+    description: 'Data created successfully',
   })
-  Create(
+  @ApiOperation({
+    description:
+      'Creates an Emission Submission Access Record.',
+  })
+  async createEmSubmissionAccess(
     @Body() payload: EmSubmissionAccessCreateDTO,
     @User() user: CurrentUser,
-  ): Promise<void> {
-    return Promise.resolve();
+  ) {
+    return this.service.createEmSubmissionAccess(payload, user.userId);
   }
 
   @Put(':id')

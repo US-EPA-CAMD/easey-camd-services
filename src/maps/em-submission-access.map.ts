@@ -40,7 +40,7 @@ export class EmSubmissionAccessMap extends BaseMap<
       lastSubmissionId: entity?.lastSubmissionId,
       submissionTypeCode: entity?.submissionTypeCode,
       severityLevel: entity?.severityLevel,
-      userId: entity?.userid,
+      userid: entity?.userid,
       addDate: entity?.addDate,
       updateDate: entity?.updateDate,
     };
