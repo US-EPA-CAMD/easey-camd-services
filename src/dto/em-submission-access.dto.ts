@@ -157,7 +157,7 @@ export class EmSubmissionAccessDTO extends EmSubmissionAccessCreateDTO {
 
   @ApiProperty()
   @IsString()
-  userId: string;
+  userid: string;
 
   @ApiProperty()
   @IsDate()
