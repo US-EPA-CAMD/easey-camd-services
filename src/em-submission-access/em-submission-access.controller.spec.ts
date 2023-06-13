@@ -2,17 +2,19 @@ import { ConfigService } from '@nestjs/config';
 import { LoggerModule } from '@us-epa-camd/easey-common/logger';
 import { HttpModule } from '@nestjs/axios';
 import { EntityManager } from 'typeorm';
-import { EmSubmissionAccessController } from './em-submission-access.controller';
 import { EmSubmissionAccessService } from './em-submission-access.service';
 import { Test, TestingModule } from '@nestjs/testing';
-import { EmSubmissionAccessDTO } from '../dto/em-submission-access.dto';
+import {
+  EmSubmissionAccessCreateDTO,
+  EmSubmissionAccessDTO,
+} from '../dto/em-submission-access.dto';
 import { EmSubmissionAccessParamsDTO } from '../dto/em-submission-access.params.dto';
 import { EmSubmissionAccessMap } from '../maps/em-submission-access.map';
 import { EmSubmissionAccessViewRepository } from './em-submission-access-view.repository';
 import { CurrentUser } from '@us-epa-camd/easey-common/interfaces';
 import { EmSubmissionAccessRepository } from './em-submission-access.repository';
 import { genEmSubmissionAccess } from '../../test/object-generators/em-submission-access';
-import { EmSubmissionAccessPayloadDTO } from '../dto/em-submission-access-payload.dto';
+import { EmSubmissionAccessController } from './em-submission-access.controller';
 
 describe('EmSubmissionAccessController', () => {
   let controller: EmSubmissionAccessController;
@@ -63,7 +65,7 @@ describe('EmSubmissionAccessController', () => {
 
   it('calls EmSubmissionAccessService.createEmSubmissionAccess() and creates an Emission Submission Access record', async () => {
     const mockedValue = genEmSubmissionAccess<EmSubmissionAccessDTO>()[0];
-    const payload = new EmSubmissionAccessPayloadDTO();
+    const payload = new EmSubmissionAccessCreateDTO();
     jest
       .spyOn(service, 'createEmSubmissionAccess')
       .mockResolvedValue(mockedValue);

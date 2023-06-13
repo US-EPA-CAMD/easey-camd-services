@@ -4,8 +4,10 @@ import { LoggingException } from '@us-epa-camd/easey-common/exceptions';
 import { EmSubmissionAccessViewRepository } from './em-submission-access-view.repository';
 import { EmSubmissionAccessMap } from '../maps/em-submission-access.map';
 import { EmSubmissionAccessParamsDTO } from '../dto/em-submission-access.params.dto';
-import { EmSubmissionAccessDTO } from '../dto/em-submission-access.dto';
-import { EmSubmissionAccessPayloadDTO } from '../dto/em-submission-access-payload.dto';
+import {
+  EmSubmissionAccessCreateDTO,
+  EmSubmissionAccessDTO,
+} from '../dto/em-submission-access.dto';
 import { EmSubmissionAccessRepository } from './em-submission-access.repository';
 
 @Injectable()
@@ -31,7 +33,7 @@ export class EmSubmissionAccessService {
   }
 
   async createEmSubmissionAccess(
-    payload: EmSubmissionAccessPayloadDTO,
+    payload: EmSubmissionAccessCreateDTO,
     userid?: string,
   ): Promise<EmSubmissionAccessDTO> {
     try {

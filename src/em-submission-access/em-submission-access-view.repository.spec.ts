@@ -15,7 +15,6 @@ let filters = new EmSubmissionAccessParamsDTO();
 describe('EmSubmissionAccessViewRepository', () => {
   let repository: EmSubmissionAccessViewRepository;
   let queryBuilder: any;
-  let req: any;
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({

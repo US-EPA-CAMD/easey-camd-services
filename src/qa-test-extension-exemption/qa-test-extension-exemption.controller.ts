@@ -59,7 +59,7 @@ export class QaTestExtensionExemptionController {
     description:
       'Deletes a QA Test Extension Exemption maintenance record from global',
   })
-  async delete(): Promise<void> {
-    return Promise.resolve();
+  async deleteQACertTeeData(@Param('id') id: string): Promise<any> {
+    return this.service.deleteQACertTeeData(id);
   }
 }

@@ -1,12 +1,14 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { EmSubmissionAccessService } from './em-submission-access.service';
 import { EmSubmissionAccessViewRepository } from './em-submission-access-view.repository';
-import { EmSubmissionAccessDTO } from '../dto/em-submission-access.dto';
+import {
+  EmSubmissionAccessCreateDTO,
+  EmSubmissionAccessDTO,
+} from '../dto/em-submission-access.dto';
 import { EmSubmissionAccessParamsDTO } from '../dto/em-submission-access.params.dto';
 import { EmSubmissionAccessMap } from '../maps/em-submission-access.map';
 import { EmSubmissionAccessRepository } from './em-submission-access.repository';
 import { genEmSubmissionAccess } from '../../test/object-generators/em-submission-access';
-import { EmSubmissionAccessPayloadDTO } from '../dto/em-submission-access-payload.dto';
 import { EmSubmissionAccess } from '../entities/em-submission-access.entity';
 
 const mockViewRepository = () => ({
@@ -71,7 +73,7 @@ describe('EmSubmissionAccessService', () => {
   it('calls EmSubmissionAccessRepository.createEmSubmissionAccess() and creates an emission submission access record', async () => {
     const mockedDto = genEmSubmissionAccess<EmSubmissionAccessDTO>()[0];
     map.one.mockReturnValue(mockedDto);
-    let payload = new EmSubmissionAccessPayloadDTO();
+    let payload = new EmSubmissionAccessCreateDTO();
     viewRepository.findOne.mockResolvedValue(new EmSubmissionAccess());
     const result = await service.createEmSubmissionAccess(payload, 'user');
     expect(result).toEqual(mockedDto);

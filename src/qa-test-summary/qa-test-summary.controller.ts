@@ -60,7 +60,7 @@ export class QaTestSummaryController {
   @ApiOkResponse({
     description: 'Deletes a QA Test record in workspace and global',
   })
-  async delete(): Promise<void> {
-    return Promise.resolve();
+  async deleteQATestSummaryData(@Param('id') id: string): Promise<any> {
+    return this.service.deleteQATestSummaryData(id);
   }
 }

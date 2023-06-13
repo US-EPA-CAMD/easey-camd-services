@@ -62,7 +62,7 @@ export class QaCertEventController {
   @ApiOkResponse({
     description: 'Deletes a QA Cert Event record from global',
   })
-  async delete(): Promise<void> {
-    return Promise.resolve();
+  async deleteQACertEventData(@Param('id') id: string): Promise<any> {
+    return this.service.deleteQACertEventData(id);
   }
 }
