@@ -31,6 +31,7 @@ export class ErrorSuppressionsRepository extends Repository<EsSpec> {
         'es.severityCode',
         'es.facilityId',
         'p.orisCode',
+        'p.facilityName',
         'es.locations',
         'es.matchDataTypeCode',
         'es.matchDataValue',
