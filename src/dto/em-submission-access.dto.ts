@@ -54,6 +54,10 @@ export class EmSubmissionAccessUpdateDTO {
   submissionTypeCode: string;
 
   @ApiProperty()
+  @IsString()
+  resubExplanation: string;
+
+  @ApiProperty()
   @IsValidDate({
     message: ErrorMessages.DateValidity(),
   })

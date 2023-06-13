@@ -61,6 +61,11 @@ export class EmSubmissionAccessView extends BaseEntity {
   submissionAvailabilityCode: string;
 
   @Column({
+    name: 'resub_explanation',
+  })
+  resubExplanation: string;
+
+  @Column({
     name: 'fac_id',
     transformer: new NumericColumnTransformer(),
   })

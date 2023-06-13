@@ -30,6 +30,7 @@ export class EmSubmissionAccessViewRepository extends Repository<EmSubmissionAcc
       'em.updateDate',
       'em.year',
       'em.quarter',
+      'em.resubExplanation'
     ]);
 
     if (facilityId) {
