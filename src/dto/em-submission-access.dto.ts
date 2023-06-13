@@ -68,7 +68,7 @@ export class EmSubmissionAccessDTO {
 
   @ApiProperty()
   @IsString()
-  userId: string;
+  userid: string;
 
   @ApiProperty()
   @IsDate()
