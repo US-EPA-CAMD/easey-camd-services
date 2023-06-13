@@ -2,7 +2,7 @@ import { Test } from '@nestjs/testing';
 import { SelectQueryBuilder } from 'typeorm';
 
 import { EmSubmissionAccessParamsDTO } from '../dto/em-submission-access.params.dto';
-import { EmSubmissionAccessRepository } from './em-submission-access.repository';
+import { EmSubmissionAccessViewRepository } from './em-submission-access-view.repository';
 
 const mockQueryBuilder = () => ({
   andWhere: jest.fn(),
@@ -12,15 +12,14 @@ const mockQueryBuilder = () => ({
 
 let filters = new EmSubmissionAccessParamsDTO();
 
-describe('EmSubmissionAccessRepository', () => {
-  let repository: EmSubmissionAccessRepository;
+describe('EmSubmissionAccessViewRepository', () => {
+  let repository: EmSubmissionAccessViewRepository;
   let queryBuilder: any;
-  let req: any;
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
       providers: [
-        EmSubmissionAccessRepository,
+        EmSubmissionAccessViewRepository,
         {
           provide: SelectQueryBuilder,
           useFactory: mockQueryBuilder,
@@ -28,7 +27,7 @@ describe('EmSubmissionAccessRepository', () => {
       ],
     }).compile();
 
-    repository = module.get(EmSubmissionAccessRepository);
+    repository = module.get(EmSubmissionAccessViewRepository);
     queryBuilder = module.get(SelectQueryBuilder);
 
     queryBuilder.select.mockReturnValue(queryBuilder);
@@ -39,7 +38,7 @@ describe('EmSubmissionAccessRepository', () => {
   });
 
   describe('getEmSumbissionAccess', () => {
-    it('calls createQueryBuilder and gets all AnnualUnitData from the repository no filters', async () => {
+    it('gets all EmSubmissionAccess data from the repository', async () => {
       const result = await repository.getEmSubmissionAccess(filters);
 
       expect(queryBuilder.getMany).toHaveBeenCalled();
