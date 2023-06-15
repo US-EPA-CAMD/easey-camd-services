@@ -3,7 +3,6 @@ import {
   IsOptional,
   ValidationArguments,
   IsEnum,
-  Length,
 } from 'class-validator';
 
 import { Status } from '../enums/status.enum';
@@ -12,6 +11,7 @@ import { Plant } from '../entities/plant.entity';
 import { IsValidCode, IsInRange } from '@us-epa-camd/easey-common/pipes';
 import { MonitorPlan } from '../entities/monitor-plan.entity';
 import { CheckCatalogService } from '@us-epa-camd/easey-common/check-catalog';
+import { currentDateTime } from '@us-epa-camd/easey-common/utilities/functions';
 
 export class EmSubmissionAccessParamsDTO {
   @IsOptional()
@@ -40,14 +40,9 @@ export class EmSubmissionAccessParamsDTO {
 
   @IsOptional()
   @ApiProperty()
-  @Length(4, 4, {
-    message: (args: ValidationArguments) => {
-      return CheckCatalogService.formatMessage(
-        `Ensure the year format is YYYY.`,
-        {
-          value: args.value,
-        },
-      );
+  @IsInRange(1930, currentDateTime().getFullYear(), {
+    message: () => {
+      return `Ensure the year value is in the range from 1930 to ${currentDateTime().getFullYear()}`;
     },
   })
   @Type(() => Number)

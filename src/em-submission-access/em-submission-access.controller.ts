@@ -56,8 +56,7 @@ export class EmSubmissionAccessController {
     description: 'Data created successfully',
   })
   @ApiOperation({
-    description:
-      'Creates an Emission Submission Access Record.',
+    description: 'Creates an Emission Submission Access Record.',
   })
   async createEmSubmissionAccess(
     @Body() payload: EmSubmissionAccessCreateDTO,
