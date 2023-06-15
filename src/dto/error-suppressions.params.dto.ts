@@ -199,8 +199,8 @@ export class ErrorSuppressionsParamsDTO {
   @ApiProperty()
   @IsBoolean()
   @Transform(({ value }) => {
-    if(String(value).toLowerCase() === 'true') return true;
-    if(String(value).toLowerCase() === 'false') return false;
+    if (String(value).toLowerCase() === 'true') return true;
+    if (String(value).toLowerCase() === 'false') return false;
     return null;
   })
   active?: boolean;
