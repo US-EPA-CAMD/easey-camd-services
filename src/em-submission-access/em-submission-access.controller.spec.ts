@@ -7,6 +7,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import {
   EmSubmissionAccessCreateDTO,
   EmSubmissionAccessDTO,
+  EmSubmissionAccessUpdateDTO,
 } from '../dto/em-submission-access.dto';
 import { EmSubmissionAccessParamsDTO } from '../dto/em-submission-access.params.dto';
 import { EmSubmissionAccessMap } from '../maps/em-submission-access.map';
@@ -72,5 +73,16 @@ describe('EmSubmissionAccessController', () => {
     expect(
       await controller.createEmSubmissionAccess(payload, currentUser),
     ).toBe(mockedValue);
+  });
+
+  it('calls EmSubmissionAccessService.updateEmSubmissionAccess() and updates an Emission Submission Access record', async () => {
+    const mockedValue = genEmSubmissionAccess<EmSubmissionAccessDTO>()[0];
+    const payload = new EmSubmissionAccessUpdateDTO();
+    jest
+      .spyOn(service, 'updateEmSubmissionAccess')
+      .mockResolvedValue(mockedValue);
+    expect(await controller.updateEmSubmissionAccess(123, payload)).toBe(
+      mockedValue,
+    );
   });
 });

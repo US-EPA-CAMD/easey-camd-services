@@ -7,8 +7,10 @@ import { EmSubmissionAccessParamsDTO } from '../dto/em-submission-access.params.
 import {
   EmSubmissionAccessCreateDTO,
   EmSubmissionAccessDTO,
+  EmSubmissionAccessUpdateDTO,
 } from '../dto/em-submission-access.dto';
 import { EmSubmissionAccessRepository } from './em-submission-access.repository';
+import { EmSubmissionAccess } from '../entities/em-submission-access.entity';
 
 @Injectable()
 export class EmSubmissionAccessService {
@@ -45,13 +47,48 @@ export class EmSubmissionAccessService {
         updateDate: null,
       });
       await this.repository.save(entity);
-      let emSubmissionAcess = await this.viewRepository.findOne({
+      let emSubmissionAccess = await this.viewRepository.findOne({
         where: { id: entity?.id },
       });
-      const dto = await this.map.one(emSubmissionAcess);
+      const dto = await this.map.one(emSubmissionAccess);
       return dto;
     } catch (e) {
       throw new LoggingException(e.message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
+  }
+
+  async updateEmSubmissionAccess(
+    id: number,
+    payload: EmSubmissionAccessUpdateDTO,
+  ): Promise<EmSubmissionAccessDTO> {
+    let recordToUpdate: EmSubmissionAccess;
+
+    try {
+      recordToUpdate = await this.repository.findOne(id);
+      if (!recordToUpdate)
+        throw new LoggingException(
+          `Record with id ${id} not found`,
+          HttpStatus.NOT_FOUND,
+        );
+
+      recordToUpdate.emissionStatusCode = payload?.emissionStatusCode;
+      recordToUpdate.submissionAvailabilityCode =
+        payload?.submissionAvailabilityCode;
+      recordToUpdate.submissionTypeCode = payload?.submissionTypeCode;
+      recordToUpdate.resubExplanation = payload?.resubExplanation;
+      recordToUpdate.closeDate = payload?.closeDate;
+
+      await this.repository.save(recordToUpdate);
+    } catch (e) {
+      throw new LoggingException(e.message, e.status);
+    }
+
+    let emSubmissionAccess = await this.viewRepository.findOne({
+      where: { id: recordToUpdate?.id },
+    });
+
+    const dto = await this.map.one(emSubmissionAccess);
+
+    return dto;
   }
 }
