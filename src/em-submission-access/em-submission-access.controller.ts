@@ -69,13 +69,12 @@ export class EmSubmissionAccessController {
   @UseGuards(AuthGuard)
   @ApiBearerAuth('Token')
   @ApiOkResponse({
-    description: 'Update a Em Submission Access record.',
+    description: 'Update a Emission Submission Access record.',
   })
-  Update(
-    @Param('id') id: string,
+  async updateEmSubmissionAccess(
+    @Param('id') id: number,
     @Body() payload: EmSubmissionAccessUpdateDTO,
-    @User() user: CurrentUser,
-  ): Promise<void> {
-    return Promise.resolve();
+  ) {
+    return this.service.updateEmSubmissionAccess(id, payload);
   }
 }

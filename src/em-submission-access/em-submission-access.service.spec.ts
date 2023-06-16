@@ -4,6 +4,7 @@ import { EmSubmissionAccessViewRepository } from './em-submission-access-view.re
 import {
   EmSubmissionAccessCreateDTO,
   EmSubmissionAccessDTO,
+  EmSubmissionAccessUpdateDTO,
 } from '../dto/em-submission-access.dto';
 import { EmSubmissionAccessParamsDTO } from '../dto/em-submission-access.params.dto';
 import { EmSubmissionAccessMap } from '../maps/em-submission-access.map';
@@ -19,6 +20,7 @@ const mockViewRepository = () => ({
 const mockRepository = () => ({
   save: jest.fn(),
   create: jest.fn(),
+  findOne: jest.fn(),
 });
 
 const mockMap = () => ({
@@ -76,6 +78,18 @@ describe('EmSubmissionAccessService', () => {
     let payload = new EmSubmissionAccessCreateDTO();
     viewRepository.findOne.mockResolvedValue(new EmSubmissionAccess());
     const result = await service.createEmSubmissionAccess(payload, 'user');
+    expect(result).toEqual(mockedDto);
+  });
+
+  it('calls EmSubmissionAccessRepository.updateEmSubmissionAccess() and updates an emission submission access record', async () => {
+    const mockedDto = genEmSubmissionAccess<EmSubmissionAccessDTO>()[0];
+    map.one.mockReturnValue(mockedDto);
+    let payload = new EmSubmissionAccessUpdateDTO();
+    repository.findOne.mockResolvedValue(new EmSubmissionAccess());
+    const result = await service.updateEmSubmissionAccess(
+      mockedDto.id,
+      payload,
+    );
     expect(result).toEqual(mockedDto);
   });
 });
