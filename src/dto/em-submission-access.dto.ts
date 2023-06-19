@@ -64,12 +64,7 @@ export class EmSubmissionAccessUpdateDTO {
   @IsDateString()
   @IsIsoFormat({
     message: (args: ValidationArguments) => {
-      return CheckCatalogService.formatMessage(
-        `Ensure [fieldname] is a valid ISO date format of YYYY-MM-DD.`,
-        {
-          fieldname: args.property,
-        },
-      );
+      return `Ensure ${args.property} is a valid ISO date format of YYYY-MM-DD.`;
     },
   })
   closeDate: Date;
@@ -83,12 +78,7 @@ export class EmSubmissionAccessCreateDTO extends EmSubmissionAccessUpdateDTO {
   @IsDateString()
   @IsIsoFormat({
     message: (args: ValidationArguments) => {
-      return CheckCatalogService.formatMessage(
-        `Ensure [fieldname] is a valid ISO date format of YYYY-MM-DD.`,
-        {
-          fieldname: args.property,
-        },
-      );
+      return `Ensure ${args.property} is a valid ISO date format of YYYY-MM-DD.`;
     },
   })
   openDate: Date;
@@ -97,12 +87,7 @@ export class EmSubmissionAccessCreateDTO extends EmSubmissionAccessUpdateDTO {
   @IsString()
   @IsValidCode(MonitorPlan, {
     message: (args: ValidationArguments) => {
-      return CheckCatalogService.formatMessage(
-        'The reported a invalid [property].',
-        {
-          property: args.property,
-        },
-      );
+      return `The reported ${args.property} is invalid.`;
     },
   })
   monitorPlanId: string;
@@ -111,12 +96,7 @@ export class EmSubmissionAccessCreateDTO extends EmSubmissionAccessUpdateDTO {
   @IsNumber()
   @IsValidCode(ReportingPeriod, {
     message: (args: ValidationArguments) => {
-      return CheckCatalogService.formatMessage(
-        'The reported a invalid [property].',
-        {
-          property: args.property,
-        },
-      );
+      return `The reported ${args.property} is invalid.`;
     },
   })
   reportingPeriodId: number;
