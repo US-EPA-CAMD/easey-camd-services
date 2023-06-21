@@ -45,6 +45,7 @@ export class EmSubmissionAccessService {
         dataLoadedFlag: null,
         addDate: new Date(),
         updateDate: null,
+        submissionTypeCode: 'RQRESUB',
       });
       await this.repository.save(entity);
       let emSubmissionAccess = await this.viewRepository.findOne({
@@ -74,7 +75,6 @@ export class EmSubmissionAccessService {
       recordToUpdate.emissionStatusCode = payload?.emissionStatusCode;
       recordToUpdate.submissionAvailabilityCode =
         payload?.submissionAvailabilityCode;
-      recordToUpdate.submissionTypeCode = payload?.submissionTypeCode;
       recordToUpdate.resubExplanation = payload?.resubExplanation;
       recordToUpdate.closeDate = payload?.closeDate;
 

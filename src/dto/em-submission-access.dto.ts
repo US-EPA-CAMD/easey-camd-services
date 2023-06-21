@@ -12,7 +12,6 @@ import { IsValidCode, IsValidDate } from '@us-epa-camd/easey-common/pipes';
 import { ErrorMessages } from '@us-epa-camd/easey-common/constants';
 import { EmissionStatusCode } from '../entities/emission-status-code.entity';
 import { SubmissionAvailiblityCode } from '../entities/submission-availiblity-code.entity';
-import { SubmissionTypeCode } from '../entities/submission-type-code.entity';
 import { ReportingPeriod } from '../entities/reporting-period.entity';
 import { MonitorPlan } from '../entities/monitor-plan.entity';
 
@@ -41,17 +40,6 @@ export class EmSubmissionAccessUpdateDTO {
     },
   })
   submissionAvailabilityCode: string;
-
-  @ApiProperty()
-  @IsString()
-  @IsValidCode(SubmissionTypeCode, {
-    message: (args: ValidationArguments) => {
-      return CheckCatalogService.formatMessage(msgA, {
-        property: args.property,
-      });
-    },
-  })
-  submissionTypeCode: string;
 
   @ApiProperty()
   @IsString()
@@ -126,6 +114,10 @@ export class EmSubmissionAccessDTO extends EmSubmissionAccessCreateDTO {
   @ApiProperty()
   @IsString()
   reportingFrequencyCode: string;
+
+  @ApiProperty()
+  @IsString()
+  submissionTypeCode: string;
 
   @ApiProperty()
   @IsString()
