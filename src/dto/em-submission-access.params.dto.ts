@@ -10,7 +10,6 @@ import { Type } from 'class-transformer';
 import { Plant } from '../entities/plant.entity';
 import { IsValidCode, IsInRange } from '@us-epa-camd/easey-common/pipes';
 import { MonitorPlan } from '../entities/monitor-plan.entity';
-import { CheckCatalogService } from '@us-epa-camd/easey-common/check-catalog';
 import { currentDateTime } from '@us-epa-camd/easey-common/utilities/functions';
 
 export class EmSubmissionAccessParamsDTO {
@@ -28,12 +27,7 @@ export class EmSubmissionAccessParamsDTO {
   @ApiProperty()
   @IsValidCode(MonitorPlan, {
     message: (args: ValidationArguments) => {
-      return CheckCatalogService.formatMessage(
-        'The reported a invalid [property].',
-        {
-          property: args.property,
-        },
-      );
+      return `The reported ${args.property} is invalid.`;
     },
   })
   monitorPlanId?: string;
@@ -51,13 +45,8 @@ export class EmSubmissionAccessParamsDTO {
   @IsOptional()
   @ApiProperty()
   @IsInRange(1, 4, {
-    message: (args: ValidationArguments) => {
-      return CheckCatalogService.formatMessage(
-        `Ensure that the Quarter value is a number from 1 to 4.`,
-        {
-          value: args.value,
-        },
-      );
+    message: () => {
+      return `Ensure that the Quarter value is a number from 1 to 4.`;
     },
   })
   @Type(() => Number)
@@ -67,9 +56,7 @@ export class EmSubmissionAccessParamsDTO {
   @ApiProperty({ enum: Status })
   @IsEnum(Status, {
     message: () => {
-      return CheckCatalogService.formatMessage(
-        `The status must have a value of OPEN,PENDING or CLOSED,`,
-      );
+      return `The status must have a value of OPEN,PENDING or CLOSED,`;
     },
   })
   status?: string;
