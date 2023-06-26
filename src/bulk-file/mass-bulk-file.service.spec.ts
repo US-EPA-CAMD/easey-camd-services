@@ -104,9 +104,9 @@ describe('-- Mass Bulk File Service --', () => {
     });
   });
 
-  describe('createBasicJobLog', () => {
+  describe('newJobLog', () => {
     it('Create basic record', () => {
-      const result = massBulkFileService.createBasicJobLog('Job');
+      const result = massBulkFileService.newJobLog('Job');
       expect(result.jobName).toEqual('Job');
     });
   });
