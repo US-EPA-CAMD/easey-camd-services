@@ -14,10 +14,7 @@ describe('-- Report Controller --', () => {
   beforeAll(async () => {
     const module = await Test.createTestingModule({
       controllers: [ReportController],
-      providers: [
-        DataSetService,
-        DataSetRepository
-      ],
+      providers: [DataSetService, DataSetRepository],
     }).compile();
 
     controller = module.get(ReportController);

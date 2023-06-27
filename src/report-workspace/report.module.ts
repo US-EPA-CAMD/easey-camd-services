@@ -6,16 +6,9 @@ import { DataSetModule } from '../dataset/dataset.module';
 import { ReportWorkspaceController } from './report.controller';
 
 @Module({
-  imports: [
-    HttpModule,
-    DataSetModule
-  ],
-  controllers: [
-    ReportWorkspaceController
-  ],
-  providers: [
-    DataSetService
-  ],
+  imports: [HttpModule, DataSetModule],
+  controllers: [ReportWorkspaceController],
+  providers: [DataSetService],
   exports: [],
 })
 export class ReportWorkspaceModule {}

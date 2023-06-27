@@ -2213,10 +2213,10 @@
     "@typescript-eslint/types" "5.1.0"
     eslint-visitor-keys "^3.0.0"
 
-"@us-epa-camd/easey-common@^15.7.3":
-  version "15.7.3"
-  resolved "https://npm.pkg.github.com/download/@US-EPA-CAMD/easey-common/15.7.3/4dd5a8cd5f4e11ef326e7268af44a8d6037bfd99#4dd5a8cd5f4e11ef326e7268af44a8d6037bfd99"
-  integrity sha512-C3rPZVIeFrmOPwlafDXIK3TQOp3E40U68MpbRAXMfygjp9dWYdh8tSxJVCX6HjA+orH9BaxghSXk4OMvsOxLDg==
+"@us-epa-camd/easey-common@^15.9.0":
+  version "15.9.0"
+  resolved "https://npm.pkg.github.com/download/@US-EPA-CAMD/easey-common/15.9.0/b21b9b7cbc315f6848e302d4b5e6eb0606a9e61c#b21b9b7cbc315f6848e302d4b5e6eb0606a9e61c"
+  integrity sha512-lnbbd4tHbGybgnEupziPWV3GJT6fV42//lbPhSTmI1DWm+iZ5OeYdfUl0VAu3/CpouBtRLdur86fQCzHWWhbYQ==
   dependencies:
     "@golevelup/ts-jest" "^0.3.4"
     "@nestjs/axios" "0.0.3"
@@ -7962,9 +7962,9 @@ vary@^1, vary@~1.1.2:
   integrity sha512-BNGbWLfd0eUPabhkXUVm0j8uuvREyTh5ovRa/dyow/BqAbZJyC+5fU+IzQOzmAKzYqYRAISoRhdQr3eIZ/PXqg==
 
 vm2@^3.9.8:
-  version "3.9.17"
-  resolved "https://registry.yarnpkg.com/vm2/-/vm2-3.9.17.tgz#251b165ff8a0e034942b5181057305e39570aeab"
-  integrity sha512-AqwtCnZ/ERcX+AVj9vUsphY56YANXxRuqMb7GsDtAr0m0PcQX3u0Aj3KWiXM0YAHy7i6JEeHrwOnwXbGYgRpAw==
+  version "3.9.19"
+  resolved "https://registry.yarnpkg.com/vm2/-/vm2-3.9.19.tgz#be1e1d7a106122c6c492b4d51c2e8b93d3ed6a4a"
+  integrity sha512-J637XF0DHDMV57R6JyVsTak7nIL8gy5KH4r1HiwWLf/4GBbb5MKL5y7LpmF4A8E2nR6XmzpmMFQ7V7ppPTmUQg==
   dependencies:
     acorn "^8.7.0"
     acorn-walk "^8.2.0"

@@ -29,6 +29,7 @@ applications:
       EASEY_STREAMING_SERVICES: https://((apiHost))/streaming-services
       EASEY_CAMD_SERVICES_ECMPS_HOST: ((ecmpsHost))
       EASEY_CAMD_SERVICES_ENABLE_ROLE_GUARD_CHECKOUT: true
+      TZ: America/New_York
     routes:
       - route: ((host))/((path))
     services:

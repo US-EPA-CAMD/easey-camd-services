@@ -4,7 +4,7 @@ import {
   Entity,
   JoinColumn,
   OneToMany,
-  PrimaryColumn
+  PrimaryColumn,
 } from 'typeorm';
 
 import { DataTable } from './datatable.entity';
@@ -31,10 +31,7 @@ export class Template extends BaseEntity {
   })
   displayName: string;
 
-  @OneToMany(
-    () => DataTable,
-    o => o.template,
-  )
+  @OneToMany(() => DataTable, (o) => o.template)
   @JoinColumn({ name: 'template_cd' })
   dataTables: DataTable[];
 }
