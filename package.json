@@ -1,10 +1,6 @@
 {
   "name": "easey-camd-services",
-<<<<<<< HEAD
   "version": "2.0",
-=======
-  "version": "1.2",
->>>>>>> 156d1212d41134c2000ae335e17efba49c856664
   "description": "EPA CAMD Services",
   "license": "MIT",
   "private": true,
