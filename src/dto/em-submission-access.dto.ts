@@ -100,6 +100,10 @@ export class EmSubmissionAccessDTO extends EmSubmissionAccessCreateDTO {
   facilityId: number;
 
   @ApiProperty()
+  @IsString()
+  facilityName: string;
+
+  @ApiProperty()
   @IsNumber()
   orisCode: number;
 
@@ -117,7 +121,11 @@ export class EmSubmissionAccessDTO extends EmSubmissionAccessCreateDTO {
 
   @ApiProperty()
   @IsString()
-  submissionTypeCode: string;
+  reportingPeriodAbbreviation: string;
+
+  @ApiProperty()
+  @IsString()
+  submissionTypeDescription: string;
 
   @ApiProperty()
   @IsString()
