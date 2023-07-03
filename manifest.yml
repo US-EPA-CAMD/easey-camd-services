@@ -24,6 +24,7 @@ applications:
       EASEY_BULK_FILES_AWS_BUCKET: ((campdDatasetsS3Bucket))
       EASEY_API_GATEWAY_HOST: ((apiHost))
       EASEY_AUTH_API: https://((apiHost))/auth-mgmt
+      EASEY_STREAMING_SERVICES: https://((apiHost))/streaming-services
     routes:
       - route: ((host))/((path))
     services:

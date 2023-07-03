@@ -1356,6 +1356,11 @@
   resolved "https://registry.yarnpkg.com/@golevelup/ts-jest/-/ts-jest-0.3.4.tgz#b1da56344136f9d4ebce03676c099b5214bb7c29"
   integrity sha512-UXas4+20gNmYfVR7DTJ9iRppy00o0ElqQrRQyn9cF3Gq90iM1Xx1lKvipTEe5NniHDD9FiMZNweOfB+9ebZRZA==
 
+"@golevelup/ts-jest@^0.3.4":
+  version "0.3.5"
+  resolved "https://registry.yarnpkg.com/@golevelup/ts-jest/-/ts-jest-0.3.5.tgz#8244deb3755ced65abe579d07f53d81b596383ce"
+  integrity sha512-Ul4+JsIcKSwzqM78ZwGU9xNvisNoPnHVNEwHK+t8s/WpQVOx+f8W61SIi6OcPpnkyFqyEHGBkOmTGXj3nRQwbg==
+
 "@humanwhocodes/config-array@^0.11.8":
   version "0.11.8"
   resolved "https://registry.yarnpkg.com/@humanwhocodes/config-array/-/config-array-0.11.8.tgz#03595ac2075a4dc0f191cc2131de14fbd7d410b9"
@@ -2018,6 +2023,11 @@
   resolved "https://registry.yarnpkg.com/@types/uuid/-/uuid-8.3.4.tgz#bd86a43617df0594787d38b735f55c805becf1bc"
   integrity sha512-c/I8ZRb51j+pYGAu5CrFMRxqZ2ke4y2grEBO5AUjgSkSk+qT2Ea+OdWElz/OiMf5MNpn2b17kuVBwZLQJXzihw==
 
+"@types/validator@^13.1.3":
+  version "13.7.12"
+  resolved "https://registry.yarnpkg.com/@types/validator/-/validator-13.7.12.tgz#a285379b432cc8d103b69d223cbb159a253cf2f7"
+  integrity sha512-YVtyAPqpefU+Mm/qqnOANW6IkqKpCSrarcyV269C8MA8Ux0dbkEuQwM/4CjL47kVEM2LgBef/ETfkH+c6+moFA==
+
 "@types/yargs-parser@*":
   version "21.0.0"
   resolved "https://registry.yarnpkg.com/@types/yargs-parser/-/yargs-parser-21.0.0.tgz#0c60e537fa790f5f9472ed2776c2b71ec117351b"
@@ -2105,19 +2115,20 @@
     "@typescript-eslint/types" "5.1.0"
     eslint-visitor-keys "^3.0.0"
 
-"@us-epa-camd/easey-common@11.0.0":
-  version "11.0.0"
-  resolved "https://npm.pkg.github.com/download/@US-EPA-CAMD/easey-common/11.0.0/2fa975e8915ee489a4a006af25689656d617a1e3#2fa975e8915ee489a4a006af25689656d617a1e3"
-  integrity sha512-dVudFjz+dIBa3t2e8HMDTEISX5huBSFwRgLkwX11cmpBvYWljamgMwuhBUlgV4vY7aCYG2rcu9UD4zEkBoNXMg==
+"@us-epa-camd/easey-common@14.2.2":
+  version "14.2.2"
+  resolved "https://npm.pkg.github.com/download/@US-EPA-CAMD/easey-common/14.2.2/5693038fecfc42f9236880652ca0ddd962bde099#5693038fecfc42f9236880652ca0ddd962bde099"
+  integrity sha512-oN6nQigrJu7T83OM8jliBAveaL4U1ZzTJP/1B6KQxn3HwOBfqFaNsEIHbKdpNEe85rhMXF7zD9o+5iCOzU9HMg==
   dependencies:
+    "@golevelup/ts-jest" "^0.3.4"
     "@nestjs/axios" "0.0.3"
     "@nestjs/common" "^8.1.1"
     "@nestjs/config" "^1.0.2"
     "@nestjs/core" "^8.1.1"
     "@nestjs/swagger" "^5.1.2"
-    class-validator "^0.13.1"
+    class-validator "0.13.1"
     dotenv "^10.0.0"
-    express "^4.17.1"
+    express "^4.17.3"
     helmet "^4.6.0"
     json2csv "^5.0.6"
     prettier "^2.7.1"
@@ -2809,6 +2820,15 @@ class-transformer@0.4.0:
   version "0.4.0"
   resolved "https://registry.yarnpkg.com/class-transformer/-/class-transformer-0.4.0.tgz#b52144117b423c516afb44cc1c76dbad31c2165b"
   integrity sha512-ETWD/H2TbWbKEi7m9N4Km5+cw1hNcqJSxlSYhsLsNjQzWWiZIYA1zafxpK9PwVfaZ6AqR5rrjPVUBGESm5tQUA==
+
+class-validator@0.13.1:
+  version "0.13.1"
+  resolved "https://registry.yarnpkg.com/class-validator/-/class-validator-0.13.1.tgz#381b2001ee6b9e05afd133671fbdf760da7dec67"
+  integrity sha512-zWIeYFhUitvAHBwNhDdCRK09hWx+P0HUwFE8US8/CxFpMVzkUK8RJl7yOIE+BVu2lxyPNgeOaFv78tLE47jBIg==
+  dependencies:
+    "@types/validator" "^13.1.3"
+    libphonenumber-js "^1.9.7"
+    validator "^13.5.2"
 
 class-validator@^0.13.1:
   version "0.13.2"
@@ -3570,7 +3590,7 @@ express@4.18.1:
     utils-merge "1.0.1"
     vary "~1.1.2"
 
-express@^4.17.1:
+express@^4.17.1, express@^4.17.3:
   version "4.18.2"
   resolved "https://registry.yarnpkg.com/express/-/express-4.18.2.tgz#3fabe08296e930c796c19e3c516979386ba9fd59"
   integrity sha512-5/PsL6iGPdfQ/lKM1UuielYgv3BUoJfz1aUwU9vHZ+J7gyvwdQXFEBIEIaxeGf0GIcreATNyBExtalisDbuMqQ==
@@ -4868,6 +4888,11 @@ libphonenumber-js@^1.9.43:
   version "1.10.18"
   resolved "https://registry.yarnpkg.com/libphonenumber-js/-/libphonenumber-js-1.10.18.tgz#657c419071c8a02c638c0e80d9ee1232f152f280"
   integrity sha512-NS4ZEgNhwbcPz1gfSXCGFnQm0xEiyTSPRthIuWytDzOiEG9xnZ2FbLyfJC4tI2BMAAXpoWbNxHYH75pa3Dq9og==
+
+libphonenumber-js@^1.9.7:
+  version "1.10.20"
+  resolved "https://registry.yarnpkg.com/libphonenumber-js/-/libphonenumber-js-1.10.20.tgz#03c310adf83381eeceb4bd6830442fd14e64964d"
+  integrity sha512-kQovlKNdLcVzerbTPmJ+Fx4R+7/pYXmPDIllHjg7IxL4X6MsMG7jaT5opfYrBok0uqkByVif//JUR8e11l/V7w==
 
 lines-and-columns@^1.1.6:
   version "1.2.4"
@@ -6509,6 +6534,11 @@ v8-to-istanbul@^8.1.0:
     "@types/istanbul-lib-coverage" "^2.0.1"
     convert-source-map "^1.6.0"
     source-map "^0.7.3"
+
+validator@^13.5.2:
+  version "13.9.0"
+  resolved "https://registry.yarnpkg.com/validator/-/validator-13.9.0.tgz#33e7b85b604f3bbce9bb1a05d5c3e22e1c2ff855"
+  integrity sha512-B+dGG8U3fdtM0/aNK4/X8CXq/EcxU2WPrPEkJGslb47qyHsxmbggTWK0yEA4qnYVNF+nxNlN88o14hIcPmSIEA==
 
 validator@^13.7.0:
   version "13.7.0"
