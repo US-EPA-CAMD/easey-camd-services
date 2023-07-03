@@ -6,13 +6,17 @@ import {
   ApiBearerAuth,
   ApiOperation,
 } from '@nestjs/swagger';
-import { Controller, Post, Body, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Get } from '@nestjs/common';
 import { ClientTokenGuard } from '@us-epa-camd/easey-common/guards';
 
 import { MailService } from './mail.service';
 import { CreateMailDto } from './../dto/create-mail.dto';
 import { ClientId } from '../decorators/client-id.decorator';
+import { ProcessMailDTO } from '../dto/process-mail.dto';
 import { MassEvalParamsDTO } from '../dto/mass-eval-params.dto';
+import { MailTemplateService } from './mail-template.service';
+import { MailEvalService } from './mail-eval.service';
+import { RecipientPayloadDTO } from 'src/dto/recipient-payload.dto';
 
 @Controller()
 @ApiTags('Support')
@@ -21,9 +25,13 @@ import { MassEvalParamsDTO } from '../dto/mass-eval-params.dto';
 @ApiBearerAuth('ClientToken')
 @UseGuards(ClientTokenGuard)
 export class MailController {
-  constructor(private mailService: MailService) {}
+  constructor(
+    private mailService: MailService,
+    private mailTemplateService: MailTemplateService,
+    private mailEvalService: MailEvalService,
+  ) {}
 
-  @Post('email')
+  @Post('contact-us')
   @ApiOkResponse({
     description: 'Data sent successfully',
   })
@@ -36,6 +44,19 @@ export class MailController {
     await this.mailService.sendEmail(clientId, payload);
   }
 
+  @Post('email/process')
+  @ApiOkResponse({
+    description: 'Data sent successfully',
+  })
+  @ApiOperation({
+    description:
+      'Processes an email using the associated email record stored in the email_queue',
+  })
+  @ApiInternalServerErrorResponse()
+  async sendRecord(@Body() payload: ProcessMailDTO) {
+    await this.mailTemplateService.sendEmailRecord(payload.emailToProcessId);
+  }
+
   @Post('email/mass-eval')
   @ApiOkResponse({
     description: 'Data sent successfully',
@@ -46,6 +67,20 @@ export class MailController {
   })
   @ApiInternalServerErrorResponse()
   async sendMassEval(@Body() payload: MassEvalParamsDTO) {
-    this.mailService.sendMassEvalEmail(payload);
+    await this.mailEvalService.sendMassEvalEmail(
+      payload.toEmail,
+      payload.fromEmail,
+      payload.evaluationSetId,
+    );
+  }
+
+  @Post('email/emailRecipientList')
+  async getRecipientList(@Body() payload: RecipientPayloadDTO) {
+    return [
+      {
+        emailAddressList: ['kyleherceg@gmail.com'],
+        plantIdList: payload.plantIdList,
+      },
+    ];
   }
 }

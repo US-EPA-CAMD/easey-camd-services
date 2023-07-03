@@ -80,7 +80,14 @@ export default registerAs('app', () => ({
   enableDebug: getConfigValueBoolean('EASEY_CAMD_SERVICES_ENABLE_DEBUG'),
   // NEEDS TO BE SET IN .ENV FILE FOR LOCAL DEVELOPMENT
   // FORMAT: { "userId": "", "roles": [ { "orisCode": 3, "role": "P" } ] }
-  currentUser: getConfigValue('EASEY_CAMD_SERVICES_CURRENT_USER'),
+  currentUser: getConfigValue(
+    'EASEY_CAMD_SERVICES_CURRENT_USER',
+    '{"userId": ""}',
+  ),
+  contentUri: getConfigValue(
+    'EASEY_CAMD_SERVICES_CONTENT_API',
+    'https://api.epa.gov/easey/dev/content-mgmt',
+  ),
   apiHost: apiHost,
   authApi: {
     uri: getConfigValue('EASEY_AUTH_API', `https://${apiHost}/auth-mgmt`),
