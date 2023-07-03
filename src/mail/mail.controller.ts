@@ -16,7 +16,7 @@ import { ProcessMailDTO } from '../dto/process-mail.dto';
 import { MassEvalParamsDTO } from '../dto/mass-eval-params.dto';
 import { MailTemplateService } from './mail-template.service';
 import { MailEvalService } from './mail-eval.service';
-import { RecipientPayloadDTO } from 'src/dto/recipient-payload.dto';
+import { RecipientPayloadDTO } from '../dto/recipient-payload.dto';
 
 @Controller()
 @ApiTags('Support')
