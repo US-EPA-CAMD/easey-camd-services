@@ -76,11 +76,13 @@ export class MailController {
 
   @Post('email/emailRecipientList')
   async getRecipientList(@Body() payload: RecipientPayloadDTO) {
-    return [
-      {
-        emailAddressList: ['kyleherceg@gmail.com'],
-        plantIdList: payload.plantIdList,
-      },
-    ];
+    return {
+      recipientList: [
+        {
+          emailAddressList: ['kyleherceg@gmail.com'],
+          plantIdList: payload.plantIdList,
+        },
+      ],
+    };
   }
 }
