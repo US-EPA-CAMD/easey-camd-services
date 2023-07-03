@@ -24,6 +24,7 @@ import { AdminModule } from './admin/admin.module';
 import { QaTestExtensionExemptionModule } from './qa-test-extension-exemption/qa-test-extension-exemption.module';
 import { QaCertEventModule } from './qa-cert-event/qa-cert-event.module';
 import { QaTestSummaryModule } from './qa-test-summary/qa-test-summary.module';
+import { EmSubmissionAccessModule } from './em-submission-access/em-submission-access.module';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { QaTestSummaryModule } from './qa-test-summary/qa-test-summary.module';
     QaTestExtensionExemptionModule,
     QaCertEventModule,
     QaTestSummaryModule,
+    EmSubmissionAccessModule,
   ],
 })
 export class AppModule {}

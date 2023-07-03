@@ -12,6 +12,7 @@ import { QaMaintenanceModule } from './qa-maintenance/qa-maintenance.module';
 import { QaTestSummaryModule } from './qa-test-summary/qa-test-summary.module';
 import { QaCertEventModule } from './qa-cert-event/qa-cert-event.module';
 import { QaTestExtensionExemptionModule } from './qa-test-extension-exemption/qa-test-extension-exemption.module';
+import { EmSubmissionAccessModule } from './em-submission-access/em-submission-access.module';
 
 const routes: Routes = [
   {
@@ -59,6 +60,10 @@ const routes: Routes = [
             module: QaTestExtensionExemptionModule,
           },
         ],
+      },
+      {
+        path: '/em-submission-access',
+        module: EmSubmissionAccessModule,
       },
       {
         path: '/error-suppressions',
