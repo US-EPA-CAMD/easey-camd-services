@@ -1,5 +1,5 @@
 import { Controller, UseGuards } from '@nestjs/common';
-import { Get, Put, Delete } from '@nestjs/common/decorators';
+import { Get, Put, Delete, Query, Param } from '@nestjs/common/decorators';
 import {
   ApiBearerAuth,
   ApiOkResponse,
@@ -13,7 +13,10 @@ import {
 } from '../utilities/swagger-decorator.const';
 import { AuthGuard } from '@us-epa-camd/easey-common/guards';
 import { QaTestExtensionExemptionService } from './qa-test-extension-exemption.service';
-
+import { QaCertMaintParamsDto } from '../dto/qa-cert-maint-params.dto';
+import { QaTeeMaintView } from '../entities/qa-tee-maint-vw.entity';
+import { User } from '@us-epa-camd/easey-common/decorators';
+import { CurrentUser } from '@us-epa-camd/easey-common/interfaces';
 @Controller()
 @ApiSecurity('APIKey')
 @ApiTags('QA Test Extension Exemption Maintenance')
@@ -32,8 +35,10 @@ export class QaTestExtensionExemptionController {
     type: Number,
     description: 'Data retrieved successfully',
   })
-  getQaTestData(): Promise<number[]> {
-    return Promise.resolve([1, 2, 3]);
+  getQaTeeViewData(
+    @Query() params: QaCertMaintParamsDto,
+  ): Promise<QaTeeMaintView[]> {
+    return this.service.getQaTeeViewData(params.orisCode, params.unitStack);
   }
 
   @Put(':id')
@@ -42,8 +47,11 @@ export class QaTestExtensionExemptionController {
   @ApiOkResponse({
     description: 'Changes submission status to resubmit',
   })
-  updateSubmissionStatus(): Promise<void> {
-    return Promise.resolve();
+  updateSubmissionStatus(
+    @Param('id') id: string,
+    @User() user: CurrentUser,
+  ): Promise<QaTeeMaintView> {
+    return this.service.updateSubmissionStatus(id, user.userId);
   }
 
   @Delete(':id')
@@ -51,7 +59,7 @@ export class QaTestExtensionExemptionController {
     description:
       'Deletes a QA Test Extension Exemption maintenance record from global',
   })
-  async delete(): Promise<void> {
-    return Promise.resolve();
+  async deleteQACertTeeData(@Param('id') id: string): Promise<any> {
+    return this.service.deleteQACertTeeData(id);
   }
 }

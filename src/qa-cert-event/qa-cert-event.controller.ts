@@ -1,5 +1,5 @@
 import { Controller, UseGuards } from '@nestjs/common';
-import { Get, Put, Delete } from '@nestjs/common/decorators';
+import { Get, Put, Delete, Query, Param } from '@nestjs/common/decorators';
 import {
   ApiBearerAuth,
   ApiOkResponse,
@@ -13,6 +13,10 @@ import {
 } from '../utilities/swagger-decorator.const';
 import { AuthGuard } from '@us-epa-camd/easey-common/guards';
 import { QaCertEventService } from './qa-cert-event.service';
+import { QaCertMaintParamsDto } from '../dto/qa-cert-maint-params.dto';
+import { QaCertEventMaintView } from '../entities/qa-cert-event-maint-vw.entity';
+import { User } from '@us-epa-camd/easey-common/decorators';
+import { CurrentUser } from '@us-epa-camd/easey-common/interfaces';
 
 @Controller()
 @ApiSecurity('APIKey')
@@ -32,8 +36,13 @@ export class QaCertEventController {
     type: Number,
     description: 'Data retrieved successfully',
   })
-  getQaTestData(): Promise<number[]> {
-    return Promise.resolve([1, 2, 3]);
+  getQaCertEventViewData(
+    @Query() params: QaCertMaintParamsDto,
+  ): Promise<QaCertEventMaintView[]> {
+    return this.service.getQaCertEventViewData(
+      params.orisCode,
+      params.unitStack,
+    );
   }
 
   @Put(':id')
@@ -42,15 +51,18 @@ export class QaCertEventController {
   @ApiOkResponse({
     description: 'Changes submission status to resubmit',
   })
-  updateSubmissionStatus(): Promise<void> {
-    return Promise.resolve();
+  updateSubmissionStatus(
+    @Param('id') id: string,
+    @User() user: CurrentUser,
+  ): Promise<QaCertEventMaintView> {
+    return this.service.updateSubmissionStatus(id, user.userId);
   }
 
   @Delete(':id')
   @ApiOkResponse({
     description: 'Deletes a QA Cert Event record from global',
   })
-  async delete(): Promise<void> {
-    return Promise.resolve();
+  async deleteQACertEventData(@Param('id') id: string): Promise<any> {
+    return this.service.deleteQACertEventData(id);
   }
 }
