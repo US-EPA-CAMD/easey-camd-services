@@ -14,6 +14,7 @@ import { EmissionStatusCode } from '../entities/emission-status-code.entity';
 import { SubmissionAvailiblityCode } from '../entities/submission-availiblity-code.entity';
 import { ReportingPeriod } from '../entities/reporting-period.entity';
 import { MonitorPlan } from '../entities/monitor-plan.entity';
+import { IsValidCloseDate } from '../pipes/is-valid-close-date.pipe';
 
 const msgA =
   'The [property] is not valid refer to the list of available [property]s for valid values';
@@ -55,6 +56,7 @@ export class EmSubmissionAccessUpdateDTO {
       return `Ensure ${args.property} is a valid ISO date format of YYYY-MM-DD.`;
     },
   })
+  @IsValidCloseDate()
   closeDate: Date;
 }
 
