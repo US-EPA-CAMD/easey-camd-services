@@ -56,6 +56,7 @@
     "fs": "^0.0.1-security",
     "handlebars": "^4.7.7",
     "https": "^1.0.0",
+    "moment": "^2.29.4",
     "nest-router": "^1.0.9",
     "nodemailer": "^6.7.2",
     "pg": "^8.3.0",

@@ -4,6 +4,8 @@ import {
   ValidationArguments,
 } from 'class-validator';
 
+const moment = require('moment');
+
 export function IsValidCloseDate() {
   return function (object: Object, propertyName: string) {
     let validationOptions: ValidationOptions = {
@@ -20,9 +22,9 @@ export function IsValidCloseDate() {
       validator: {
         validate(value: any, args: ValidationArguments) {
           if (value && args.object['openDate']) {
-            const closeDate = new Date(value);
-            const openDate = new Date(args.object['openDate']);
-            return closeDate < openDate;
+            const closeDate = moment(value);
+            const openDate = moment(args.object['openDate']);
+            return closeDate.isSameOrAfter(openDate);
           }
           return true;
         },
