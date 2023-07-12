@@ -8,7 +8,7 @@ export class EmSubmissionAccessViewRepository extends Repository<EmSubmissionAcc
   async getEmSubmissionAccess(
     params: EmSubmissionAccessParamsDTO,
   ): Promise<EmSubmissionAccessView[]> {
-    const { facilityId, monitorPlanId, year, quarter, status } = params;
+    const { orisCode, monitorPlanId, year, quarter, status } = params;
     let query = this.createQueryBuilder('em').select([
       'em.id',
       'em.facilityId',
@@ -35,9 +35,9 @@ export class EmSubmissionAccessViewRepository extends Repository<EmSubmissionAcc
       'em.resubExplanation',
     ]);
 
-    if (facilityId) {
-      query.andWhere('em.orisCode = :facilityId', {
-        facilityId: facilityId,
+    if (orisCode) {
+      query.andWhere('em.orisCode = :orisCode', {
+        orisCode: orisCode,
       });
     }
 

@@ -21,7 +21,7 @@ export class EmSubmissionAccessParamsDTO {
     },
   })
   @Type(() => Number)
-  facilityId?: number;
+  orisCode?: number;
 
   @IsOptional()
   @ApiProperty()
