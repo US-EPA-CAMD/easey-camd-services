@@ -14,7 +14,7 @@ import { currentDateTime } from '@us-epa-camd/easey-common/utilities/functions';
 
 export class EmSubmissionAccessParamsDTO {
   @ApiProperty()
-  @IsNotEmpty({message: (args: ValidationArguments) => `${args.property} is required`})
+  @IsNotEmpty({message: () => 'Facility is required'})
   @IsValidCode(Plant, {
     message: (args: ValidationArguments) => {
       return `The ${args.property} is not valid. Refer to the list of available facilityRecordIds for valid values '/facilities-mgmt/facilities'`;
@@ -24,7 +24,7 @@ export class EmSubmissionAccessParamsDTO {
   orisCode?: number;
 
   @ApiProperty()
-  @IsNotEmpty({message: (args: ValidationArguments) => `${args.property} is required`})
+  @IsNotEmpty({message: () => 'Configuration is required'})
   @IsValidCode(MonitorPlan, {
     message: (args: ValidationArguments) => {
       return `The reported ${args.property} is invalid.`;
