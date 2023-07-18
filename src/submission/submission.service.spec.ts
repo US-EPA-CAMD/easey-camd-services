@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { LoggerModule } from '@us-epa-camd/easey-common/logger';
 import { MonitorPlan } from '../entities/monitor-plan.entity';
-import { EvaluationDTO, EvaluationItem } from '../dto/evaluation.dto';
+import { EvaluationItem } from '../dto/evaluation.dto';
 import { Plant } from '../entities/plant.entity';
 import { TestSummary } from '../entities/test-summary.entity';
 import { QaCertEvent } from '../entities/qa-cert-event.entity';
@@ -9,6 +9,7 @@ import { QaTee } from '../entities/qa-tee.entity';
 import { ReportingPeriod } from '../entities/reporting-period.entity';
 import { EmissionEvaluation } from '../entities/emission-evaluation.entity';
 import { SubmissionService } from './submission.service';
+import { SubmissionQueueDTO } from '../dto/submission-queue.dto';
 
 const dtoItem = new EvaluationItem();
 dtoItem.monPlanId = 'mock';
@@ -18,7 +19,7 @@ dtoItem.qceIds = ['mock'];
 dtoItem.teeIds = ['mock'];
 dtoItem.emissionsReportingPeriods = ['2020 Q1'];
 
-const payloadDto = new EvaluationDTO();
+const payloadDto = new SubmissionQueueDTO();
 payloadDto.items = [dtoItem, dtoItem];
 
 describe('-- Submission Service --', () => {

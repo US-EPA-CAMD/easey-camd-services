@@ -31,4 +31,7 @@ export class SubmissionSet extends BaseEntity {
 
   @Column({ name: 'configuration' })
   configuration: string;
+
+  @Column({ name: 'activity_id' })
+  activityId: string;
 }

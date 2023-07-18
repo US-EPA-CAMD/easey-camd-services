@@ -1,9 +1,9 @@
 import { Test } from '@nestjs/testing';
 import { HttpModule } from '@nestjs/axios';
-import { EvaluationDTO } from '../dto/evaluation.dto';
 import { ConfigService } from '@nestjs/config';
 import { SubmissionController } from './submission.controller';
 import { SubmissionService } from './submission.service';
+import { SubmissionQueueDTO } from '../dto/submission-queue.dto';
 
 jest.mock('./submission.service');
 
@@ -25,7 +25,7 @@ describe('-- Evaluation Controller --', () => {
   });
 
   it('evaluate', async () => {
-    const dtoParams = new EvaluationDTO();
+    const dtoParams = new SubmissionQueueDTO();
 
     expect(async () => {
       await controller.evaluate(dtoParams);

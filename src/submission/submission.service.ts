@@ -1,7 +1,7 @@
 import { getManager } from 'typeorm';
 import { Injectable } from '@nestjs/common';
 import { Logger } from '@us-epa-camd/easey-common/logger';
-import { EvaluationDTO, EvaluationItem } from '../dto/evaluation.dto';
+import { EvaluationItem } from '../dto/evaluation.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { MonitorPlan } from '../entities/monitor-plan.entity';
 import { Plant } from '../entities/plant.entity';
@@ -12,6 +12,7 @@ import { ReportingPeriod } from '../entities/reporting-period.entity';
 import { EmissionEvaluation } from '../entities/emission-evaluation.entity';
 import { SubmissionSet } from '../entities/submission-set.entity';
 import { SubmissionQueue } from '../entities/submission-queue.entity';
+import { SubmissionQueueDTO } from '../dto/submission-queue.dto';
 
 @Injectable()
 export class SubmissionService {
@@ -24,6 +25,7 @@ export class SubmissionService {
   async queueRecord(
     userId: string,
     userEmail: string,
+    activityId: string,
     item: EvaluationItem,
   ): Promise<void> {
     try {
@@ -31,6 +33,7 @@ export class SubmissionService {
       const set_id = uuidv4();
 
       const submissionSet = new SubmissionSet();
+      submissionSet.activityId = activityId;
       submissionSet.submissionSetIdentifier = set_id;
       submissionSet.monPlanIdentifier = item.monPlanId;
       submissionSet.userIdentifier = userId;
@@ -155,11 +158,18 @@ export class SubmissionService {
     }
   }
 
-  async queueSubmissionRecords(params: EvaluationDTO): Promise<void> {
+  async queueSubmissionRecords(params: SubmissionQueueDTO): Promise<void> {
     let promises = [];
 
     for (const item of params.items) {
-      promises.push(this.queueRecord(params.userId, params.userEmail, item));
+      promises.push(
+        this.queueRecord(
+          params.userId,
+          params.userEmail,
+          params.activityId,
+          item,
+        ),
+      );
     }
 
     await Promise.all(promises);
