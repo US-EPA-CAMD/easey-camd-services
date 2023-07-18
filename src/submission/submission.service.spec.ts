@@ -1,14 +1,15 @@
 import { Test } from '@nestjs/testing';
 import { LoggerModule } from '@us-epa-camd/easey-common/logger';
 import { MonitorPlan } from '../entities/monitor-plan.entity';
-import { EvaluationDTO, EvaluationItem } from '../dto/evaluation.dto';
-import { EvaluationService } from './evaluation.service';
+import { EvaluationItem } from '../dto/evaluation.dto';
 import { Plant } from '../entities/plant.entity';
 import { TestSummary } from '../entities/test-summary.entity';
 import { QaCertEvent } from '../entities/qa-cert-event.entity';
 import { QaTee } from '../entities/qa-tee.entity';
 import { ReportingPeriod } from '../entities/reporting-period.entity';
 import { EmissionEvaluation } from '../entities/emission-evaluation.entity';
+import { SubmissionService } from './submission.service';
+import { SubmissionQueueDTO } from '../dto/submission-queue.dto';
 
 const dtoItem = new EvaluationItem();
 dtoItem.monPlanId = 'mock';
@@ -18,20 +19,20 @@ dtoItem.qceIds = ['mock'];
 dtoItem.teeIds = ['mock'];
 dtoItem.emissionsReportingPeriods = ['2020 Q1'];
 
-const payloadDto = new EvaluationDTO();
+const payloadDto = new SubmissionQueueDTO();
 payloadDto.items = [dtoItem, dtoItem];
 
-describe('-- Evaluation Service --', () => {
-  let service: EvaluationService;
+describe('-- Submission Service --', () => {
+  let service: SubmissionService;
 
   beforeAll(async () => {
     const module = await Test.createTestingModule({
       imports: [LoggerModule],
       controllers: [],
-      providers: [EvaluationService],
+      providers: [SubmissionService],
     }).compile();
 
-    service = module.get(EvaluationService);
+    service = module.get(SubmissionService);
   });
 
   it('should be defined', async () => {
@@ -78,8 +79,8 @@ describe('-- Evaluation Service --', () => {
       save: mockInsertion,
     });
 
-    await service.queueEvaluationRecords(payloadDto);
+    await service.queueSubmissionRecords(payloadDto);
 
-    expect(mockInsertion).toHaveBeenCalledTimes(26);
+    expect(mockInsertion).toHaveBeenCalledTimes(14);
   });
 });
