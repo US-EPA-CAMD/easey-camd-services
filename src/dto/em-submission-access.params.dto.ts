@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import {
   IsOptional,
   ValidationArguments,
-  IsEnum,
+  IsEnum, IsNotEmpty,
 } from 'class-validator';
 
 import { Status } from '../enums/status.enum';
@@ -13,18 +13,18 @@ import { MonitorPlan } from '../entities/monitor-plan.entity';
 import { currentDateTime } from '@us-epa-camd/easey-common/utilities/functions';
 
 export class EmSubmissionAccessParamsDTO {
-  @IsOptional()
   @ApiProperty()
+  @IsNotEmpty({message: () => 'Facility is required'})
   @IsValidCode(Plant, {
     message: (args: ValidationArguments) => {
       return `The ${args.property} is not valid. Refer to the list of available facilityRecordIds for valid values '/facilities-mgmt/facilities'`;
     },
   })
   @Type(() => Number)
-  facilityId?: number;
+  orisCode?: number;
 
-  @IsOptional()
   @ApiProperty()
+  @IsNotEmpty({message: () => 'Configuration is required'})
   @IsValidCode(MonitorPlan, {
     message: (args: ValidationArguments) => {
       return `The reported ${args.property} is invalid.`;
