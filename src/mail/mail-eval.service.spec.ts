@@ -1,10 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { LoggerModule } from '@us-epa-camd/easey-common/logger';
-import { MailService } from './mail.service';
 import { HttpModule } from '@nestjs/axios';
 import { MailerService } from '@nestjs-modules/mailer';
 import { ClientConfig } from '../entities/client-config.entity';
-import { CreateMailDto } from '../dto/create-mail.dto';
 import { EntityManager } from 'typeorm';
 import { MonitorSystem } from '../entities/monitor-system.entity';
 import { Component } from '../entities/component.entity';
@@ -18,20 +16,20 @@ import { EvaluationSet } from '../entities/evaluation-set.entity';
 import { MonitorPlan } from '../entities/monitor-plan.entity';
 import { Plant } from '../entities/plant.entity';
 import { CountyCode } from '../entities/county-code.entity';
-import { MassEvalParamsDTO } from '../dto/mass-eval-params.dto';
 import { ConfigService } from '@nestjs/config';
+import { MailEvalService } from './mail-eval.service';
 
 const mockEvalList = [new Evaluation(), new Evaluation(), new Evaluation()];
 
-describe('Mail Service', () => {
-  let service: MailService;
+describe('Mail Eval Service', () => {
+  let service: MailEvalService;
   let wrapperService: MailerService;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [LoggerModule, HttpModule],
       providers: [
-        MailService,
+        MailEvalService,
         {
           provide: MailerService,
           useFactory: () => ({
@@ -42,7 +40,7 @@ describe('Mail Service', () => {
       ],
     }).compile();
 
-    service = module.get(MailService);
+    service = module.get(MailEvalService);
     wrapperService = module.get(MailerService);
 
     const mockManager = {
@@ -60,11 +58,6 @@ describe('Mail Service', () => {
 
   it('should be defined', () => {
     expect(service).toBeDefined();
-  });
-
-  it('should fire off a basic email', async () => {
-    await service.sendEmail('', new CreateMailDto());
-    expect(wrapperService.sendMail).toHaveBeenCalled();
   });
 
   it('get report color red', async () => {
@@ -274,7 +267,7 @@ describe('Mail Service', () => {
     jest.spyOn(service, 'formatTeeContext').mockResolvedValue({});
     jest.spyOn(service, 'formatEmissionsContext').mockResolvedValue({});
 
-    await service.sendMassEvalEmail(new MassEvalParamsDTO());
+    await service.sendMassEvalEmail('', '', '');
     expect(wrapperService.sendMail).toHaveBeenCalled();
   });
 });

@@ -11,6 +11,7 @@ import {
 } from '../dto/em-submission-access.dto';
 import { EmSubmissionAccessRepository } from './em-submission-access.repository';
 import { EmSubmissionAccess } from '../entities/em-submission-access.entity';
+import { currentDateTime } from '@us-epa-camd/easey-common/utilities/functions';
 
 @Injectable()
 export class EmSubmissionAccessService {
@@ -38,12 +39,13 @@ export class EmSubmissionAccessService {
     payload: EmSubmissionAccessCreateDTO,
     userid?: string,
   ): Promise<EmSubmissionAccessDTO> {
+    const currentTime = currentDateTime();
     try {
       const entity = this.repository.create({
         ...payload,
         userid: userid,
         dataLoadedFlag: null,
-        addDate: new Date(),
+        addDate: currentTime,
         updateDate: null,
         submissionTypeCode: 'RQRESUB',
       });
@@ -63,6 +65,7 @@ export class EmSubmissionAccessService {
     payload: EmSubmissionAccessUpdateDTO,
   ): Promise<EmSubmissionAccessDTO> {
     let recordToUpdate: EmSubmissionAccess;
+    const currentTime = currentDateTime();
 
     try {
       recordToUpdate = await this.repository.findOne(id);
@@ -77,6 +80,7 @@ export class EmSubmissionAccessService {
         payload?.submissionAvailabilityCode;
       recordToUpdate.resubExplanation = payload?.resubExplanation;
       recordToUpdate.closeDate = payload?.closeDate;
+      recordToUpdate.updateDate = currentTime;
 
       await this.repository.save(recordToUpdate);
     } catch (e) {

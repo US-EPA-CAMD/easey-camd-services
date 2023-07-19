@@ -38,6 +38,11 @@ export class EmSubmissionAccessView extends BaseEntity {
   submissionTypeCode: string;
 
   @Column({
+    name: 'em_sub_type_cd_description',
+  })
+  submissionTypeDescription: string;
+
+  @Column({
     name: 'userid',
   })
   userid: string;
@@ -77,6 +82,9 @@ export class EmSubmissionAccessView extends BaseEntity {
   })
   orisCode: number;
 
+  @Column({ name: 'facility_name' })
+  facilityName: string;
+
   @Column({
     name: 'state',
   })
@@ -93,6 +101,9 @@ export class EmSubmissionAccessView extends BaseEntity {
 
   @Column({ name: 'report_freq_cd' })
   reportingFrequencyCode: string;
+
+  @Column({ name: 'period_abbreviation' })
+  reportingPeriodAbbreviation: string;
 
   @Column({
     name: 'submission_id',

@@ -8,22 +8,24 @@ export class EmSubmissionAccessViewRepository extends Repository<EmSubmissionAcc
   async getEmSubmissionAccess(
     params: EmSubmissionAccessParamsDTO,
   ): Promise<EmSubmissionAccessView[]> {
-    const { facilityId, monitorPlanId, year, quarter, status } = params;
+    const { orisCode, monitorPlanId, year, quarter, status } = params;
     let query = this.createQueryBuilder('em').select([
       'em.id',
       'em.facilityId',
+      'em.facilityName',
       'em.orisCode',
       'em.monitorPlanId',
       'em.state',
       'em.locations',
       'em.reportingPeriodId',
       'em.reportingFrequencyCode',
+      'em.reportingPeriodAbbreviation',
       'em.openDate',
       'em.closeDate',
       'em.emissionStatusCode',
       'em.submissionAvailabilityCode',
       'em.lastSubmissionId',
-      'em.submissionTypeCode',
+      'em.submissionTypeDescription',
       'em.severityLevel',
       'em.userid',
       'em.addDate',
@@ -33,9 +35,9 @@ export class EmSubmissionAccessViewRepository extends Repository<EmSubmissionAcc
       'em.resubExplanation',
     ]);
 
-    if (facilityId) {
-      query.andWhere('em.orisCode = :facilityId', {
-        facilityId: facilityId,
+    if (orisCode) {
+      query.andWhere('em.orisCode = :orisCode', {
+        orisCode: orisCode,
       });
     }
 
@@ -57,18 +59,23 @@ export class EmSubmissionAccessViewRepository extends Repository<EmSubmissionAcc
       });
     }
 
-    // need to add case for when emissionStatusCode is APPRVD but submissionAvailabilityCode is not REQUIRE or GRANTED
     if (status === 'OPEN') {
       query.andWhere(
-        `(em.emissionStatusCode = 'APPRVD') AND (em.submissionAvailabilityCode = 'REQUIRE' OR em.submissionAvailabilityCode = 'GRANTED')`,
+        `(em.emissionStatusCode = 'APPRVD') AND (em.submissionAvailabilityCode IN ('REQUIRE', 'GRANTED') OR em.submissionAvailabilityCode IS NULL)`,
         { status: status },
       );
     }
     if (status === 'PENDING') {
-      query.andWhere(`em.emissionStatusCode = 'PENDING'`, { status: status });
+      query.andWhere(
+        `(em.emissionStatusCode = 'PENDING') AND (em.submissionAvailabilityCode IN ('REQUIRE', 'GRANTED') OR em.submissionAvailabilityCode IS NULL)`,
+        { status: status },
+      );
     }
     if (status === 'CLOSED') {
-      query.andWhere(`em.emissionStatusCode = 'RECVD'`, { status: status });
+      query.andWhere(
+        `(em.emissionStatusCode = 'RECVD' OR em.submissionAvailabilityCode IN ('DELETE','CRITERR', 'NOTSUB'))`,
+        { status: status },
+      );
     }
 
     return query.getMany();
