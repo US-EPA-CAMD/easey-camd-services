@@ -9,7 +9,7 @@ import { genErrorSuppressions } from '../../test/object-generators/error-suppres
 import { ErrorSuppressionsDTO } from '../dto/error-suppressions.dto';
 import { ErrorSuppressionsMap } from '../../src/maps/error-suppressions.map';
 import { EsSpec } from '../entities/es-spec.entity';
-import { LoggingException } from '@us-epa-camd/easey-common/exceptions';
+import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
 import { ErrorSuppressionsPayloadDTO } from '../dto/error-suppressions-payload.dto';
 
 const mockRepository = () => ({
@@ -85,7 +85,7 @@ describe('-- Error Suppressions Service --', () => {
       map.one.mockResolvedValue(mockedDto);
       repository.findOne.mockResolvedValue(null);
       expect(service.deactivateErrorSuppression(mockedDto.id)).rejects.toThrow(
-        LoggingException,
+        EaseyException,
       );
     });
   });

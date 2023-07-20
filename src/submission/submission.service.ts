@@ -152,7 +152,7 @@ export class SubmissionService {
       }
     } catch (e) {
       console.log(e);
-      this.logger.info('Failed record queueing', {
+      this.logger.log('Failed record queueing', {
         monPlanId: item.monPlanId,
       });
     }

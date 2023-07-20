@@ -1,6 +1,6 @@
 import { Injectable, HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { LoggingException } from '@us-epa-camd/easey-common/exceptions';
+import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
 import { EmSubmissionAccessViewRepository } from './em-submission-access-view.repository';
 import { EmSubmissionAccessMap } from '../maps/em-submission-access.map';
 import { EmSubmissionAccessParamsDTO } from '../dto/em-submission-access.params.dto';
@@ -30,7 +30,7 @@ export class EmSubmissionAccessService {
     try {
       query = await this.viewRepository.getEmSubmissionAccess(params);
     } catch (e) {
-      throw new LoggingException(e.message, HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new EaseyException(e, HttpStatus.INTERNAL_SERVER_ERROR);
     }
     return this.map.many(query);
   }
@@ -56,7 +56,7 @@ export class EmSubmissionAccessService {
       const dto = await this.map.one(emSubmissionAccess);
       return dto;
     } catch (e) {
-      throw new LoggingException(e.message, HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new EaseyException(e, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -70,8 +70,8 @@ export class EmSubmissionAccessService {
     try {
       recordToUpdate = await this.repository.findOne(id);
       if (!recordToUpdate)
-        throw new LoggingException(
-          `Record with id ${id} not found`,
+        throw new EaseyException(
+          new Error(`Record with id ${id} not found`),
           HttpStatus.NOT_FOUND,
         );
 
@@ -84,7 +84,7 @@ export class EmSubmissionAccessService {
 
       await this.repository.save(recordToUpdate);
     } catch (e) {
-      throw new LoggingException(e.message, e.status);
+      throw new EaseyException(e, e.status);
     }
 
     let emSubmissionAccess = await this.viewRepository.findOne({

@@ -1,6 +1,6 @@
 import { Injectable, HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { LoggingException } from '@us-epa-camd/easey-common/exceptions';
+import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
 
 import { ErrorSuppressionsRepository } from './error-suppressions.repository';
 import { ErrorSuppressionsParamsDTO } from '../dto/error-suppressions.params.dto';
@@ -24,7 +24,7 @@ export class ErrorSuppressionsService {
     try {
       query = await this.repository.getErrorSuppressions(params);
     } catch (e) {
-      throw new LoggingException(e.message, HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new EaseyException(e, HttpStatus.INTERNAL_SERVER_ERROR);
     }
     return this.map.many(query);
   }
@@ -41,15 +41,15 @@ export class ErrorSuppressionsService {
         ],
       });
       if (!recordToUpdate)
-        throw new LoggingException(
-          `Record with id ${id} not found`,
+        throw new EaseyException(
+          new Error(`Record with id ${id} not found`),
           HttpStatus.NOT_FOUND,
         );
 
       recordToUpdate.active = 0;
       await this.repository.save(recordToUpdate);
     } catch (e) {
-      throw new LoggingException(e.message, e.status);
+      throw new EaseyException(e, e.status);
     }
 
     return this.map.one(recordToUpdate);
@@ -79,7 +79,7 @@ export class ErrorSuppressionsService {
       const dto = await this.map.one(errorSuppression);
       return dto;
     } catch (e) {
-      throw new LoggingException(e.message, HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new EaseyException(e, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 }

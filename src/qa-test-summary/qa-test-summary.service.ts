@@ -2,8 +2,8 @@ import { Injectable, HttpStatus } from '@nestjs/common';
 import { EntityManager } from 'typeorm';
 import { QaTestSummaryMaintView } from '../entities/qa-test-summary-maint-vw.entity';
 import { InjectEntityManager } from '@nestjs/typeorm';
-import { LoggingException } from '@us-epa-camd/easey-common/exceptions';
 import { currentDateTime } from '@us-epa-camd/easey-common/utilities/functions';
+import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
 @Injectable()
 export class QaTestSummaryService {
   constructor(
@@ -59,12 +59,12 @@ export class QaTestSummaryService {
       recordToUpdate = await this.manager.findOne(QaTestSummaryMaintView, id);
 
       if (!recordToUpdate)
-        throw new LoggingException(
-          `Record with id ${id} not found`,
+        throw new EaseyException(
+          new Error(`Record with id ${id} not found`),
           HttpStatus.NOT_FOUND,
         );
     } catch (e) {
-      throw new LoggingException(e.message, e.status);
+      throw new EaseyException(e, e.status);
     }
 
     return recordToUpdate;
@@ -93,7 +93,7 @@ export class QaTestSummaryService {
         );
       });
     } catch (e) {
-      throw new LoggingException(e.message, e.status);
+      throw new EaseyException(e, e.status);
     }
 
     return {
