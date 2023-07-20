@@ -36,7 +36,7 @@ export class MailService {
         console.log(err);
       });
 
-    this.logger.info('Successfully sent an email', {
+    this.logger.log('Successfully sent an email', {
       from: payload.fromEmail,
     });
   }

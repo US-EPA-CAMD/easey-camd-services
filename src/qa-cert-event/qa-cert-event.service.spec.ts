@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { QaCertEventService } from './qa-cert-event.service';
 import { EntityManager } from 'typeorm';
-import { LoggingException } from '@us-epa-camd/easey-common/exceptions';
+import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
 
 describe('QaCertEventService', () => {
   let service: QaCertEventService;
@@ -41,7 +41,7 @@ describe('QaCertEventService', () => {
 
     jest
       .spyOn(entityManager, 'findOne')
-      .mockRejectedValue(new LoggingException('Error', 500));
+      .mockRejectedValue(new EaseyException(new Error('Error'), 500));
 
     let errored = false;
     try {
@@ -64,7 +64,7 @@ describe('QaCertEventService', () => {
   it('should throw error while deleting data', async () => {
     jest
       .spyOn(entityManager, 'query')
-      .mockRejectedValue(new LoggingException('Error', 500));
+      .mockRejectedValue(new EaseyException(new Error('Error'), 500));
 
     let errored = false;
     try {
