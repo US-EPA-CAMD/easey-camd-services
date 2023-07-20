@@ -4,9 +4,9 @@ import { MailerService } from '@nestjs-modules/mailer';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
-import { LoggingException } from '@us-epa-camd/easey-common/exceptions';
 import { EmailToSend } from '../entities/email-to-send.entity';
 import { EmailTemplate } from '../entities/email-template.entity';
+import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
 
 //Sends and formats html templates based on the content-url
 @Injectable()
@@ -29,7 +29,7 @@ export class MailTemplateService {
       const template = await firstValueFrom(this.httpService.get(url));
       templateString = template.data;
     } catch (e) {
-      throw new LoggingException(e.message, HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new EaseyException(e, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     for (const key in context) {
@@ -106,7 +106,7 @@ export class MailTemplateService {
         await getManager().save(record);
       }
     } catch (e) {
-      throw new LoggingException(e.message, HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new EaseyException(e, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 }

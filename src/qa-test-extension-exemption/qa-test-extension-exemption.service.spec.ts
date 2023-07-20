@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { QaTestExtensionExemptionService } from './qa-test-extension-exemption.service';
 import { EntityManager } from 'typeorm';
-import { LoggingException } from '@us-epa-camd/easey-common/exceptions';
+import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
 
 describe('QaTestExtensionExemptionService', () => {
   let service: QaTestExtensionExemptionService;
@@ -42,7 +42,7 @@ describe('QaTestExtensionExemptionService', () => {
 
     jest
       .spyOn(entityManager, 'findOne')
-      .mockRejectedValue(new LoggingException('Error', 500));
+      .mockRejectedValue(new EaseyException(new Error('Error'), 500));
 
     let errored = false;
     try {
@@ -65,7 +65,7 @@ describe('QaTestExtensionExemptionService', () => {
   it('should throw error while deleting data', async () => {
     jest
       .spyOn(entityManager, 'query')
-      .mockRejectedValue(new LoggingException('Error', 500));
+      .mockRejectedValue(new EaseyException(new Error('Error'), 500));
 
     let errored = false;
     try {
