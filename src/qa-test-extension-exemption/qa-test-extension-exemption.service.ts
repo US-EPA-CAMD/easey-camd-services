@@ -4,6 +4,7 @@ import { EntityManager } from 'typeorm';
 import { QaTeeMaintView } from '../entities/qa-tee-maint-vw.entity';
 import { currentDateTime } from '@us-epa-camd/easey-common/utilities/functions';
 import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
+import { QaUpdateDto } from '../dto/qa-update.dto';
 
 @Injectable()
 export class QaTestExtensionExemptionService {
@@ -31,6 +32,7 @@ export class QaTestExtensionExemptionService {
   async updateSubmissionStatus(
     id: string,
     userId: string,
+    payload: QaUpdateDto,
   ): Promise<QaTeeMaintView> {
     let recordToUpdate: QaTeeMaintView;
 
@@ -40,9 +42,10 @@ export class QaTestExtensionExemptionService {
         `UPDATE camdecmps.test_extension_exemption 
       SET submission_availability_cd = $2,
       userid = $3,
-      update_date = $4
+      update_date = $4,
+      resub_explanation = $5
       WHERE test_extension_exemption_id = $1`,
-        [id, 'REQUIRE', userId, currentDateTime()],
+        [id, 'REQUIRE', userId, currentDateTime(), payload?.resubExplanation],
       );
       recordToUpdate = await this.manager.findOne(QaTeeMaintView, id);
       if (!recordToUpdate)

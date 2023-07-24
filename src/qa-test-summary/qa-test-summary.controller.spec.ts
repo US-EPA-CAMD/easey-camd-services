@@ -8,10 +8,12 @@ import { QaCertMaintParamsDto } from '../dto/qa-cert-maint-params.dto';
 import { EntityManager } from 'typeorm';
 import { QaTestSummaryMaintView } from '../entities/qa-test-summary-maint-vw.entity';
 import { CurrentUser } from '@us-epa-camd/easey-common/interfaces';
+import { QaUpdateDto } from '../dto/qa-update.dto';
 
 describe('QaTestSummaryController', () => {
   let controller: QaTestSummaryController;
   let service: QaTestSummaryService;
+  let updatePayload;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -22,6 +24,7 @@ describe('QaTestSummaryController', () => {
 
     controller = module.get<QaTestSummaryController>(QaTestSummaryController);
     service = module.get<QaTestSummaryService>(QaTestSummaryService);
+    updatePayload = new QaUpdateDto();
   });
 
   it('should be defined', () => {
@@ -48,7 +51,9 @@ describe('QaTestSummaryController', () => {
     };
     jest.spyOn(service, 'updateSubmissionStatus').mockResolvedValue(record);
 
-    expect(await controller.updateSubmissionStatus('id', user)).toEqual(record);
+    expect(
+      await controller.updateSubmissionStatus('id', user, updatePayload),
+    ).toEqual(record);
   });
 
   it('should return data for deleteQATestSummaryData controller method', async () => {

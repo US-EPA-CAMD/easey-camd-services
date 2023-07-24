@@ -8,10 +8,12 @@ import { QaCertMaintParamsDto } from '../dto/qa-cert-maint-params.dto';
 import { EntityManager } from 'typeorm';
 import { QaTeeMaintView } from '../entities/qa-tee-maint-vw.entity';
 import { CurrentUser } from '@us-epa-camd/easey-common/interfaces';
+import { QaUpdateDto } from '../dto/qa-update.dto';
 
 describe('QaTestExtensionExemptionController', () => {
   let controller: QaTestExtensionExemptionController;
   let service: QaTestExtensionExemptionService;
+  let updatePayload;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -31,6 +33,8 @@ describe('QaTestExtensionExemptionController', () => {
     service = module.get<QaTestExtensionExemptionService>(
       QaTestExtensionExemptionService,
     );
+
+    updatePayload = new QaUpdateDto();
   });
 
   it('should be defined', () => {
@@ -57,7 +61,9 @@ describe('QaTestExtensionExemptionController', () => {
     };
     jest.spyOn(service, 'updateSubmissionStatus').mockResolvedValue(record);
 
-    expect(await controller.updateSubmissionStatus('id', user)).toEqual(record);
+    expect(
+      await controller.updateSubmissionStatus('id', user, updatePayload),
+    ).toEqual(record);
   });
 
   it('should return data for deleteQACertTeeData controller method', async () => {

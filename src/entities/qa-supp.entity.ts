@@ -10,4 +10,7 @@ export class QaSuppData extends BaseEntity {
 
   @Column({ name: 'submission_availability_cd' })
   submissionAvailabilityCode: string;
+
+  @Column({ name: 'resub_explanation' })
+  resubExplanation: string;
 }

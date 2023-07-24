@@ -4,6 +4,7 @@ import { QaTestSummaryMaintView } from '../entities/qa-test-summary-maint-vw.ent
 import { InjectEntityManager } from '@nestjs/typeorm';
 import { currentDateTime } from '@us-epa-camd/easey-common/utilities/functions';
 import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
+import { QaUpdateDto } from '../dto/qa-update.dto';
 @Injectable()
 export class QaTestSummaryService {
   constructor(
@@ -30,6 +31,7 @@ export class QaTestSummaryService {
   async updateSubmissionStatus(
     id: string,
     userId: string,
+    payload: QaUpdateDto,
   ): Promise<QaTestSummaryMaintView> {
     let recordToUpdate: QaTestSummaryMaintView;
 
@@ -40,9 +42,10 @@ export class QaTestSummaryService {
           `UPDATE camdecmps.qa_supp_data 
             SET submission_availability_cd = $2,
             userid = $3,
-            update_date = $4
+            update_date = $4,
+            resub_explanation = $5
             WHERE test_sum_id = $1;`,
-          [id, 'REQUIRE', userId, currentDateTime()],
+          [id, 'REQUIRE', userId, currentDateTime(), payload?.resubExplanation],
         );
 
         // UPDATE WORKSPACE TABLE
@@ -50,9 +53,10 @@ export class QaTestSummaryService {
           `UPDATE camdecmpswks.qa_supp_data 
             SET submission_availability_cd = $2,
             userid = $3,
-            update_date = $4
+            update_date = $4,
+            resub_explanation = $5
             WHERE test_sum_id = $1;`,
-          [id, 'REQUIRE', userId, currentDateTime()],
+          [id, 'REQUIRE', userId, currentDateTime(), payload.resubExplanation],
         );
       });
 
