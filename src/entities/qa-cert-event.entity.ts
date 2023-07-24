@@ -88,4 +88,7 @@ export class QaCertEvent extends BaseEntity {
 
   @Column({ name: 'eval_status_cd' })
   evalStatusCode: string;
+
+  @Column({ name: 'resub_explanation' })
+  resubExplanation: string;
 }

@@ -1,5 +1,12 @@
 import { Controller, UseGuards } from '@nestjs/common';
-import { Get, Put, Delete, Query, Param } from '@nestjs/common/decorators';
+import {
+  Get,
+  Put,
+  Delete,
+  Query,
+  Param,
+  Body,
+} from '@nestjs/common/decorators';
 import {
   ApiBearerAuth,
   ApiOkResponse,
@@ -17,6 +24,7 @@ import { QaCertMaintParamsDto } from '../dto/qa-cert-maint-params.dto';
 import { QaTeeMaintView } from '../entities/qa-tee-maint-vw.entity';
 import { User } from '@us-epa-camd/easey-common/decorators';
 import { CurrentUser } from '@us-epa-camd/easey-common/interfaces';
+import { QaUpdateDto } from '../dto/qa-update.dto';
 @Controller()
 @ApiSecurity('APIKey')
 @ApiTags('QA Test Extension Exemption Maintenance')
@@ -50,8 +58,9 @@ export class QaTestExtensionExemptionController {
   updateSubmissionStatus(
     @Param('id') id: string,
     @User() user: CurrentUser,
+    @Body() payload: QaUpdateDto,
   ): Promise<QaTeeMaintView> {
-    return this.service.updateSubmissionStatus(id, user.userId);
+    return this.service.updateSubmissionStatus(id, user.userId, payload);
   }
 
   @Delete(':id')

@@ -4,6 +4,7 @@ import { EntityManager } from 'typeorm';
 import { QaCertEventMaintView } from '../entities/qa-cert-event-maint-vw.entity';
 import { currentDateTime } from '@us-epa-camd/easey-common/utilities/functions';
 import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
+import { QaUpdateDto } from '../dto/qa-update.dto';
 @Injectable()
 export class QaCertEventService {
   constructor(
@@ -30,6 +31,7 @@ export class QaCertEventService {
   async updateSubmissionStatus(
     id: string,
     userId: string,
+    payload: QaUpdateDto,
   ): Promise<QaCertEventMaintView> {
     let recordToUpdate: QaCertEventMaintView;
 
@@ -39,9 +41,10 @@ export class QaCertEventService {
         `UPDATE camdecmps.qa_cert_event 
       SET submission_availability_cd = $2,
       userid = $3,
-      update_date = $4
+      update_date = $4,
+      resub_explanation = $5
       WHERE qa_cert_event_id = $1`,
-        [id, 'REQUIRE', userId, currentDateTime()],
+        [id, 'REQUIRE', userId, currentDateTime(), payload?.resubExplanation],
       );
       recordToUpdate = await this.manager.findOne(QaCertEventMaintView, id);
       if (!recordToUpdate)

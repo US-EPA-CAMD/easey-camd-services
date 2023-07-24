@@ -2,10 +2,12 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { QaTestSummaryService } from './qa-test-summary.service';
 import { EntityManager } from 'typeorm';
 import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
+import { QaUpdateDto } from '../dto/qa-update.dto';
 
 describe('QaTestSummaryService', () => {
   let service: QaTestSummaryService;
   let entityManager: EntityManager;
+  let updatePayload;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -14,6 +16,7 @@ describe('QaTestSummaryService', () => {
 
     service = module.get<QaTestSummaryService>(QaTestSummaryService);
     entityManager = module.get<EntityManager>(EntityManager);
+    updatePayload = new QaUpdateDto();
   });
 
   it('should be defined', () => {
@@ -31,7 +34,11 @@ describe('QaTestSummaryService', () => {
     // jest.spyOn(entityManager, 'query').mockResolvedValue([[], 1]);
     jest.spyOn(entityManager, 'findOne').mockResolvedValue({});
 
-    const result = await service.updateSubmissionStatus('id', 'userId');
+    const result = await service.updateSubmissionStatus(
+      'id',
+      'userId',
+      updatePayload,
+    );
     expect(result).toEqual({});
   });
 
@@ -44,7 +51,7 @@ describe('QaTestSummaryService', () => {
 
     let errored = false;
     try {
-      await service.updateSubmissionStatus('id', 'userId');
+      await service.updateSubmissionStatus('id', 'userId', updatePayload);
     } catch {
       errored = true;
     }
