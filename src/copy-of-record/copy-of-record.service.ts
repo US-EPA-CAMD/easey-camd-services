@@ -75,12 +75,34 @@ export class CopyOfRecordService {
     }
     innerContent += '</tr>';
 
-    const codeDefinitions = [];
+    const codeToDefinitions = new Map<string, string[]>(); //Prepopulate our table of code descriptions used for the table legend
 
     //Load column rows
     for (const result of results) {
       innerContent += '<tr>';
       for (const column of columns.values) {
+        //Populate the code definitions for the legend of this table
+        if (
+          result[column.name + 'Group'] &&
+          result[column.name + 'Description']
+        ) {
+          if (codeToDefinitions.has(result[column.name + 'Group'])) {
+            const arr = codeToDefinitions.get(result[column.name + 'Group']);
+            arr.push(
+              `${result[column.name]} - ${result[column.name + 'Description']}`,
+            );
+
+            codeToDefinitions.set(result[column.name + 'Group'], arr);
+          } else {
+            const arr = [];
+            arr.push(
+              `${result[column.name]} - ${result[column.name + 'Description']}`,
+            );
+
+            codeToDefinitions.set(result[column.name + 'Group'], arr);
+          }
+        }
+
         if (result[column.name]) {
           innerContent += `<td> ${result[column.name]} </td>`;
         } else {
@@ -91,6 +113,24 @@ export class CopyOfRecordService {
     }
 
     innerContent += '</table> </div>';
+
+    //Populate legend from map
+    codeToDefinitions.forEach((vals, key) => {
+      if (vals.length > 0) {
+        const minifiedVals = new Set(vals);
+        innerContent +=
+          '<div class ="code-section"> <div class = "col-table-container">';
+
+        innerContent += `<div class = "code-group"> ${key}: </div>`;
+        innerContent += `<div class = "code-values">`;
+
+        for (const codeVal of Array.from(minifiedVals)) {
+          innerContent += `<div> ${codeVal} </div>`;
+        }
+
+        innerContent += '</div> </div> </div>';
+      }
+    });
 
     return innerContent;
   }
