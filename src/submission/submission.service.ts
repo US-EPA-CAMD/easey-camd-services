@@ -83,7 +83,7 @@ export class SubmissionService {
         const tsRecord = new SubmissionQueue();
         tsRecord.submissionSetIdentifier = set_id;
         tsRecord.processCode = 'QA';
-        tsRecord.processCode = 'QUEUED';
+        tsRecord.statusCode = 'QUEUED';
         tsRecord.testSumIdentifier = id;
         tsRecord.submittedOn = currentTime;
 
