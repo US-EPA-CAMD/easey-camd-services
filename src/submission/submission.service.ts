@@ -39,6 +39,7 @@ export class SubmissionService {
       submissionSet.userIdentifier = userId;
       submissionSet.userEmail = userEmail;
       submissionSet.submittedOn = currentTime;
+      submissionSet.statusCode = 'QUEUED';
 
       const locations = await this.returnManager().query(
         `SELECT camdecmpsaux.get_mp_location_list($1);`,

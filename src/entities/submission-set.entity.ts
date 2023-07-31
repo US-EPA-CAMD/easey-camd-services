@@ -34,4 +34,10 @@ export class SubmissionSet extends BaseEntity {
 
   @Column({ name: 'activity_id' })
   activityId: string;
+
+  @Column({ name: 'status_cd' })
+  statusCode: string;
+
+  @Column({ name: 'details' })
+  details: string;
 }

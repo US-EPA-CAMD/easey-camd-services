@@ -21,7 +21,7 @@ export class SubmissionController {
     private processService: SubmissionProcessService,
   ) {}
 
-  @Post('submission-queue')
+  @Post('queue')
   @ApiOkResponse({
     description:
       'Creates submission queue records for quartz copy of record process',
@@ -40,7 +40,7 @@ export class SubmissionController {
   @ApiBearerAuth('ClientToken')
   @UseGuards(ClientTokenGuard)
   async process(
-    @Query('submissionSetId') submissionSetId: string,
+    @Body('submissionSetId') submissionSetId: string,
   ): Promise<void> {
     this.processService.processSubmissionSet(submissionSetId);
   }
