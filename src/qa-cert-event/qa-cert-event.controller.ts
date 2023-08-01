@@ -25,6 +25,7 @@ import { QaCertEventMaintView } from '../entities/qa-cert-event-maint-vw.entity'
 import { User } from '@us-epa-camd/easey-common/decorators';
 import { CurrentUser } from '@us-epa-camd/easey-common/interfaces';
 import { QaUpdateDto } from '../dto/qa-update.dto';
+import { SuccessMessageDTO } from '../dto/success-message.dto';
 
 @Controller()
 @ApiSecurity('APIKey')
@@ -41,7 +42,7 @@ export class QaCertEventController {
   })
   @ApiOkResponse({
     isArray: true,
-    type: Number,
+    type: QaCertEventMaintView,
     description: 'Data retrieved successfully',
   })
   getQaCertEventViewData(
@@ -57,7 +58,13 @@ export class QaCertEventController {
   @UseGuards(AuthGuard)
   @ApiBearerAuth('Token')
   @ApiOkResponse({
+    isArray: false,
+    type: QaCertEventMaintView,
     description: 'Changes submission status to resubmit',
+  })
+  @ApiOperation({
+    description:
+      'Changes submission status to resubmit and update re-submission explanation for QA Test maintenance record.',
   })
   updateSubmissionStatus(
     @Param('id') id: string,
@@ -69,7 +76,12 @@ export class QaCertEventController {
 
   @Delete(':id')
   @ApiOkResponse({
-    description: 'Deletes a QA Cert Event record from global',
+    isArray: false,
+    type: SuccessMessageDTO,
+    description: 'Deletes a QA Cert Event record successfully.',
+  })
+  @ApiOperation({
+    description: 'Deletes a QA Cert Event record from global.',
   })
   async deleteQACertEventData(@Param('id') id: string): Promise<any> {
     return this.service.deleteQACertEventData(id);

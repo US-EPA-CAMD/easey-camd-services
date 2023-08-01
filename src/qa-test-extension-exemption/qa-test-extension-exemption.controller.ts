@@ -25,6 +25,7 @@ import { QaTeeMaintView } from '../entities/qa-tee-maint-vw.entity';
 import { User } from '@us-epa-camd/easey-common/decorators';
 import { CurrentUser } from '@us-epa-camd/easey-common/interfaces';
 import { QaUpdateDto } from '../dto/qa-update.dto';
+import { SuccessMessageDTO } from '../dto/success-message.dto';
 @Controller()
 @ApiSecurity('APIKey')
 @ApiTags('QA Test Extension Exemption Maintenance')
@@ -40,7 +41,7 @@ export class QaTestExtensionExemptionController {
   })
   @ApiOkResponse({
     isArray: true,
-    type: Number,
+    type: QaTeeMaintView,
     description: 'Data retrieved successfully',
   })
   getQaTeeViewData(
@@ -53,7 +54,13 @@ export class QaTestExtensionExemptionController {
   @UseGuards(AuthGuard)
   @ApiBearerAuth('Token')
   @ApiOkResponse({
+    isArray: false,
+    type: QaTeeMaintView,
     description: 'Changes submission status to resubmit',
+  })
+  @ApiOperation({
+    description:
+      'Changes submission status to resubmit and update re-submission explanation for QA Test maintenance record.',
   })
   updateSubmissionStatus(
     @Param('id') id: string,
@@ -65,8 +72,14 @@ export class QaTestExtensionExemptionController {
 
   @Delete(':id')
   @ApiOkResponse({
+    isArray: false,
+    type: SuccessMessageDTO,
     description:
-      'Deletes a QA Test Extension Exemption maintenance record from global',
+      'Deletes a QA Test Extension Exemption maintenance record successfully.',
+  })
+  @ApiOperation({
+    description:
+      'Deletes a QA Test Extension Exemption maintenance record from global.',
   })
   async deleteQACertTeeData(@Param('id') id: string): Promise<any> {
     return this.service.deleteQACertTeeData(id);

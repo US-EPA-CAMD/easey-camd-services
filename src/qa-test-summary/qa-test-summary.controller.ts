@@ -25,6 +25,7 @@ import { QaCertMaintParamsDto } from '../dto/qa-cert-maint-params.dto';
 import { User } from '@us-epa-camd/easey-common/decorators';
 import { CurrentUser } from '@us-epa-camd/easey-common/interfaces';
 import { QaUpdateDto } from '../dto/qa-update.dto';
+import { SuccessMessageDTO } from '../dto/success-message.dto';
 @Controller()
 @ApiSecurity('APIKey')
 @ApiTags('QA Test Data Maintenance')
@@ -39,7 +40,7 @@ export class QaTestSummaryController {
   })
   @ApiOkResponse({
     isArray: true,
-    type: Number,
+    type: QaTestSummaryMaintView,
     description: 'Data retrieved successfully',
   })
   getQaTestSummaryViewData(
@@ -55,7 +56,13 @@ export class QaTestSummaryController {
   @UseGuards(AuthGuard)
   @ApiBearerAuth('Token')
   @ApiOkResponse({
+    isArray: false,
+    type: QaTestSummaryMaintView,
     description: 'Changes submission status to resubmit',
+  })
+  @ApiOperation({
+    description:
+      'Changes submission status to resubmit and update re-submission explanation for QA Test maintenance record.',
   })
   updateSubmissionStatus(
     @Param('id') id: string,
@@ -67,7 +74,12 @@ export class QaTestSummaryController {
 
   @Delete(':id')
   @ApiOkResponse({
-    description: 'Deletes a QA Test record in workspace and global',
+    isArray: false,
+    type: SuccessMessageDTO,
+    description: 'Deletes a QA Test maintenance record successfully.',
+  })
+  @ApiOperation({
+    description: 'Deletes a QA Test maintenance record.',
   })
   async deleteQATestSummaryData(@Param('id') id: string): Promise<any> {
     return this.service.deleteQATestSummaryData(id);
