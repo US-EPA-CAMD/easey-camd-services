@@ -21,11 +21,11 @@ import {
 import { AuthGuard } from '@us-epa-camd/easey-common/guards';
 import { QaCertEventService } from './qa-cert-event.service';
 import { QaCertMaintParamsDto } from '../dto/qa-cert-maint-params.dto';
-import { QaCertEventMaintView } from '../entities/qa-cert-event-maint-vw.entity';
 import { User } from '@us-epa-camd/easey-common/decorators';
 import { CurrentUser } from '@us-epa-camd/easey-common/interfaces';
 import { QaUpdateDto } from '../dto/qa-update.dto';
 import { SuccessMessageDTO } from '../dto/success-message.dto';
+import { QaCertEventMaintViewDTO } from '../dto/qa-cert-event-maint-vw.dto';
 
 @Controller()
 @ApiSecurity('APIKey')
@@ -42,12 +42,12 @@ export class QaCertEventController {
   })
   @ApiOkResponse({
     isArray: true,
-    type: QaCertEventMaintView,
+    type: QaCertEventMaintViewDTO,
     description: 'Data retrieved successfully',
   })
   getQaCertEventViewData(
     @Query() params: QaCertMaintParamsDto,
-  ): Promise<QaCertEventMaintView[]> {
+  ): Promise<QaCertEventMaintViewDTO[]> {
     return this.service.getQaCertEventViewData(
       params.orisCode,
       params.unitStack,
@@ -59,7 +59,7 @@ export class QaCertEventController {
   @ApiBearerAuth('Token')
   @ApiOkResponse({
     isArray: false,
-    type: QaCertEventMaintView,
+    type: QaCertEventMaintViewDTO,
     description: 'Changes submission status to resubmit',
   })
   @ApiOperation({
@@ -70,7 +70,7 @@ export class QaCertEventController {
     @Param('id') id: string,
     @User() user: CurrentUser,
     @Body() payload: QaUpdateDto,
-  ): Promise<QaCertEventMaintView> {
+  ): Promise<QaCertEventMaintViewDTO> {
     return this.service.updateSubmissionStatus(id, user.userId, payload);
   }
 

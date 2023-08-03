@@ -5,17 +5,20 @@ import { QaCertEventMaintView } from '../entities/qa-cert-event-maint-vw.entity'
 import { currentDateTime } from '@us-epa-camd/easey-common/utilities/functions';
 import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
 import { QaUpdateDto } from '../dto/qa-update.dto';
+import { QaCertEventMaintViewDTO } from '../dto/qa-cert-event-maint-vw.dto';
+import { QaCertEventMaintMap } from '../maps/qa-cert-event-maint.map';
 @Injectable()
 export class QaCertEventService {
   constructor(
     @InjectEntityManager()
     private readonly manager: EntityManager,
+    private readonly map: QaCertEventMaintMap,
   ) {}
 
-  getQaCertEventViewData(
+  async getQaCertEventViewData(
     orisCode: number,
     unitStack: string,
-  ): Promise<QaCertEventMaintView[]> {
+  ): Promise<QaCertEventMaintViewDTO[]> {
     const where = {
       orisCode,
     } as any;
@@ -23,16 +26,17 @@ export class QaCertEventService {
     if (unitStack !== null && unitStack !== undefined)
       where.unitStack = unitStack;
 
-    return this.manager.find(QaCertEventMaintView, {
+    const result = await this.manager.find(QaCertEventMaintView, {
       where,
     });
+    return this.map.many(result);
   }
 
   async updateSubmissionStatus(
     id: string,
     userId: string,
     payload: QaUpdateDto,
-  ): Promise<QaCertEventMaintView> {
+  ): Promise<QaCertEventMaintViewDTO> {
     let recordToUpdate: QaCertEventMaintView;
 
     try {
@@ -56,7 +60,7 @@ export class QaCertEventService {
       throw new EaseyException(e, e.status);
     }
 
-    return recordToUpdate;
+    return this.map.one(recordToUpdate);
   }
 
   async deleteQACertEventData(id: string): Promise<any> {

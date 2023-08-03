@@ -20,12 +20,12 @@ import {
 } from '../utilities/swagger-decorator.const';
 import { AuthGuard } from '@us-epa-camd/easey-common/guards';
 import { QaTestSummaryService } from './qa-test-summary.service';
-import { QaTestSummaryMaintView } from '../entities/qa-test-summary-maint-vw.entity';
 import { QaCertMaintParamsDto } from '../dto/qa-cert-maint-params.dto';
 import { User } from '@us-epa-camd/easey-common/decorators';
 import { CurrentUser } from '@us-epa-camd/easey-common/interfaces';
 import { QaUpdateDto } from '../dto/qa-update.dto';
 import { SuccessMessageDTO } from '../dto/success-message.dto';
+import { QaTestSummaryMaintViewDTO } from '../dto/qa-test-summary-maint-vw.dto';
 @Controller()
 @ApiSecurity('APIKey')
 @ApiTags('QA Test Data Maintenance')
@@ -40,12 +40,12 @@ export class QaTestSummaryController {
   })
   @ApiOkResponse({
     isArray: true,
-    type: QaTestSummaryMaintView,
+    type: QaTestSummaryMaintViewDTO,
     description: 'Data retrieved successfully',
   })
   getQaTestSummaryViewData(
     @Query() params: QaCertMaintParamsDto,
-  ): Promise<QaTestSummaryMaintView[]> {
+  ): Promise<QaTestSummaryMaintViewDTO[]> {
     return this.service.getQaTestSummaryViewData(
       params.orisCode,
       params.unitStack,
@@ -57,7 +57,7 @@ export class QaTestSummaryController {
   @ApiBearerAuth('Token')
   @ApiOkResponse({
     isArray: false,
-    type: QaTestSummaryMaintView,
+    type: QaTestSummaryMaintViewDTO,
     description: 'Changes submission status to resubmit',
   })
   @ApiOperation({
@@ -68,7 +68,7 @@ export class QaTestSummaryController {
     @Param('id') id: string,
     @User() user: CurrentUser,
     @Body() payload: QaUpdateDto,
-  ): Promise<QaTestSummaryMaintView> {
+  ): Promise<QaTestSummaryMaintViewDTO> {
     return this.service.updateSubmissionStatus(id, user.userId, payload);
   }
 
