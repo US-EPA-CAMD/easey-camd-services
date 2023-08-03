@@ -6,9 +6,10 @@ import { LoggerModule } from '@us-epa-camd/easey-common/logger';
 import { HttpModule } from '@nestjs/axios';
 import { QaCertMaintParamsDto } from '../dto/qa-cert-maint-params.dto';
 import { EntityManager } from 'typeorm';
-import { QaCertEventMaintView } from '../entities/qa-cert-event-maint-vw.entity';
 import { CurrentUser } from '@us-epa-camd/easey-common/interfaces';
 import { QaUpdateDto } from '../dto/qa-update.dto';
+import { QaCertEventMaintViewDTO } from '../dto/qa-cert-event-maint-vw.dto';
+import { QaCertEventMaintMap } from '../maps/qa-cert-event-maint.map';
 
 describe('QaCertEventController', () => {
   let controller: QaCertEventController;
@@ -19,7 +20,12 @@ describe('QaCertEventController', () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [LoggerModule, HttpModule],
       controllers: [QaCertEventController],
-      providers: [QaCertEventService, ConfigService, EntityManager],
+      providers: [
+        QaCertEventService,
+        ConfigService,
+        EntityManager,
+        QaCertEventMaintMap,
+      ] ,
     }).compile();
 
     controller = module.get<QaCertEventController>(QaCertEventController);
@@ -40,7 +46,7 @@ describe('QaCertEventController', () => {
   });
 
   it('should return data for updateSubmissionStatus controller method', async () => {
-    const record = new QaCertEventMaintView();
+    const record = new QaCertEventMaintViewDTO();
     const user: CurrentUser = {
       userId: 'testUser',
       sessionId: '',

@@ -3,6 +3,7 @@ import { QaTestExtensionExemptionService } from './qa-test-extension-exemption.s
 import { EntityManager } from 'typeorm';
 import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
 import { QaUpdateDto } from '../dto/qa-update.dto';
+import { QaTeeMaintMap } from '../maps/qa-tee-maint.map';
 
 describe('QaTestExtensionExemptionService', () => {
   let service: QaTestExtensionExemptionService;
@@ -11,7 +12,11 @@ describe('QaTestExtensionExemptionService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [QaTestExtensionExemptionService, EntityManager],
+      providers: [
+        QaTestExtensionExemptionService,
+        EntityManager,
+        QaTeeMaintMap,
+      ],
     }).compile();
 
     service = module.get<QaTestExtensionExemptionService>(
