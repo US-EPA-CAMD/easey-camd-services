@@ -5,18 +5,21 @@ import { QaTeeMaintView } from '../entities/qa-tee-maint-vw.entity';
 import { currentDateTime } from '@us-epa-camd/easey-common/utilities/functions';
 import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
 import { QaUpdateDto } from '../dto/qa-update.dto';
+import { QaTeeMaintMap } from '../maps/qa-tee-maint.map';
+import { QaTeeMaintViewDTO } from '../dto/qa-tee-maint-vw.dto';
 
 @Injectable()
 export class QaTestExtensionExemptionService {
   constructor(
     @InjectEntityManager()
     private readonly manager: EntityManager,
+    private readonly map: QaTeeMaintMap,
   ) {}
 
-  getQaTeeViewData(
+  async getQaTeeViewData(
     orisCode: number,
     unitStack: string,
-  ): Promise<QaTeeMaintView[]> {
+  ): Promise<QaTeeMaintViewDTO[]> {
     const where = {
       orisCode,
     } as any;
@@ -24,16 +27,17 @@ export class QaTestExtensionExemptionService {
     if (unitStack !== null && unitStack !== undefined)
       where.unitStack = unitStack;
 
-    return this.manager.find(QaTeeMaintView, {
+    const result = await this.manager.find(QaTeeMaintView, {
       where,
     });
+    return this.map.many(result);
   }
 
   async updateSubmissionStatus(
     id: string,
     userId: string,
     payload: QaUpdateDto,
-  ): Promise<QaTeeMaintView> {
+  ): Promise<QaTeeMaintViewDTO> {
     let recordToUpdate: QaTeeMaintView;
 
     try {
@@ -57,7 +61,7 @@ export class QaTestExtensionExemptionService {
       throw new EaseyException(e, e.status);
     }
 
-    return recordToUpdate;
+    return this.map.one(recordToUpdate);
   }
 
   async deleteQACertTeeData(id: string): Promise<any> {

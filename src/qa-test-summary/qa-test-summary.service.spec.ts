@@ -3,6 +3,7 @@ import { QaTestSummaryService } from './qa-test-summary.service';
 import { EntityManager } from 'typeorm';
 import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
 import { QaUpdateDto } from '../dto/qa-update.dto';
+import { QaTestSummaryMaintMap } from '../maps/qa-test-summary-maint.map';
 
 describe('QaTestSummaryService', () => {
   let service: QaTestSummaryService;
@@ -11,7 +12,7 @@ describe('QaTestSummaryService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [QaTestSummaryService, EntityManager],
+      providers: [QaTestSummaryService, EntityManager, QaTestSummaryMaintMap],
     }).compile();
 
     service = module.get<QaTestSummaryService>(QaTestSummaryService);

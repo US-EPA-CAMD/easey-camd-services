@@ -21,10 +21,11 @@ import {
 import { AuthGuard } from '@us-epa-camd/easey-common/guards';
 import { QaCertEventService } from './qa-cert-event.service';
 import { QaCertMaintParamsDto } from '../dto/qa-cert-maint-params.dto';
-import { QaCertEventMaintView } from '../entities/qa-cert-event-maint-vw.entity';
 import { User } from '@us-epa-camd/easey-common/decorators';
 import { CurrentUser } from '@us-epa-camd/easey-common/interfaces';
 import { QaUpdateDto } from '../dto/qa-update.dto';
+import { SuccessMessageDTO } from '../dto/success-message.dto';
+import { QaCertEventMaintViewDTO } from '../dto/qa-cert-event-maint-vw.dto';
 
 @Controller()
 @ApiSecurity('APIKey')
@@ -41,12 +42,12 @@ export class QaCertEventController {
   })
   @ApiOkResponse({
     isArray: true,
-    type: Number,
+    type: QaCertEventMaintViewDTO,
     description: 'Data retrieved successfully',
   })
   getQaCertEventViewData(
     @Query() params: QaCertMaintParamsDto,
-  ): Promise<QaCertEventMaintView[]> {
+  ): Promise<QaCertEventMaintViewDTO[]> {
     return this.service.getQaCertEventViewData(
       params.orisCode,
       params.unitStack,
@@ -57,19 +58,30 @@ export class QaCertEventController {
   @UseGuards(AuthGuard)
   @ApiBearerAuth('Token')
   @ApiOkResponse({
+    isArray: false,
+    type: QaCertEventMaintViewDTO,
     description: 'Changes submission status to resubmit',
+  })
+  @ApiOperation({
+    description:
+      'Changes submission status to resubmit and update re-submission explanation for QA Test maintenance record.',
   })
   updateSubmissionStatus(
     @Param('id') id: string,
     @User() user: CurrentUser,
     @Body() payload: QaUpdateDto,
-  ): Promise<QaCertEventMaintView> {
+  ): Promise<QaCertEventMaintViewDTO> {
     return this.service.updateSubmissionStatus(id, user.userId, payload);
   }
 
   @Delete(':id')
   @ApiOkResponse({
-    description: 'Deletes a QA Cert Event record from global',
+    isArray: false,
+    type: SuccessMessageDTO,
+    description: 'Deletes a QA Cert Event record successfully.',
+  })
+  @ApiOperation({
+    description: 'Deletes a QA Cert Event record from global.',
   })
   async deleteQACertEventData(@Param('id') id: string): Promise<any> {
     return this.service.deleteQACertEventData(id);
