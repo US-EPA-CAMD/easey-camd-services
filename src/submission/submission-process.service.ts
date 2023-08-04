@@ -16,6 +16,10 @@ export class SubmissionProcessService {
     private copyOfRecordService: CopyOfRecordService,
   ) {}
 
+  returnManager(): any {
+    return getManager();
+  }
+
   async getCopyOfRecord(
     set: SubmissionSet,
     record: SubmissionQueue,
@@ -24,7 +28,7 @@ export class SubmissionProcessService {
   ): Promise<void> {
     try {
       record.statusCode = 'WIP';
-      getManager().save(record);
+      this.returnManager().save(record);
 
       const params = new ReportParamsDTO();
       params.facilityId = set.facIdentifier;
@@ -60,24 +64,28 @@ export class SubmissionProcessService {
       );
 
       record.statusCode = 'COMPLETE';
-      getManager().save(record);
+      this.returnManager().save(record);
     } catch (e) {
+      console.log(e);
       record.details = JSON.stringify(e);
       record.statusCode = 'ERROR';
-      getManager().save(record);
+      this.returnManager().save(record);
       errors.push(JSON.stringify(e));
     }
   }
 
   async processSubmissionSet(id: string): Promise<void> {
     this.logger.log(`Processing copy of record for: ${id}`);
-    const set = await getManager().findOne(SubmissionSet, id);
+    const set = await this.returnManager().findOne(SubmissionSet, id);
 
     try {
       // Obtain the database records for the SubmissionSet and SubmissionQueue records under that set
-      const submissionSetRecords = await getManager().find(SubmissionQueue, {
-        where: { submissionSetIdentifier: id },
-      });
+      const submissionSetRecords = await this.returnManager().find(
+        SubmissionQueue,
+        {
+          where: { submissionSetIdentifier: id },
+        },
+      );
 
       // Iterate each record in the submission queue linked to the set and create a promise that resolves with the addition of document html string in the documents array
       const promises = [];
@@ -104,11 +112,11 @@ export class SubmissionProcessService {
       }
 
       set.statusCode = 'COMPLETE';
-      await getManager().save(set);
+      await this.returnManager().save(set);
     } catch (e) {
       set.details = JSON.stringify(e);
       set.statusCode = 'ERROR';
-      await getManager().save(set);
+      await this.returnManager().save(set);
     }
 
     // Initiate the sign service process

@@ -4,13 +4,14 @@ import {
   ApiOkResponse,
   ApiBearerAuth,
 } from '@nestjs/swagger';
-import { Body, Controller, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import { SubmissionService } from './submission.service';
 import { RoleGuard } from '@us-epa-camd/easey-common/decorators';
 import { LookupType } from '@us-epa-camd/easey-common/enums';
 import { SubmissionQueueDTO } from '../dto/submission-queue.dto';
 import { ClientTokenGuard } from '@us-epa-camd/easey-common/guards';
 import { SubmissionProcessService } from './submission-process.service';
+import { ProcessParamsDTO } from '../dto/process-params.dto';
 
 @Controller()
 @ApiTags('Submission')
@@ -27,7 +28,7 @@ export class SubmissionController {
       'Creates submission queue records for quartz copy of record process',
   })
   @RoleGuard({ bodyParam: 'items.*.monPlanId' }, LookupType.MonitorPlan)
-  async evaluate(@Body() params: SubmissionQueueDTO): Promise<void> {
+  async queue(@Body() params: SubmissionQueueDTO): Promise<void> {
     await this.service.queueSubmissionRecords(params);
   }
 
@@ -39,9 +40,7 @@ export class SubmissionController {
   @ApiSecurity('ClientId')
   @ApiBearerAuth('ClientToken')
   @UseGuards(ClientTokenGuard)
-  async process(
-    @Body('submissionSetId') submissionSetId: string,
-  ): Promise<void> {
-    this.processService.processSubmissionSet(submissionSetId);
+  async process(@Body() params: ProcessParamsDTO): Promise<void> {
+    this.processService.processSubmissionSet(params.submissionSetId);
   }
 }
