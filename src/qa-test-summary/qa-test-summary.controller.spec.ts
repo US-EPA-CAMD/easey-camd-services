@@ -6,9 +6,10 @@ import { HttpModule } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { QaCertMaintParamsDto } from '../dto/qa-cert-maint-params.dto';
 import { EntityManager } from 'typeorm';
-import { QaTestSummaryMaintView } from '../entities/qa-test-summary-maint-vw.entity';
 import { CurrentUser } from '@us-epa-camd/easey-common/interfaces';
 import { QaUpdateDto } from '../dto/qa-update.dto';
+import { QaTestSummaryMaintMap } from '../maps/qa-test-summary-maint.map';
+import { QaTestSummaryMaintViewDTO } from '../dto/qa-test-summary-maint-vw.dto';
 
 describe('QaTestSummaryController', () => {
   let controller: QaTestSummaryController;
@@ -19,7 +20,12 @@ describe('QaTestSummaryController', () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [LoggerModule, HttpModule],
       controllers: [QaTestSummaryController],
-      providers: [QaTestSummaryService, ConfigService, EntityManager],
+      providers: [
+        QaTestSummaryService,
+        ConfigService,
+        EntityManager,
+        QaTestSummaryMaintMap,
+      ],
     }).compile();
 
     controller = module.get<QaTestSummaryController>(QaTestSummaryController);
@@ -40,7 +46,7 @@ describe('QaTestSummaryController', () => {
   });
 
   it('should return data for updateSubmissionStatus controller method', async () => {
-    const record = new QaTestSummaryMaintView();
+    const record = new QaTestSummaryMaintViewDTO();
     const user: CurrentUser = {
       userId: 'testUser',
       sessionId: '',
