@@ -23,10 +23,12 @@ import { QaTee } from '../entities/qa-tee.entity';
 import { EmissionEvaluation } from '../entities/emission-evaluation.entity';
 import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
 import { QaSuppData } from '../entities/qa-supp.entity';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class SubmissionProcessService {
   constructor(
+    private readonly configService: ConfigService,
     private readonly logger: Logger,
     private dataSetService: DataSetService,
     private copyOfRecordService: CopyOfRecordService,
@@ -257,11 +259,12 @@ export class SubmissionProcessService {
       formData.append('activityId', id);
 
       const obs = this.httpService.post(
-        'http://localhost:8000/auth-mgmt/sign',
+        `${this.configService.get<string>('app.authApi.uri')}/sign`,
         formData,
         {
           headers: {
             ...formData.getHeaders(),
+            'x-api-key': this.configService.get<string>('app.apiKey'),
           },
         },
       );
