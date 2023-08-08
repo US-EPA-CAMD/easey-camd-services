@@ -256,7 +256,7 @@ export class SubmissionProcessService {
         formData.append('files', createReadStream(filePath), file);
       }
 
-      formData.append('activityId', id);
+      formData.append('activityId', set.activityId); //
 
       const obs = this.httpService.post(
         `${this.configService.get<string>('app.authApi.uri')}/sign`,
