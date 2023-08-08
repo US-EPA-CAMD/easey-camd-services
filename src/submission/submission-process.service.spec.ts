@@ -52,11 +52,14 @@ describe('-- Submission Process Service --', () => {
   });
 
   beforeEach(() => {
+    const set = new SubmissionSet();
+    set.activityId = 'mock';
+
     jest.spyOn(service, 'returnManager').mockReturnValue({
       findOne: jest.fn().mockImplementation((val) => {
         switch (val.name) {
           case 'SubmissionSet':
-            return new SubmissionSet();
+            return set;
           case 'SubmissionQueue':
             return new SubmissionQueue();
           case 'MonitorPlan':
