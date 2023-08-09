@@ -13,6 +13,7 @@ import { QaTestSummaryModule } from './qa-test-summary/qa-test-summary.module';
 import { QaCertEventModule } from './qa-cert-event/qa-cert-event.module';
 import { QaTestExtensionExemptionModule } from './qa-test-extension-exemption/qa-test-extension-exemption.module';
 import { EmSubmissionAccessModule } from './em-submission-access/em-submission-access.module';
+import { SubmissionModule } from './submission/submission.module';
 
 const routes: Routes = [
   {
@@ -38,6 +39,10 @@ const routes: Routes = [
   {
     path: '/workspace/reports',
     module: ReportWorkspaceModule,
+  },
+  {
+    path: '/submission',
+    module: SubmissionModule,
   },
   {
     path: '/admin',
