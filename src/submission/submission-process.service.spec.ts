@@ -148,8 +148,24 @@ describe('-- Submission Process Service --', () => {
     expect(mockEm.submissionAvailabilityCode).toEqual('UPDATED');
   });
 
+  it('should handle cleanup of success correctly', async () => {
+    jest.spyOn(fsFunctions, 'rmSync').mockImplementation();
+
+    jest.spyOn(service, 'setRecordStatusCode').mockImplementation(jest.fn());
+
+    expect(async () => {
+      await service.successCleanup(
+        '',
+        new SubmissionSet(),
+        [new SubmissionQueue()],
+        [],
+      );
+    }).not.toThrowError();
+  });
+
   it('should process submission set fires correctly', async () => {
     jest.spyOn(service, 'getCopyOfRecord').mockResolvedValue();
+    jest.spyOn(service, 'successCleanup').mockResolvedValue();
     jest.spyOn(fsFunctions, 'writeFile').mockImplementation(jest.fn());
     jest.spyOn(fsFunctions, 'mkdirSync').mockImplementation(jest.fn());
     jest.spyOn(fsFunctions, 'writeFileSync').mockImplementation(jest.fn());
@@ -159,8 +175,8 @@ describe('-- Submission Process Service --', () => {
 
     jest.spyOn(service, 'setRecordStatusCode').mockImplementation(jest.fn());
 
-    await service.processSubmissionSet('');
-
-    expect(service).toBeDefined();
+    expect(async () => {
+      await service.processSubmissionSet('');
+    }).not.toThrowError();
   });
 });

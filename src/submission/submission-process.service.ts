@@ -197,6 +197,41 @@ export class SubmissionProcessService {
     throw new EaseyException(e, HttpStatus.INTERNAL_SERVER_ERROR);
   }
 
+  async successCleanup(fileBucket, set, submissionSetRecords, transactions) {
+    rmSync(`src/${fileBucket}`, {
+      recursive: true,
+      maxRetries: 5,
+      retryDelay: 1,
+      force: true,
+    });
+
+    await this.returnManager().transaction(
+      //Copy records from workspace to global
+      async (transactionalEntityManager) => {
+        try {
+          for (const trans of transactions) {
+            await transactionalEntityManager.query(trans.command, trans.params);
+          }
+        } catch (error) {
+          this.handleError(set, submissionSetRecords, error);
+        }
+      },
+    );
+
+    await this.setRecordStatusCode(
+      set,
+      submissionSetRecords,
+      'COMPLETE',
+      '',
+      'UPDATED',
+    );
+
+    set.statusCode = 'COMPLETE';
+    await this.returnManager().save(set);
+
+    this.logger.log('Finished processing copy of record');
+  }
+
   async processSubmissionSet(id: string): Promise<void> {
     this.logger.log(`Processing copy of record for: ${id}`);
     const set: SubmissionSet = await this.returnManager().findOne(
@@ -280,42 +315,14 @@ export class SubmissionProcessService {
             force: true,
           });
         },
-        next: async () => {
+        next: () => {
           //After copy of record is successful we need to remove the file directory and copy the workspace data in a transaction
-          rmSync(`src/${fileBucket}`, {
-            recursive: true,
-            maxRetries: 5,
-            retryDelay: 1,
-            force: true,
-          });
-
-          await this.returnManager().transaction(
-            async (transactionalEntityManager) => {
-              try {
-                for (const trans of transactions) {
-                  await transactionalEntityManager.query(
-                    trans.command,
-                    trans.params,
-                  );
-                }
-              } catch (error) {
-                this.handleError(set, submissionSetRecords, error);
-              }
-            },
-          );
-
-          await this.setRecordStatusCode(
+          this.successCleanup(
+            fileBucket,
             set,
             submissionSetRecords,
-            'COMPLETE',
-            '',
-            'UPDATED',
+            transactions,
           );
-
-          set.statusCode = 'COMPLETE';
-          await this.returnManager().save(set);
-
-          this.logger.log('Finished processing copy of record');
         },
       });
     } catch (e) {
