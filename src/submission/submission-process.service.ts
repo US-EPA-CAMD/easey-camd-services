@@ -197,8 +197,8 @@ export class SubmissionProcessService {
     throw new EaseyException(e, HttpStatus.INTERNAL_SERVER_ERROR);
   }
 
-  async successCleanup(fileBucket, set, submissionSetRecords, transactions) {
-    rmSync(`src/${fileBucket}`, {
+  async successCleanup(folderPath, set, submissionSetRecords, transactions) {
+    rmSync(folderPath, {
       recursive: true,
       maxRetries: 5,
       retryDelay: 1,
@@ -272,22 +272,22 @@ export class SubmissionProcessService {
 
     try {
       const fileBucket = uuidv4();
-      mkdirSync(`src/${fileBucket}`);
+
+      const folderPath = path.join(__dirname, fileBucket);
+
+      mkdirSync(folderPath);
 
       //Write the document strings to html files
       for (const doc of documents) {
-        writeFileSync(
-          `src/${fileBucket}/${doc.documentTitle}.html`,
-          doc.context,
-        );
+        writeFileSync(`${folderPath}/${doc.documentTitle}.html`, doc.context);
       }
 
       // Read files from the new directory and attach them to the outgoing sign request
-      const files = readdirSync(`src/${fileBucket}`);
+      const files = readdirSync(folderPath);
       const formData = new FormData();
 
       for (const file of files) {
-        const filePath = path.join(`src/${fileBucket}`, file);
+        const filePath = path.join(folderPath, file);
         formData.append('files', createReadStream(filePath), file);
       }
 
@@ -308,7 +308,7 @@ export class SubmissionProcessService {
         //Handle transmission cleanup / error handling
         error: (e) => {
           this.handleError(set, submissionSetRecords, e);
-          rmSync(`src/${fileBucket}`, {
+          rmSync(folderPath, {
             recursive: true,
             maxRetries: 5,
             retryDelay: 1,
@@ -318,7 +318,7 @@ export class SubmissionProcessService {
         next: () => {
           //After copy of record is successful we need to remove the file directory and copy the workspace data in a transaction
           this.successCleanup(
-            fileBucket,
+            folderPath,
             set,
             submissionSetRecords,
             transactions,
