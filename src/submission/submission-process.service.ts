@@ -24,6 +24,7 @@ import { EmissionEvaluation } from '../entities/emission-evaluation.entity';
 import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
 import { QaSuppData } from '../entities/qa-supp.entity';
 import { ConfigService } from '@nestjs/config';
+import { ReportingPeriod } from '../entities/reporting-period.entity';
 
 @Injectable()
 export class SubmissionProcessService {
@@ -95,6 +96,25 @@ export class SubmissionProcessService {
         }
         break;
       case 'EM':
+        params.monitorPlanId = set.monPlanIdentifier;
+        params.reportCode = 'EM';
+
+        const rptPeriod: ReportingPeriod = await this.returnManager().findOne(
+          ReportingPeriod,
+          {
+            where: { rptPeriodIdentifier: record.rptPeriodIdentifier },
+          },
+        );
+
+        params.year = rptPeriod.calendarYear;
+        params.quarter = rptPeriod.quarter;
+
+        transactions.push({
+          command:
+            'CALL camdecmps.copy_emissions_from_workspace_to_global($1, $2)',
+          params: [params.monitorPlanId, record.rptPeriodIdentifier],
+        });
+
         titleContext =
           'EM_' +
           params.monitorPlanId +
@@ -102,11 +122,6 @@ export class SubmissionProcessService {
           params.year +
           'q' +
           params.quarter;
-        transactions.push({
-          command:
-            'CALL camdecmps.copy_emissions_from_workspace_to_global($1, $2)',
-          params: [params.monitorPlanId, record.rptPeriodIdentifier],
-        });
         break; //TODO: Implement Emissions Report
     }
 
@@ -172,6 +187,7 @@ export class SubmissionProcessService {
           break;
       }
 
+      originRecord.submissionIdentifier = record.submissionIdentifier;
       originRecord.submissionAvailabilityCode = originRecordCode;
 
       await this.returnManager().save(originRecord);
