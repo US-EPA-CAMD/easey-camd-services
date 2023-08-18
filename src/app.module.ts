@@ -10,6 +10,7 @@ import { CorsOptionsModule } from '@us-epa-camd/easey-common/cors-options';
 import routes from './routes';
 import s3Config from './config/s3.config';
 import appConfig from './config/app.config';
+import matsConfig from './config/mats.config';
 import { TypeOrmConfigService } from './config/typeorm.config';
 
 import { BulkFileModule } from './bulk-file/bulk-file.module';
@@ -32,7 +33,7 @@ import { SubmissionModule } from './submission/submission.module';
     RouterModule.forRoutes(routes),
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [s3Config, dbConfig, appConfig],
+      load: [s3Config, dbConfig, appConfig, matsConfig],
     }),
     TypeOrmModule.forRootAsync({
       useClass: TypeOrmConfigService,
