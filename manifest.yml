@@ -29,6 +29,8 @@ applications:
       EASEY_STREAMING_SERVICES: https://((apiHost))/streaming-services
       EASEY_CAMD_SERVICES_ECMPS_HOST: ((ecmpsHost))
       EASEY_CAMD_SERVICES_ENABLE_ROLE_GUARD_CHECKOUT: true
+      EASEY_CAMD_SERVICES_DEFAULT_FROM_EMAIL: noreply@epa.gov
+      EASEY_CAMD_SERVICES_CDX_URL: ((cdxUrl))
       TZ: America/New_York
     routes:
       - route: ((host))/((path))
