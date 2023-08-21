@@ -22,15 +22,20 @@ export class MatsFileUploadService {
       );
     }
 
-    this.s3Client = new S3Client({
-      credentials: {
-        accessKeyId: this.configService.get<string>('app.matsImportBucketAccessKey'),
-        secretAccessKey: this.configService.get<string>(
-          'app.matsImportBucketSecretAccessKey',
-        ),
-      },
-      region: this.configService.get<string>('app.awsRegion'),
-    });
+    const matsConfig = this.configService.get("matsConfig");
+    console.log("amats config")
+    console.log(matsConfig);
+    // this.s3Client = new S3Client()
+
+    // this.s3Client = new S3Client({
+    //   credentials: {
+    //     accessKeyId: this.configService.get<string>('app.matsImportBucketAccessKey'),
+    //     secretAccessKey: this.configService.get<string>(
+    //       'app.matsImportBucketSecretAccessKey',
+    //     ),
+    //   },
+    //   region: this.configService.get<string>('app.awsRegion'),
+    // });
 
     return this.s3Client.send(
       new PutObjectCommand({
