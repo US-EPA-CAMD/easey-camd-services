@@ -25,6 +25,7 @@ import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
 import { QaSuppData } from '../entities/qa-supp.entity';
 import { ConfigService } from '@nestjs/config';
 import { ReportingPeriod } from '../entities/reporting-period.entity';
+import { MailEvalService } from '../mail/mail-eval.service';
 
 @Injectable()
 export class SubmissionProcessService {
@@ -34,6 +35,7 @@ export class SubmissionProcessService {
     private dataSetService: DataSetService,
     private copyOfRecordService: CopyOfRecordService,
     private readonly httpService: HttpService,
+    private mailEvalService: MailEvalService,
   ) {}
 
   returnManager(): any {
@@ -213,7 +215,12 @@ export class SubmissionProcessService {
     throw new EaseyException(e, HttpStatus.INTERNAL_SERVER_ERROR);
   }
 
-  async successCleanup(folderPath, set, submissionSetRecords, transactions) {
+  async successCleanup(
+    folderPath,
+    set: SubmissionSet,
+    submissionSetRecords,
+    transactions,
+  ) {
     rmSync(folderPath, {
       recursive: true,
       maxRetries: 5,
@@ -244,6 +251,13 @@ export class SubmissionProcessService {
 
     set.statusCode = 'COMPLETE';
     await this.returnManager().save(set);
+
+    this.mailEvalService.sendMassEvalEmail(
+      set.userEmail,
+      this.configService.get<string>('app.defaultFromEmail'),
+      set.submissionSetIdentifier,
+      true,
+    );
 
     this.logger.log('Finished processing copy of record');
   }

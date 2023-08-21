@@ -14,6 +14,8 @@ import { QaTee } from '../entities/qa-tee.entity';
 import { ReportingPeriod } from '../entities/reporting-period.entity';
 import { EmissionEvaluation } from '../entities/emission-evaluation.entity';
 import { ConfigService } from '@nestjs/config';
+import { SubmissionQueue } from '../entities/submission-queue.entity';
+import { SubmissionSet } from '../entities/submission-set.entity';
 
 //Formats and sends emissions evaluations emails
 @Injectable()
@@ -51,6 +53,7 @@ export class MailEvalService {
     records,
     orisCode,
     mappedStatusCodes,
+    isSubmission,
   ) {
     const testDataKeys = [
       'System / Component Id',
@@ -58,8 +61,11 @@ export class MailEvalService {
       'Test Type',
       'Test Reason',
       'Test Result',
-      'Evaluation Status Code',
     ];
+
+    if (!isSubmission) {
+      testDataKeys.push('Evaluation Status Code');
+    }
 
     if (records.length > 0) {
       templateContext['testData'] = {
@@ -106,13 +112,17 @@ export class MailEvalService {
     records,
     orisCode,
     mappedStatusCodes,
+    isSubmission,
   ) {
     const certEventKeys = [
       'System / Component Id',
       'Cert Event Code',
       'Required Test Code',
-      'Evaluation Status Code',
     ];
+
+    if (!isSubmission) {
+      certEventKeys.push('Evaluation Status Code');
+    }
 
     if (records.length > 0) {
       templateContext['certEvents'] = {
@@ -157,6 +167,7 @@ export class MailEvalService {
     records,
     orisCode,
     mappedStatusCodes,
+    isSubmission,
   ) {
     const teeKeys = [
       'System / Component Id',
@@ -165,8 +176,11 @@ export class MailEvalService {
       'Extension Exemption Code',
       'Hours Used',
       'Span Scale Code',
-      'Evaluation Status Code',
     ];
+
+    if (!isSubmission) {
+      teeKeys.push('Evaluation Status Code');
+    }
 
     if (records.length > 0) {
       templateContext['teeEvents'] = {
@@ -220,8 +234,13 @@ export class MailEvalService {
     monitorPlanId,
     orisCode,
     mappedStatusCodes,
+    isSubmission,
   ) {
-    const emissionsKeys = ['Year / Quarter', 'Evaluation Status Code'];
+    const emissionsKeys = ['Year / Quarter'];
+
+    if (!isSubmission) {
+      emissionsKeys.push('Evaluation Status Code');
+    }
 
     if (records.length > 0) {
       templateContext['emissions'] = {
@@ -276,7 +295,12 @@ export class MailEvalService {
     });
   };
 
-  async sendMassEvalEmail(to: string, from: string, evalSetId: string) {
+  async sendMassEvalEmail(
+    to: string,
+    from: string,
+    setId: string,
+    isSubmission: boolean,
+  ) {
     //Create our lookup map of eval codes to descriptions
     const statusCodes = await this.returnManager().query(
       'SELECT * FROM camdecmpsmd.eval_status_code',
@@ -299,19 +323,34 @@ export class MailEvalService {
       'Latitude',
     ];
 
-    const records = await this.returnManager().find(Evaluation, {
-      where: { evaluationSetIdentifier: evalSetId },
-    });
+    let subject;
+    let template;
+    let setRecord;
+    let records;
+
+    if (isSubmission) {
+      subject = `ECMPS Submission Confirmation | ${this.displayCurrentDate()}`;
+      template = 'submissionTemplate';
+      records = await this.returnManager().find(SubmissionQueue, {
+        where: { submissionSetIdentifier: setId },
+      });
+      setRecord = await this.returnManager().findOne(SubmissionSet, setId);
+    } else {
+      subject = `ECMPS Evaluation Report | ${this.displayCurrentDate()}`;
+      template = 'massEvaluationTemplate';
+      records = await this.returnManager().find(Evaluation, {
+        where: { evaluationSetIdentifier: setId },
+      });
+      setRecord = await this.returnManager().findOne(EvaluationSet, setId);
+    }
 
     // Build the context for our email --------------------------------------
     let templateContext: any = {};
     templateContext['dateEvaluated'] = this.displayCurrentDate();
+    templateContext['cdxUrl'] = this.configService.get<string>('app.cdxUrl');
 
     // Create Monitor Plan Section of Email
-    const setRecord = await this.returnManager().findOne(
-      EvaluationSet,
-      evalSetId,
-    );
+
     const mpRecord = await this.returnManager().findOne(
       MonitorPlan,
       setRecord.monPlanIdentifier,
@@ -366,6 +405,7 @@ export class MailEvalService {
       testDataChildRecords,
       plant.orisCode,
       mappedStatusCodes,
+      isSubmission,
     );
 
     const certChildRecords = records.filter(
@@ -376,6 +416,7 @@ export class MailEvalService {
       certChildRecords,
       plant.orisCode,
       mappedStatusCodes,
+      isSubmission,
     );
 
     const teeChildRecords = records.filter(
@@ -387,6 +428,7 @@ export class MailEvalService {
       teeChildRecords,
       plant.orisCode,
       mappedStatusCodes,
+      isSubmission,
     );
 
     //Create Emissions Section of Email
@@ -397,14 +439,15 @@ export class MailEvalService {
       mpRecord.monPlanIdentifier,
       plant.orisCode,
       mappedStatusCodes,
+      isSubmission,
     );
 
     this.mailerService
       .sendMail({
         to: to, // List of receivers email address
         from: from,
-        subject: `ECMPS Evaluation Report | ${this.displayCurrentDate()}`, // Subject line
-        template: 'massEvaluationTemplate',
+        subject: subject, // Subject line
+        template: template,
         context: templateContext,
       })
       .then((success) => {
