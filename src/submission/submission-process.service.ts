@@ -189,10 +189,18 @@ export class SubmissionProcessService {
           break;
       }
 
-      originRecord.submissionIdentifier = record.submissionIdentifier;
-      originRecord.submissionAvailabilityCode = originRecordCode;
+      if (
+        !(
+          record.testSumIdentifier !== null ||
+          record.rptPeriodIdentifier !== null
+        ) || //The transation deletes the Test Sum and Emissions Records so don't execute this logic on final update
+        originRecordCode !== 'UPDATED'
+      ) {
+        originRecord.submissionIdentifier = record.submissionIdentifier;
+        originRecord.submissionAvailabilityCode = originRecordCode;
 
-      await this.returnManager().save(originRecord);
+        await this.returnManager().save(originRecord);
+      }
       await this.returnManager().save(record);
     }
   }
