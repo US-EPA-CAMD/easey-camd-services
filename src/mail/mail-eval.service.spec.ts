@@ -131,6 +131,7 @@ describe('Mail Eval Service', () => {
       mockEvalList,
       3,
       new Map(),
+      false,
     );
     expect(result['testData'].items.length).toEqual(3);
     expect(result['testData'].items[0]['System / Component Id']).toEqual(
@@ -161,6 +162,7 @@ describe('Mail Eval Service', () => {
       mockEvalList,
       3,
       new Map(),
+      false,
     );
     expect(result['certEvents'].items.length).toEqual(3);
     expect(result['certEvents'].items[0]['System / Component Id']).toEqual(
@@ -193,6 +195,7 @@ describe('Mail Eval Service', () => {
       mockEvalList,
       3,
       new Map(),
+      false,
     );
     expect(result['teeEvents'].items.length).toEqual(3);
     expect(result['teeEvents'].items[0]['System / Component Id']).toEqual(
@@ -230,6 +233,7 @@ describe('Mail Eval Service', () => {
       3,
       1,
       new Map(),
+      false,
     );
     expect(result['emissions'].items.length).toEqual(3);
     expect(result['emissions'].items[0]['Year / Quarter']).toEqual('MOCK');
@@ -267,7 +271,7 @@ describe('Mail Eval Service', () => {
     jest.spyOn(service, 'formatTeeContext').mockResolvedValue({});
     jest.spyOn(service, 'formatEmissionsContext').mockResolvedValue({});
 
-    await service.sendMassEvalEmail('', '', '');
+    await service.sendMassEvalEmail('', '', '', false);
     expect(wrapperService.sendMail).toHaveBeenCalled();
   });
 });
