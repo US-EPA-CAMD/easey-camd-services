@@ -7,7 +7,7 @@ import { EaseyException } from "@us-epa-camd/easey-common/exceptions";
 const MAX_UPLOAD_SIZE_MB: number = 30;
 
 @Controller()
-@ApiTags("File Upload")
+@ApiTags("MATs File Upload")
 @ApiSecurity('APIKey')
 export class MatsFileUploadController {
 
@@ -27,7 +27,7 @@ export class MatsFileUploadController {
     },
   })
   @UseInterceptors(FileInterceptor('file'))
-  uploadFile(@UploadedFile() file: Express.Multer.File) {
+  async uploadFile(@UploadedFile() file: Express.Multer.File) {
     const fileErrors = [];
     if (file.size > MAX_UPLOAD_SIZE_MB * 1024 * 1024)
       fileErrors.push(`Uploaded file exceeds maximum size of ${MAX_UPLOAD_SIZE_MB}M`);
@@ -40,7 +40,7 @@ export class MatsFileUploadController {
         HttpStatus.BAD_REQUEST,
         { responseObject: fileErrors }
       )
-
-    this.service.uploadFile(file.originalname, file.buffer)
+    
+    await this.service.uploadFile(file.originalname, file.buffer)
   }
 }

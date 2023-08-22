@@ -11,10 +11,10 @@ export class MatsFileUploadService {
 
   async uploadFile(fileName: string, file: Buffer) {
     if (
-      !this.configService.get<string>('app.awsRegion') ||
-      !this.configService.get<string>('app.matsImportBucket') ||
-      !this.configService.get<string>('app.matsImportBucketAccessKey') ||
-      !this.configService.get<string>('app.matsImportBucketSecretAccessKey')
+      !this.configService.get<string>('matsConfig.awsRegion') ||
+      !this.configService.get<string>('matsConfig.matsImportBucket') ||
+      !this.configService.get<string>('matsConfig.matsImportBucketAccessKey') ||
+      !this.configService.get<string>('matsConfig.matsImportBucketSecretAccessKey')
     ) {
       throw new EaseyException(
         new Error('No AWS credentials'),
@@ -23,25 +23,20 @@ export class MatsFileUploadService {
     }
 
     const matsConfig = this.configService.get("matsConfig");
-    console.log("amats config")
-    console.log(matsConfig);
-    // this.s3Client = new S3Client()
 
-    // this.s3Client = new S3Client({
-    //   credentials: {
-    //     accessKeyId: this.configService.get<string>('app.matsImportBucketAccessKey'),
-    //     secretAccessKey: this.configService.get<string>(
-    //       'app.matsImportBucketSecretAccessKey',
-    //     ),
-    //   },
-    //   region: this.configService.get<string>('app.awsRegion'),
-    // });
+    this.s3Client = new S3Client({
+      credentials: {
+        accessKeyId: matsConfig.matsImportBucketAccessKey,
+        secretAccessKey: matsConfig.matsImportBucketSecretAccessKey,
+      },
+      region: matsConfig.awsRegion,
+    });
 
     return this.s3Client.send(
       new PutObjectCommand({
         Body: file,
         Key: fileName,
-        Bucket: this.configService.get<string>('app.matsImportBucket'),
+        Bucket: matsConfig.matsImportBucket,
       }),
     );
   }

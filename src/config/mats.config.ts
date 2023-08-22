@@ -10,4 +10,16 @@ export default registerAs('matsConfig', () => ({
     accessKeyId: getConfigValue('EASEY_CAMD_SERVICES_MATS_BULK_FILES_IMPORT_AWS_SECRET_ACCESS_KEY'),
     secretAccessKey: getConfigValue('EASEY_CAMD_SERVICES_MATS_BULK_FILES_IMPORT_AWS_ACCESS_KEY_ID'),
   },
+  awsRegion: getConfigValue(
+    'EASEY_CAMD_SERVICES_AWS_S3_REGION'
+  ),
+  matsImportBucket: getConfigValue(
+    'EASEY_CAMD_SERVICES_MATS_BULK_FILES_IMPORT_BUCKET'
+  ),
+  matsImportBucketAccessKey: getConfigValue( 
+    'EASEY_CAMD_SERVICES_MATS_BULK_FILES_IMPORT_AWS_ACCESS_KEY_ID'
+  ),
+  matsImportBucketSecretAccessKey: getConfigValue(
+    'EASEY_CAMD_SERVICES_MATS_BULK_FILES_IMPORT_AWS_SECRET_ACCESS_KEY',
+  ),
 }));
