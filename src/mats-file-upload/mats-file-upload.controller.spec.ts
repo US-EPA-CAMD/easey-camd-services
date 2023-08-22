@@ -68,13 +68,13 @@ describe('MatsFileUploadController', () => {
 
 
     const testFile = { ...file, mimetype: 'text/xml' };
-    expect(controller.uploadFile(testFile, "monplanid", "testnum", null));
+    expect(controller.uploadFile(testFile, "monplanid", "testnum", null)).resolves;
 
     testFile.mimetype = 'application/xml';
-    expect(controller.uploadFile(testFile, "monplanid", "testnum", null));
+    expect(controller.uploadFile(testFile, "monplanid", "testnum", null)).resolves;
 
     testFile.mimetype = 'application/pdf';
-    expect(controller.uploadFile(testFile, "monplanid", "testnum", null));
+    expect(controller.uploadFile(testFile, "monplanid", "testnum", null)).resolves;
 
     testFile.mimetype = 'image/png'
     expect(controller.uploadFile(testFile, "monplanid", "testnum", null)).rejects.toThrow();
