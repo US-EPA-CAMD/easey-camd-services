@@ -37,7 +37,7 @@ export class MatsFileUploadController {
   ) {
 
     const fileErrors = [];
-    console.log(file.mimetype)
+
     if (file.size > MAX_UPLOAD_SIZE_MB * 1024 * 1024)
       fileErrors.push(`Uploaded file exceeds maximum size of ${MAX_UPLOAD_SIZE_MB}M`);
     if (!['application/pdf', 'application/xml', 'text/xml'].includes(file.mimetype))
