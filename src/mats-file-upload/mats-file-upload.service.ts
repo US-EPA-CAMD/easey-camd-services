@@ -2,7 +2,6 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
-import { getManager } from 'typeorm';
 import { MonitorPlan } from '../entities/monitor-plan.entity';
 import { MatsBulkFile } from '../entities/mats-bulk-file.entity';
 
