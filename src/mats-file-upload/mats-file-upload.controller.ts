@@ -3,8 +3,9 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBody, ApiConsumes, ApiSecurity, ApiTags } from '@nestjs/swagger';
 import { MatsFileUploadService } from './mats-file-upload.service';
 import { EaseyException } from "@us-epa-camd/easey-common/exceptions";
-import { User } from '@us-epa-camd/easey-common/decorators';
+import { RoleGuard, User } from '@us-epa-camd/easey-common/decorators';
 import { CurrentUser } from '@us-epa-camd/easey-common/interfaces';
+import { LookupType } from '@us-epa-camd/easey-common/enums';
 
 const MAX_UPLOAD_SIZE_MB: number = 30;
 
@@ -17,6 +18,10 @@ export class MatsFileUploadController {
 
   @Post(':monPlanId/:testNumber/import')
   @ApiConsumes('multipart/form-data')
+  @RoleGuard(
+    {enforceCheckout: true, pathParam: 'monPlanId'},
+    LookupType.MonitorPlan,
+  )
   @ApiBody({
     schema: {
       type: 'object',

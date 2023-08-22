@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { MatsFileUploadController } from './mats-file-upload.controller';
 import { ConfigService } from '@nestjs/config';
 import { MatsFileUploadService } from './mats-file-upload.service';
+import { HttpModule } from '@nestjs/axios';
 
 const file = {
   originalname: 'sample.name',
@@ -23,6 +24,7 @@ describe('MatsFileUploadController', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
+      imports: [HttpModule],
       controllers: [MatsFileUploadController],
       providers: [
         ConfigService,
