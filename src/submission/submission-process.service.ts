@@ -24,6 +24,8 @@ import { EmissionEvaluation } from '../entities/emission-evaluation.entity';
 import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
 import { QaSuppData } from '../entities/qa-supp.entity';
 import { ConfigService } from '@nestjs/config';
+import { ReportingPeriod } from '../entities/reporting-period.entity';
+import { MailEvalService } from '../mail/mail-eval.service';
 
 @Injectable()
 export class SubmissionProcessService {
@@ -33,6 +35,7 @@ export class SubmissionProcessService {
     private dataSetService: DataSetService,
     private copyOfRecordService: CopyOfRecordService,
     private readonly httpService: HttpService,
+    private mailEvalService: MailEvalService,
   ) {}
 
   returnManager(): any {
@@ -95,6 +98,25 @@ export class SubmissionProcessService {
         }
         break;
       case 'EM':
+        params.monitorPlanId = set.monPlanIdentifier;
+        params.reportCode = 'EM';
+
+        const rptPeriod: ReportingPeriod = await this.returnManager().findOne(
+          ReportingPeriod,
+          {
+            where: { rptPeriodIdentifier: record.rptPeriodIdentifier },
+          },
+        );
+
+        params.year = rptPeriod.calendarYear;
+        params.quarter = rptPeriod.quarter;
+
+        transactions.push({
+          command:
+            'CALL camdecmps.copy_emissions_from_workspace_to_global($1, $2)',
+          params: [params.monitorPlanId, record.rptPeriodIdentifier],
+        });
+
         titleContext =
           'EM_' +
           params.monitorPlanId +
@@ -102,11 +124,6 @@ export class SubmissionProcessService {
           params.year +
           'q' +
           params.quarter;
-        transactions.push({
-          command:
-            'CALL camdecmps.copy_emissions_from_workspace_to_global($1, $2)',
-          params: [params.monitorPlanId, record.rptPeriodIdentifier],
-        });
         break; //TODO: Implement Emissions Report
     }
 
@@ -172,9 +189,18 @@ export class SubmissionProcessService {
           break;
       }
 
-      originRecord.submissionAvailabilityCode = originRecordCode;
+      if (
+        !(
+          record.testSumIdentifier !== null ||
+          record.rptPeriodIdentifier !== null
+        ) || //The transation deletes the Test Sum and Emissions Records so don't execute this logic on final update
+        originRecordCode !== 'UPDATED'
+      ) {
+        originRecord.submissionIdentifier = record.submissionIdentifier;
+        originRecord.submissionAvailabilityCode = originRecordCode;
 
-      await this.returnManager().save(originRecord);
+        await this.returnManager().save(originRecord);
+      }
       await this.returnManager().save(record);
     }
   }
@@ -197,7 +223,12 @@ export class SubmissionProcessService {
     throw new EaseyException(e, HttpStatus.INTERNAL_SERVER_ERROR);
   }
 
-  async successCleanup(folderPath, set, submissionSetRecords, transactions) {
+  async successCleanup(
+    folderPath,
+    set: SubmissionSet,
+    submissionSetRecords,
+    transactions,
+  ) {
     rmSync(folderPath, {
       recursive: true,
       maxRetries: 5,
@@ -228,6 +259,13 @@ export class SubmissionProcessService {
 
     set.statusCode = 'COMPLETE';
     await this.returnManager().save(set);
+
+    this.mailEvalService.sendMassEvalEmail(
+      set.userEmail,
+      this.configService.get<string>('app.defaultFromEmail'),
+      set.submissionSetIdentifier,
+      true,
+    );
 
     this.logger.log('Finished processing copy of record');
   }

@@ -14,3 +14,4 @@ smtpPort: 25
 apiHost: api.epa.gov/easey/dev
 campdDatasetsS3Bucket: cg-e7433599-fb63-4afa-9e14-652c10fa370a
 ecmpsHost: https://ecmps-dev.app.cloud.gov
+cdxUrl: https://dev.epacdx.net/

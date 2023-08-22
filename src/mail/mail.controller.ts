@@ -71,6 +71,7 @@ export class MailController {
       payload.toEmail,
       payload.fromEmail,
       payload.evaluationSetId,
+      false,
     );
   }
 
