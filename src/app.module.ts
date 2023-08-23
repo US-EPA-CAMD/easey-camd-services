@@ -10,6 +10,7 @@ import { CorsOptionsModule } from '@us-epa-camd/easey-common/cors-options';
 import routes from './routes';
 import s3Config from './config/s3.config';
 import appConfig from './config/app.config';
+import matsConfig from './config/mats.config';
 import { TypeOrmConfigService } from './config/typeorm.config';
 
 import { BulkFileModule } from './bulk-file/bulk-file.module';
@@ -26,13 +27,14 @@ import { QaCertEventModule } from './qa-cert-event/qa-cert-event.module';
 import { QaTestSummaryModule } from './qa-test-summary/qa-test-summary.module';
 import { EmSubmissionAccessModule } from './em-submission-access/em-submission-access.module';
 import { SubmissionModule } from './submission/submission.module';
+import { MatsFileUploadModule } from './mats-file-upload/mats-file-upload.module';
 
 @Module({
   imports: [
     RouterModule.forRoutes(routes),
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [s3Config, dbConfig, appConfig],
+      load: [s3Config, dbConfig, appConfig, matsConfig],
     }),
     TypeOrmModule.forRootAsync({
       useClass: TypeOrmConfigService,
@@ -53,6 +55,7 @@ import { SubmissionModule } from './submission/submission.module';
     QaTestSummaryModule,
     EmSubmissionAccessModule,
     SubmissionModule,
+    MatsFileUploadModule,
   ],
 })
 export class AppModule {}

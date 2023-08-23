@@ -1,6 +1,7 @@
-import { BaseEntity, Column, Entity, PrimaryColumn } from 'typeorm';
+import { BaseEntity, Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
 
 import { NumericColumnTransformer } from '@us-epa-camd/easey-common/transforms';
+import { Plant } from './plant.entity';
 
 @Entity({ name: 'camdecmpswks.monitor_plan' })
 export class MonitorPlan extends BaseEntity {
@@ -70,4 +71,12 @@ export class MonitorPlan extends BaseEntity {
 
   @Column({ name: 'eval_status_cd' })
   evalStatusCode: string;
+
+  @ManyToOne(
+    () => Plant,
+    o => o.monitorPlans,
+  )
+  @JoinColumn({ name: 'fac_id' })
+  plant: Plant;
+
 }
