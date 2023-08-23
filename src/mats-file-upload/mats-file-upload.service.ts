@@ -14,32 +14,17 @@ export class MatsFileUploadService {
   async uploadFile(fileName: string, file: Buffer) {
 
     const matsConfig = this.configService.get("matsConfig");
-    
-    if (
-      !matsConfig.awsRegion ||
-      !matsConfig.matsImportBucket ||
-      !matsConfig.matsImportBucketAccessKey ||
-      !matsConfig.matsImportBucketSecretAccessKey
-    ) {
-      throw new EaseyException(
-        new Error('No AWS credentials'),
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
 
     this.s3Client = new S3Client({
-      credentials: {
-        accessKeyId: matsConfig.matsImportBucketAccessKey,
-        secretAccessKey: matsConfig.matsImportBucketSecretAccessKey,
-      },
-      region: matsConfig.awsRegion,
+      credentials: matsConfig.importCredentials,
+      region: matsConfig.importRegion,
     });
 
     return this.s3Client.send(
       new PutObjectCommand({
         Body: file,
         Key: fileName,
-        Bucket: matsConfig.matsImportBucket,
+        Bucket: matsConfig.importBucket,
       }),
     );
   }

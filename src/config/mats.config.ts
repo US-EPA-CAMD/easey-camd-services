@@ -4,22 +4,17 @@ import { getConfigValue } from '@us-epa-camd/easey-common/utilities';
 require('dotenv').config();
 
 export default registerAs('matsConfig', () => ({
-  bucket: getConfigValue('EASEY_CAMD_SERVICES_MATS_BULK_FILES_IMPORT_BUCKET'),
-  region: getConfigValue('EASEY_CAMD_SERVICES_AWS_S3_REGION', 'us-gov-west-1'),
-  credentials: {
-    accessKeyId: getConfigValue('EASEY_CAMD_SERVICES_MATS_BULK_FILES_IMPORT_AWS_SECRET_ACCESS_KEY'),
-    secretAccessKey: getConfigValue('EASEY_CAMD_SERVICES_MATS_BULK_FILES_IMPORT_AWS_ACCESS_KEY_ID'),
+  importBucket: getConfigValue('EASEY_CAMD_SERVICES_MATS_BULK_FILES_IMPORT_BUCKET'),
+  importRegion: getConfigValue('EASEY_BULK_FILES_AWS_REGION', 'us-gov-west-1'),
+  importCredentials: {
+    accessKeyId: getConfigValue('EASEY_CAMD_SERVICES_MATS_BULK_FILES_IMPORT_AWS_ACCESS_KEY_ID'),
+    secretAccessKey: getConfigValue('EASEY_CAMD_SERVICES_MATS_BULK_FILES_IMPORT_AWS_SECRET_ACCESS_KEY'),
   },
-  awsRegion: getConfigValue(
-    'EASEY_CAMD_SERVICES_AWS_S3_REGION'
-  ),
-  matsImportBucket: getConfigValue(
-    'EASEY_CAMD_SERVICES_MATS_BULK_FILES_IMPORT_BUCKET'
-  ),
-  matsImportBucketAccessKey: getConfigValue( 
-    'EASEY_CAMD_SERVICES_MATS_BULK_FILES_IMPORT_AWS_ACCESS_KEY_ID'
-  ),
-  matsImportBucketSecretAccessKey: getConfigValue(
-    'EASEY_CAMD_SERVICES_MATS_BULK_FILES_IMPORT_AWS_SECRET_ACCESS_KEY',
-  ),
+  globalBucket: getConfigValue('EASEY_CAMD_SERVICES_MATS_BULK_FILES_BUCKET'),
+  globalRegion: getConfigValue('EASEY_BULK_FILES_AWS_REGION', 'us-gov-west-1'),
+  globalCredentials: {
+    accessKeyId: getConfigValue('EASEY_BULK_FILES_AWS_ACCESS_KEY_ID'),
+    secretAccessKey: getConfigValue('EASEY_BULK_FILES_AWS_SECRET_ACCESS_KEY'),
+  },
+
 }));
