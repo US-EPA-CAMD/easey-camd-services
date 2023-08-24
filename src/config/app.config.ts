@@ -56,6 +56,14 @@ export default registerAs('app', () => ({
     'EASEY_CAMD_SERVICES_ENABLE_ROLE_GUARD',
     true,
   ),
+  defaultFromEmail: getConfigValue(
+    'EASEY_CAMD_SERVICES_DEFAULT_FROM_EMAIL',
+    'noreply@epa.gov',
+  ),
+  cdxUrl: getConfigValue(
+    'EASEY_CAMD_SERVICES_CDX_URL',
+    'https://dev.epacdx.net/',
+  ),
   enableAuthToken: getConfigValueBoolean(
     'EASEY_CAMD_SERVICES_ENABLE_AUTH_TOKEN',
     true,

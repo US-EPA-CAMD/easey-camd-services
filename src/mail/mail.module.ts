@@ -40,5 +40,6 @@ import { MailTemplateService } from './mail-template.service';
   ],
   controllers: [MailController],
   providers: [MailService, MailEvalService, MailTemplateService],
+  exports: [MailEvalService],
 })
 export class MailModule {}

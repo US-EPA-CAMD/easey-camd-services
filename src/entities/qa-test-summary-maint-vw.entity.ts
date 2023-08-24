@@ -80,32 +80,42 @@ export class QaTestSummaryMaintView extends BaseEntity {
     name: 'end_date_time',
   })
   endDateTime: string;
+
   @ViewColumn({
     name: 'test_comment',
   })
   testComment: string;
+
   @ViewColumn({
     name: 'span_scale_cd',
   })
   spanScaleCode: string;
+
   @ViewColumn({
     name: 'injection_protocol_cd',
   })
   injectionProtocolCode: string;
+
   @ViewColumn({
     name: 'submission_availability_cd',
   })
   submissionAvailabilityCode: string;
+
   @ViewColumn({
     name: 'submission_availability_description',
   })
   submissionAvailabilityDescription: string;
+
   @ViewColumn({
     name: 'severity_cd',
   })
   severityCode: string;
+
   @ViewColumn({
     name: 'severity_description',
   })
   severityDescription: string;
+
+  @ViewColumn({ name: 'resub_explanation' })
+  resubExplanation: string;
 }

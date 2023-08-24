@@ -2,19 +2,23 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { QaCertEventService } from './qa-cert-event.service';
 import { EntityManager } from 'typeorm';
 import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
+import { QaUpdateDto } from '../dto/qa-update.dto';
+import { QaCertEventMaintMap } from '../maps/qa-cert-event-maint.map';
 
 describe('QaCertEventService', () => {
   let service: QaCertEventService;
   let entityManager: EntityManager;
+  let updatePayload;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [QaCertEventService, EntityManager],
+      providers: [QaCertEventService, EntityManager, QaCertEventMaintMap],
     }).compile();
 
     service = module.get<QaCertEventService>(QaCertEventService);
 
     entityManager = module.get<EntityManager>(EntityManager);
+    updatePayload = new QaUpdateDto();
   });
 
   it('should be defined', () => {
@@ -32,7 +36,11 @@ describe('QaCertEventService', () => {
     jest.spyOn(entityManager, 'query').mockResolvedValue([[], 1]);
     jest.spyOn(entityManager, 'findOne').mockResolvedValue({});
 
-    const result = await service.updateSubmissionStatus('id', 'userId');
+    const result = await service.updateSubmissionStatus(
+      'id',
+      'userId',
+      updatePayload,
+    );
     expect(result).toEqual({});
   });
 
@@ -45,7 +53,7 @@ describe('QaCertEventService', () => {
 
     let errored = false;
     try {
-      await service.updateSubmissionStatus('id', 'userId');
+      await service.updateSubmissionStatus('id', 'userId', updatePayload);
     } catch {
       errored = true;
     }

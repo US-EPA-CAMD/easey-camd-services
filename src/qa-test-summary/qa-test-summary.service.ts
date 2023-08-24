@@ -4,17 +4,21 @@ import { QaTestSummaryMaintView } from '../entities/qa-test-summary-maint-vw.ent
 import { InjectEntityManager } from '@nestjs/typeorm';
 import { currentDateTime } from '@us-epa-camd/easey-common/utilities/functions';
 import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
+import { QaUpdateDto } from '../dto/qa-update.dto';
+import { QaTestSummaryMaintMap } from '../maps/qa-test-summary-maint.map';
+import { QaTestSummaryMaintViewDTO } from '../dto/qa-test-summary-maint-vw.dto';
 @Injectable()
 export class QaTestSummaryService {
   constructor(
     @InjectEntityManager()
     private readonly manager: EntityManager,
+    private readonly map: QaTestSummaryMaintMap,
   ) {}
 
   async getQaTestSummaryViewData(
     orisCode: number,
     unitStack: string,
-  ): Promise<QaTestSummaryMaintView[]> {
+  ): Promise<QaTestSummaryMaintViewDTO[]> {
     const where = {
       orisCode,
     } as any;
@@ -22,15 +26,17 @@ export class QaTestSummaryService {
     if (unitStack !== null && unitStack !== undefined)
       where.unitStack = unitStack;
 
-    return this.manager.find(QaTestSummaryMaintView, {
+    const result = await this.manager.find(QaTestSummaryMaintView, {
       where,
     });
+    return this.map.many(result);
   }
 
   async updateSubmissionStatus(
     id: string,
     userId: string,
-  ): Promise<QaTestSummaryMaintView> {
+    payload: QaUpdateDto,
+  ): Promise<QaTestSummaryMaintViewDTO> {
     let recordToUpdate: QaTestSummaryMaintView;
 
     try {
@@ -40,9 +46,10 @@ export class QaTestSummaryService {
           `UPDATE camdecmps.qa_supp_data 
             SET submission_availability_cd = $2,
             userid = $3,
-            update_date = $4
+            update_date = $4,
+            resub_explanation = $5
             WHERE test_sum_id = $1;`,
-          [id, 'REQUIRE', userId, currentDateTime()],
+          [id, 'REQUIRE', userId, currentDateTime(), payload?.resubExplanation],
         );
 
         // UPDATE WORKSPACE TABLE
@@ -50,9 +57,10 @@ export class QaTestSummaryService {
           `UPDATE camdecmpswks.qa_supp_data 
             SET submission_availability_cd = $2,
             userid = $3,
-            update_date = $4
+            update_date = $4,
+            resub_explanation = $5
             WHERE test_sum_id = $1;`,
-          [id, 'REQUIRE', userId, currentDateTime()],
+          [id, 'REQUIRE', userId, currentDateTime(), payload.resubExplanation],
         );
       });
 
@@ -67,7 +75,7 @@ export class QaTestSummaryService {
       throw new EaseyException(e, e.status);
     }
 
-    return recordToUpdate;
+    return this.map.one(recordToUpdate);
   }
 
   async deleteQATestSummaryData(id: string): Promise<any> {

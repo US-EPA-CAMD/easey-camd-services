@@ -5,7 +5,6 @@ import { EvaluationItem } from '../dto/evaluation.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { MonitorPlan } from '../entities/monitor-plan.entity';
 import { Plant } from '../entities/plant.entity';
-import { TestSummary } from '../entities/test-summary.entity';
 import { QaCertEvent } from '../entities/qa-cert-event.entity';
 import { QaTee } from '../entities/qa-tee.entity';
 import { ReportingPeriod } from '../entities/reporting-period.entity';
@@ -13,6 +12,7 @@ import { EmissionEvaluation } from '../entities/emission-evaluation.entity';
 import { SubmissionSet } from '../entities/submission-set.entity';
 import { SubmissionQueue } from '../entities/submission-queue.entity';
 import { SubmissionQueueDTO } from '../dto/submission-queue.dto';
+import { QaSuppData } from '../entities/qa-supp.entity';
 
 @Injectable()
 export class SubmissionService {
@@ -39,6 +39,7 @@ export class SubmissionService {
       submissionSet.userIdentifier = userId;
       submissionSet.userEmail = userEmail;
       submissionSet.submittedOn = currentTime;
+      submissionSet.statusCode = 'QUEUED';
 
       const locations = await this.returnManager().query(
         `SELECT camdecmpsaux.get_mp_location_list($1);`,
@@ -64,7 +65,7 @@ export class SubmissionService {
 
       if (item.submitMonPlan === true) {
         //Create monitor plan queue record
-        //mp.evalStatusCode = 'INQ';
+        mp.submissionAvailabilityCode = 'PENDING';
 
         const mpRecord = new SubmissionQueue();
         mpRecord.submissionSetIdentifier = set_id;
@@ -73,27 +74,32 @@ export class SubmissionService {
         mpRecord.submittedOn = currentTime;
 
         await this.returnManager().save(mpRecord);
-        //await this.returnManager().save(mp);
+        await this.returnManager().save(mp);
       }
 
       for (const id of item.testSumIds) {
-        const ts = await this.returnManager().findOne(TestSummary, id);
-        //ts.evalStatusCode = 'INQ';
+        const ts: QaSuppData = await this.returnManager().findOne(QaSuppData, {
+          where: { testSumIdentifier: id },
+        });
+        ts.submissionAvailabilityCode = 'PENDING'; //TODO FIND SUPP RECORD CORRESPONDING
 
         const tsRecord = new SubmissionQueue();
         tsRecord.submissionSetIdentifier = set_id;
         tsRecord.processCode = 'QA';
-        tsRecord.processCode = 'QUEUED';
+        tsRecord.statusCode = 'QUEUED';
         tsRecord.testSumIdentifier = id;
         tsRecord.submittedOn = currentTime;
 
-        //await this.returnManager().save(ts);
+        await this.returnManager().save(ts);
         await this.returnManager().save(tsRecord);
       }
 
       for (const id of item.qceIds) {
-        const qce = await this.returnManager().findOne(QaCertEvent, id);
-        //qce.evalStatusCode = 'INQ';
+        const qce: QaCertEvent = await this.returnManager().findOne(
+          QaCertEvent,
+          id,
+        );
+        qce.submissionAvailabilityCode = 'PENDING';
 
         const qceRecord = new SubmissionQueue();
         qceRecord.submissionSetIdentifier = set_id;
@@ -104,13 +110,13 @@ export class SubmissionService {
         qceRecord.qaCertEventIdentifier = id;
         qceRecord.submittedOn = currentTime;
 
-        //await this.returnManager().save(qce);
+        await this.returnManager().save(qce);
         await this.returnManager().save(qceRecord);
       }
 
       for (const id of item.teeIds) {
-        const tee = await this.returnManager().findOne(QaTee, id);
-        //tee.evalStatusCode = 'INQ';
+        const tee: QaTee = await this.returnManager().findOne(QaTee, id);
+        tee.submissionAvailabilityCode = 'PENDING';
 
         const teeRecord = new SubmissionQueue();
         teeRecord.submissionSetIdentifier = set_id;
@@ -120,7 +126,7 @@ export class SubmissionService {
         teeRecord.testExtensionExemptionIdentifier = id;
         teeRecord.submittedOn = currentTime;
 
-        //await this.returnManager().save(tee);
+        await this.returnManager().save(tee);
         await this.returnManager().save(teeRecord);
       }
 
@@ -129,14 +135,17 @@ export class SubmissionService {
           where: { periodAbbreviation: periodAbr },
         });
 
-        const ee = await this.returnManager().findOne(EmissionEvaluation, {
-          where: {
-            monPlanIdentifier: item.monPlanId,
-            rptPeriodIdentifier: rp.rptPeriodIdentifier,
+        const ee: EmissionEvaluation = await this.returnManager().findOne(
+          EmissionEvaluation,
+          {
+            where: {
+              monPlanIdentifier: item.monPlanId,
+              rptPeriodIdentifier: rp.rptPeriodIdentifier,
+            },
           },
-        });
+        );
 
-        //ee.evalStatusCode = 'INQ';
+        ee.submissionAvailabilityCode = 'PENDING';
 
         const emissionRecord = new SubmissionQueue();
         emissionRecord.submissionSetIdentifier = set_id;
@@ -147,7 +156,7 @@ export class SubmissionService {
         emissionRecord.rptPeriodIdentifier = rp.rptPeriodIdentifier;
         emissionRecord.submittedOn = currentTime;
 
-        //await this.returnManager().save(ee);
+        await this.returnManager().save(ee);
         await this.returnManager().save(emissionRecord);
       }
     } catch (e) {

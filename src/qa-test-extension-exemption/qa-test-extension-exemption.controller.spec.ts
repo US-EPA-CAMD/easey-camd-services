@@ -6,12 +6,15 @@ import { LoggerModule } from '@us-epa-camd/easey-common/logger';
 import { ConfigService } from '@nestjs/config';
 import { QaCertMaintParamsDto } from '../dto/qa-cert-maint-params.dto';
 import { EntityManager } from 'typeorm';
-import { QaTeeMaintView } from '../entities/qa-tee-maint-vw.entity';
 import { CurrentUser } from '@us-epa-camd/easey-common/interfaces';
+import { QaUpdateDto } from '../dto/qa-update.dto';
+import { QaTeeMaintMap } from '../maps/qa-tee-maint.map';
+import { QaTeeMaintViewDTO } from '../dto/qa-tee-maint-vw.dto';
 
 describe('QaTestExtensionExemptionController', () => {
   let controller: QaTestExtensionExemptionController;
   let service: QaTestExtensionExemptionService;
+  let updatePayload;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -21,6 +24,7 @@ describe('QaTestExtensionExemptionController', () => {
         QaTestExtensionExemptionService,
         ConfigService,
         EntityManager,
+        QaTeeMaintMap,
       ],
     }).compile();
 
@@ -31,6 +35,8 @@ describe('QaTestExtensionExemptionController', () => {
     service = module.get<QaTestExtensionExemptionService>(
       QaTestExtensionExemptionService,
     );
+
+    updatePayload = new QaUpdateDto();
   });
 
   it('should be defined', () => {
@@ -46,7 +52,7 @@ describe('QaTestExtensionExemptionController', () => {
   });
 
   it('should return data for updateSubmissionStatus controller method', async () => {
-    const record = new QaTeeMaintView();
+    const record = new QaTeeMaintViewDTO();
     const user: CurrentUser = {
       userId: 'testUser',
       sessionId: '',
@@ -57,7 +63,9 @@ describe('QaTestExtensionExemptionController', () => {
     };
     jest.spyOn(service, 'updateSubmissionStatus').mockResolvedValue(record);
 
-    expect(await controller.updateSubmissionStatus('id', user)).toEqual(record);
+    expect(
+      await controller.updateSubmissionStatus('id', user, updatePayload),
+    ).toEqual(record);
   });
 
   it('should return data for deleteQACertTeeData controller method', async () => {

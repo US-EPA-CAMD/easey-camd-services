@@ -1,4 +1,4 @@
-import { IsNotEmpty } from 'class-validator';
+import { IsNotEmpty, IsOptional } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import {
@@ -19,21 +19,27 @@ export class ReportParamsDTO {
   facilityId: number;
 
   @ApiProperty()
+  @IsOptional()
   monitorPlanId?: string;
 
   @ApiProperty({ isArray: true })
+  @IsOptional()
   @Transform(({ value }) => value.split('|').map((item: string) => item.trim()))
   testId?: string[];
 
   @ApiProperty()
+  @IsOptional()
   qceId?: string;
 
   @ApiProperty()
+  @IsOptional()
   teeId?: string;
 
   @ApiProperty()
+  @IsOptional()
   year?: number;
 
   @ApiProperty()
+  @IsOptional()
   quarter?: number;
 }

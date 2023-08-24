@@ -10,6 +10,7 @@ import {
 import { NumericColumnTransformer } from '@us-epa-camd/easey-common/transforms';
 import { Unit } from './unit.entity';
 import { StackPipe } from './stack-pipe.entity';
+import { MonitorPlan } from './monitor-plan.entity';
 
 @Entity({ name: 'camd.plant' })
 export class Plant extends BaseEntity {
@@ -121,4 +122,11 @@ export class Plant extends BaseEntity {
   @OneToMany(() => StackPipe, (stackPipe) => stackPipe.plant)
   @JoinColumn({ name: 'stack_pipe_id' })
   stackPipes: StackPipe[];
+
+  @OneToMany(
+    () => MonitorPlan,
+    plan => plan.plant,
+  )
+  monitorPlans: MonitorPlan[];
+
 }
