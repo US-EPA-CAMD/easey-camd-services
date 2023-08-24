@@ -20,8 +20,10 @@ applications:
       EASEY_CAMD_SERVICES_ENABLE_GLOBAL_VALIDATION_PIPE: true
       EASEY_CAMD_SERVICES_SMTP_HOST: ((smtpHost))
       EASEY_CAMD_SERVICES_SMTP_PORT: ((smtpPort))
-      EASEY_BULK_FILES_AWS_REGION: us-gov-west-1
+      EASEY_BULK_FILES_AWS_REGION: us-gov-west-1      
       EASEY_BULK_FILES_AWS_BUCKET: ((campdDatasetsS3Bucket))
+      EASEY_CAMD_SERVICES_MATS_BULK_FILES_BUCKET: ((matsS3Bucket))
+      EASEY_CAMD_SERVICES_MATS_BULK_FILES_IMPORT_BUCKET: ((importMatsS3Bucket))
       EASEY_API_GATEWAY_HOST: ((apiHost))
       EASEY_AUTH_API: https://((apiHost))/auth-mgmt
       EASEY_CAMD_SERVICES_ENABLE_AUTH_TOKEN: true
@@ -29,6 +31,8 @@ applications:
       EASEY_STREAMING_SERVICES: https://((apiHost))/streaming-services
       EASEY_CAMD_SERVICES_ECMPS_HOST: ((ecmpsHost))
       EASEY_CAMD_SERVICES_ENABLE_ROLE_GUARD_CHECKOUT: true
+      EASEY_CAMD_SERVICES_DEFAULT_FROM_EMAIL: noreply@epa.gov
+      EASEY_CAMD_SERVICES_CDX_URL: ((cdxUrl))
       TZ: America/New_York
     routes:
       - route: ((host))/((path))

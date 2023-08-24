@@ -53,6 +53,8 @@ export class EmSubmissionAccessController {
   @UseGuards(AuthGuard)
   @ApiBearerAuth('Token')
   @ApiCreatedResponse({
+    isArray: false,
+    type: EmSubmissionAccessDTO,
     description: 'Data created successfully',
   })
   @ApiOperation({
@@ -69,7 +71,12 @@ export class EmSubmissionAccessController {
   @UseGuards(AuthGuard)
   @ApiBearerAuth('Token')
   @ApiOkResponse({
-    description: 'Update a Emission Submission Access record.',
+    isArray: false,
+    type: EmSubmissionAccessDTO,
+    description: 'Data updated successfully.',
+  })
+  @ApiOperation({
+    description: 'Updates an Emission Submission Access Record.',
   })
   async updateEmSubmissionAccess(
     @Param('id') id: number,

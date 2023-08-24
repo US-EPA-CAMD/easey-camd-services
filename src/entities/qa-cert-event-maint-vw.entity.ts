@@ -1,3 +1,4 @@
+import { ApiProperty } from '@nestjs/swagger';
 import { NumericColumnTransformer } from '@us-epa-camd/easey-common/transforms';
 import { BaseEntity, PrimaryColumn, ViewColumn, ViewEntity } from 'typeorm';
 
@@ -5,6 +6,11 @@ import { BaseEntity, PrimaryColumn, ViewColumn, ViewEntity } from 'typeorm';
 export class QaCertEventMaintView extends BaseEntity {
   @PrimaryColumn({
     name: 'cert_event_id',
+  })
+  @ApiProperty({
+    description: 'Unique identifier of a QA Cert Event Maintainance record.',
+    example: 'FOS-D6QLND-62BAF816050B46BAA78CD6009278156E',
+    name: 'certEventId',
   })
   certEventId: string;
 
@@ -88,4 +94,7 @@ export class QaCertEventMaintView extends BaseEntity {
     name: 'severity_description',
   })
   severityDescription: string;
+
+  @ViewColumn({ name: 'resub_explanation' })
+  resubExplanation: string;
 }

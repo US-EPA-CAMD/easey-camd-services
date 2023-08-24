@@ -3,13 +3,13 @@ import { LoggerModule } from '@us-epa-camd/easey-common/logger';
 import { MonitorPlan } from '../entities/monitor-plan.entity';
 import { EvaluationItem } from '../dto/evaluation.dto';
 import { Plant } from '../entities/plant.entity';
-import { TestSummary } from '../entities/test-summary.entity';
 import { QaCertEvent } from '../entities/qa-cert-event.entity';
 import { QaTee } from '../entities/qa-tee.entity';
 import { ReportingPeriod } from '../entities/reporting-period.entity';
 import { EmissionEvaluation } from '../entities/emission-evaluation.entity';
 import { SubmissionService } from './submission.service';
 import { SubmissionQueueDTO } from '../dto/submission-queue.dto';
+import { QaSuppData } from '../entities/qa-supp.entity';
 
 const dtoItem = new EvaluationItem();
 dtoItem.monPlanId = 'mock';
@@ -60,8 +60,8 @@ describe('-- Submission Service --', () => {
             p.facilityName = 'test';
             p.orisCode = 1;
             return p;
-          case 'TestSummary':
-            return new TestSummary();
+          case 'QaSuppData':
+            return new QaSuppData();
           case 'QaCertEvent':
             return new QaCertEvent();
           case 'QaTee':
@@ -81,6 +81,6 @@ describe('-- Submission Service --', () => {
 
     await service.queueSubmissionRecords(payloadDto);
 
-    expect(mockInsertion).toHaveBeenCalledTimes(14);
+    expect(mockInsertion).toHaveBeenCalledTimes(26);
   });
 });

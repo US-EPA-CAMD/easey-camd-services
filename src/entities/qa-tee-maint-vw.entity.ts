@@ -80,8 +80,12 @@ export class QaTeeMaintView extends BaseEntity {
     name: 'severity_cd',
   })
   severityCode: string;
+
   @ViewColumn({
     name: 'severity_description',
   })
   severityDescription: string;
+
+  @ViewColumn({ name: 'resub_explanation' })
+  resubExplanation: string;
 }

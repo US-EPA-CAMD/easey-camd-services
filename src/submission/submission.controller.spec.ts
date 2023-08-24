@@ -4,8 +4,11 @@ import { ConfigService } from '@nestjs/config';
 import { SubmissionController } from './submission.controller';
 import { SubmissionService } from './submission.service';
 import { SubmissionQueueDTO } from '../dto/submission-queue.dto';
+import { SubmissionProcessService } from './submission-process.service';
+import { ProcessParamsDTO } from '../dto/process-params.dto';
 
 jest.mock('./submission.service');
+jest.mock('./submission-process.service');
 
 describe('-- Evaluation Controller --', () => {
   let controller: SubmissionController;
@@ -14,7 +17,7 @@ describe('-- Evaluation Controller --', () => {
     const module = await Test.createTestingModule({
       imports: [HttpModule],
       controllers: [SubmissionController],
-      providers: [SubmissionService, ConfigService],
+      providers: [SubmissionService, SubmissionProcessService, ConfigService],
     }).compile();
 
     controller = module.get(SubmissionController);
@@ -28,7 +31,13 @@ describe('-- Evaluation Controller --', () => {
     const dtoParams = new SubmissionQueueDTO();
 
     expect(async () => {
-      await controller.evaluate(dtoParams);
+      await controller.queue(dtoParams);
+    }).not.toThrowError();
+  });
+
+  it('process', async () => {
+    expect(async () => {
+      await controller.process(new ProcessParamsDTO());
     }).not.toThrowError();
   });
 });
