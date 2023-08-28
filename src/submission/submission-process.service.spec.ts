@@ -15,6 +15,8 @@ import { EmissionEvaluation } from '../entities/emission-evaluation.entity';
 import { Observable, of } from 'rxjs';
 import { MailEvalService } from '../mail/mail-eval.service';
 
+jest.mock('@aws-sdk/client-s3');
+
 describe('-- Submission Process Service --', () => {
   let service: SubmissionProcessService;
 
@@ -101,7 +103,7 @@ describe('-- Submission Process Service --', () => {
     set.facIdentifier = 1;
     set.monPlanIdentifier = 'mockMP';
 
-    await service.getCopyOfRecord(set, record, mockDocuments, []);
+    await service.getCopyOfRecord(set, record, mockDocuments, [], '');
 
     expect(mockDocuments.length).toBe(1);
   });

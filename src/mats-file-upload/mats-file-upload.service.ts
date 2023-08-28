@@ -11,7 +11,12 @@ export class MatsFileUploadService {
 
   constructor(private readonly configService: ConfigService) {}
 
-  async uploadFile(fileName: string, file: Buffer, monPlanId: string) {
+  async uploadFile(
+    fileName: string,
+    file: Buffer,
+    monPlanId: string,
+    testNumber: string,
+  ) {
     const matsConfig = this.configService.get('matsConfig');
 
     this.s3Client = new S3Client({
@@ -22,7 +27,7 @@ export class MatsFileUploadService {
     return this.s3Client.send(
       new PutObjectCommand({
         Body: file,
-        Key: `${monPlanId}/fileName`,
+        Key: `${monPlanId}/${testNumber}/${fileName}`,
         Bucket: matsConfig.importBucket,
       }),
     );

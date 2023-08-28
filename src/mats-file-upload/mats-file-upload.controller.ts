@@ -66,7 +66,12 @@ export class MatsFileUploadController {
         { responseObject: fileErrors },
       );
 
-    await this.service.uploadFile(file.originalname, file.buffer, monPlanId);
+    await this.service.uploadFile(
+      file.originalname,
+      file.buffer,
+      monPlanId,
+      testNumber,
+    );
     await this.service.saveImportMetaData(
       monPlanId,
       testNumber,
