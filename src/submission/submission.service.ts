@@ -13,6 +13,7 @@ import { SubmissionSet } from '../entities/submission-set.entity';
 import { SubmissionQueue } from '../entities/submission-queue.entity';
 import { SubmissionQueueDTO } from '../dto/submission-queue.dto';
 import { QaSuppData } from '../entities/qa-supp.entity';
+import { MatsBulkFile } from '../entities/mats-bulk-file.entity';
 
 @Injectable()
 export class SubmissionService {
@@ -158,6 +159,26 @@ export class SubmissionService {
 
         await this.returnManager().save(ee);
         await this.returnManager().save(emissionRecord);
+      }
+
+      for (const matsId of item.matsBulkFiles) {
+        const mf = await this.returnManager().findOne(MatsBulkFile, {
+          where: { id: matsId },
+        });
+
+        mf.submissionAvailabilityCode = 'PENDING';
+
+        const matsRecord = new SubmissionQueue();
+        matsRecord.submissionSetIdentifier = set_id;
+        matsRecord.processCode = 'MATS';
+
+        matsRecord.statusCode = 'QUEUED';
+
+        matsRecord.matsBulkFileId = matsId;
+        matsRecord.submittedOn = currentTime;
+
+        await this.returnManager().save(mf);
+        await this.returnManager().save(matsRecord);
       }
     } catch (e) {
       console.log(e);

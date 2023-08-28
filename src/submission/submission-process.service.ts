@@ -26,9 +26,18 @@ import { QaSuppData } from '../entities/qa-supp.entity';
 import { ConfigService } from '@nestjs/config';
 import { ReportingPeriod } from '../entities/reporting-period.entity';
 import { MailEvalService } from '../mail/mail-eval.service';
+import { MatsBulkFile } from '../entities/mats-bulk-file.entity';
+import {
+  S3Client,
+  GetObjectCommand,
+  PutObjectCommand,
+} from '@aws-sdk/client-s3';
 
 @Injectable()
 export class SubmissionProcessService {
+  private importS3Client: S3Client;
+  private globalS3Client: S3Client;
+
   constructor(
     private readonly configService: ConfigService,
     private readonly logger: Logger,
@@ -36,7 +45,17 @@ export class SubmissionProcessService {
     private copyOfRecordService: CopyOfRecordService,
     private readonly httpService: HttpService,
     private mailEvalService: MailEvalService,
-  ) {}
+  ) {
+    this.importS3Client = new S3Client({
+      credentials: this.configService.get('matsConfig.importCredentials'),
+      region: this.configService.get('matsConfig.importRegion'),
+    });
+
+    this.globalS3Client = new S3Client({
+      credentials: this.configService.get('matsConfig.globalCredentials'),
+      region: this.configService.get('matsConfig.globalRegion'),
+    });
+  }
 
   returnManager(): any {
     return getManager();
@@ -47,6 +66,7 @@ export class SubmissionProcessService {
     record: SubmissionQueue,
     documents: object[],
     transactions: any[],
+    folderPath: string,
   ): Promise<void> {
     record.statusCode = 'WIP';
     this.returnManager().save(record);
@@ -124,18 +144,56 @@ export class SubmissionProcessService {
           params.year +
           'q' +
           params.quarter;
-        break; //TODO: Implement Emissions Report
+        break;
+      case 'MATS':
+        //Pull down the Mats Bulk File Object
+        const matsRecord: MatsBulkFile = await this.returnManager().findOne(
+          MatsBulkFile,
+          {
+            where: {
+              id: record.matsBulkFileId,
+            },
+          },
+        );
+
+        const response = await this.importS3Client.send(
+          new GetObjectCommand({
+            Bucket: this.configService.get<string>('matsConfig.importBucket'),
+            Key: `${set.monPlanIdentifier}/${matsRecord.testNumber}/${matsRecord.fileName}`,
+          }),
+        );
+        const responseString = await response.Body.transformToString();
+
+        writeFileSync(
+          `${folderPath}/MATS_${set.monPlanIdentifier}_${matsRecord.testNumber}_${matsRecord.fileName}`,
+          responseString,
+        );
+
+        //Upload the Mats Bulk File Object to the global bucket
+        await this.globalS3Client.send(
+          new PutObjectCommand({
+            Body: responseString,
+            Key: `${set.monPlanIdentifier}/${matsRecord.testNumber}/${matsRecord.fileName}`,
+            Bucket: this.configService.get<string>('matsConfig.globalBucket'),
+          }),
+        );
+
+        break;
     }
 
-    const reportInformation = await this.dataSetService.getDataSet(
-      params,
-      true,
-    );
+    if (record.processCode !== 'MATS') {
+      //For MATS files we pull them directly from S3
+      const reportInformation = await this.dataSetService.getDataSet(
+        params,
+        true,
+      );
 
-    documents.push({
-      documentTitle: `${set.facIdentifier}_${titleContext}`,
-      context: this.copyOfRecordService.generateCopyOfRecord(reportInformation),
-    });
+      documents.push({
+        documentTitle: `${set.facIdentifier}_${titleContext}`,
+        context:
+          this.copyOfRecordService.generateCopyOfRecord(reportInformation),
+      });
+    }
   }
 
   async setRecordStatusCode(
@@ -186,6 +244,13 @@ export class SubmissionProcessService {
               },
             },
           );
+          break;
+        case 'MATS':
+          originRecord = await this.returnManager().findOne(MatsBulkFile, {
+            where: {
+              id: record.matsBulkFileId,
+            },
+          });
           break;
       }
 
@@ -290,11 +355,18 @@ export class SubmissionProcessService {
       MP: 1,
       QA: 2,
       EM: 3,
+      MATS: 4,
     };
 
     submissionSetRecords = submissionSetRecords.sort((a, b) => {
       return values[a.processCode] - values[b.processCode];
     });
+
+    const fileBucket = uuidv4();
+
+    const folderPath = path.join(__dirname, fileBucket);
+
+    mkdirSync(folderPath);
 
     // Iterate each record in the submission queue linked to the set and create a promise that resolves with the addition of document html string in the documents array
     const documents = [];
@@ -305,16 +377,11 @@ export class SubmissionProcessService {
         submissionRecord,
         documents,
         transactions,
+        folderPath,
       );
     }
 
     try {
-      const fileBucket = uuidv4();
-
-      const folderPath = path.join(__dirname, fileBucket);
-
-      mkdirSync(folderPath);
-
       //Write the document strings to html files
       for (const doc of documents) {
         writeFileSync(`${folderPath}/${doc.documentTitle}.html`, doc.context);

@@ -35,6 +35,7 @@
           </tr>
         {{/each}}
       </table>
+      <h4> Monitor Plan Record Submitted: {{monPlanSubmitted}} </h4>
     </div>
     {{#if testData}}
       <div>
@@ -104,6 +105,25 @@
           {{#each emissions.items}}
             <tr>
               {{#each ../emissions.keys}}
+                {{#if (notEquals this "Evaluation Status Code")}}
+                  <td> {{lookup .. this}} </td>
+                {{/if}}
+              {{/each}}
+            </tr>
+          {{/each}}
+        </table>
+      </div>
+    {{/if}}
+    {{#if mats}}
+      <div>
+        <h2> MATS Bulk Files </h2>
+        <table>
+          {{#each mats.keys}}
+            <th> {{this}} </th>
+          {{/each}}
+          {{#each mats.items}}
+            <tr>
+              {{#each ../mats.keys}}
                 {{#if (notEquals this "Evaluation Status Code")}}
                   <td> {{lookup .. this}} </td>
                 {{/if}}

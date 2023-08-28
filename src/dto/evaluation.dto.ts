@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsBoolean, IsString } from 'class-validator';
+import { IsArray, IsBoolean, IsOptional, IsString } from 'class-validator';
 
 export class EvaluationItem {
   @ApiProperty()
@@ -25,6 +25,10 @@ export class EvaluationItem {
   @ApiProperty()
   @IsArray()
   emissionsReportingPeriods: string[];
+
+  @ApiProperty()
+  @IsOptional() //Optional for submissions
+  matsBulkFiles: number[];
 }
 
 export class EvaluationDTO {
