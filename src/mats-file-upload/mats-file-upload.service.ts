@@ -11,9 +11,13 @@ export class MatsFileUploadService {
 
   constructor(private readonly configService: ConfigService) {}
 
-  async uploadFile(fileName: string, file: Buffer) {
-
-    const matsConfig = this.configService.get("matsConfig");
+  async uploadFile(
+    fileName: string,
+    file: Buffer,
+    monPlanId: string,
+    testNumber: string,
+  ) {
+    const matsConfig = this.configService.get('matsConfig');
 
     this.s3Client = new S3Client({
       credentials: matsConfig.importCredentials,
@@ -23,23 +27,29 @@ export class MatsFileUploadService {
     return this.s3Client.send(
       new PutObjectCommand({
         Body: file,
-        Key: fileName,
+        Key: `${monPlanId}/${testNumber}/${fileName}`,
         Bucket: matsConfig.importBucket,
       }),
     );
   }
 
-  async saveImportMetaData(monPlanId: string, testNumber: string, fileName: string, userId: string){
+  async saveImportMetaData(
+    monPlanId: string,
+    testNumber: string,
+    fileName: string,
+    userId: string,
+  ) {
+    const monitorPlan: MonitorPlan = await MonitorPlan.findOne(monPlanId, {
+      relations: ['plant'],
+    });
 
-    const monitorPlan: MonitorPlan = await MonitorPlan.findOne(monPlanId, { relations: ["plant"] });
-    
-    if( !monitorPlan )
-    throw new EaseyException(
-      new Error(`Monitor Plan with id: ${monPlanId} not found`),
-      HttpStatus.NOT_FOUND
-    )
+    if (!monitorPlan)
+      throw new EaseyException(
+        new Error(`Monitor Plan with id: ${monPlanId} not found`),
+        HttpStatus.NOT_FOUND,
+      );
 
-    const matsBulkFileRecord: MatsBulkFile  = MatsBulkFile.create({
+    const matsBulkFileRecord: MatsBulkFile = MatsBulkFile.create({
       facIdentifier: monitorPlan.plant.facIdentifier,
       orisCode: monitorPlan.plant.orisCode,
       facilityName: monitorPlan.plant.facilityName,
@@ -53,5 +63,3 @@ export class MatsFileUploadService {
     await MatsBulkFile.save(matsBulkFileRecord);
   }
 }
-
-

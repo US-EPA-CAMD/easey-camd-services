@@ -16,6 +16,7 @@ import { EmissionEvaluation } from '../entities/emission-evaluation.entity';
 import { ConfigService } from '@nestjs/config';
 import { SubmissionQueue } from '../entities/submission-queue.entity';
 import { SubmissionSet } from '../entities/submission-set.entity';
+import { MatsBulkFile } from '../entities/mats-bulk-file.entity';
 
 //Formats and sends emissions evaluations emails
 @Injectable()
@@ -282,6 +283,31 @@ export class MailEvalService {
     return templateContext;
   }
 
+  async formatMATSContext(templateContext, records) {
+    const matsKeys = ['Test Number', 'File Name'];
+
+    if (records.length > 0) {
+      templateContext['mats'] = {
+        keys: matsKeys,
+        items: [],
+      };
+
+      for (const matsRecord of records) {
+        const newItem: any = {};
+        const mats: MatsBulkFile = await this.returnManager().findOne(
+          MatsBulkFile,
+          matsRecord.matsBulkFileId,
+        );
+
+        newItem['Test Number'] = mats.testNumber;
+        newItem['File Name'] = mats.fileName;
+
+        templateContext['mats'].items.push(newItem);
+      }
+    }
+    return templateContext;
+  }
+
   displayCurrentDate = () => {
     const date = new Date();
 
@@ -396,6 +422,13 @@ export class MailEvalService {
       }&monitorPlanId=${mpRecord.monPlanIdentifier}`;
     }
 
+    if (isSubmission) {
+      templateContext['monPlanSubmitted'] = false;
+      if (mpChildRecord) {
+        templateContext['monPlanSubmitted'] = true;
+      }
+    }
+
     //Create QA Section of Email ----------------------------------------
     const testDataChildRecords = records.filter(
       (r) => r.processCode === 'QA' && r.testSumIdentifier !== null,
@@ -442,10 +475,20 @@ export class MailEvalService {
       isSubmission,
     );
 
+    if (isSubmission) {
+      const matsDataChildRecords = records.filter(
+        (r) => r.processCode === 'MATS',
+      );
+      templateContext = await this.formatMATSContext(
+        templateContext,
+        matsDataChildRecords,
+      );
+    }
+
     this.mailerService
       .sendMail({
         to: to, // List of receivers email address
-        from: from,
+        from: 'kyleherceg@gmail.com',
         subject: subject, // Subject line
         template: template,
         context: templateContext,

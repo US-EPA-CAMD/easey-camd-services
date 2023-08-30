@@ -29,6 +29,13 @@ export class SubmissionQueue extends BaseEntity {
   })
   rptPeriodIdentifier: number;
 
+  @Column({
+    name: 'mats_bulk_file_id',
+    type: 'numeric',
+    transformer: new NumericColumnTransformer(),
+  })
+  matsBulkFileId: number;
+
   @Column({ name: 'severity_cd' })
   severityCode: string;
 
