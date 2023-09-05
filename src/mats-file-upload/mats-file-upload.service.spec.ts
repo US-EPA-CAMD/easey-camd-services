@@ -1,70 +1,53 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { MatsFileUploadService } from './mats-file-upload.service';
 import { ConfigService } from '@nestjs/config';
+import { MonitorPlan } from '../entities/monitor-plan.entity';
+import { TestTypeCode } from '../entities/test-type-code.entity';
+import { MatsBulkFile } from '../entities/mats-bulk-file.entity';
+import { Plant } from '../entities/plant.entity';
+
+jest.mock('@aws-sdk/client-s3');
 
 describe('MatsFileUploadService', () => {
   let service: MatsFileUploadService;
-  let configService: ConfigService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [MatsFileUploadService, ConfigService],
+      providers: [ConfigService, MatsFileUploadService],
     }).compile();
 
     service = module.get(MatsFileUploadService);
-    configService = module.get(ConfigService);
-
-    const mS3ClientInstance = {
-      upload: jest.fn().mockReturnThis(),
-    };
-    
-    jest.mock('@aws-sdk/client-s3', () => { 
-      S3Client: jest.fn(() => mS3ClientInstance) 
-      PutObjectCommand: jest.fn(() => {})
-    });
-
-    mS3ClientInstance.upload.mockResolvedValue('fake response');
-
   });
 
   it('should be defined', async () => {
-    expect(service).toBeDefined()
+    expect(service).not.toBeNull();
+  });
+
+  it('Should call into s3 to upload a file without error', async () => {
+    expect(async () => {
+      await service.uploadFile(Buffer.from('mock'), '');
+    }).not.toThrowError();
+  });
+
+  it('Should go through the process of the importFile procedure correctly', async () => {
+    const mockSave = jest.fn();
+
+    const mockPlan: MonitorPlan = { plant: new Plant() } as any;
+    const testTypecode: TestTypeCode = { testTypeCodeDescription: '' } as any;
+
+    jest.spyOn(MonitorPlan, 'findOne').mockResolvedValue(mockPlan);
+    jest.spyOn(TestTypeCode, 'findOne').mockResolvedValue(testTypecode);
+    jest.spyOn(service, 'uploadFile').mockResolvedValue(null);
+
+    jest.spyOn(MatsBulkFile, 'create').mockReturnValue(null);
+    jest.spyOn(MatsBulkFile, 'save').mockImplementation(mockSave);
+
+    const file: Express.Multer.File = {
+      buffer: Buffer.from(''),
+      originalname: 'mock',
+    } as any;
+
+    await service.importFile(file, '', '', '', '', '');
+    expect(mockSave).toHaveBeenCalled();
   });
 });
-
-// NOTE: The below test works fine locally but makes the test fail in github for some reason. This should be investigated further
-
-// describe('MatsFileUploadService', () => {
-//   let service: MatsFileUploadService;
-//   let configService: ConfigService;
-
-//   beforeEach(async () => {
-//     const module: TestingModule = await Test.createTestingModule({
-//       providers: [MatsFileUploadService, ConfigService],
-//     }).compile();
-
-//     service = module.get(MatsFileUploadService);
-//     configService = module.get(ConfigService);
-
-//     const mS3ClientInstance = {
-//       upload: jest.fn().mockReturnThis(),
-//     };
-    
-//     jest.mock('@aws-sdk/client-s3', () => { 
-//       S3Client: jest.fn(() => mS3ClientInstance) 
-//       PutObjectCommand: jest.fn(() => {})
-//     });
-
-//     mS3ClientInstance.upload.mockResolvedValue('fake response');
-
-//   });
-
-//   it('should be defined', async () => {
-
-
-//     jest.spyOn(configService, 'get').mockReturnValue("value");
-
-//     await expect(service.uploadFile('name', Buffer.from('ok'))).resolves;
-
-//   });
-// });

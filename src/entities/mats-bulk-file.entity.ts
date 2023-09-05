@@ -24,6 +24,21 @@ export class MatsBulkFile extends BaseEntity {
   })
   orisCode: number;
 
+  @Column({
+    name: 'location',
+  })
+  location: string;
+
+  @Column({
+    name: 'test_type_code',
+  })
+  testTypeGroup: string;
+
+  @Column({
+    name: 'test_type_code_description',
+  })
+  testTypeGroupDescription: string;
+
   @Column({ name: 'facility_name', nullable: false })
   facilityName: string;
 
@@ -57,4 +72,7 @@ export class MatsBulkFile extends BaseEntity {
 
   @Column({ name: 'add_date' })
   addDate: Date;
+
+  @Column({ name: 'bucket_location' })
+  bucketLocation: string;
 }
