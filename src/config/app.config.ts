@@ -84,6 +84,10 @@ export default registerAs('app', () => ({
   ecmpsHost: getConfigValue('EASEY_CAMD_SERVICES_ECMPS_HOST'),
   version: getConfigValue('EASEY_CAMD_SERVICES_VERSION', 'v0.0.0'),
   published: getConfigValue('EASEY_CAMD_SERVICES_PUBLISHED', 'local'),
+  maxMatsUploadSizeMB: getConfigValueNumber(
+    'EASEY_CAMD_SERVICES_MAX_MATS_UPLOAD_SIZE',
+    100,
+  ),
   // ENABLES DEBUG CONSOLE LOGS
   enableDebug: getConfigValueBoolean('EASEY_CAMD_SERVICES_ENABLE_DEBUG'),
   // NEEDS TO BE SET IN .ENV FILE FOR LOCAL DEVELOPMENT
