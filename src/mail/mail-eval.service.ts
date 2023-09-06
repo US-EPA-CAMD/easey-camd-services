@@ -284,7 +284,7 @@ export class MailEvalService {
   }
 
   async formatMATSContext(templateContext, records) {
-    const matsKeys = ['Test Number', 'File Name'];
+    const matsKeys = ['Test Type', 'Test Number', 'File Name'];
 
     if (records.length > 0) {
       templateContext['mats'] = {
@@ -299,6 +299,7 @@ export class MailEvalService {
           matsRecord.matsBulkFileId,
         );
 
+        newItem['Test Type'] = mats.testTypeGroupDescription;
         newItem['Test Number'] = mats.testNumber;
         newItem['File Name'] = mats.fileName;
 
@@ -488,7 +489,7 @@ export class MailEvalService {
     this.mailerService
       .sendMail({
         to: to, // List of receivers email address
-        from: 'kyleherceg@gmail.com',
+        from: from,
         subject: subject, // Subject line
         template: template,
         context: templateContext,
