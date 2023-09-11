@@ -10,7 +10,9 @@ export const copyOfRecordTemplate = `
     .code-values { flex: 0 1 auto; width: 75% }
     .col-table-container {display: flex; width: 100%}
     .col-table {flex: 0 1 auto; width: 25%}
-    body {margin: 25px}
+    .large-table{font-size: 1.5vw}
+    .larger-table{font-size: 1.2vw}
+    .largest-table{font-size: .8vw}
     table { font-family: Arial, Helvetica, sans-serif; border-collapse: collapse; width: 100%; } 
     table td, table th { border: 1px solid #ddd; padding: 8px; } 
     table tr:nth-child(even){background-color: #f2f2f2;} 

@@ -28,6 +28,7 @@ import { QaTestSummaryModule } from './qa-test-summary/qa-test-summary.module';
 import { EmSubmissionAccessModule } from './em-submission-access/em-submission-access.module';
 import { SubmissionModule } from './submission/submission.module';
 import { MatsFileUploadModule } from './mats-file-upload/mats-file-upload.module';
+import { CopyOfRecordModule } from './copy-of-record/copy-of-record.module';
 
 @Module({
   imports: [
@@ -56,6 +57,7 @@ import { MatsFileUploadModule } from './mats-file-upload/mats-file-upload.module
     EmSubmissionAccessModule,
     SubmissionModule,
     MatsFileUploadModule,
+    CopyOfRecordModule,
   ],
 })
 export class AppModule {}
