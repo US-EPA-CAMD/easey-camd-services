@@ -1,5 +1,4 @@
-import { Controller, Res, StreamableFile } from '@nestjs/common';
-import { Get, Query } from '@nestjs/common';
+import { Controller, Res, StreamableFile, Get, Query } from '@nestjs/common';
 import { ApiSecurity, ApiTags } from '@nestjs/swagger';
 import { CopyOfRecordService } from './copy-of-record.service';
 import { ReportParamsDTO } from '../dto/report-params.dto';
@@ -11,11 +10,19 @@ import type { Response } from 'express';
 export class CopyOfRecordController {
   constructor(private service: CopyOfRecordService) {}
 
-  @Get()
+  @Get('copy-of-record')
   generatePdf(
     @Query() params: ReportParamsDTO,
     @Res({ passthrough: true }) res: Response,
   ): Promise<StreamableFile> {
-    return this.service.getCopyOfRecordPDF(params, res);
+    return this.service.getCopyOfRecordPDF(params, res, false);
+  }
+
+  @Get('workspace/copy-of-record')
+  generatePdfWorkspace(
+    @Query() params: ReportParamsDTO,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<StreamableFile> {
+    return this.service.getCopyOfRecordPDF(params, res, true);
   }
 }

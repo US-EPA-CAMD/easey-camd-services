@@ -204,8 +204,12 @@ export class CopyOfRecordService {
   async getCopyOfRecordPDF(
     params: ReportParamsDTO,
     res: Response,
+    isWorkspace: boolean,
   ): Promise<StreamableFile> {
-    const reportInformation = await this.dataService.getDataSet(params, true);
+    const reportInformation = await this.dataService.getDataSet(
+      params,
+      isWorkspace,
+    );
     const htmlContent = this.generateCopyOfRecord(reportInformation, true);
 
     const plant: Plant = await Plant.findOne(params.facilityId);
