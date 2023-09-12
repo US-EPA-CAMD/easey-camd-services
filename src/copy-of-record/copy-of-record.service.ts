@@ -230,7 +230,7 @@ export class CopyOfRecordService {
 
     writeFileSync(`${__dirname}/${fileName}.html`, htmlContent);
 
-    const browser = await launch();
+    const browser = await launch({ args: ['--no-sandbox'] });
     const page = await browser.newPage();
 
     await page.goto(`file://${__dirname}/${fileName}.html`, {
