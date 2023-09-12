@@ -10,7 +10,7 @@ import { ProcessParamsDTO } from '../dto/process-params.dto';
 jest.mock('./submission.service');
 jest.mock('./submission-process.service');
 
-describe('-- Evaluation Controller --', () => {
+describe('-- Submission Controller --', () => {
   let controller: SubmissionController;
 
   beforeAll(async () => {
