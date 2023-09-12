@@ -9,9 +9,8 @@ import { data } from 'cheerio/lib/api/attributes';
 import { createReadStream, writeFileSync, rmSync } from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 import type { Response } from 'express';
-import { Plant } from 'src/entities/plant.entity';
-
-const puppeteer = require('puppeteer');
+import { Plant } from '../entities/plant.entity';
+import { launch } from 'puppeteer';
 
 @Injectable()
 export class CopyOfRecordService {
@@ -227,7 +226,7 @@ export class CopyOfRecordService {
 
     writeFileSync(`${__dirname}/${fileName}.html`, htmlContent);
 
-    const browser = await puppeteer.launch();
+    const browser = await launch();
     const page = await browser.newPage();
 
     await page.goto(`file://${__dirname}/${fileName}.html`, {

@@ -84,6 +84,7 @@ describe('-- Copy of Record Service --', () => {
       columnDto,
       reportDto.results,
       'Display',
+      false,
     );
 
     expect(content).toEqual(
