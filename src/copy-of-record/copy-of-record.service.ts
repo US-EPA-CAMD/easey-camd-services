@@ -10,7 +10,6 @@ import { createReadStream, writeFileSync, rmSync } from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 import type { Response } from 'express';
 import { Plant } from '../entities/plant.entity';
-import { launch } from 'puppeteer';
 
 @Injectable()
 export class CopyOfRecordService {
@@ -83,15 +82,7 @@ export class CopyOfRecordService {
   ): string {
     let innerContent = this.addTableHeader(displayName);
 
-    if (isPdf && columns.values.length >= 15) {
-      innerContent += '<div class = "largest-table"> <table>';
-    } else if (isPdf && columns.values.length >= 11) {
-      innerContent += '<div class = "larger-table"> <table>';
-    } else if (isPdf && columns.values.length >= 9) {
-      innerContent += '<div class = "large-table"> <table>';
-    } else {
-      innerContent += '<div> <table>';
-    }
+    innerContent += '<div> <table>';
 
     //Load column headings
     innerContent += '<tr>';
@@ -216,13 +207,13 @@ export class CopyOfRecordService {
 
     let responseFileName;
     if (params.reportCode === 'EM') {
-      responseFileName = `${params.reportCode}_${plant.facilityName}_${plant.orisCode}_${params.year}Q${params.quarter}.pdf`;
+      responseFileName = `${params.reportCode}_${plant.facilityName}_${plant.orisCode}_${params.year}Q${params.quarter}.html`;
     } else {
-      responseFileName = `${params.reportCode}_${plant.facilityName}_${plant.orisCode}.pdf`;
+      responseFileName = `${params.reportCode}_${plant.facilityName}_${plant.orisCode}.html`;
     }
 
     res.set({
-      'Content-Type': 'application/pdf',
+      'Content-Type': 'application/html',
       'Content-Disposition': `attachment; filename="${responseFileName}"`,
     });
 
@@ -230,21 +221,9 @@ export class CopyOfRecordService {
 
     writeFileSync(`${__dirname}/${fileName}.html`, htmlContent);
 
-    const browser = await launch({ args: ['--no-sandbox'] });
-    const page = await browser.newPage();
-
-    await page.goto(`file://${__dirname}/${fileName}.html`, {
-      waitUntil: 'networkidle2',
-    });
-    await page.pdf({ path: `${__dirname}/${fileName}.pdf`, format: 'A4' });
-
-    await browser.close();
-
-    rmSync(`${__dirname}/${fileName}.html`);
-
-    const stream = createReadStream(`${__dirname}/${fileName}.pdf`);
+    const stream = createReadStream(`${__dirname}/${fileName}.html`);
     stream.on('end', () => {
-      rmSync(`${__dirname}/${fileName}.pdf`);
+      rmSync(`${__dirname}/${fileName}.html`);
     });
 
     return new StreamableFile(stream);

@@ -4,6 +4,9 @@ import { CopyOfRecordService } from './copy-of-record.service';
 import { ReportDTO } from '../dto/report.dto';
 import { ReportColumnDTO } from '../dto/report-column.dto';
 import { ReportDetailDTO } from '../dto/report-detail.dto';
+import { DataSetService } from '../dataset/dataset.service';
+
+jest.mock('../dataset/dataset.service');
 
 const report = new ReportDTO();
 
@@ -43,7 +46,7 @@ describe('-- Copy of Record Service --', () => {
     const module = await Test.createTestingModule({
       imports: [LoggerModule],
       controllers: [],
-      providers: [CopyOfRecordService],
+      providers: [CopyOfRecordService, DataSetService],
     }).compile();
 
     service = module.get(CopyOfRecordService);
