@@ -1,6 +1,6 @@
 export const copyOfRecordTemplate = `
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
   <style>
     h1 {text-align: center}
@@ -21,9 +21,11 @@ export const copyOfRecordTemplate = `
     h3{margin-top: 25px;}
   </style>
 
+  <title> {TITLE} </title>
+
   <body>
     <h1> {HEADER} </h1>
-    <h3> {DATE} </h3>
+    <p> {DATE} </p>
     {CONTENT}
   </body>
 </html>

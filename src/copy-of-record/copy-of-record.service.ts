@@ -34,11 +34,13 @@ export class CopyOfRecordService {
       date.toLocaleDateString('en-US', options),
     );
 
+    content = content.replace('{TITLE}', title);
+
     return content.replace('{HEADER}', title);
   }
 
   addTableHeader(title: string): string {
-    const heading = `<h2> ${title} </h2>`;
+    const heading = `<h2 tabindex="0"> ${title} </h2>`;
     return heading;
   }
 
@@ -83,6 +85,7 @@ export class CopyOfRecordService {
   ): string {
     let innerContent = this.addTableHeader(displayName);
 
+    /*
     if (isPdf && columns.values.length >= 15) {
       innerContent += '<div class = "largest-table"> <table>';
     } else if (isPdf && columns.values.length >= 11) {
@@ -92,6 +95,9 @@ export class CopyOfRecordService {
     } else {
       innerContent += '<div> <table>';
     }
+    */
+
+    innerContent += '<div> <table>';
 
     //Load column headings
     innerContent += '<tr>';
@@ -131,7 +137,7 @@ export class CopyOfRecordService {
         if (result[column.name]) {
           innerContent += `<td> ${result[column.name]} </td>`;
         } else {
-          innerContent += `<td></td>`;
+          innerContent += `<td> n/a </td>`;
         }
       }
       innerContent += '</tr>';
@@ -236,7 +242,15 @@ export class CopyOfRecordService {
     await page.goto(`file://${__dirname}/${fileName}.html`, {
       waitUntil: 'networkidle2',
     });
-    await page.pdf({ path: `${__dirname}/${fileName}.pdf`, format: 'A4' });
+
+    await page.emulateMediaType('screen');
+
+    await page.pdf({
+      path: `${__dirname}/${fileName}.pdf`,
+      format: 'LEDGER',
+      margin: { right: '50px', left: '50px' },
+      printBackground: true,
+    });
 
     await browser.close();
 
