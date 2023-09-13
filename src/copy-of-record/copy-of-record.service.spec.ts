@@ -4,6 +4,9 @@ import { CopyOfRecordService } from './copy-of-record.service';
 import { ReportDTO } from '../dto/report.dto';
 import { ReportColumnDTO } from '../dto/report-column.dto';
 import { ReportDetailDTO } from '../dto/report-detail.dto';
+import { DataSetService } from '../dataset/dataset.service';
+
+jest.mock('../dataset/dataset.service');
 
 const report = new ReportDTO();
 
@@ -43,7 +46,7 @@ describe('-- Copy of Record Service --', () => {
     const module = await Test.createTestingModule({
       imports: [LoggerModule],
       controllers: [],
-      providers: [CopyOfRecordService],
+      providers: [CopyOfRecordService, DataSetService],
     }).compile();
 
     service = module.get(CopyOfRecordService);
@@ -63,7 +66,7 @@ describe('-- Copy of Record Service --', () => {
   it('should add table header correctly', () => {
     const header = service.addTableHeader('Header');
 
-    expect(header).toBe('<h2> Header </h2>');
+    expect(header).toBe('<h2 tabindex="0"> Header </h2>');
   });
 
   it('should add a column table correctly', () => {
@@ -75,7 +78,7 @@ describe('-- Copy of Record Service --', () => {
     );
 
     expect(content).toEqual(
-      `<h2> Display </h2><div class = \"col-table-container\"><table class = \"col-table\"><tr><th> Facility Name </th><td> Cholla </td></tr><tr><th> Facility ID (ORISPL) </th><td> 113 </td></tr><tr><th> State </th><td> AZ </td></tr><tr><th> County </th><td> Navajo County </td></tr><tr><th> Latitude </th><td> 34.9394 </td></tr><tr><th> Longitude </th><td> -110.3033 </td></tr></table></div>`,
+      `<h2 tabindex=\"0\"> Display </h2><div class = \"col-table-container\"><table class = \"col-table\"><tr><th> Facility Name </th><td> Cholla </td></tr><tr><th> Facility ID (ORISPL) </th><td> 113 </td></tr><tr><th> State </th><td> AZ </td></tr><tr><th> County </th><td> Navajo County </td></tr><tr><th> Latitude </th><td> 34.9394 </td></tr><tr><th> Longitude </th><td> -110.3033 </td></tr></table></div>`,
     );
   });
 
@@ -88,7 +91,7 @@ describe('-- Copy of Record Service --', () => {
     );
 
     expect(content).toEqual(
-      `<h2> Display </h2><div> <table><tr><th> Facility Name </th><th> Facility ID (ORISPL) </th><th> State </th><th> County </th><th> Latitude </th><th> Longitude </th></tr><tr><td> Cholla </td><td> 113 </td><td> AZ </td><td> Navajo County </td><td> 34.9394 </td><td> -110.3033 </td></tr></table> </div>`,
+      `<h2 tabindex=\"0\"> Display </h2><div> <table><tr><th> Facility Name </th><th> Facility ID (ORISPL) </th><th> State </th><th> County </th><th> Latitude </th><th> Longitude </th></tr><tr><td> Cholla </td><td> 113 </td><td> AZ </td><td> Navajo County </td><td> 34.9394 </td><td> -110.3033 </td></tr></table> </div>`,
     );
   });
 
