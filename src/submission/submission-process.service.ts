@@ -99,7 +99,7 @@ export class SubmissionProcessService {
           });
         } else if (record.qaCertEventIdentifier) {
           params.reportCode = 'QCE';
-          params.qceId = record.qaCertEventIdentifier;
+          params.qceId = [record.qaCertEventIdentifier];
           titleContext = 'QCE_' + record.qaCertEventIdentifier;
           transactions.push({
             command:
@@ -108,7 +108,7 @@ export class SubmissionProcessService {
           });
         } else {
           params.reportCode = 'TEE';
-          params.teeId = record.testExtensionExemptionIdentifier;
+          params.teeId = [record.testExtensionExemptionIdentifier];
           titleContext = 'TEE_' + record.testExtensionExemptionIdentifier;
           transactions.push({
             command:

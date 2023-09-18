@@ -1,5 +1,5 @@
 import { Controller, Res, StreamableFile, Get, Query } from '@nestjs/common';
-import { ApiSecurity, ApiTags } from '@nestjs/swagger';
+import { ApiQuery, ApiSecurity, ApiTags } from '@nestjs/swagger';
 import { CopyOfRecordService } from './copy-of-record.service';
 import { ReportParamsDTO } from '../dto/report-params.dto';
 import type { Response } from 'express';
@@ -11,6 +11,24 @@ export class CopyOfRecordController {
   constructor(private service: CopyOfRecordService) {}
 
   @Get('copy-of-record')
+  @ApiQuery({
+    style: 'pipeDelimited',
+    name: 'testId',
+    required: false,
+    explode: false,
+  })
+  @ApiQuery({
+    style: 'pipeDelimited',
+    name: 'qceId',
+    required: false,
+    explode: false,
+  })
+  @ApiQuery({
+    style: 'pipeDelimited',
+    name: 'teeId',
+    required: false,
+    explode: false,
+  })
   generatePdf(
     @Query() params: ReportParamsDTO,
     @Res({ passthrough: true }) res: Response,
@@ -19,6 +37,24 @@ export class CopyOfRecordController {
   }
 
   @Get('workspace/copy-of-record')
+  @ApiQuery({
+    style: 'pipeDelimited',
+    name: 'testId',
+    required: false,
+    explode: false,
+  })
+  @ApiQuery({
+    style: 'pipeDelimited',
+    name: 'qceId',
+    required: false,
+    explode: false,
+  })
+  @ApiQuery({
+    style: 'pipeDelimited',
+    name: 'teeId',
+    required: false,
+    explode: false,
+  })
   generatePdfWorkspace(
     @Query() params: ReportParamsDTO,
     @Res({ passthrough: true }) res: Response,
