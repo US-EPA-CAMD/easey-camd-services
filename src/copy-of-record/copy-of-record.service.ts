@@ -201,6 +201,7 @@ export class CopyOfRecordService {
       params,
       isWorkspace,
     );
+
     const htmlContent = this.generateCopyOfRecord(reportInformation, true);
 
     const plant: Plant = await Plant.findOne(params.facilityId);

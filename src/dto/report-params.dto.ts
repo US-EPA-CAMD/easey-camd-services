@@ -27,13 +27,15 @@ export class ReportParamsDTO {
   @Transform(({ value }) => value.split('|').map((item: string) => item.trim()))
   testId?: string[];
 
-  @ApiProperty()
+  @ApiProperty({ isArray: true })
   @IsOptional()
-  qceId?: string;
+  @Transform(({ value }) => value.split('|').map((item: string) => item.trim()))
+  qceId?: string[];
 
-  @ApiProperty()
+  @ApiProperty({ isArray: true })
   @IsOptional()
-  teeId?: string;
+  @Transform(({ value }) => value.split('|').map((item: string) => item.trim()))
+  teeId?: string[];
 
   @ApiProperty()
   @IsOptional()

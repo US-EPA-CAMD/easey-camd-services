@@ -15,6 +15,8 @@ export class DataSetService {
   private hasFacilityInfo: boolean;
   private reportColumns: ReportColumnDTO[];
 
+  private FACINFO = 'FACINFO1C';
+
   constructor(
     @InjectRepository(DataSetRepository)
     private readonly repository: DataSetRepository,
@@ -58,6 +60,24 @@ export class DataSetService {
         [params.testId],
       );
 
+      promises.push(
+        //First push one facility global information piece
+        new Promise((resolve, reject) => {
+          const detailDef = dataSet.tables.filter(
+            (tbl) => tbl.templateCode === this.FACINFO,
+          );
+
+          const details = this.getReportResults(
+            schema,
+            detailDef,
+            params,
+            tests[0].id,
+            true,
+          );
+          resolve(details);
+        }),
+      );
+
       tests.forEach((test: { id: string; code: string }) => {
         promises.push(
           new Promise((resolve, _reject) => {
@@ -66,11 +86,13 @@ export class DataSetService {
                 tbl.template.groupCode === 'ALL' ||
                 tbl.template.groupCode === test.code,
             );
+
             const details = this.getReportResults(
               schema,
               detailDef,
               params,
               test.id,
+              false,
             );
             resolve(details);
           }),
@@ -88,6 +110,8 @@ export class DataSetService {
         schema,
         dataSet.tables,
         params,
+        null,
+        true,
       );
     }
 
@@ -104,12 +128,12 @@ export class DataSetService {
     tables: DataTable[],
     params: ReportParamsDTO,
     testId?: string,
+    isHeader = false,
   ): Promise<ReportDetailDTO[]> {
     const promises = [];
-    const FACINFO = 'FACINFO';
 
     tables.forEach((tbl) => {
-      if (!this.hasFacilityInfo || tbl.templateCode !== FACINFO) {
+      if (isHeader || tbl.templateCode !== this.FACINFO) {
         promises.push(
           new Promise(async (resolve, _reject) => {
             tbl.sqlStatement = tbl.sqlStatement.replace(/{SCHEMA}/, schema);
@@ -154,9 +178,6 @@ export class DataSetService {
             resolve(detailDto);
           }),
         );
-        if (!this.hasFacilityInfo && tbl.templateCode === FACINFO) {
-          this.hasFacilityInfo = true;
-        }
       }
     });
 
