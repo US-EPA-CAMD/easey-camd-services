@@ -99,7 +99,7 @@ export class SubmissionProcessService {
           });
         } else if (record.qaCertEventIdentifier) {
           params.reportCode = 'QCE';
-          params.qceId = record.qaCertEventIdentifier;
+          params.qceId = [record.qaCertEventIdentifier];
           titleContext = 'QCE_' + record.qaCertEventIdentifier;
           transactions.push({
             command:
@@ -108,7 +108,7 @@ export class SubmissionProcessService {
           });
         } else {
           params.reportCode = 'TEE';
-          params.teeId = record.testExtensionExemptionIdentifier;
+          params.teeId = [record.testExtensionExemptionIdentifier];
           titleContext = 'TEE_' + record.testExtensionExemptionIdentifier;
           transactions.push({
             command:
@@ -159,13 +159,13 @@ export class SubmissionProcessService {
         const response = await this.importS3Client.send(
           new GetObjectCommand({
             Bucket: this.configService.get<string>('matsConfig.importBucket'),
-            Key: `${set.monPlanIdentifier}/${matsRecord.testNumber}/${matsRecord.fileName}`,
+            Key: matsRecord.bucketLocation,
           }),
         );
         const responseString = await response.Body.transformToString();
 
         writeFileSync(
-          `${folderPath}/MATS_${set.monPlanIdentifier}_${matsRecord.testNumber}_${matsRecord.fileName}`,
+          `${folderPath}/MATS_${set.monPlanIdentifier}_${matsRecord.testTypeGroup}_${matsRecord.testNumber}_${matsRecord.fileName}`,
           responseString,
         );
 
@@ -173,7 +173,7 @@ export class SubmissionProcessService {
         await this.globalS3Client.send(
           new PutObjectCommand({
             Body: responseString,
-            Key: `${set.monPlanIdentifier}/${matsRecord.testNumber}/${matsRecord.fileName}`,
+            Key: matsRecord.bucketLocation,
             Bucket: this.configService.get<string>('matsConfig.globalBucket'),
           }),
         );

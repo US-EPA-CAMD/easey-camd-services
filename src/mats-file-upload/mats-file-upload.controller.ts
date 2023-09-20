@@ -13,6 +13,7 @@ import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
 import { RoleGuard, User } from '@us-epa-camd/easey-common/decorators';
 import { CurrentUser } from '@us-epa-camd/easey-common/interfaces';
 import { LookupType } from '@us-epa-camd/easey-common/enums';
+import { ConfigService } from '@nestjs/config';
 
 const MAX_UPLOAD_SIZE_MB: number = 30;
 
@@ -20,9 +21,12 @@ const MAX_UPLOAD_SIZE_MB: number = 30;
 @ApiTags('MATs File Upload')
 @ApiSecurity('APIKey')
 export class MatsFileUploadController {
-  constructor(private service: MatsFileUploadService) {}
+  constructor(
+    private configService: ConfigService,
+    private service: MatsFileUploadService,
+  ) {}
 
-  @Post(':monPlanId/:testNumber/import')
+  @Post(':monPlanId/:locId/:testGroupCode/:testNumber/import')
   @ApiConsumes('multipart/form-data')
   @RoleGuard(
     { enforceCheckout: true, pathParam: 'monPlanId' },
@@ -43,14 +47,19 @@ export class MatsFileUploadController {
   async uploadFile(
     @UploadedFile() file: Express.Multer.File,
     @Param('monPlanId') monPlanId: string,
+    @Param('locId') locId: string,
+    @Param('testGroupCode') testGroupCode: string,
     @Param('testNumber') testNumber: string,
     @User() user: CurrentUser,
   ) {
     const fileErrors = [];
 
-    if (file.size > MAX_UPLOAD_SIZE_MB * 1024 * 1024)
+    if (
+      file.size >
+      this.configService.get<number>('app.maxMatsUploadSizeMB') * 1024 * 1024
+    )
       fileErrors.push(
-        `Uploaded file exceeds maximum size of ${MAX_UPLOAD_SIZE_MB}M`,
+        `Uploaded file exceeds maximum size of ${MAX_UPLOAD_SIZE_MB}MB`,
       );
     if (
       !['application/pdf', 'application/xml', 'text/xml'].includes(
@@ -59,24 +68,21 @@ export class MatsFileUploadController {
     )
       fileErrors.push('Only XML and PDF files may be uploaded');
 
-    if (fileErrors.length > 0)
+    if (fileErrors.length > 0) {
       throw new EaseyException(
         new Error(fileErrors.join('\n')),
         HttpStatus.BAD_REQUEST,
         { responseObject: fileErrors },
       );
+    }
 
-    await this.service.uploadFile(
-      file.originalname,
-      file.buffer,
+    await this.service.importFile(
+      file,
       monPlanId,
+      locId,
+      testGroupCode,
       testNumber,
-    );
-    await this.service.saveImportMetaData(
-      monPlanId,
-      testNumber,
-      file.originalname,
-      user?.userId,
+      user.userId,
     );
   }
 }

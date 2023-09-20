@@ -1,0 +1,64 @@
+import { Controller, Res, StreamableFile, Get, Query } from '@nestjs/common';
+import { ApiQuery, ApiSecurity, ApiTags } from '@nestjs/swagger';
+import { CopyOfRecordService } from './copy-of-record.service';
+import { ReportParamsDTO } from '../dto/report-params.dto';
+import type { Response } from 'express';
+
+@Controller()
+@ApiSecurity('APIKey')
+@ApiTags('Copy of Record')
+export class CopyOfRecordController {
+  constructor(private service: CopyOfRecordService) {}
+
+  @Get('copy-of-record')
+  @ApiQuery({
+    style: 'pipeDelimited',
+    name: 'testId',
+    required: false,
+    explode: false,
+  })
+  @ApiQuery({
+    style: 'pipeDelimited',
+    name: 'qceId',
+    required: false,
+    explode: false,
+  })
+  @ApiQuery({
+    style: 'pipeDelimited',
+    name: 'teeId',
+    required: false,
+    explode: false,
+  })
+  generatePdf(
+    @Query() params: ReportParamsDTO,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<StreamableFile> {
+    return this.service.getCopyOfRecordPDF(params, res, false);
+  }
+
+  @Get('workspace/copy-of-record')
+  @ApiQuery({
+    style: 'pipeDelimited',
+    name: 'testId',
+    required: false,
+    explode: false,
+  })
+  @ApiQuery({
+    style: 'pipeDelimited',
+    name: 'qceId',
+    required: false,
+    explode: false,
+  })
+  @ApiQuery({
+    style: 'pipeDelimited',
+    name: 'teeId',
+    required: false,
+    explode: false,
+  })
+  generatePdfWorkspace(
+    @Query() params: ReportParamsDTO,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<StreamableFile> {
+    return this.service.getCopyOfRecordPDF(params, res, true);
+  }
+}

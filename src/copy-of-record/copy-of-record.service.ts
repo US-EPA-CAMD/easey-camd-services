@@ -1,12 +1,22 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, StreamableFile } from '@nestjs/common';
 import { Logger } from '@us-epa-camd/easey-common/logger';
 import { copyOfRecordTemplate } from './template';
 import { ReportDTO } from '../dto/report.dto';
 import { ReportColumnDTO } from '../dto/report-column.dto';
+import { ReportParamsDTO } from '../dto/report-params.dto';
+import { DataSetService } from '../dataset/dataset.service';
+import { data } from 'cheerio/lib/api/attributes';
+import { createReadStream, writeFileSync, rmSync } from 'fs';
+import { v4 as uuidv4 } from 'uuid';
+import type { Response } from 'express';
+import { Plant } from '../entities/plant.entity';
 
 @Injectable()
 export class CopyOfRecordService {
-  constructor(private readonly logger: Logger) {}
+  constructor(
+    private readonly logger: Logger,
+    private dataService: DataSetService,
+  ) {}
 
   addDocumentHeader(content: string, title: string): string {
     const date = new Date();
@@ -64,8 +74,14 @@ export class CopyOfRecordService {
     return innerContent;
   }
 
-  addDefaultTable(columns: ReportColumnDTO, results, displayName): string {
+  addDefaultTable(
+    columns: ReportColumnDTO,
+    results,
+    displayName,
+    isPdf,
+  ): string {
     let innerContent = this.addTableHeader(displayName);
+
     innerContent += '<div> <table>';
 
     //Load column headings
@@ -135,7 +151,7 @@ export class CopyOfRecordService {
     return innerContent;
   }
 
-  generateCopyOfRecord(data: ReportDTO): string {
+  generateCopyOfRecord(data: ReportDTO, isPdf: boolean = false): string {
     let documentContent = copyOfRecordTemplate;
     documentContent = this.addDocumentHeader(documentContent, data.displayName);
     let innerContent = '';
@@ -166,6 +182,7 @@ export class CopyOfRecordService {
           columns,
           results,
           detail.displayName,
+          isPdf,
         );
       }
     }
@@ -173,5 +190,43 @@ export class CopyOfRecordService {
     documentContent = documentContent.replace('{CONTENT}', innerContent);
 
     return documentContent;
+  }
+
+  async getCopyOfRecordPDF(
+    params: ReportParamsDTO,
+    res: Response,
+    isWorkspace: boolean,
+  ): Promise<StreamableFile> {
+    const reportInformation = await this.dataService.getDataSet(
+      params,
+      isWorkspace,
+    );
+
+    const htmlContent = this.generateCopyOfRecord(reportInformation, true);
+
+    const plant: Plant = await Plant.findOne(params.facilityId);
+
+    let responseFileName;
+    if (params.reportCode === 'EM') {
+      responseFileName = `${params.reportCode}_${plant.facilityName}_${plant.orisCode}_${params.year}Q${params.quarter}.html`;
+    } else {
+      responseFileName = `${params.reportCode}_${plant.facilityName}_${plant.orisCode}.html`;
+    }
+
+    res.set({
+      'Content-Type': 'application/html',
+      'Content-Disposition': `attachment; filename="${responseFileName}"`,
+    });
+
+    const fileName = uuidv4();
+
+    writeFileSync(`${__dirname}/${fileName}.html`, htmlContent);
+
+    const stream = createReadStream(`${__dirname}/${fileName}.html`);
+    stream.on('end', () => {
+      rmSync(`${__dirname}/${fileName}.html`);
+    });
+
+    return new StreamableFile(stream);
   }
 }
