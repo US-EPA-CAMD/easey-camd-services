@@ -4,7 +4,7 @@ import {
   ApiOkResponse,
   ApiBearerAuth,
 } from '@nestjs/swagger';
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Post, UseGuards, Get, Query } from '@nestjs/common';
 import { SubmissionService } from './submission.service';
 import { RoleGuard } from '@us-epa-camd/easey-common/decorators';
 import { LookupType } from '@us-epa-camd/easey-common/enums';
@@ -12,6 +12,7 @@ import { SubmissionQueueDTO } from '../dto/submission-queue.dto';
 import { ClientTokenGuard } from '@us-epa-camd/easey-common/guards';
 import { SubmissionProcessService } from './submission-process.service';
 import { ProcessParamsDTO } from '../dto/process-params.dto';
+import { SubmissionsLastUpdatedResponseDTO } from '../dto/submission-last-updated.dto';
 
 @Controller()
 @ApiTags('Submission')
@@ -21,6 +22,18 @@ export class SubmissionController {
     private service: SubmissionService,
     private processService: SubmissionProcessService,
   ) {}
+
+  @Get('last-updated')
+  @ApiOkResponse({
+    type: SubmissionsLastUpdatedResponseDTO,
+    description:
+      'Returns all submission records that have been updated / submitted since the input date.',
+  })
+  async lastUpdated(
+    @Query('date') queryTime: string,
+  ): Promise<SubmissionsLastUpdatedResponseDTO> {
+    return this.service.getLastUpdated(queryTime);
+  }
 
   @Post('queue')
   @ApiOkResponse({

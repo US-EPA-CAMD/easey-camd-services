@@ -1,4 +1,4 @@
-import { getManager } from 'typeorm';
+import { MoreThan, getManager } from 'typeorm';
 import { Injectable } from '@nestjs/common';
 import { Logger } from '@us-epa-camd/easey-common/logger';
 import { EvaluationItem } from '../dto/evaluation.dto';
@@ -14,10 +14,19 @@ import { SubmissionQueue } from '../entities/submission-queue.entity';
 import { SubmissionQueueDTO } from '../dto/submission-queue.dto';
 import { QaSuppData } from '../entities/qa-supp.entity';
 import { MatsBulkFile } from '../entities/mats-bulk-file.entity';
+import { SubmissionsLastUpdatedResponseDTO } from '../dto/submission-last-updated.dto';
+import { CombinedSubmissions } from '../entities/combined-submissions.entity';
+import { CombinedSubmissionsMap } from '../maps/combined-submissions.map';
+import { EmissionsLastUpdatedMap } from '../maps/emissions-last-updated.map';
+import { EmissionEvaluationGlobal } from '../entities/emission-evaluation-global.entity';
 
 @Injectable()
 export class SubmissionService {
-  constructor(private readonly logger: Logger) {}
+  constructor(
+    private readonly logger: Logger,
+    private readonly combinedSubmissionMap: CombinedSubmissionsMap,
+    private readonly emissionsLastUpdatedMap: EmissionsLastUpdatedMap,
+  ) {}
 
   returnManager(): any {
     return getManager();
@@ -203,5 +212,32 @@ export class SubmissionService {
     }
 
     await Promise.all(promises);
+  }
+
+  async getLastUpdated(
+    queryTime: string,
+  ): Promise<SubmissionsLastUpdatedResponseDTO> {
+    const dto = new SubmissionsLastUpdatedResponseDTO();
+
+    dto.submissionLogs = await this.combinedSubmissionMap.many(
+      await CombinedSubmissions.find({
+        where: { submittedOn: MoreThan(new Date(queryTime)) },
+      }),
+    );
+
+    dto.emissionReports = await this.emissionsLastUpdatedMap.many(
+      await EmissionEvaluationGlobal.find({
+        where: { lastUpdated: MoreThan(new Date(queryTime)) },
+      }),
+    );
+
+    const est = new Date().toLocaleString('en-us', {
+      timeZone: 'America/New_York',
+    });
+    const processDate = new Date(est);
+
+    dto.mostRecentUpdateDate = processDate;
+
+    return dto;
   }
 }
