@@ -29,9 +29,6 @@ export class Evaluation extends BaseEntity {
   })
   rptPeriodIdentifier?: number;
 
-  @Column({ name: 'severity_cd' })
-  severityCode: string;
-
   @Column({ name: 'submitted_on' })
   submittedOn: Date;
 
