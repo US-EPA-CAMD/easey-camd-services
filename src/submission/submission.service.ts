@@ -19,6 +19,7 @@ import { CombinedSubmissions } from '../entities/combined-submissions.entity';
 import { CombinedSubmissionsMap } from '../maps/combined-submissions.map';
 import { EmissionsLastUpdatedMap } from '../maps/emissions-last-updated.map';
 import { EmissionEvaluationGlobal } from '../entities/emission-evaluation-global.entity';
+import { CheckSession } from '../entities/check-session.entity';
 
 @Injectable()
 export class SubmissionService {
@@ -83,13 +84,24 @@ export class SubmissionService {
         mpRecord.statusCode = 'QUEUED';
         mpRecord.submittedOn = currentTime;
 
+        const cs: CheckSession = await this.returnManager().findOne(
+          CheckSession,
+          {
+            where: { monPlanId: item.monPlanId },
+          },
+        );
+
+        mpRecord.severityCode = cs?.severityCode || 'NONE';
+
         await this.returnManager().save(mpRecord);
         await this.returnManager().save(mp);
       }
 
       for (const id of item.testSumIds) {
+        console.log(id);
+
         const ts: QaSuppData = await this.returnManager().findOne(QaSuppData, {
-          where: { testSumIdentifier: id },
+          where: { testSumId: id },
         });
         ts.submissionAvailabilityCode = 'PENDING'; //TODO FIND SUPP RECORD CORRESPONDING
 
@@ -99,6 +111,15 @@ export class SubmissionService {
         tsRecord.statusCode = 'QUEUED';
         tsRecord.testSumIdentifier = id;
         tsRecord.submittedOn = currentTime;
+
+        const cs: CheckSession = await this.returnManager().findOne(
+          CheckSession,
+          {
+            where: { tesSumId: id },
+          },
+        );
+
+        tsRecord.severityCode = cs?.severityCode || 'NONE';
 
         await this.returnManager().save(ts);
         await this.returnManager().save(tsRecord);
@@ -120,6 +141,15 @@ export class SubmissionService {
         qceRecord.qaCertEventIdentifier = id;
         qceRecord.submittedOn = currentTime;
 
+        const cs: CheckSession = await this.returnManager().findOne(
+          CheckSession,
+          {
+            where: { qaCertEventId: id },
+          },
+        );
+
+        qceRecord.severityCode = cs?.severityCode || 'NONE';
+
         await this.returnManager().save(qce);
         await this.returnManager().save(qceRecord);
       }
@@ -135,6 +165,15 @@ export class SubmissionService {
 
         teeRecord.testExtensionExemptionIdentifier = id;
         teeRecord.submittedOn = currentTime;
+
+        const cs: CheckSession = await this.returnManager().findOne(
+          CheckSession,
+          {
+            where: { testExtensionExemptionId: id },
+          },
+        );
+
+        teeRecord.severityCode = cs?.severityCode || 'NONE';
 
         await this.returnManager().save(tee);
         await this.returnManager().save(teeRecord);
@@ -166,6 +205,18 @@ export class SubmissionService {
         emissionRecord.rptPeriodIdentifier = rp.rptPeriodIdentifier;
         emissionRecord.submittedOn = currentTime;
 
+        const cs: CheckSession = await this.returnManager().findOne(
+          CheckSession,
+          {
+            where: {
+              monPlanId: item.monPlanId,
+              rptPeriodId: rp.rptPeriodIdentifier,
+            },
+          },
+        );
+
+        emissionRecord.severityCode = cs?.severityCode || 'NONE';
+
         await this.returnManager().save(ee);
         await this.returnManager().save(emissionRecord);
       }
@@ -185,6 +236,8 @@ export class SubmissionService {
 
         matsRecord.matsBulkFileId = matsId;
         matsRecord.submittedOn = currentTime;
+
+        matsRecord.severityCode = 'NONE';
 
         await this.returnManager().save(mf);
         await this.returnManager().save(matsRecord);

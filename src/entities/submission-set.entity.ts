@@ -40,4 +40,7 @@ export class SubmissionSet extends BaseEntity {
 
   @Column({ name: 'details' })
   details: string;
+
+  @Column({ name: 'submission_end_stage_time' })
+  endStageTime: Date;
 }
