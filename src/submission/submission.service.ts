@@ -69,7 +69,8 @@ export class SubmissionService {
         mp.facIdentifier,
       );
 
-      submissionSet.facIdentifier = facility.orisCode;
+      submissionSet.facIdentifier = facility.facIdentifier;
+      submissionSet.orisCode = facility.orisCode;
       submissionSet.facName = facility.facilityName;
 
       await this.returnManager().save(SubmissionSet, submissionSet);
@@ -98,8 +99,6 @@ export class SubmissionService {
       }
 
       for (const id of item.testSumIds) {
-        console.log(id);
-
         const ts: QaSuppData = await this.returnManager().findOne(QaSuppData, {
           where: { testSumId: id },
         });

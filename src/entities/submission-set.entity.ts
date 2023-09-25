@@ -26,6 +26,13 @@ export class SubmissionSet extends BaseEntity {
   })
   facIdentifier: number;
 
+  @Column({
+    name: 'oris_code',
+    type: 'numeric',
+    transformer: new NumericColumnTransformer(),
+  })
+  orisCode: number;
+
   @Column({ name: 'fac_name' })
   facName: string;
 
