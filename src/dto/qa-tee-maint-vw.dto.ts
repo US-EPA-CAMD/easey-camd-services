@@ -7,7 +7,7 @@ export class QaTeeMaintViewDTO {
     example: propertyMetadata.testExtensionExemptionId.example,
     name: propertyMetadata.testExtensionExemptionId.fieldLabels.value,
   })
-  testExtensionExemptionId: string;
+  id: string;
 
   @ApiProperty({
     description: propertyMetadata.emissions.monitoringLocationId.description,
