@@ -36,8 +36,9 @@ describe('-- Logging Controller --', () => {
       });
 
       const errorDto = new ServerErrorDto();
-      errorDto.errorMessage = '';
-      errorDto.metadata = {};
+      errorDto.errorId = '';
+      errorDto.message = '';
+      errorDto.stackTrace = '';
 
       await service.logServerError(request, errorDto);
 

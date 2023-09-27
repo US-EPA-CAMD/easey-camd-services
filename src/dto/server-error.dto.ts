@@ -1,14 +1,16 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  DataDictionary,
-  OverrideKeys,
-  PropertyKeys,
-} from '@us-epa-camd/easey-common/data-dictionary';
+import { IsString } from 'class-validator';
 
 export class ServerErrorDto {
   @ApiProperty()
-  errorMessage: string;
+  @IsString()
+  errorId: string;
 
   @ApiProperty()
-  metadata: object;
+  @IsString()
+  message: string;
+
+  @ApiProperty()
+  @IsString()
+  stackTrace: string;
 }
