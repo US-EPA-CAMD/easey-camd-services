@@ -78,7 +78,7 @@ describe('-- Copy of Record Service --', () => {
     );
 
     expect(content).toEqual(
-      `<h2> Display </h2><div class = \"col-table-container\"><table class = \"col-table\"><tr><th> Facility Name </th><td> Cholla </td></tr><tr><th> Facility ID (ORISPL) </th><td> 113 </td></tr><tr><th> State </th><td> AZ </td></tr><tr><th> County </th><td> Navajo County </td></tr><tr><th> Latitude </th><td> 34.9394 </td></tr><tr><th> Longitude </th><td> -110.3033 </td></tr></table></div>`,
+      `<h2> Display </h2><div class = \"col-table-container\"><table class=\"col-table\"><tr><th>Facility Name</th><td>Cholla</td></tr><tr><th>Facility ID (ORISPL)</th><td>113</td></tr><tr><th>State</th><td>AZ</td></tr><tr><th>County</th><td>Navajo County</td></tr><tr><th>Latitude</th><td>34.9394</td></tr><tr><th>Longitude</th><td>-110.3033</td></tr></table></div>`,
     );
   });
 
