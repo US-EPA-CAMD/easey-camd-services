@@ -50,22 +50,29 @@ export class CopyOfRecordService {
     let innerContent = this.addTableHeader(displayName);
     innerContent += '<div class = "col-table-container">';
 
-    const itemsPerColumn = Math.ceil(columns.values.length / columnCount);
-
-    let idx = 0;
+    //Set up our column groupings
+    const groups = [];
     for (let i = 0; i < columnCount; i++) {
-      innerContent += '<table class = "col-table">';
-      for (let j = 0; j < itemsPerColumn; j++) {
-        if (idx < columns.values.length) {
-          innerContent += '<tr>';
+      groups.push([]);
+    }
 
-          innerContent += `<th> ${columns.values[idx].displayName} </th>`;
-          innerContent += `<td> ${results[0][columns.values[idx].name]} </td>`;
+    for (let i = 0; i < columns.values.length; i++) {
+      groups[i % columnCount].push([
+        columns.values[i].displayName,
+        columns.values[i].name,
+      ]);
+    }
 
-          innerContent += '</tr>';
-        }
-        idx++;
+    for (const group of groups) {
+      innerContent += '<table class="col-table">';
+
+      for (const item of group) {
+        innerContent += '<tr>';
+        innerContent += `<th>${item[0]}</th>`;
+        innerContent += `<td>${results[0][item[1]]}</td>`;
+        innerContent += '</tr>';
       }
+
       innerContent += '</table>';
     }
 
