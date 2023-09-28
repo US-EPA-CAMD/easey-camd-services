@@ -26,6 +26,13 @@ export class SubmissionSet extends BaseEntity {
   })
   facIdentifier: number;
 
+  @Column({
+    name: 'oris_code',
+    type: 'numeric',
+    transformer: new NumericColumnTransformer(),
+  })
+  orisCode: number;
+
   @Column({ name: 'fac_name' })
   facName: string;
 
@@ -40,4 +47,7 @@ export class SubmissionSet extends BaseEntity {
 
   @Column({ name: 'details' })
   details: string;
+
+  @Column({ name: 'submission_end_stage_time' })
+  endStageTime: Date;
 }
