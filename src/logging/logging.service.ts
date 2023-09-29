@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { getManager } from 'typeorm';
 import { Logger } from '@us-epa-camd/easey-common/logger';
 import { ConfigService } from '@nestjs/config';
 import { ClientConfig } from '../entities/client-config.entity';
 import { ServerErrorDto } from '../dto/server-error.dto';
+import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
 
 @Injectable()
 export class LoggingService {
@@ -25,9 +26,18 @@ export class LoggingService {
       request.headers['x-client-id'],
     );
 
-    this.logger.log(errorDto.errorMessage, {
+    let logMetadata = {
       appName: dbRecord.name,
-      ...errorDto.metadata,
-    });
+      stack: errorDto.stackTrace,
+      statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+      errorId: errorDto.errorId,
+    };
+
+    this.logger.error(
+      errorDto.message,
+      errorDto.stackTrace,
+      request.url,
+      logMetadata,
+    );
   }
 }

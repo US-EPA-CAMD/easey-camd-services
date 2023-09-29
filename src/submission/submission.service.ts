@@ -1,4 +1,4 @@
-import { getManager } from 'typeorm';
+import { MoreThan, getManager } from 'typeorm';
 import { Injectable } from '@nestjs/common';
 import { Logger } from '@us-epa-camd/easey-common/logger';
 import { EvaluationItem } from '../dto/evaluation.dto';
@@ -14,10 +14,20 @@ import { SubmissionQueue } from '../entities/submission-queue.entity';
 import { SubmissionQueueDTO } from '../dto/submission-queue.dto';
 import { QaSuppData } from '../entities/qa-supp.entity';
 import { MatsBulkFile } from '../entities/mats-bulk-file.entity';
+import { SubmissionsLastUpdatedResponseDTO } from '../dto/submission-last-updated.dto';
+import { CombinedSubmissions } from '../entities/combined-submissions.entity';
+import { CombinedSubmissionsMap } from '../maps/combined-submissions.map';
+import { EmissionsLastUpdatedMap } from '../maps/emissions-last-updated.map';
+import { EmissionEvaluationGlobal } from '../entities/emission-evaluation-global.entity';
+import { CheckSession } from '../entities/check-session.entity';
 
 @Injectable()
 export class SubmissionService {
-  constructor(private readonly logger: Logger) {}
+  constructor(
+    private readonly logger: Logger,
+    private readonly combinedSubmissionMap: CombinedSubmissionsMap,
+    private readonly emissionsLastUpdatedMap: EmissionsLastUpdatedMap,
+  ) {}
 
   returnManager(): any {
     return getManager();
@@ -59,7 +69,8 @@ export class SubmissionService {
         mp.facIdentifier,
       );
 
-      submissionSet.facIdentifier = facility.orisCode;
+      submissionSet.facIdentifier = facility.facIdentifier;
+      submissionSet.orisCode = facility.orisCode;
       submissionSet.facName = facility.facilityName;
 
       await this.returnManager().save(SubmissionSet, submissionSet);
@@ -74,13 +85,22 @@ export class SubmissionService {
         mpRecord.statusCode = 'QUEUED';
         mpRecord.submittedOn = currentTime;
 
+        const cs: CheckSession = await this.returnManager().findOne(
+          CheckSession,
+          {
+            where: { monPlanId: item.monPlanId },
+          },
+        );
+
+        mpRecord.severityCode = cs?.severityCode || 'NONE';
+
         await this.returnManager().save(mpRecord);
         await this.returnManager().save(mp);
       }
 
       for (const id of item.testSumIds) {
         const ts: QaSuppData = await this.returnManager().findOne(QaSuppData, {
-          where: { testSumIdentifier: id },
+          where: { testSumId: id },
         });
         ts.submissionAvailabilityCode = 'PENDING'; //TODO FIND SUPP RECORD CORRESPONDING
 
@@ -90,6 +110,15 @@ export class SubmissionService {
         tsRecord.statusCode = 'QUEUED';
         tsRecord.testSumIdentifier = id;
         tsRecord.submittedOn = currentTime;
+
+        const cs: CheckSession = await this.returnManager().findOne(
+          CheckSession,
+          {
+            where: { tesSumId: id },
+          },
+        );
+
+        tsRecord.severityCode = cs?.severityCode || 'NONE';
 
         await this.returnManager().save(ts);
         await this.returnManager().save(tsRecord);
@@ -111,6 +140,15 @@ export class SubmissionService {
         qceRecord.qaCertEventIdentifier = id;
         qceRecord.submittedOn = currentTime;
 
+        const cs: CheckSession = await this.returnManager().findOne(
+          CheckSession,
+          {
+            where: { qaCertEventId: id },
+          },
+        );
+
+        qceRecord.severityCode = cs?.severityCode || 'NONE';
+
         await this.returnManager().save(qce);
         await this.returnManager().save(qceRecord);
       }
@@ -126,6 +164,15 @@ export class SubmissionService {
 
         teeRecord.testExtensionExemptionIdentifier = id;
         teeRecord.submittedOn = currentTime;
+
+        const cs: CheckSession = await this.returnManager().findOne(
+          CheckSession,
+          {
+            where: { testExtensionExemptionId: id },
+          },
+        );
+
+        teeRecord.severityCode = cs?.severityCode || 'NONE';
 
         await this.returnManager().save(tee);
         await this.returnManager().save(teeRecord);
@@ -157,6 +204,18 @@ export class SubmissionService {
         emissionRecord.rptPeriodIdentifier = rp.rptPeriodIdentifier;
         emissionRecord.submittedOn = currentTime;
 
+        const cs: CheckSession = await this.returnManager().findOne(
+          CheckSession,
+          {
+            where: {
+              monPlanId: item.monPlanId,
+              rptPeriodId: rp.rptPeriodIdentifier,
+            },
+          },
+        );
+
+        emissionRecord.severityCode = cs?.severityCode || 'NONE';
+
         await this.returnManager().save(ee);
         await this.returnManager().save(emissionRecord);
       }
@@ -176,6 +235,8 @@ export class SubmissionService {
 
         matsRecord.matsBulkFileId = matsId;
         matsRecord.submittedOn = currentTime;
+
+        matsRecord.severityCode = 'NONE';
 
         await this.returnManager().save(mf);
         await this.returnManager().save(matsRecord);
@@ -203,5 +264,32 @@ export class SubmissionService {
     }
 
     await Promise.all(promises);
+  }
+
+  async getLastUpdated(
+    queryTime: string,
+  ): Promise<SubmissionsLastUpdatedResponseDTO> {
+    const dto = new SubmissionsLastUpdatedResponseDTO();
+
+    dto.submissionLogs = await this.combinedSubmissionMap.many(
+      await CombinedSubmissions.find({
+        where: { submittedOn: MoreThan(new Date(queryTime)) },
+      }),
+    );
+
+    dto.emissionReports = await this.emissionsLastUpdatedMap.many(
+      await EmissionEvaluationGlobal.find({
+        where: { lastUpdated: MoreThan(new Date(queryTime)) },
+      }),
+    );
+
+    const est = new Date().toLocaleString('en-us', {
+      timeZone: 'America/New_York',
+    });
+    const processDate = new Date(est);
+
+    dto.mostRecentUpdateDate = processDate;
+
+    return dto;
   }
 }

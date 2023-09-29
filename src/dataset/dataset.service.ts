@@ -48,7 +48,7 @@ export class DataSetService {
 
     report.displayName = dataSet.displayName;
 
-    if (params.testId && params.testId.length > 1) {
+    if (params.testId) {
       const promises = [];
       const tests = await getManager().query(
         `

@@ -6,6 +6,8 @@ import { SubmissionService } from './submission.service';
 import { SubmissionQueueDTO } from '../dto/submission-queue.dto';
 import { SubmissionProcessService } from './submission-process.service';
 import { ProcessParamsDTO } from '../dto/process-params.dto';
+import { CombinedSubmissionsMap } from '../maps/combined-submissions.map';
+import { EmissionsLastUpdatedMap } from '../maps/emissions-last-updated.map';
 
 jest.mock('./submission.service');
 jest.mock('./submission-process.service');
@@ -17,7 +19,13 @@ describe('-- Submission Controller --', () => {
     const module = await Test.createTestingModule({
       imports: [HttpModule],
       controllers: [SubmissionController],
-      providers: [SubmissionService, SubmissionProcessService, ConfigService],
+      providers: [
+        SubmissionService,
+        SubmissionProcessService,
+        ConfigService,
+        CombinedSubmissionsMap,
+        EmissionsLastUpdatedMap,
+      ],
     }).compile();
 
     controller = module.get(SubmissionController);
@@ -38,6 +46,12 @@ describe('-- Submission Controller --', () => {
   it('process', async () => {
     expect(async () => {
       await controller.process(new ProcessParamsDTO());
+    }).not.toThrowError();
+  });
+
+  it('last-updated', async () => {
+    expect(async () => {
+      await controller.lastUpdated('');
     }).not.toThrowError();
   });
 });

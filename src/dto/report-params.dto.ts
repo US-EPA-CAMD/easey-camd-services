@@ -18,7 +18,7 @@ export class ReportParamsDTO {
   @IsNotEmpty({ message: 'Facility Id is required' })
   facilityId: number;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsOptional()
   monitorPlanId?: string;
 
@@ -37,11 +37,11 @@ export class ReportParamsDTO {
   @Transform(({ value }) => value.split('|').map((item: string) => item.trim()))
   teeId?: string[];
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsOptional()
   year?: number;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsOptional()
   quarter?: number;
 }

@@ -32,6 +32,7 @@ import {
   GetObjectCommand,
   PutObjectCommand,
 } from '@aws-sdk/client-s3';
+import { currentDateTime } from '@us-epa-camd/easey-common/utilities/functions';
 
 @Injectable()
 export class SubmissionProcessService {
@@ -273,6 +274,7 @@ export class SubmissionProcessService {
   async handleError(set: SubmissionSet, queue: SubmissionQueue[], e: Error) {
     set.details = JSON.stringify(e);
     set.statusCode = 'ERROR';
+    set.endStageTime = currentDateTime();
 
     await this.setRecordStatusCode(
       //Reset the original records to require
@@ -323,6 +325,7 @@ export class SubmissionProcessService {
     );
 
     set.statusCode = 'COMPLETE';
+    set.endStageTime = currentDateTime();
     await this.returnManager().save(set);
 
     this.mailEvalService.sendMassEvalEmail(
@@ -343,6 +346,8 @@ export class SubmissionProcessService {
     );
 
     set.statusCode = 'WIP';
+    set.endStageTime = currentDateTime();
+
     await this.returnManager().save(set);
 
     let submissionSetRecords: SubmissionQueue[] =

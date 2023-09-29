@@ -10,6 +10,9 @@ import { EmissionEvaluation } from '../entities/emission-evaluation.entity';
 import { SubmissionService } from './submission.service';
 import { SubmissionQueueDTO } from '../dto/submission-queue.dto';
 import { QaSuppData } from '../entities/qa-supp.entity';
+import { CombinedSubmissionsMap } from '../maps/combined-submissions.map';
+import { EmissionsLastUpdatedMap } from '../maps/emissions-last-updated.map';
+import { CheckSession } from '../entities/check-session.entity';
 
 const dtoItem = new EvaluationItem();
 dtoItem.monPlanId = 'mock';
@@ -29,7 +32,11 @@ describe('-- Submission Service --', () => {
     const module = await Test.createTestingModule({
       imports: [LoggerModule],
       controllers: [],
-      providers: [SubmissionService],
+      providers: [
+        SubmissionService,
+        CombinedSubmissionsMap,
+        EmissionsLastUpdatedMap,
+      ],
     }).compile();
 
     service = module.get(SubmissionService);
@@ -70,6 +77,9 @@ describe('-- Submission Service --', () => {
             const rp = new ReportingPeriod();
             rp.rptPeriodIdentifier = 1;
             return rp;
+          case 'CheckSession':
+            const cs = new CheckSession();
+            return cs;
           case 'EmissionEvaluation':
             return new EmissionEvaluation();
         }

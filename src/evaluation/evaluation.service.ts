@@ -54,7 +54,8 @@ export class EvaluationService {
         mp.facIdentifier,
       );
 
-      evaluationSet.facIdentifier = facility.orisCode;
+      evaluationSet.orisCode = facility.orisCode;
+      evaluationSet.facIdentifier = facility.facIdentifier;
       evaluationSet.facName = facility.facilityName;
 
       await this.returnManager().save(EvaluationSet, evaluationSet);
