@@ -135,47 +135,50 @@ export class DataSetService {
     tables.forEach((tbl) => {
       if (isHeader || tbl.templateCode !== this.FACINFO) {
         promises.push(
-          new Promise(async (resolve, _reject) => {
-            tbl.sqlStatement = tbl.sqlStatement.replace(/{SCHEMA}/, schema);
+          new Promise((resolve, _reject) => {
+            (async () => {
+              tbl.sqlStatement = tbl.sqlStatement.replace(/{SCHEMA}/, schema);
 
-            const sqlParams = tbl.parameters.map((param) => {
-              if (param.name === 'testId') {
-                if (params.testId.length > 1) return testId;
-                else return params.testId[0];
-              }
-              return params[param.name] ?? param.defaultValue;
-            });
+              const sqlParams = tbl.parameters.map((param) => {
+                if (param.name === 'testId') {
+                  if (params.testId.length > 1) return testId;
+                  else return params.testId[0];
+                }
+                return params[param.name] ?? param.defaultValue;
+              });
 
-            const detailDto = new ReportDetailDTO();
-            detailDto.displayName = tbl.displayName
-              ? tbl.displayName
-              : tbl.template.displayName;
-            detailDto.templateCode = tbl.template.code;
-            detailDto.templateType = tbl.template.type;
-            detailDto.results = await getManager().query(
-              tbl.sqlStatement,
-              sqlParams,
-            );
-
-            if (detailDto.results.length > 0) {
-              let columnDto = this.reportColumns.find(
-                (column) => column.code === tbl.templateCode,
+              const detailDto = new ReportDetailDTO();
+              detailDto.displayName = tbl.displayName
+                ? tbl.displayName
+                : tbl.template.displayName;
+              detailDto.templateCode = tbl.template.code;
+              detailDto.templateType = tbl.template.type;
+              detailDto.results = await getManager().query(
+                tbl.sqlStatement,
+                sqlParams,
               );
 
-              if (!columnDto) {
-                columnDto = new ReportColumnDTO();
-                columnDto.code = tbl.templateCode;
-                columnDto.values = tbl.columns.map((column) => {
-                  return {
-                    name: column.name,
-                    displayName: column.displayName,
-                  };
-                });
-                this.reportColumns.push(columnDto);
-              }
-            }
+              if (detailDto.results.length > 0) {
+                let columnDto = this.reportColumns.find(
+                  (column) => column.code === tbl.templateCode,
+                );
 
-            resolve(detailDto);
+                if (!columnDto) {
+                  columnDto = new ReportColumnDTO();
+                  columnDto.code = tbl.templateCode;
+                  columnDto.values = tbl.columns.map((column) => {
+                    return {
+                      name: column.name,
+                      displayName: column.displayName,
+                    };
+                  });
+                  this.reportColumns.push(columnDto);
+                }
+              }
+
+              resolve(detailDto);
+            })()
+
           }),
         );
       }
