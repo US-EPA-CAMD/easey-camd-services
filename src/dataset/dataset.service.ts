@@ -118,7 +118,14 @@ export class DataSetService {
     );
 
     const sqlParams = table.parameters.map((param) => {
-      if (param.name === 'testId') {
+      if (params.reportCode.includes('EVAL')) {
+        if (param.name === 'testId')
+          return params.testId[0];
+        if (param.name === 'qceId')
+          return params.qceId[0];
+        if (param.name === 'teeId')
+          return params.teeId[0];
+      } else if (param.name === 'testId') {
         if (params.testId.length === 1)
           return params.testId[0];
         else return testId;
