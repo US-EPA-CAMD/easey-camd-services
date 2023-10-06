@@ -123,12 +123,6 @@ export class DataSetService {
           return params.testId[0];
         else return testId;
       }
-      if (param.name === 'qceId' && params.qceId.length === 1) {
-        return params.qceId[0];
-      }
-      if (param.name === 'teeId' && params.teeId.length === 1) {
-        return params.teeId[0];
-      }
       return params[param.name] ?? param.defaultValue;
     });
 
