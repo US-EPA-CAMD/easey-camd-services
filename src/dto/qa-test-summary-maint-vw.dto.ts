@@ -8,7 +8,7 @@ export class QaTestSummaryMaintViewDTO {
     example: propertyMetadata.testSummaryId.example,
     name: propertyMetadata.testSummaryId.fieldLabels.value,
   })
-  testSumId: string;
+  id: string;
   
   @ApiProperty({
     description: propertyMetadata.emissions.monitoringLocationId.description,

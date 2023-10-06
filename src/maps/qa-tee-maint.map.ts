@@ -12,7 +12,7 @@ export class QaTeeMaintMap extends BaseMap<
     entity: QaTeeMaintView,
   ): Promise<QaTeeMaintViewDTO> {
     return {
-      testExtensionExemptionId: entity.testExtensionExemptionId,
+      id: entity.testExtensionExemptionId,
       locationId: entity.locationId,
       orisCode: entity.orisCode,
       unitStack: entity.unitStack,

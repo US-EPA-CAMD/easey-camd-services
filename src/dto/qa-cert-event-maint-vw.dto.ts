@@ -7,7 +7,7 @@ export class QaCertEventMaintViewDTO {
     example: propertyMetadata.qaCertificationEventId.example,
     name: propertyMetadata.qaCertificationEventId.fieldLabels.value,
   })
-  certEventId: string;
+  id: string;
   
   @ApiProperty({
     description: propertyMetadata.emissions.monitoringLocationId.description,
