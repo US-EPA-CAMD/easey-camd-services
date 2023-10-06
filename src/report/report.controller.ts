@@ -27,7 +27,7 @@ export class ReportController {
     description: 'Retrieves list of official reports available.',
   })
   async getAvailableReports() {
-    return this.service.getAvailableReports();
+    return this.service.getAvailableDataSets();
   }
 
   @Get()

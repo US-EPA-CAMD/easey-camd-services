@@ -39,4 +39,7 @@ export class CombinedSubmissions extends BaseEntity {
 
   @ViewColumn({ name: 'submission_end_stage_time' })
   submissionEndStateStageTime: Date;
+
+  @ViewColumn({ name: 'status_cd' })
+  statusCode: string;
 }

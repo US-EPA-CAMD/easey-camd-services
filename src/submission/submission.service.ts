@@ -273,7 +273,11 @@ export class SubmissionService {
 
     dto.submissionLogs = await this.combinedSubmissionMap.many(
       await CombinedSubmissions.find({
-        where: { submittedOn: MoreThan(new Date(queryTime)) },
+        where: {
+          submittedOn: MoreThan(new Date(queryTime)),
+          statusCode: 'COMPLETE',
+          processCode: 'EM',
+        },
       }),
     );
 
