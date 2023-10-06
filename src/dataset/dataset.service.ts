@@ -6,6 +6,7 @@ import { BadRequestException } from '@nestjs/common/exceptions';
 import { ReportDTO } from '../dto/report.dto';
 import { DataSetRepository } from './dataset.repository';
 import { ReportParamsDTO } from '../dto/report-params.dto';
+import { DataSet } from '../entities/dataset.entity';
 import { DataTable } from '../entities/datatable.entity';
 import { ReportDetailDTO } from '../dto/report-detail.dto';
 import { ReportColumnDTO } from '../dto/report-column.dto';
@@ -15,14 +16,12 @@ export class DataSetService {
   private hasFacilityInfo: boolean;
   private reportColumns: ReportColumnDTO[];
 
-  private FACINFO = 'FACINFO1C';
-
   constructor(
     @InjectRepository(DataSetRepository)
     private readonly repository: DataSetRepository,
   ) {}
 
-  async getAvailableReports(isWorkspace: boolean = false) {
+  async getAvailableDataSets(isWorkspace: boolean = false) {
     const results = await this.repository.find({
       where: { groupCode: 'REPORT' },
     });
@@ -35,7 +34,29 @@ export class DataSetService {
     });
   }
 
-  async getDataSet(params: ReportParamsDTO, isWorkspace: boolean = false) {
+  async getTestDataSet(
+    schema: string,
+    dataSet: DataSet,
+    params: ReportParamsDTO,
+    test: { id: string; code: string },
+  ): Promise<ReportDetailDTO[]> {
+    const detailDef = dataSet.tables.filter(tbl =>
+        tbl.template.groupCode === 'ALL' ||
+        tbl.template.groupCode === test.code,
+    );
+
+    return this.getDataSetResults(
+      schema,
+      detailDef,
+      params,
+      test.id,
+    );    
+  }
+
+  async getDataSet(
+    params: ReportParamsDTO,
+    isWorkspace: boolean = false
+  ) {
     this.reportColumns = [];
     this.hasFacilityInfo = false;
     const report = new ReportDTO();
@@ -48,10 +69,9 @@ export class DataSetService {
 
     report.displayName = dataSet.displayName;
 
-    if (params.testId) {
+    if (params.reportCode === 'TEST_DETAIL') {
       const promises = [];
-      const tests = await getManager().query(
-        `
+      const tests = await getManager().query(`
         SELECT
           test_sum_id AS "id",
           test_type_cd AS  "code"
@@ -60,43 +80,8 @@ export class DataSetService {
         [params.testId],
       );
 
-      promises.push(
-        //First push one facility global information piece
-        new Promise((resolve, reject) => {
-          const detailDef = dataSet.tables.filter(
-            (tbl) => tbl.templateCode === this.FACINFO,
-          );
-
-          const details = this.getReportResults(
-            schema,
-            detailDef,
-            params,
-            tests[0].id,
-            true,
-          );
-          resolve(details);
-        }),
-      );
-
       tests.forEach((test: { id: string; code: string }) => {
-        promises.push(
-          new Promise((resolve, _reject) => {
-            const detailDef = dataSet.tables.filter(
-              (tbl) =>
-                tbl.template.groupCode === 'ALL' ||
-                tbl.template.groupCode === test.code,
-            );
-
-            const details = this.getReportResults(
-              schema,
-              detailDef,
-              params,
-              test.id,
-              false,
-            );
-            resolve(details);
-          }),
-        );
+        promises.push(this.getTestDataSet(schema, dataSet, params, test));
       });
 
       await Promise.all(promises);
@@ -106,12 +91,10 @@ export class DataSetService {
         report.details.push(...(await details));
       }
     } else {
-      report.details = await this.getReportResults(
+      report.details = await this.getDataSetResults(
         schema,
         dataSet.tables,
         params,
-        null,
-        true,
       );
     }
 
@@ -123,64 +106,78 @@ export class DataSetService {
     return report;
   }
 
-  async getReportResults(
+  async getDataSetResult(
+    schema: string,
+    table: DataTable,
+    params: ReportParamsDTO,
+    testId?: string,
+  ): Promise<ReportDetailDTO> {
+    table.sqlStatement = table.sqlStatement.replace(
+      /{SCHEMA}/,
+      schema,
+    );
+
+    const sqlParams = table.parameters.map((param) => {
+      if (param.name === 'testId') {
+        if (params.testId.length === 1)
+          return params.testId[0];
+        else return testId;
+      }
+      if (param.name === 'qceId' && params.qceId.length === 1) {
+        return params.qceId[0];
+      }
+      if (param.name === 'teeId' && params.teeId.length === 1) {
+        return params.teeId[0];
+      }
+      return params[param.name] ?? param.defaultValue;
+    });
+
+    const detailDto = new ReportDetailDTO();
+    detailDto.displayName = table.displayName
+      ? table.displayName
+      : table.template.displayName;
+    detailDto.templateCode = table.template.code;
+    detailDto.templateType = table.template.type;
+    detailDto.results = await getManager().query(
+      table.sqlStatement, sqlParams
+    );
+
+    if (detailDto.results.length > 0) {
+      let columnDto = this.reportColumns.find(column =>
+        column.code === table.templateCode
+      );
+
+      if (!columnDto) {
+        columnDto = new ReportColumnDTO();
+        columnDto.code = table.templateCode;
+        columnDto.values = table.columns.map(column => {
+          return {
+            name: column.name,
+            displayName: column.displayName,
+          };
+        });
+        this.reportColumns.push(columnDto);
+      }
+    }
+
+    return detailDto;
+  }
+
+  async getDataSetResults(
     schema: string,
     tables: DataTable[],
     params: ReportParamsDTO,
     testId?: string,
-    isHeader = false,
   ): Promise<ReportDetailDTO[]> {
     const promises = [];
+    const FACINFO = 'FACINFO';
 
-    tables.forEach((tbl) => {
-      if (isHeader || tbl.templateCode !== this.FACINFO) {
-        promises.push(
-          new Promise((resolve, _reject) => {
-            (async () => {
-              tbl.sqlStatement = tbl.sqlStatement.replace(/{SCHEMA}/, schema);
-
-              const sqlParams = tbl.parameters.map((param) => {
-                if (param.name === 'testId') {
-                  if (params.testId.length > 1) return testId;
-                  else return params.testId[0];
-                }
-                return params[param.name] ?? param.defaultValue;
-              });
-
-              const detailDto = new ReportDetailDTO();
-              detailDto.displayName = tbl.displayName
-                ? tbl.displayName
-                : tbl.template.displayName;
-              detailDto.templateCode = tbl.template.code;
-              detailDto.templateType = tbl.template.type;
-              detailDto.results = await getManager().query(
-                tbl.sqlStatement,
-                sqlParams,
-              );
-
-              if (detailDto.results.length > 0) {
-                let columnDto = this.reportColumns.find(
-                  (column) => column.code === tbl.templateCode,
-                );
-
-                if (!columnDto) {
-                  columnDto = new ReportColumnDTO();
-                  columnDto.code = tbl.templateCode;
-                  columnDto.values = tbl.columns.map((column) => {
-                    return {
-                      name: column.name,
-                      displayName: column.displayName,
-                    };
-                  });
-                  this.reportColumns.push(columnDto);
-                }
-              }
-
-              resolve(detailDto);
-            })()
-
-          }),
-        );
+    tables.forEach(tbl => {
+      if (!this.hasFacilityInfo || !tbl.templateCode.includes(FACINFO)) {
+        promises.push(this.getDataSetResult(schema, tbl, params, testId));
+        if (!this.hasFacilityInfo && tbl.templateCode.includes(FACINFO)) {
+          this.hasFacilityInfo = true;
+        }
       }
     });
 
