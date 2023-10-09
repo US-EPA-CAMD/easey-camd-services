@@ -12,7 +12,7 @@ export class QaCertEventMaintMap extends BaseMap<
     entity: QaCertEventMaintView,
   ): Promise<QaCertEventMaintViewDTO> {
     return {
-      certEventId: entity.certEventId,
+      id: entity.certEventId,
       locationId: entity.locationId,
       orisCode: entity.orisCode,
       unitStack: entity.unitStack,

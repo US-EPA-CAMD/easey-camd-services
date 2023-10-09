@@ -12,7 +12,7 @@ export class QaTestSummaryMaintMap extends BaseMap<
     entity: QaTestSummaryMaintView,
   ): Promise<QaTestSummaryMaintViewDTO> {
     return {
-      testSumId: entity.testSumId,
+      id: entity.testSumId,
       locationId: entity.locationId,
       orisCode: entity.orisCode,
       unitStack: entity.unitStack,
