@@ -94,7 +94,7 @@ describe('-- Submission Process Service --', () => {
   });
 
   it('should ensure getCopyOfRecord fires correctly', async () => {
-    const mockDocuments = [];
+    const mockTransactions = [];
 
     const record = new SubmissionQueue();
     record.processCode = 'MP';
@@ -103,9 +103,9 @@ describe('-- Submission Process Service --', () => {
     set.facIdentifier = 1;
     set.monPlanIdentifier = 'mockMP';
 
-    await service.getCopyOfRecord(set, record, mockDocuments, [], '');
+    await service.buildTransactions(set, record, [], mockTransactions, '');
 
-    expect(mockDocuments.length).toBe(1);
+    expect(mockTransactions.length).toBe(1);
   });
 
   it('should set record status code correctly for files sent in', async () => {
@@ -175,7 +175,8 @@ describe('-- Submission Process Service --', () => {
   });
 
   it('should process submission set fires correctly', async () => {
-    jest.spyOn(service, 'getCopyOfRecord').mockResolvedValue();
+    jest.spyOn(service, 'buildTransactions').mockResolvedValue();
+    jest.spyOn(service, 'buildDocuments').mockResolvedValue();
     jest.spyOn(service, 'successCleanup').mockResolvedValue();
     jest.spyOn(fsFunctions, 'writeFile').mockImplementation(jest.fn());
     jest.spyOn(fsFunctions, 'mkdirSync').mockImplementation(jest.fn());

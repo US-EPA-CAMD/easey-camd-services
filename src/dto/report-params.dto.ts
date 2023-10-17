@@ -22,17 +22,17 @@ export class ReportParamsDTO {
   @IsOptional()
   monitorPlanId?: string;
 
-  @ApiProperty({ isArray: true })
+  @ApiProperty({ isArray: true, required: false })
   @IsOptional()
   @Transform(({ value }) => value.split('|').map((item: string) => item.trim()))
   testId?: string[];
 
-  @ApiProperty({ isArray: true })
+  @ApiProperty({ isArray: true, required: false })
   @IsOptional()
   @Transform(({ value }) => value.split('|').map((item: string) => item.trim()))
   qceId?: string[];
 
-  @ApiProperty({ isArray: true })
+  @ApiProperty({ isArray: true, required: false })
   @IsOptional()
   @Transform(({ value }) => value.split('|').map((item: string) => item.trim()))
   teeId?: string[];
