@@ -62,7 +62,81 @@ export class SubmissionProcessService {
     return getManager();
   }
 
-  async getCopyOfRecord(
+  async buildDocuments(
+    set: SubmissionSet,
+    records: SubmissionQueue[],
+    documents: object[],
+    processCd: string,
+  ) {
+    // -- MONITOR PLAN COR --------------------
+    const params = new ReportParamsDTO();
+    params.facilityId = set.facIdentifier;
+    let titleContext = '';
+
+    switch (processCd) {
+      case 'MP':
+        params.reportCode = 'MPP';
+        params.monitorPlanId = set.monPlanIdentifier;
+        titleContext = 'MP_' + set.monPlanIdentifier;
+        break;
+      case 'QA_TEST':
+        params.reportCode = 'TEST_DETAIL';
+        params.testId = records
+          .filter((r) => r.testSumIdentifier !== null)
+          .map((o) => o.testSumIdentifier);
+        titleContext = 'TEST_DETAIL';
+        break;
+      case 'QA_QCE':
+        params.reportCode = 'QCE';
+        params.qceId = records
+          .filter((r) => r.qaCertEventIdentifier !== null)
+          .map((o) => o.qaCertEventIdentifier);
+        titleContext = 'QCE';
+        break;
+      case 'QA_TEE':
+        params.reportCode = 'TEE';
+        params.teeId = records
+          .filter((r) => r.testExtensionExemptionIdentifier !== null)
+          .map((o) => o.testExtensionExemptionIdentifier);
+        titleContext = 'TEE';
+        break;
+      case 'EM':
+        const emRecord = records.find((r) => r.processCode === 'EM');
+        params.reportCode = 'EM';
+        params.monitorPlanId = set.monPlanIdentifier;
+        const rptPeriod: ReportingPeriod = await this.returnManager().findOne(
+          ReportingPeriod,
+          {
+            where: { rptPeriodIdentifier: emRecord.rptPeriodIdentifier },
+          },
+        );
+
+        params.year = rptPeriod.calendarYear;
+        params.quarter = rptPeriod.quarter;
+
+        titleContext =
+          'EM_' +
+          params.monitorPlanId +
+          '_' +
+          params.year +
+          'q' +
+          params.quarter;
+
+        break;
+    }
+
+    const reportInformation = await this.dataSetService.getDataSet(
+      params,
+      true,
+    );
+
+    documents.push({
+      documentTitle: `${set.facIdentifier}_${titleContext}`,
+      context: this.copyOfRecordService.generateCopyOfRecord(reportInformation),
+    });
+  }
+
+  async buildTransactions(
     set: SubmissionSet,
     record: SubmissionQueue,
     documents: object[],
@@ -72,79 +146,41 @@ export class SubmissionProcessService {
     record.statusCode = 'WIP';
     this.returnManager().save(record);
 
-    const params = new ReportParamsDTO();
-    params.facilityId = set.facIdentifier;
-
-    let titleContext = '';
-
     switch (record.processCode) {
       case 'MP':
-        params.reportCode = 'MPP';
-        params.monitorPlanId = set.monPlanIdentifier;
-        titleContext = 'MP_' + set.monPlanIdentifier;
         transactions.push({
           command:
             'CALL camdecmps.copy_monitor_plan_from_workspace_to_global($1)',
-          params: [params.monitorPlanId],
+          params: [set.monPlanIdentifier],
         });
         break;
       case 'QA':
         if (record.testSumIdentifier) {
-          params.reportCode = 'TEST_DETAIL';
-          params.testId = [record.testSumIdentifier];
-          titleContext = 'TEST_' + record.testSumIdentifier;
           transactions.push({
             command:
               'CALL camdecmps.copy_qa_test_summary_from_workspace_to_global($1)',
-            params: [params.testId],
+            params: [record.testSumIdentifier],
           });
         } else if (record.qaCertEventIdentifier) {
-          params.reportCode = 'QCE';
-          params.qceId = [record.qaCertEventIdentifier];
-          titleContext = 'QCE_' + record.qaCertEventIdentifier;
           transactions.push({
             command:
               'CALL camdecmps.copy_qa_qce_data_from_workspace_to_global($1)',
-            params: [params.qceId],
+            params: [record.qaCertEventIdentifier],
           });
         } else {
-          params.reportCode = 'TEE';
-          params.teeId = [record.testExtensionExemptionIdentifier];
-          titleContext = 'TEE_' + record.testExtensionExemptionIdentifier;
           transactions.push({
             command:
               'CALL camdecmps.copy_qa_tee_data_from_workspace_to_global($1)',
-            params: [params.teeId],
+            params: [record.testExtensionExemptionIdentifier],
           });
         }
         break;
       case 'EM':
-        params.monitorPlanId = set.monPlanIdentifier;
-        params.reportCode = 'EM';
-
-        const rptPeriod: ReportingPeriod = await this.returnManager().findOne(
-          ReportingPeriod,
-          {
-            where: { rptPeriodIdentifier: record.rptPeriodIdentifier },
-          },
-        );
-
-        params.year = rptPeriod.calendarYear;
-        params.quarter = rptPeriod.quarter;
-
         transactions.push({
           command:
             'CALL camdecmps.copy_emissions_from_workspace_to_global($1, $2)',
-          params: [params.monitorPlanId, record.rptPeriodIdentifier],
+          params: [set.monPlanIdentifier, record.rptPeriodIdentifier],
         });
-
-        titleContext =
-          'EM_' +
-          params.monitorPlanId +
-          '_' +
-          params.year +
-          'q' +
-          params.quarter;
         break;
       case 'MATS':
         //Pull down the Mats Bulk File Object
@@ -181,20 +217,6 @@ export class SubmissionProcessService {
 
         break;
     }
-
-    if (record.processCode !== 'MATS') {
-      //For MATS files we pull them directly from S3
-      const reportInformation = await this.dataSetService.getDataSet(
-        params,
-        true,
-      );
-
-      documents.push({
-        documentTitle: `${set.facIdentifier}_${titleContext}`,
-        context:
-          this.copyOfRecordService.generateCopyOfRecord(reportInformation),
-      });
-    }
   }
 
   async setRecordStatusCode(
@@ -221,7 +243,7 @@ export class SubmissionProcessService {
         case 'QA':
           if (record.testSumIdentifier) {
             originRecord = await this.returnManager().findOne(QaSuppData, {
-              where: { testSumIdentifier: record.testSumIdentifier },
+              where: { testSumId: record.testSumIdentifier },
             });
           } else if (record.qaCertEventIdentifier) {
             originRecord = await this.returnManager().findOne(
@@ -377,7 +399,7 @@ export class SubmissionProcessService {
     const documents = [];
     const transactions: any = [];
     for (const submissionRecord of submissionSetRecords) {
-      await this.getCopyOfRecord(
+      await this.buildTransactions(
         set,
         submissionRecord,
         documents,
@@ -385,6 +407,47 @@ export class SubmissionProcessService {
         folderPath,
       );
     }
+
+    //Build Copy of Records ---
+
+    if (submissionSetRecords.filter((r) => r.processCode === 'MP').length > 0) {
+      await this.buildDocuments(set, submissionSetRecords, documents, 'MP');
+    }
+
+    if (
+      submissionSetRecords.filter(
+        (r) => r.processCode === 'QA' && r.testSumIdentifier,
+      ).length > 0
+    ) {
+      await this.buildDocuments(
+        set,
+        submissionSetRecords,
+        documents,
+        'QA_TEST',
+      );
+    }
+
+    if (
+      submissionSetRecords.filter(
+        (r) => r.processCode === 'QA' && r.qaCertEventIdentifier,
+      ).length > 0
+    ) {
+      await this.buildDocuments(set, submissionSetRecords, documents, 'QA_QCE');
+    }
+
+    if (
+      submissionSetRecords.filter(
+        (r) => r.processCode === 'QA' && r.testExtensionExemptionIdentifier,
+      ).length > 0
+    ) {
+      await this.buildDocuments(set, submissionSetRecords, documents, 'QA_TEE');
+    }
+
+    if (submissionSetRecords.filter((r) => r.processCode === 'EM').length > 0) {
+      await this.buildDocuments(set, submissionSetRecords, documents, 'EM');
+    }
+
+    //--------------------------
 
     try {
       //Write the document strings to html files
