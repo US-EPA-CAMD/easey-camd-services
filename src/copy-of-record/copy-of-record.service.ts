@@ -36,8 +36,17 @@ export class CopyOfRecordService {
     return content.replace('{HEADER}', title);
   }
 
-  addTableHeader(title: string): string {
-    const heading = `<h2> ${title} </h2>`;
+  addTableHeader(
+    title: string,
+    isTest: boolean = false,
+    isDefault2: boolean = false,
+  ): string {
+    let heading = '';
+    if (!isDefault2) {
+      heading = `<h3 class =${isTest ? 'test-header' : ''} > ${title} </h3>`;
+    } else {
+      heading = `<hr/> ${title} <hr/>`;
+    }
     return heading;
   }
 
@@ -46,8 +55,9 @@ export class CopyOfRecordService {
     results,
     displayName,
     columnCount: number,
+    isTest: boolean = false,
   ): string {
-    let innerContent = this.addTableHeader(displayName);
+    let innerContent = this.addTableHeader(displayName, isTest, false);
     innerContent += '<div class = "col-table-container">';
 
     //Set up our column groupings
@@ -68,8 +78,16 @@ export class CopyOfRecordService {
 
       for (const item of group) {
         innerContent += '<tr>';
-        innerContent += `<th>${item[0]}</th>`;
-        innerContent += `<td>${results[0][item[1]]}</td>`;
+        if (item[0] === 'HIDDEN') {
+          innerContent += `<th>&nbsp;</th>`;
+          innerContent += `<td>&nbsp;</td>`;
+        } else if (results[0][item[1]] === null) {
+          innerContent += `<th>${item[0]}</th>`;
+          innerContent += `<td>&nbsp;</td>`;
+        } else {
+          innerContent += `<th>${item[0]}</th>`;
+          innerContent += `<td>${results[0][item[1]]}</td>`;
+        }
         innerContent += '</tr>';
       }
 
@@ -85,11 +103,11 @@ export class CopyOfRecordService {
     columns: ReportColumnDTO,
     results,
     displayName,
-    isPdf,
+    isDefault2,
   ): string {
-    let innerContent = this.addTableHeader(displayName);
+    let innerContent = this.addTableHeader(displayName, false, isDefault2);
 
-    innerContent += '<div> <table>';
+    innerContent += '<div> <table class = "default">';
 
     //Load column headings
     innerContent += '<tr>';
@@ -171,9 +189,11 @@ export class CopyOfRecordService {
 
       if (templateType.includes('COLTBL')) {
         let modifiedDisplayName = detail.displayName;
+        let isTest = false;
 
         if (results[0]['unitStack']) {
-          modifiedDisplayName = `Unit/Stack/Pipe ID: ${results[0]['unitStack']} - ${modifiedDisplayName}`;
+          isTest = true;
+          modifiedDisplayName = `Unit/Stack/Pipe ID: ${results[0]['unitStack']}<br/>${modifiedDisplayName}`;
         }
 
         //Special formatting for smaller column sizes
@@ -182,14 +202,17 @@ export class CopyOfRecordService {
           results,
           modifiedDisplayName,
           parseInt(templateType.charAt(0)),
+          isTest,
         );
       } else {
+        let isDefault2 = templateType === 'DEFAULT2';
+
         //Default table view
         innerContent += this.addDefaultTable(
           columns,
           results,
           detail.displayName,
-          isPdf,
+          isDefault2,
         );
       }
     }
