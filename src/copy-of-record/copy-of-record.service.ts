@@ -1,12 +1,13 @@
 import { Injectable, StreamableFile } from '@nestjs/common';
 import { Logger } from '@us-epa-camd/easey-common/logger';
 import { copyOfRecordTemplate } from './template';
+import { certTemplate } from './cert-template';
 import { ReportDTO } from '../dto/report.dto';
 import { ReportColumnDTO } from '../dto/report-column.dto';
 import { ReportParamsDTO } from '../dto/report-params.dto';
 import { DataSetService } from '../dataset/dataset.service';
 import { data } from 'cheerio/lib/api/attributes';
-import { createReadStream, writeFileSync, rmSync } from 'fs';
+import { createReadStream, writeFileSync, rmSync, stat } from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 import type { Response } from 'express';
 import { Plant } from '../entities/plant.entity';
@@ -176,6 +177,26 @@ export class CopyOfRecordService {
     return innerContent;
   }
 
+  generateCopyOfRecordCert(statements: object[]): string {
+    let documentContent = certTemplate;
+    documentContent = this.addDocumentHeader(
+      documentContent,
+      'Certification Statement(s)',
+    );
+    let innerContent = '';
+
+    statements.forEach((val, idx) => {
+      innerContent += `<p> ${val['statementText']} </p>`;
+      if (idx + 1 < statements.length) {
+        innerContent += '<hr/>';
+      }
+    });
+
+    documentContent = documentContent.replace('{CONTENT}', innerContent);
+
+    return documentContent;
+  }
+
   generateCopyOfRecord(data: ReportDTO, isPdf: boolean = false): string {
     let documentContent = copyOfRecordTemplate;
     documentContent = this.addDocumentHeader(documentContent, data.displayName);
@@ -238,7 +259,7 @@ export class CopyOfRecordService {
 
     let responseFileName;
     if (params.reportCode === 'EM') {
-      responseFileName = `${params.reportCode}_${plant.facilityName}_${plant.orisCode}_${params.year}Q${params.quarter}.html`;
+      responseFileName = `${params.reportCode}_${plant.orisCode}_${params.year}Q${params.quarter}.html`;
     } else {
       responseFileName = `${params.reportCode}_${plant.facilityName}_${plant.orisCode}.html`;
     }

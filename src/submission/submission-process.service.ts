@@ -33,6 +33,7 @@ import {
   PutObjectCommand,
 } from '@aws-sdk/client-s3';
 import { currentDateTime } from '@us-epa-camd/easey-common/utilities/functions';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class SubmissionProcessService {
@@ -131,7 +132,7 @@ export class SubmissionProcessService {
     );
 
     documents.push({
-      documentTitle: `${set.facIdentifier}_${titleContext}`,
+      documentTitle: `${set.orisCode}_${titleContext}`,
       context: this.copyOfRecordService.generateCopyOfRecord(reportInformation),
     });
   }
@@ -446,6 +447,26 @@ export class SubmissionProcessService {
     if (submissionSetRecords.filter((r) => r.processCode === 'EM').length > 0) {
       await this.buildDocuments(set, submissionSetRecords, documents, 'EM');
     }
+
+    // Handle Certification Statements
+
+    const obs = this.httpService.get(
+      `${this.configService.get<string>(
+        'app.authApi.uri',
+      )}/certifications/statements?monitorPlanIds=${set.monPlanIdentifier}`,
+      {
+        headers: {
+          'x-api-key': this.configService.get<string>('app.apiKey'),
+        },
+      },
+    );
+
+    const statements = (await firstValueFrom(obs)).data;
+
+    documents.push({
+      documentTitle: `Certification Statements`,
+      context: this.copyOfRecordService.generateCopyOfRecordCert(statements),
+    });
 
     //--------------------------
 
