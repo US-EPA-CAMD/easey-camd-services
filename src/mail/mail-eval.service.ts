@@ -17,6 +17,7 @@ import { ConfigService } from '@nestjs/config';
 import { SubmissionQueue } from '../entities/submission-queue.entity';
 import { SubmissionSet } from '../entities/submission-set.entity';
 import { MatsBulkFile } from '../entities/mats-bulk-file.entity';
+import { ClientConfig } from '../entities/client-config.entity';
 
 //Formats and sends emissions evaluations emails
 @Injectable()
@@ -80,29 +81,31 @@ export class MailEvalService {
           testRecord.testSumIdentifier,
         );
 
-        newItem['System / Component Id'] =
-          await this.getSystemComponentIdentifier(
-            testSumRecord.monSystemIdentifier,
-            testSumRecord.componentIdentifier,
+        if (testSumRecord) {
+          newItem['System / Component Id'] =
+            await this.getSystemComponentIdentifier(
+              testSumRecord.monSystemIdentifier,
+              testSumRecord.componentIdentifier,
+            );
+          newItem['Test Number'] = testSumRecord.testNumber;
+          newItem['Test Type'] = testSumRecord.testTypeCode;
+          newItem['Test Reason'] = testSumRecord.testReasonCode;
+          newItem['Test Result'] = testSumRecord.testResultCode;
+          newItem['evalStatusCode'] = mappedStatusCodes.get(
+            testSumRecord.evalStatusCode,
           );
-        newItem['Test Number'] = testSumRecord.testNumber;
-        newItem['Test Type'] = testSumRecord.testTypeCode;
-        newItem['Test Reason'] = testSumRecord.testReasonCode;
-        newItem['Test Result'] = testSumRecord.testResultCode;
-        newItem['evalStatusCode'] = mappedStatusCodes.get(
-          testSumRecord.evalStatusCode,
-        );
-        const colors = this.getReportColors(testSumRecord.evalStatusCode);
-        newItem['reportColor'] = colors[0];
-        newItem['reportLineColor'] = colors[1];
+          const colors = this.getReportColors(testSumRecord.evalStatusCode);
+          newItem['reportColor'] = colors[0];
+          newItem['reportLineColor'] = colors[1];
 
-        newItem['reportUrl'] = `${this.configService.get<string>(
-          'app.ecmpsHost',
-        )}/workspace/reports?reportCode=TEST_EVAL&facilityId=${orisCode}&testId=${
-          testSumRecord.testSumIdentifier
-        }`;
+          newItem['reportUrl'] = `${this.configService.get<string>(
+            'app.ecmpsHost',
+          )}/workspace/reports?reportCode=TEST_EVAL&facilityId=${orisCode}&testId=${
+            testSumRecord.testSumIdentifier
+          }`;
 
-        templateContext['testData'].items.push(newItem);
+          templateContext['testData'].items.push(newItem);
+        }
       }
     }
     return templateContext;
@@ -137,27 +140,29 @@ export class MailEvalService {
           certRecord.qaCertEventIdentifier,
         );
 
-        newItem['System / Component Id'] =
-          await this.getSystemComponentIdentifier(
-            certEventRecord.monSystemIdentifier,
-            certEventRecord.componentIdentifier,
+        if (certEventRecord) {
+          newItem['System / Component Id'] =
+            await this.getSystemComponentIdentifier(
+              certEventRecord.monSystemIdentifier,
+              certEventRecord.componentIdentifier,
+            );
+          newItem['Cert Event Code'] = certEventRecord.qaCertEventCode;
+          newItem['Required Test Code'] = certEventRecord.requiredTestCode;
+          newItem['evalStatusCode'] = mappedStatusCodes.get(
+            certEventRecord.evalStatusCode,
           );
-        newItem['Cert Event Code'] = certEventRecord.qaCertEventCode;
-        newItem['Required Test Code'] = certEventRecord.requiredTestCode;
-        newItem['evalStatusCode'] = mappedStatusCodes.get(
-          certEventRecord.evalStatusCode,
-        );
-        const colors = this.getReportColors(certEventRecord.evalStatusCode);
-        newItem['reportColor'] = colors[0];
-        newItem['reportLineColor'] = colors[1];
+          const colors = this.getReportColors(certEventRecord.evalStatusCode);
+          newItem['reportColor'] = colors[0];
+          newItem['reportLineColor'] = colors[1];
 
-        newItem['reportUrl'] = `${this.configService.get<string>(
-          'app.ecmpsHost',
-        )}/workspace/reports?reportCode=QCE_EVAL&facilityId=${orisCode}&qceId=${
-          certEventRecord.qaCertEventIdentifier
-        }`;
+          newItem['reportUrl'] = `${this.configService.get<string>(
+            'app.ecmpsHost',
+          )}/workspace/reports?reportCode=QCE_EVAL&facilityId=${orisCode}&qceId=${
+            certEventRecord.qaCertEventIdentifier
+          }`;
 
-        templateContext['certEvents'].items.push(newItem);
+          templateContext['certEvents'].items.push(newItem);
+        }
       }
     }
     return templateContext;
@@ -200,30 +205,32 @@ export class MailEvalService {
           teeRecord.rptPeriodIdentifier,
         );
 
-        newItem['System / Component Id'] =
-          await this.getSystemComponentIdentifier(
-            teeRecord.monSystemIdentifier,
-            teeRecord.componentIdentifier,
+        if (teeRecord) {
+          newItem['System / Component Id'] =
+            await this.getSystemComponentIdentifier(
+              teeRecord.monSystemIdentifier,
+              teeRecord.componentIdentifier,
+            );
+          newItem['Year / Quarter'] = reportPeriodInfo.periodAbbreviation;
+          newItem['Fuel Code'] = teeRecord.fuelCode;
+          newItem['Extension Exemption Code'] = teeRecord.extensExemptCode;
+          newItem['Hours Used'] = teeRecord.hoursUsed;
+          newItem['Span Scale Code'] = teeRecord.spanScaleCode;
+          newItem['evalStatusCode'] = mappedStatusCodes.get(
+            teeRecord.evalStatusCode,
           );
-        newItem['Year / Quarter'] = reportPeriodInfo.periodAbbreviation;
-        newItem['Fuel Code'] = teeRecord.fuelCode;
-        newItem['Extension Exemption Code'] = teeRecord.extensExemptCode;
-        newItem['Hours Used'] = teeRecord.hoursUsed;
-        newItem['Span Scale Code'] = teeRecord.spanScaleCode;
-        newItem['evalStatusCode'] = mappedStatusCodes.get(
-          teeRecord.evalStatusCode,
-        );
-        const colors = this.getReportColors(teeRecord.evalStatusCode);
-        newItem['reportColor'] = colors[0];
-        newItem['reportLineColor'] = colors[1];
+          const colors = this.getReportColors(teeRecord.evalStatusCode);
+          newItem['reportColor'] = colors[0];
+          newItem['reportLineColor'] = colors[1];
 
-        newItem['reportUrl'] = `${this.configService.get<string>(
-          'app.ecmpsHost',
-        )}/workspace/reports?reportCode=TEE_EVAL&facilityId=${orisCode}&teeId=${
-          teeRecord.testExtensionExemptionIdentifier
-        }`;
+          newItem['reportUrl'] = `${this.configService.get<string>(
+            'app.ecmpsHost',
+          )}/workspace/reports?reportCode=TEE_EVAL&facilityId=${orisCode}&teeId=${
+            teeRecord.testExtensionExemptionIdentifier
+          }`;
 
-        templateContext['teeEvents'].items.push(newItem);
+          templateContext['teeEvents'].items.push(newItem);
+        }
       }
     }
     return templateContext;
@@ -258,26 +265,29 @@ export class MailEvalService {
               rptPeriodIdentifier: em.rptPeriodIdentifier,
             },
           });
-        const reportPeriodInfo = await this.returnManager().findOne(
-          ReportingPeriod,
-          emissionsRecord.rptPeriodIdentifier,
-        );
 
-        newItem['Year / Quarter'] = reportPeriodInfo.periodAbbreviation;
-        newItem['evalStatusCode'] = mappedStatusCodes.get(
-          emissionsRecord.evalStatusCode,
-        );
-        const colors = this.getReportColors(emissionsRecord.evalStatusCode);
-        newItem['reportColor'] = colors[0];
-        newItem['reportLineColor'] = colors[1];
+        if (emissionsRecord) {
+          const reportPeriodInfo = await this.returnManager().findOne(
+            ReportingPeriod,
+            emissionsRecord.rptPeriodIdentifier,
+          );
 
-        newItem['reportUrl'] = `${this.configService.get<string>(
-          'app.ecmpsHost',
-        )}/workspace/reports?reportCode=EM_EVAL&facilityId=${orisCode}&monitorPlanId=${monitorPlanId}&year=${
-          reportPeriodInfo.calendarYear
-        }&quarter=${reportPeriodInfo.quarter}`;
+          newItem['Year / Quarter'] = reportPeriodInfo.periodAbbreviation;
+          newItem['evalStatusCode'] = mappedStatusCodes.get(
+            emissionsRecord.evalStatusCode,
+          );
+          const colors = this.getReportColors(emissionsRecord.evalStatusCode);
+          newItem['reportColor'] = colors[0];
+          newItem['reportLineColor'] = colors[1];
 
-        templateContext['emissions'].items.push(newItem);
+          newItem['reportUrl'] = `${this.configService.get<string>(
+            'app.ecmpsHost',
+          )}/workspace/reports?reportCode=EM_EVAL&facilityId=${orisCode}&monitorPlanId=${monitorPlanId}&year=${
+            reportPeriodInfo.calendarYear
+          }&quarter=${reportPeriodInfo.quarter}`;
+
+          templateContext['emissions'].items.push(newItem);
+        }
       }
     }
     return templateContext;
@@ -327,6 +337,8 @@ export class MailEvalService {
     from: string,
     setId: string,
     isSubmission: boolean,
+    isSubmissionFailure: boolean = false,
+    errorId: string = '',
   ) {
     //Create our lookup map of eval codes to descriptions
     const statusCodes = await this.returnManager().query(
@@ -355,7 +367,24 @@ export class MailEvalService {
     let setRecord;
     let records;
 
-    if (isSubmission) {
+    let templateContext: any = {};
+
+    if (isSubmissionFailure) {
+      console.log('Sending Submission Failure Email');
+
+      subject = `ECMPS Submission Process Failure | ${this.displayCurrentDate()}`;
+      template = 'submissionFailureTemplate';
+      records = await this.returnManager().find(SubmissionQueue, {
+        where: { submissionSetIdentifier: setId },
+      });
+      const supportEmail = await this.returnManager().findOne(ClientConfig, {
+        where: { name: 'ecmps-ui' },
+      });
+
+      templateContext['errorId'] = errorId;
+      templateContext['supportEmail'] = supportEmail.supportEmail;
+      setRecord = await this.returnManager().findOne(SubmissionSet, setId);
+    } else if (isSubmission) {
       subject = `ECMPS Submission Confirmation | ${this.displayCurrentDate()}`;
       template = 'submissionTemplate';
       records = await this.returnManager().find(SubmissionQueue, {
@@ -372,7 +401,6 @@ export class MailEvalService {
     }
 
     // Build the context for our email --------------------------------------
-    let templateContext: any = {};
     templateContext['dateEvaluated'] = this.displayCurrentDate();
     templateContext['cdxUrl'] = this.configService.get<string>('app.cdxUrl');
 
@@ -423,7 +451,7 @@ export class MailEvalService {
       }&monitorPlanId=${mpRecord.monPlanIdentifier}`;
     }
 
-    if (isSubmission) {
+    if (isSubmission || isSubmissionFailure) {
       templateContext['monPlanSubmitted'] = false;
       if (mpChildRecord) {
         templateContext['monPlanSubmitted'] = true;
@@ -486,7 +514,7 @@ export class MailEvalService {
       );
     }
 
-    this.mailerService
+    await this.mailerService
       .sendMail({
         to: to, // List of receivers email address
         from: from,

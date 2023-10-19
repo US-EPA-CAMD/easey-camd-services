@@ -268,6 +268,22 @@ export class SubmissionProcessService {
               },
             },
           );
+
+          if (originRecordCode === 'UPDATED') {
+            await this.returnManager().query(
+              //Close the EM submission access window
+              `UPDATE camdecmpsaux.em_submission_access 
+                SET em_status_cd = $1,
+                sub_availability_cd = $2
+                WHERE mon_plan_id = $3 AND rpt_period_id = $4
+                ORDER BY access_begin_date DESC
+                LIMIT 1`,
+              ['RECVD', set.monPlanIdentifier, record.rptPeriodIdentifier],
+            );
+
+            //Close submission window
+          }
+
           break;
         case 'MATS':
           originRecord = await this.returnManager().findOne(MatsBulkFile, {
@@ -278,13 +294,7 @@ export class SubmissionProcessService {
           break;
       }
 
-      if (
-        !(
-          record.testSumIdentifier !== null ||
-          record.rptPeriodIdentifier !== null
-        ) || //The transation deletes the Test Sum and Emissions Records so don't execute this logic on final update
-        originRecordCode !== 'UPDATED'
-      ) {
+      if (originRecord) {
         originRecord.submissionIdentifier = record.submissionIdentifier;
         originRecord.submissionAvailabilityCode = originRecordCode;
 
@@ -310,6 +320,26 @@ export class SubmissionProcessService {
 
     await this.returnManager().save(set);
 
+    const errorId = uuidv4();
+
+    let logMetadata = {
+      appName: 'ecmps-ui',
+      stack: e.stack,
+      statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+      errorId: errorId,
+    };
+
+    this.logger.error(e.message, e.stack, 'submission', logMetadata);
+
+    await this.mailEvalService.sendMassEvalEmail(
+      set.userEmail,
+      this.configService.get<string>('app.defaultFromEmail'),
+      set.submissionSetIdentifier,
+      false,
+      true,
+      errorId,
+    );
+
     throw new EaseyException(e, HttpStatus.INTERNAL_SERVER_ERROR);
   }
 
@@ -319,37 +349,44 @@ export class SubmissionProcessService {
     submissionSetRecords,
     transactions,
   ) {
-    rmSync(folderPath, {
-      recursive: true,
-      maxRetries: 5,
-      retryDelay: 1,
-      force: true,
-    });
+    try {
+      rmSync(folderPath, {
+        recursive: true,
+        maxRetries: 5,
+        retryDelay: 1,
+        force: true,
+      });
 
-    await this.returnManager().transaction(
-      //Copy records from workspace to global
-      async (transactionalEntityManager) => {
-        try {
-          for (const trans of transactions) {
-            await transactionalEntityManager.query(trans.command, trans.params);
+      await this.returnManager().transaction(
+        //Copy records from workspace to global
+        async (transactionalEntityManager) => {
+          try {
+            for (const trans of transactions) {
+              await transactionalEntityManager.query(
+                trans.command,
+                trans.params,
+              );
+            }
+          } catch (error) {
+            await this.handleError(set, submissionSetRecords, error);
           }
-        } catch (error) {
-          this.handleError(set, submissionSetRecords, error);
-        }
-      },
-    );
+        },
+      );
 
-    await this.setRecordStatusCode(
-      set,
-      submissionSetRecords,
-      'COMPLETE',
-      '',
-      'UPDATED',
-    );
+      await this.setRecordStatusCode(
+        set,
+        submissionSetRecords,
+        'COMPLETE',
+        '',
+        'UPDATED',
+      );
 
-    set.statusCode = 'COMPLETE';
-    set.endStageTime = currentDateTime();
-    await this.returnManager().save(set);
+      set.statusCode = 'COMPLETE';
+      set.endStageTime = currentDateTime();
+      await this.returnManager().save(set);
+    } catch (e) {
+      await this.handleError(set, submissionSetRecords, e);
+    }
 
     this.mailEvalService.sendMassEvalEmail(
       set.userEmail,
@@ -363,114 +400,128 @@ export class SubmissionProcessService {
 
   async processSubmissionSet(id: string): Promise<void> {
     this.logger.log(`Processing copy of record for: ${id}`);
-    const set: SubmissionSet = await this.returnManager().findOne(
-      SubmissionSet,
-      id,
-    );
 
-    set.statusCode = 'WIP';
-    set.endStageTime = currentDateTime();
+    let set: SubmissionSet;
+    let submissionSetRecords: SubmissionQueue[];
 
-    await this.returnManager().save(set);
+    try {
+      set = await this.returnManager().findOne(SubmissionSet, id);
 
-    let submissionSetRecords: SubmissionQueue[] =
-      await this.returnManager().find(SubmissionQueue, {
+      set.statusCode = 'WIP';
+      set.endStageTime = currentDateTime();
+
+      await this.returnManager().save(set);
+
+      submissionSetRecords = await this.returnManager().find(SubmissionQueue, {
         where: { submissionSetIdentifier: id },
       });
 
-    const values = {
-      //Order which to process copy of records
-      MP: 1,
-      QA: 2,
-      EM: 3,
-      MATS: 4,
-    };
+      const values = {
+        //Order which to process copy of records
+        MP: 1,
+        QA: 2,
+        EM: 3,
+        MATS: 4,
+      };
 
-    submissionSetRecords = submissionSetRecords.sort((a, b) => {
-      return values[a.processCode] - values[b.processCode];
-    });
+      submissionSetRecords = submissionSetRecords.sort((a, b) => {
+        return values[a.processCode] - values[b.processCode];
+      });
 
-    const fileBucket = uuidv4();
+      const fileBucket = uuidv4();
 
-    const folderPath = path.join(__dirname, fileBucket);
+      const folderPath = path.join(__dirname, fileBucket);
 
-    mkdirSync(folderPath);
+      mkdirSync(folderPath);
 
-    // Iterate each record in the submission queue linked to the set and create a promise that resolves with the addition of document html string in the documents array
-    const documents = [];
-    const transactions: any = [];
-    for (const submissionRecord of submissionSetRecords) {
-      await this.buildTransactions(
-        set,
-        submissionRecord,
-        documents,
-        transactions,
-        folderPath,
-      );
-    }
+      // Iterate each record in the submission queue linked to the set and create a promise that resolves with the addition of document html string in the documents array
+      const documents = [];
+      const transactions: any = [];
+      for (const submissionRecord of submissionSetRecords) {
+        await this.buildTransactions(
+          set,
+          submissionRecord,
+          documents,
+          transactions,
+          folderPath,
+        );
+      }
 
-    //Build Copy of Records ---
+      //Build Copy of Records ---
 
-    if (submissionSetRecords.filter((r) => r.processCode === 'MP').length > 0) {
-      await this.buildDocuments(set, submissionSetRecords, documents, 'MP');
-    }
+      if (
+        submissionSetRecords.filter((r) => r.processCode === 'MP').length > 0
+      ) {
+        await this.buildDocuments(set, submissionSetRecords, documents, 'MP');
+      }
 
-    if (
-      submissionSetRecords.filter(
-        (r) => r.processCode === 'QA' && r.testSumIdentifier,
-      ).length > 0
-    ) {
-      await this.buildDocuments(
-        set,
-        submissionSetRecords,
-        documents,
-        'QA_TEST',
-      );
-    }
+      if (
+        submissionSetRecords.filter(
+          (r) => r.processCode === 'QA' && r.testSumIdentifier,
+        ).length > 0
+      ) {
+        await this.buildDocuments(
+          set,
+          submissionSetRecords,
+          documents,
+          'QA_TEST',
+        );
+      }
 
-    if (
-      submissionSetRecords.filter(
-        (r) => r.processCode === 'QA' && r.qaCertEventIdentifier,
-      ).length > 0
-    ) {
-      await this.buildDocuments(set, submissionSetRecords, documents, 'QA_QCE');
-    }
+      if (
+        submissionSetRecords.filter(
+          (r) => r.processCode === 'QA' && r.qaCertEventIdentifier,
+        ).length > 0
+      ) {
+        await this.buildDocuments(
+          set,
+          submissionSetRecords,
+          documents,
+          'QA_QCE',
+        );
+      }
 
-    if (
-      submissionSetRecords.filter(
-        (r) => r.processCode === 'QA' && r.testExtensionExemptionIdentifier,
-      ).length > 0
-    ) {
-      await this.buildDocuments(set, submissionSetRecords, documents, 'QA_TEE');
-    }
+      if (
+        submissionSetRecords.filter(
+          (r) => r.processCode === 'QA' && r.testExtensionExemptionIdentifier,
+        ).length > 0
+      ) {
+        await this.buildDocuments(
+          set,
+          submissionSetRecords,
+          documents,
+          'QA_TEE',
+        );
+      }
 
-    if (submissionSetRecords.filter((r) => r.processCode === 'EM').length > 0) {
-      await this.buildDocuments(set, submissionSetRecords, documents, 'EM');
-    }
+      if (
+        submissionSetRecords.filter((r) => r.processCode === 'EM').length > 0
+      ) {
+        await this.buildDocuments(set, submissionSetRecords, documents, 'EM');
+      }
 
-    // Handle Certification Statements
+      // Handle Certification Statements
 
-    const obs = this.httpService.get(
-      `${this.configService.get<string>(
-        'app.authApi.uri',
-      )}/certifications/statements?monitorPlanIds=${set.monPlanIdentifier}`,
-      {
-        headers: {
-          'x-api-key': this.configService.get<string>('app.apiKey'),
+      const obs = this.httpService.get(
+        `${this.configService.get<string>(
+          'app.authApi.uri',
+        )}/certifications/statements?monitorPlanIds=${set.monPlanIdentifier}`,
+        {
+          headers: {
+            'x-api-key': this.configService.get<string>('app.apiKey'),
+          },
         },
-      },
-    );
+      );
 
-    const statements = (await firstValueFrom(obs)).data;
+      const statements = (await firstValueFrom(obs)).data;
 
-    documents.push({
-      documentTitle: `Certification Statements`,
-      context: this.copyOfRecordService.generateCopyOfRecordCert(statements),
-    });
+      documents.push({
+        documentTitle: `Certification Statements`,
+        context: this.copyOfRecordService.generateCopyOfRecordCert(statements),
+      });
 
-    //--------------------------
+      //--------------------------
 
-    try {
       //Write the document strings to html files
       for (const doc of documents) {
         writeFileSync(`${folderPath}/${doc.documentTitle}.html`, doc.context);
@@ -487,7 +538,7 @@ export class SubmissionProcessService {
 
       formData.append('activityId', set.activityId); //
 
-      const obs = this.httpService.post(
+      const signObs = this.httpService.post(
         `${this.configService.get<string>('app.authApi.uri')}/sign`,
         formData,
         {
@@ -498,7 +549,7 @@ export class SubmissionProcessService {
         },
       );
 
-      obs.subscribe({
+      signObs.subscribe({
         //Handle transmission cleanup / error handling
         error: (e) => {
           this.handleError(set, submissionSetRecords, e);
@@ -520,7 +571,7 @@ export class SubmissionProcessService {
         },
       });
     } catch (e) {
-      this.handleError(set, submissionSetRecords, e);
+      await this.handleError(set, submissionSetRecords, e);
     }
   }
 }
