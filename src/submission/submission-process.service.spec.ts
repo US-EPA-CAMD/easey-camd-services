@@ -85,6 +85,8 @@ describe('-- Submission Process Service --', () => {
         return false;
       }),
 
+      query: jest.fn(),
+
       transaction: jest.fn(),
 
       find: jest.fn().mockResolvedValue([new SubmissionQueue()]),
@@ -129,6 +131,8 @@ describe('-- Submission Process Service --', () => {
         }
         return false;
       }),
+
+      query: jest.fn(),
 
       save: jest.fn(),
     });
