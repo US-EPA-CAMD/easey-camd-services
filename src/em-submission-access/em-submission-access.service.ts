@@ -47,6 +47,7 @@ export class EmSubmissionAccessService {
         dataLoadedFlag: null,
         addDate: currentTime,
         updateDate: null,
+        submissionTypeCode: 'RQRESUB',
         submissionAvailabilityCode: 'REQUIRE',
         emissionStatusCode: 'APPRVD',
       });
