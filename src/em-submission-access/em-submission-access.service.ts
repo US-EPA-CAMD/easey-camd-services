@@ -47,7 +47,8 @@ export class EmSubmissionAccessService {
         dataLoadedFlag: null,
         addDate: currentTime,
         updateDate: null,
-        submissionTypeCode: 'RQRESUB',
+        submissionAvailabilityCode: 'REQUIRE',
+        emissionStatusCode: 'APPRVD',
       });
       await this.repository.save(entity);
       let emSubmissionAccess = await this.viewRepository.findOne({
