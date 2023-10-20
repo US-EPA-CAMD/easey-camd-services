@@ -272,13 +272,19 @@ export class SubmissionProcessService {
           if (originRecordCode === 'UPDATED') {
             await this.returnManager().query(
               //Close the EM submission access window
-              `UPDATE camdecmpsaux.em_submission_access 
-                SET em_status_cd = $1,
-                sub_availability_cd = $2
-                WHERE mon_plan_id = $3 AND rpt_period_id = $4
-                ORDER BY access_begin_date DESC
-                LIMIT 1`,
-              ['RECVD', set.monPlanIdentifier, record.rptPeriodIdentifier],
+              `UPDATE camdecmpsaux.em_submission_access
+                SET em_status_cd = $1, sub_availability_cd = $2
+                WHERE mon_plan_id = $3
+                  AND rpt_period_id = $4
+                  AND access_begin_date = (SELECT MAX(access_begin_date)
+                                            FROM camdecmpsaux.em_submission_access
+                                            WHERE mon_plan_id = $3 AND rpt_period_id = $4);`,
+              [
+                'RECVD',
+                'UPDATED',
+                set.monPlanIdentifier,
+                record.rptPeriodIdentifier,
+              ],
             );
 
             //Close submission window
