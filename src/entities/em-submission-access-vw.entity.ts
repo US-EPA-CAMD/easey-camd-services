@@ -42,6 +42,7 @@ export class EmSubmissionAccessView extends BaseEntity {
   })
   submissionTypeDescription: string;
 
+
   @Column({
     name: 'userid',
   })
@@ -61,9 +62,19 @@ export class EmSubmissionAccessView extends BaseEntity {
   emissionStatusCode: string;
 
   @Column({
+    name: 'em_status_cd_description',
+  })
+  emissionStatusDescription: string;
+
+  @Column({
     name: 'sub_availability_cd',
   })
   submissionAvailabilityCode: string;
+
+  @Column({
+    name: 'sub_availability_cd_description',
+  })
+  submissionAvailabilityDescription: string;
 
   @Column({
     name: 'resub_explanation',
