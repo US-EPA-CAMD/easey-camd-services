@@ -40,23 +40,20 @@ export class DataSetService {
     params: ReportParamsDTO,
     test: { id: string; code: string },
   ): Promise<ReportDetailDTO[]> {
-    const detailDef = dataSet.tables.filter(tbl =>
+    let detailDef = dataSet.tables.filter(
+      (tbl) =>
         tbl.template.groupCode === 'ALL' ||
         tbl.template.groupCode === test.code,
     );
 
-    return this.getDataSetResults(
-      schema,
-      detailDef,
-      params,
-      test.id,
-    );    
+    if (test.code === '7DAY') {
+      detailDef = [detailDef[2], detailDef[0], detailDef[1]];
+    }
+
+    return this.getDataSetResults(schema, detailDef, params, test.id);
   }
 
-  async getDataSet(
-    params: ReportParamsDTO,
-    isWorkspace: boolean = false
-  ) {
+  async getDataSet(params: ReportParamsDTO, isWorkspace: boolean = false) {
     this.reportColumns = [];
     this.hasFacilityInfo = false;
     const report = new ReportDTO();
@@ -71,7 +68,8 @@ export class DataSetService {
 
     if (params.reportCode === 'TEST_DETAIL') {
       const promises = [];
-      const tests = await getManager().query(`
+      const tests = await getManager().query(
+        `
         SELECT
           test_sum_id AS "id",
           test_type_cd AS  "code"
@@ -112,22 +110,15 @@ export class DataSetService {
     params: ReportParamsDTO,
     testId?: string,
   ): Promise<ReportDetailDTO> {
-    table.sqlStatement = table.sqlStatement.replace(
-      /{SCHEMA}/,
-      schema,
-    );
+    table.sqlStatement = table.sqlStatement.replace(/{SCHEMA}/, schema);
 
     const sqlParams = table.parameters.map((param) => {
       if (params.reportCode.includes('EVAL')) {
-        if (param.name === 'testId')
-          return params.testId[0];
-        if (param.name === 'qceId')
-          return params.qceId[0];
-        if (param.name === 'teeId')
-          return params.teeId[0];
+        if (param.name === 'testId') return params.testId[0];
+        if (param.name === 'qceId') return params.qceId[0];
+        if (param.name === 'teeId') return params.teeId[0];
       } else if (param.name === 'testId') {
-        if (params.testId.length === 1)
-          return params.testId[0];
+        if (params.testId.length === 1) return params.testId[0];
         else return testId;
       }
       return params[param.name] ?? param.defaultValue;
@@ -139,19 +130,17 @@ export class DataSetService {
       : table.template.displayName;
     detailDto.templateCode = table.template.code;
     detailDto.templateType = table.template.type;
-    detailDto.results = await getManager().query(
-      table.sqlStatement, sqlParams
-    );
+    detailDto.results = await getManager().query(table.sqlStatement, sqlParams);
 
     if (detailDto.results.length > 0) {
-      let columnDto = this.reportColumns.find(column =>
-        column.code === table.templateCode
+      let columnDto = this.reportColumns.find(
+        (column) => column.code === table.templateCode,
       );
 
       if (!columnDto) {
         columnDto = new ReportColumnDTO();
         columnDto.code = table.templateCode;
-        columnDto.values = table.columns.map(column => {
+        columnDto.values = table.columns.map((column) => {
           return {
             name: column.name,
             displayName: column.displayName,
@@ -173,7 +162,7 @@ export class DataSetService {
     const promises = [];
     const FACINFO = 'FACINFO';
 
-    tables.forEach(tbl => {
+    tables.forEach((tbl) => {
       if (!this.hasFacilityInfo || !tbl.templateCode.includes(FACINFO)) {
         promises.push(this.getDataSetResult(schema, tbl, params, testId));
         if (!this.hasFacilityInfo && tbl.templateCode.includes(FACINFO)) {

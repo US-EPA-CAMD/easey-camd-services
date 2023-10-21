@@ -40,6 +40,9 @@ describe('-- Submission Process Service --', () => {
               // Simulate an HTTP POST request and return an observable
               return of({ message: 'Mock HTTP response', data });
             },
+            get() {
+              return of([]);
+            },
           }),
         },
         {
@@ -52,6 +55,7 @@ describe('-- Submission Process Service --', () => {
           provide: CopyOfRecordService,
           useFactory: () => ({
             generateCopyOfRecord: jest.fn().mockReturnValue('mockReport'),
+            generateCopyOfRecordCert: jest.fn().mockResolvedValue(''),
           }),
         },
       ],
@@ -80,6 +84,8 @@ describe('-- Submission Process Service --', () => {
         }
         return false;
       }),
+
+      query: jest.fn(),
 
       transaction: jest.fn(),
 
@@ -125,6 +131,8 @@ describe('-- Submission Process Service --', () => {
         }
         return false;
       }),
+
+      query: jest.fn(),
 
       save: jest.fn(),
     });

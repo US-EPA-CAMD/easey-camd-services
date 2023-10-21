@@ -5,6 +5,7 @@ import {
   IsString,
   ValidationArguments,
   IsDateString,
+  IsOptional,
 } from 'class-validator';
 import { IsIsoFormat } from '@us-epa-camd/easey-common/pipes/is-iso-format.pipe';
 import { CheckCatalogService } from '@us-epa-camd/easey-common/check-catalog';
@@ -38,6 +39,10 @@ export class EmSubmissionAccessUpdateDTO {
   })
   emissionStatusCode: string;
 
+  @IsString()
+  @IsOptional()
+  emissionStatusDescription?: string;
+
   @ApiProperty({
     description: propertyMetadata.submissionAvailabilityCode.description,
     example: propertyMetadata.submissionAvailabilityCode.example,
@@ -52,6 +57,10 @@ export class EmSubmissionAccessUpdateDTO {
     },
   })
   submissionAvailabilityCode: string;
+
+  @IsString()
+  @IsOptional()
+  submissionAvailabilityDescription?: string;
 
   @ApiProperty({
     description: propertyMetadata.resubExplanation.description,
@@ -195,6 +204,9 @@ export class EmSubmissionAccessDTO extends EmSubmissionAccessCreateDTO {
   })
   @IsString()
   submissionTypeDescription: string;
+
+  @IsString()
+  submissionTypeCode: string;
 
   @ApiProperty({
     description: propertyMetadata.emissionStatusCode.description,
