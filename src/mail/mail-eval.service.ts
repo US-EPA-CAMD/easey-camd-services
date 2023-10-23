@@ -18,6 +18,11 @@ import { SubmissionQueue } from '../entities/submission-queue.entity';
 import { SubmissionSet } from '../entities/submission-set.entity';
 import { MatsBulkFile } from '../entities/mats-bulk-file.entity';
 import { ClientConfig } from '../entities/client-config.entity';
+import { MonitorPlanGlobal } from '../entities/monitor-plan-global.entity';
+import { TestSummaryGlobal } from '../entities/test-summary-global.entity';
+import { QaCertEventGlobal } from '../entities/qa-cert-event-global.entity';
+import { QaTeeGlobal } from '../entities/qa-tee-global.entity';
+import { EmissionEvaluationGlobal } from '../entities/emission-evaluation-global.entity';
 
 //Formats and sends emissions evaluations emails
 @Injectable()
@@ -76,8 +81,8 @@ export class MailEvalService {
       };
       for (const testRecord of records) {
         const newItem: any = {};
-        const testSumRecord: TestSummary = await this.returnManager().findOne(
-          TestSummary,
+        const testSumRecord = await this.returnManager().findOne(
+          !isSubmission ? TestSummary : TestSummaryGlobal,
           testRecord.testSumIdentifier,
         );
 
@@ -135,8 +140,8 @@ export class MailEvalService {
       };
       for (const certRecord of records) {
         const newItem: any = {};
-        const certEventRecord: QaCertEvent = await this.returnManager().findOne(
-          QaCertEvent,
+        const certEventRecord = await this.returnManager().findOne(
+          !isSubmission ? QaCertEvent : QaCertEventGlobal,
           certRecord.qaCertEventIdentifier,
         );
 
@@ -196,8 +201,8 @@ export class MailEvalService {
 
       for (const tee of records) {
         const newItem: any = {};
-        const teeRecord: QaTee = await this.returnManager().findOne(
-          QaTee,
+        const teeRecord = await this.returnManager().findOne(
+          !isSubmission ? QaTee : QaTeeGlobal,
           tee.testExtensionExemptionIdentifier,
         );
         const reportPeriodInfo = await this.returnManager().findOne(
@@ -258,13 +263,15 @@ export class MailEvalService {
 
       for (const em of records) {
         const newItem: any = {};
-        const emissionsRecord: EmissionEvaluation =
-          await this.returnManager().findOne(EmissionEvaluation, {
+        const emissionsRecord: any = await this.returnManager().findOne(
+          !isSubmission ? EmissionEvaluation : EmissionEvaluationGlobal,
+          {
             where: {
               monPlanIdentifier: monitorPlanId,
               rptPeriodIdentifier: em.rptPeriodIdentifier,
             },
-          });
+          },
+        );
 
         if (emissionsRecord) {
           const reportPeriodInfo = await this.returnManager().findOne(
@@ -407,7 +414,7 @@ export class MailEvalService {
     // Create Monitor Plan Section of Email
 
     const mpRecord = await this.returnManager().findOne(
-      MonitorPlan,
+      !(isSubmission || isSubmissionFailure) ? MonitorPlan : MonitorPlanGlobal,
       setRecord.monPlanIdentifier,
     );
     const plant = await this.returnManager().findOne(
@@ -467,7 +474,7 @@ export class MailEvalService {
       testDataChildRecords,
       plant.orisCode,
       mappedStatusCodes,
-      isSubmission,
+      isSubmission || isSubmissionFailure,
     );
 
     const certChildRecords = records.filter(
@@ -478,7 +485,7 @@ export class MailEvalService {
       certChildRecords,
       plant.orisCode,
       mappedStatusCodes,
-      isSubmission,
+      isSubmission || isSubmissionFailure,
     );
 
     const teeChildRecords = records.filter(
@@ -490,7 +497,7 @@ export class MailEvalService {
       teeChildRecords,
       plant.orisCode,
       mappedStatusCodes,
-      isSubmission,
+      isSubmission || isSubmissionFailure,
     );
 
     //Create Emissions Section of Email
@@ -501,10 +508,10 @@ export class MailEvalService {
       mpRecord.monPlanIdentifier,
       plant.orisCode,
       mappedStatusCodes,
-      isSubmission,
+      isSubmission || isSubmissionFailure,
     );
 
-    if (isSubmission) {
+    if (isSubmission || isSubmissionFailure) {
       const matsDataChildRecords = records.filter(
         (r) => r.processCode === 'MATS',
       );
