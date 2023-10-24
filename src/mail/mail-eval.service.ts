@@ -362,7 +362,7 @@ export class MailEvalService {
         })
         .catch(async (err) => {
           await new Promise((r) => setTimeout(r, attempt * 1000 * attempt));
-          console.log('Attempting to send failed email request');
+          console.log('Attempting to send failed email request'); //
           this.sendEmailWithRetry(
             to,
             from,
