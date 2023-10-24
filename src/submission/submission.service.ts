@@ -1,4 +1,4 @@
-import { MoreThan, getManager } from 'typeorm';
+import { MoreThan, MoreThanOrEqual, getManager } from 'typeorm';
 import { Injectable } from '@nestjs/common';
 import { Logger } from '@us-epa-camd/easey-common/logger';
 import { EvaluationItem } from '../dto/evaluation.dto';
@@ -20,6 +20,7 @@ import { CombinedSubmissionsMap } from '../maps/combined-submissions.map';
 import { EmissionsLastUpdatedMap } from '../maps/emissions-last-updated.map';
 import { EmissionEvaluationGlobal } from '../entities/emission-evaluation-global.entity';
 import { CheckSession } from '../entities/check-session.entity';
+import { get } from 'http';
 
 @Injectable()
 export class SubmissionService {
@@ -271,10 +272,12 @@ export class SubmissionService {
   ): Promise<SubmissionsLastUpdatedResponseDTO> {
     const dto = new SubmissionsLastUpdatedResponseDTO();
 
+    const clock: Date = (await getManager().query('SELECT now();'))[0].now;
+
     dto.submissionLogs = await this.combinedSubmissionMap.many(
       await CombinedSubmissions.find({
         where: {
-          submittedOn: MoreThan(new Date(queryTime)),
+          submissionEndStateStageTime: MoreThanOrEqual(new Date(queryTime)),
           statusCode: 'COMPLETE',
           processCode: 'EM',
         },
@@ -283,16 +286,11 @@ export class SubmissionService {
 
     dto.emissionReports = await this.emissionsLastUpdatedMap.many(
       await EmissionEvaluationGlobal.find({
-        where: { lastUpdated: MoreThan(new Date(queryTime)) },
+        where: { lastUpdated: MoreThanOrEqual(new Date(queryTime)) },
       }),
     );
 
-    const est = new Date().toLocaleString('en-us', {
-      timeZone: 'America/New_York',
-    });
-    const processDate = new Date(est);
-
-    dto.mostRecentUpdateDate = processDate;
+    dto.mostRecentUpdateDate = clock;
 
     return dto;
   }

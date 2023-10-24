@@ -9,7 +9,7 @@
     "url": "git+https://github.com/US-EPA-CAMD/easey-camd-services.git"
   },
   "engines": {
-    "node": "16.x"
+    "node": "20.x"
   },
   "scripts": {
     "prebuild": "rimraf dist",
