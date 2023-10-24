@@ -22,7 +22,7 @@ jobs:
       - name: Setup & Configure Node
         uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: 20
           registry-url: https://npm.pkg.github.com/
           scope: '@us-epa-camd'
       - name: Configure Env Vars
@@ -270,10 +270,10 @@ jobs:
   #         CAMD_SERVICES_SECRET_TOKEN: ${{ secrets.API_SECRET_TOKEN }}
   #         BULK_FILES_AWS_ACCESS_KEY_ID: ${{ secrets.BULK_FILES_AWS_ACCESS_KEY_ID }}
   #         BULK_FILES_AWS_SECRET_ACCESS_KEY: ${{ secrets.BULK_FILES_AWS_SECRET_ACCESS_KEY }}
-          # MATS_IMPORT_AWS_ACCESS_KEY_ID: ${{ secrets.MATS_BULK_FILES_IMPORT_AWS_ACCESS_KEY_ID }}
-          # MATS_IMPORT_AWS_SECRET_ACCESS_KEY_ID: ${{ secrets.MATS_BULK_FILES_IMPORT_AWS_SECRET_ACCESS_KEY }}
-          # MATS_AWS_ACCESS_KEY_ID: ${{ secrets.MATS_BULK_FILES_AWS_ACCESS_KEY_ID }}
-          # MATS_AWS_SECRET_ACCESS_KEY_ID: ${{ secrets.MATS_BULK_FILES_AWS_SECRET_ACCESS_KEY }}
+  # MATS_IMPORT_AWS_ACCESS_KEY_ID: ${{ secrets.MATS_BULK_FILES_IMPORT_AWS_ACCESS_KEY_ID }}
+  # MATS_IMPORT_AWS_SECRET_ACCESS_KEY_ID: ${{ secrets.MATS_BULK_FILES_IMPORT_AWS_SECRET_ACCESS_KEY }}
+  # MATS_AWS_ACCESS_KEY_ID: ${{ secrets.MATS_BULK_FILES_AWS_ACCESS_KEY_ID }}
+  # MATS_AWS_SECRET_ACCESS_KEY_ID: ${{ secrets.MATS_BULK_FILES_AWS_SECRET_ACCESS_KEY }}
 
   #     - name: Deployment
   #       run: devops/scripts/deploy.sh
