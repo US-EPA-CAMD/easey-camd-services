@@ -144,9 +144,6 @@ export class SubmissionProcessService {
     transactions: any[],
     folderPath: string,
   ): Promise<void> {
-    record.statusCode = 'WIP';
-    this.returnManager().save(record);
-
     switch (record.processCode) {
       case 'MP':
         transactions.push({
@@ -421,6 +418,14 @@ export class SubmissionProcessService {
       submissionSetRecords = await this.returnManager().find(SubmissionQueue, {
         where: { submissionSetIdentifier: id },
       });
+
+      await this.setRecordStatusCode(
+        set,
+        submissionSetRecords,
+        'WIP',
+        '',
+        'PENDING',
+      );
 
       const values = {
         //Order which to process copy of records
