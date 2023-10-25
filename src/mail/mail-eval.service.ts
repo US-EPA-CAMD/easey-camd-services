@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { getManager } from 'typeorm';
 import { MailerService } from '@nestjs-modules/mailer';
 import { Evaluation } from '../entities/evaluation.entity';
@@ -23,6 +23,7 @@ import { TestSummaryGlobal } from '../entities/test-summary-global.entity';
 import { QaCertEventGlobal } from '../entities/qa-cert-event-global.entity';
 import { QaTeeGlobal } from '../entities/qa-tee-global.entity';
 import { EmissionEvaluationGlobal } from '../entities/emission-evaluation-global.entity';
+import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
 
 //Formats and sends emissions evaluations emails
 @Injectable()
@@ -339,6 +340,46 @@ export class MailEvalService {
     });
   };
 
+  async sendEmailWithRetry(
+    to: string,
+    from: string,
+    subject: string,
+    template: string,
+    templateContext: any,
+    attempt: number = 1,
+  ) {
+    if (attempt < 3) {
+      this.mailerService
+        .sendMail({
+          to: to, // List of receivers email address
+          from: from,
+          subject: subject, // Subject line
+          template: template,
+          context: templateContext,
+        })
+        .then((success) => {
+          console.log(success);
+        })
+        .catch(async (err) => {
+          await new Promise((r) => setTimeout(r, attempt * 1000 * attempt));
+          console.log('Attempting to send failed email request'); //
+          this.sendEmailWithRetry(
+            to,
+            from,
+            subject,
+            template,
+            templateContext,
+            attempt + 1,
+          );
+        });
+    } else {
+      throw new EaseyException(
+        new Error('Exceeded email attempt retry threshold'),
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
   async sendMassEvalEmail(
     to: string,
     from: string,
@@ -521,19 +562,6 @@ export class MailEvalService {
       );
     }
 
-    await this.mailerService
-      .sendMail({
-        to: to, // List of receivers email address
-        from: from,
-        subject: subject, // Subject line
-        template: template,
-        context: templateContext,
-      })
-      .then((success) => {
-        console.log(success);
-      })
-      .catch((err) => {
-        console.log(err);
-      });
+    this.sendEmailWithRetry(to, from, subject, template, templateContext);
   }
 }
