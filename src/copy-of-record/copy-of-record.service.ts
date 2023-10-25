@@ -6,7 +6,6 @@ import { ReportDTO } from '../dto/report.dto';
 import { ReportColumnDTO } from '../dto/report-column.dto';
 import { ReportParamsDTO } from '../dto/report-params.dto';
 import { DataSetService } from '../dataset/dataset.service';
-import { data } from 'cheerio/lib/api/attributes';
 import { createReadStream, writeFileSync, rmSync, stat } from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 import type { Response } from 'express';
