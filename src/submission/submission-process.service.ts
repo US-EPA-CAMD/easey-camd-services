@@ -71,7 +71,7 @@ export class SubmissionProcessService {
   ) {
     // -- MONITOR PLAN COR --------------------
     const params = new ReportParamsDTO();
-    params.facilityId = set.facIdentifier;
+    params.facilityId = set.orisCode;
     let titleContext = '';
 
     switch (processCd) {

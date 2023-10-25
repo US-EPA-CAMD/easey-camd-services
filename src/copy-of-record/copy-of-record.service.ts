@@ -254,7 +254,9 @@ export class CopyOfRecordService {
 
     const htmlContent = this.generateCopyOfRecord(reportInformation, true);
 
-    const plant: Plant = await Plant.findOne(params.facilityId);
+    const plant: Plant = await Plant.findOne({
+      where: { orisCode: params.facilityId },
+    });
 
     let responseFileName;
     if (params.reportCode === 'EM') {
