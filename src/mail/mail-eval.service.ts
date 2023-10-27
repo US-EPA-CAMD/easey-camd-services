@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { getManager } from 'typeorm';
 import { MailerService } from '@nestjs-modules/mailer';
 import { Evaluation } from '../entities/evaluation.entity';
@@ -18,6 +18,12 @@ import { SubmissionQueue } from '../entities/submission-queue.entity';
 import { SubmissionSet } from '../entities/submission-set.entity';
 import { MatsBulkFile } from '../entities/mats-bulk-file.entity';
 import { ClientConfig } from '../entities/client-config.entity';
+import { MonitorPlanGlobal } from '../entities/monitor-plan-global.entity';
+import { TestSummaryGlobal } from '../entities/test-summary-global.entity';
+import { QaCertEventGlobal } from '../entities/qa-cert-event-global.entity';
+import { QaTeeGlobal } from '../entities/qa-tee-global.entity';
+import { EmissionEvaluationGlobal } from '../entities/emission-evaluation-global.entity';
+import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
 
 //Formats and sends emissions evaluations emails
 @Injectable()
@@ -76,8 +82,8 @@ export class MailEvalService {
       };
       for (const testRecord of records) {
         const newItem: any = {};
-        const testSumRecord: TestSummary = await this.returnManager().findOne(
-          TestSummary,
+        const testSumRecord = await this.returnManager().findOne(
+          !isSubmission ? TestSummary : TestSummaryGlobal,
           testRecord.testSumIdentifier,
         );
 
@@ -135,8 +141,8 @@ export class MailEvalService {
       };
       for (const certRecord of records) {
         const newItem: any = {};
-        const certEventRecord: QaCertEvent = await this.returnManager().findOne(
-          QaCertEvent,
+        const certEventRecord = await this.returnManager().findOne(
+          !isSubmission ? QaCertEvent : QaCertEventGlobal,
           certRecord.qaCertEventIdentifier,
         );
 
@@ -196,8 +202,8 @@ export class MailEvalService {
 
       for (const tee of records) {
         const newItem: any = {};
-        const teeRecord: QaTee = await this.returnManager().findOne(
-          QaTee,
+        const teeRecord = await this.returnManager().findOne(
+          !isSubmission ? QaTee : QaTeeGlobal,
           tee.testExtensionExemptionIdentifier,
         );
         const reportPeriodInfo = await this.returnManager().findOne(
@@ -258,13 +264,15 @@ export class MailEvalService {
 
       for (const em of records) {
         const newItem: any = {};
-        const emissionsRecord: EmissionEvaluation =
-          await this.returnManager().findOne(EmissionEvaluation, {
+        const emissionsRecord: any = await this.returnManager().findOne(
+          !isSubmission ? EmissionEvaluation : EmissionEvaluationGlobal,
+          {
             where: {
               monPlanIdentifier: monitorPlanId,
               rptPeriodIdentifier: em.rptPeriodIdentifier,
             },
-          });
+          },
+        );
 
         if (emissionsRecord) {
           const reportPeriodInfo = await this.returnManager().findOne(
@@ -331,6 +339,46 @@ export class MailEvalService {
       minute: 'numeric',
     });
   };
+
+  async sendEmailWithRetry(
+    to: string,
+    from: string,
+    subject: string,
+    template: string,
+    templateContext: any,
+    attempt: number = 1,
+  ) {
+    if (attempt < 3) {
+      this.mailerService
+        .sendMail({
+          to: to, // List of receivers email address
+          from: from,
+          subject: subject, // Subject line
+          template: template,
+          context: templateContext,
+        })
+        .then((success) => {
+          console.log(success);
+        })
+        .catch(async (err) => {
+          await new Promise((r) => setTimeout(r, attempt * 1000 * attempt));
+          console.log('Attempting to send failed email request'); //
+          this.sendEmailWithRetry(
+            to,
+            from,
+            subject,
+            template,
+            templateContext,
+            attempt + 1,
+          );
+        });
+    } else {
+      throw new EaseyException(
+        new Error('Exceeded email attempt retry threshold'),
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
 
   async sendMassEvalEmail(
     to: string,
@@ -407,7 +455,7 @@ export class MailEvalService {
     // Create Monitor Plan Section of Email
 
     const mpRecord = await this.returnManager().findOne(
-      MonitorPlan,
+      !(isSubmission || isSubmissionFailure) ? MonitorPlan : MonitorPlanGlobal,
       setRecord.monPlanIdentifier,
     );
     const plant = await this.returnManager().findOne(
@@ -467,7 +515,7 @@ export class MailEvalService {
       testDataChildRecords,
       plant.orisCode,
       mappedStatusCodes,
-      isSubmission,
+      isSubmission || isSubmissionFailure,
     );
 
     const certChildRecords = records.filter(
@@ -478,7 +526,7 @@ export class MailEvalService {
       certChildRecords,
       plant.orisCode,
       mappedStatusCodes,
-      isSubmission,
+      isSubmission || isSubmissionFailure,
     );
 
     const teeChildRecords = records.filter(
@@ -490,7 +538,7 @@ export class MailEvalService {
       teeChildRecords,
       plant.orisCode,
       mappedStatusCodes,
-      isSubmission,
+      isSubmission || isSubmissionFailure,
     );
 
     //Create Emissions Section of Email
@@ -501,10 +549,10 @@ export class MailEvalService {
       mpRecord.monPlanIdentifier,
       plant.orisCode,
       mappedStatusCodes,
-      isSubmission,
+      isSubmission || isSubmissionFailure,
     );
 
-    if (isSubmission) {
+    if (isSubmission || isSubmissionFailure) {
       const matsDataChildRecords = records.filter(
         (r) => r.processCode === 'MATS',
       );
@@ -514,19 +562,6 @@ export class MailEvalService {
       );
     }
 
-    await this.mailerService
-      .sendMail({
-        to: to, // List of receivers email address
-        from: from,
-        subject: subject, // Subject line
-        template: template,
-        context: templateContext,
-      })
-      .then((success) => {
-        console.log(success);
-      })
-      .catch((err) => {
-        console.log(err);
-      });
+    this.sendEmailWithRetry(to, from, subject, template, templateContext);
   }
 }
