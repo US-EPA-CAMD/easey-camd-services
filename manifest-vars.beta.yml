@@ -6,3 +6,4 @@ campdDatasetsS3Bucket: cg-fad47021-99a0-4ae0-a73c-3d9b3dd9d44
 matsS3Bucket: cg-cf30165e-5909-4c8b-bb63-312e2ca2b057
 importMatsS3Bucket: cg-4e77a460-aab1-4070-a67c-9debdc58a516
 ecmpsHost: https://ecmps-beta.app.cloud.gov
+cdxUrl: https://test.epacdx.net/
