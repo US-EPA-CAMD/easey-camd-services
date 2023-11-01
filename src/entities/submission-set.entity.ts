@@ -50,4 +50,7 @@ export class SubmissionSet extends BaseEntity {
 
   @Column({ name: 'submission_end_stage_time' })
   endStageTime: Date;
+
+  @Column({ name: 'has_crit_errors' })
+  hasCritErrors: boolean;
 }
