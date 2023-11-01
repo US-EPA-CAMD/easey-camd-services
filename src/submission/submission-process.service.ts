@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable, Param } from '@nestjs/common';
 import { Logger } from '@us-epa-camd/easey-common/logger';
 import { DataSetService } from '../dataset/dataset.service';
 import { getManager } from 'typeorm';
@@ -63,6 +63,71 @@ export class SubmissionProcessService {
     return getManager();
   }
 
+  async addEvalReports(
+    set: SubmissionSet,
+    records: SubmissionQueue[],
+    documents: object[],
+  ) {
+    for (const rec of records) {
+      if (['CRIT1', 'CRIT2', 'CRIT3', 'FATAL'].includes(rec.severityCode)) {
+        const params = new ReportParamsDTO();
+        params.facilityId = set.orisCode;
+
+        let titleContext = '';
+
+        // Add Eval Report
+        if (rec.processCode === 'MP') {
+          titleContext = 'MP_EVAL' + set.monPlanIdentifier;
+          params.reportCode = 'MP_EVAL';
+          params.monitorPlanId = set.monPlanIdentifier;
+        } else if (rec.testSumIdentifier != null) {
+          titleContext = 'TEST_DETAIL_EVAL';
+          params.reportCode = 'TEST_EVAL';
+          params.testId = [rec.testSumIdentifier];
+        } else if (rec.qaCertEventIdentifier != null) {
+          titleContext = 'QCE_EVAL';
+          params.reportCode = 'QCE_EVAL';
+          params.qceId = [rec.qaCertEventIdentifier];
+        } else if (rec.testExtensionExemptionIdentifier != null) {
+          titleContext = 'TEE_EVAL';
+          params.reportCode = 'TEE_EVAL';
+          params.teeId = [rec.testExtensionExemptionIdentifier];
+        } else if (rec.processCode === 'EM') {
+          const rptPeriod: ReportingPeriod = await this.returnManager().findOne(
+            ReportingPeriod,
+            {
+              where: { rptPeriodIdentifier: rec.rptPeriodIdentifier },
+            },
+          );
+
+          params.reportCode = 'EM_EVAL';
+          params.monitorPlanId = set.monPlanIdentifier;
+          params.year = rptPeriod.calendarYear;
+          params.quarter = rptPeriod.quarter;
+
+          titleContext =
+            'EM_EVAL_' +
+            params.monitorPlanId +
+            '_' +
+            params.year +
+            'q' +
+            params.quarter;
+        }
+
+        const reportInformation = await this.dataSetService.getDataSet(
+          params,
+          true,
+        );
+
+        documents.push({
+          documentTitle: `${set.orisCode}_${titleContext}`,
+          context:
+            this.copyOfRecordService.generateCopyOfRecord(reportInformation),
+        });
+      }
+    }
+  }
+
   async buildDocuments(
     set: SubmissionSet,
     records: SubmissionQueue[],
@@ -86,6 +151,7 @@ export class SubmissionProcessService {
           .filter((r) => r.testSumIdentifier !== null)
           .map((o) => o.testSumIdentifier);
         titleContext = 'TEST_DETAIL';
+
         break;
       case 'QA_QCE':
         params.reportCode = 'QCE';
@@ -283,8 +349,6 @@ export class SubmissionProcessService {
                 record.rptPeriodIdentifier,
               ],
             );
-
-            //Close submission window
           }
 
           break;
@@ -360,28 +424,30 @@ export class SubmissionProcessService {
         force: true,
       });
 
-      await this.returnManager().transaction(
-        //Copy records from workspace to global
-        async (transactionalEntityManager) => {
-          try {
-            for (const trans of transactions) {
-              await transactionalEntityManager.query(
-                trans.command,
-                trans.params,
-              );
+      if (!set.hasCritErrors) {
+        await this.returnManager().transaction(
+          //Copy records from workspace to global
+          async (transactionalEntityManager) => {
+            try {
+              for (const trans of transactions) {
+                await transactionalEntityManager.query(
+                  trans.command,
+                  trans.params,
+                );
+              }
+            } catch (error) {
+              await this.handleError(set, submissionSetRecords, error);
             }
-          } catch (error) {
-            await this.handleError(set, submissionSetRecords, error);
-          }
-        },
-      );
+          },
+        );
+      }
 
       await this.setRecordStatusCode(
         set,
         submissionSetRecords,
         'COMPLETE',
         '',
-        'UPDATED',
+        set.hasCritErrors ? 'REQUIRE' : 'UPDATED',
       );
 
       set.statusCode = 'COMPLETE';
@@ -396,6 +462,9 @@ export class SubmissionProcessService {
       this.configService.get<string>('app.defaultFromEmail'),
       set.submissionSetIdentifier,
       true,
+      false,
+      '',
+      set.hasCritErrors,
     );
 
     this.logger.log('Finished processing copy of record');
@@ -448,6 +517,7 @@ export class SubmissionProcessService {
       // Iterate each record in the submission queue linked to the set and create a promise that resolves with the addition of document html string in the documents array
       const documents = [];
       const transactions: any = [];
+
       for (const submissionRecord of submissionSetRecords) {
         await this.buildTransactions(
           set,
@@ -459,6 +529,7 @@ export class SubmissionProcessService {
       }
 
       //Build Copy of Records ---
+      await this.addEvalReports(set, submissionSetRecords, documents);
 
       if (
         submissionSetRecords.filter((r) => r.processCode === 'MP').length > 0
@@ -547,7 +618,7 @@ export class SubmissionProcessService {
         formData.append('files', createReadStream(filePath), file);
       }
 
-      formData.append('activityId', set.activityId); //
+      formData.append('activityId', set.activityId);
 
       const signObs = this.httpService.post(
         `${this.configService.get<string>('app.authApi.uri')}/sign`,

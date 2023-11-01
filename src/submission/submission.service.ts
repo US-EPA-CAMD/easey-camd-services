@@ -37,6 +37,7 @@ export class SubmissionService {
     userId: string,
     userEmail: string,
     activityId: string,
+    hasCritErrors: boolean,
     item: EvaluationItem,
   ): Promise<void> {
     try {
@@ -44,6 +45,7 @@ export class SubmissionService {
       const set_id = uuidv4();
 
       const submissionSet = new SubmissionSet();
+      submissionSet.hasCritErrors = hasCritErrors;
       submissionSet.activityId = activityId;
       submissionSet.submissionSetIdentifier = set_id;
       submissionSet.monPlanIdentifier = item.monPlanId;
@@ -258,6 +260,7 @@ export class SubmissionService {
           params.userId,
           params.userEmail,
           params.activityId,
+          params.hasCritErrors,
           item,
         ),
       );
