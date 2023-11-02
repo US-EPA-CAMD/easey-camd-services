@@ -90,7 +90,13 @@ export class SubmissionService {
         const cs: CheckSession = await this.returnManager().findOne(
           CheckSession,
           {
-            where: { monPlanId: item.monPlanId },
+            where: {
+              monPlanId: item.monPlanId,
+              tesSumId: null,
+              qaCertEventId: null,
+              testExtensionExemptionId: null,
+              rptPeriodId: null,
+            },
           },
         );
 
