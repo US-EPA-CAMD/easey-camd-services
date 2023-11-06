@@ -39,13 +39,13 @@ export class CopyOfRecordService {
   addTableHeader(
     title: string,
     isTest: boolean = false,
-    isDefault2: boolean = false,
+    opLevelRefMethod?: any,
   ): string {
     let heading = '';
-    if (!isDefault2) {
+    if (!opLevelRefMethod) {
       heading = `<h3 class =${isTest ? 'test-header' : ''} > ${title} </h3>`;
     } else {
-      heading = `<hr/> ${title} <hr/>`;
+      heading = `<hr/><div>${title}</div><div>Reference Method Used: ${opLevelRefMethod["referenceMethodCode"]} - ${opLevelRefMethod["referenceMethodDescription"]}</div><hr/>`;
     }
     return heading;
   }
@@ -57,7 +57,7 @@ export class CopyOfRecordService {
     columnCount: number,
     isTest: boolean = false,
   ): string {
-    let innerContent = this.addTableHeader(displayName, isTest, false);
+    let innerContent = this.addTableHeader(displayName, isTest);
     innerContent += '<div class = "col-table-container">';
 
     //Set up our column groupings
@@ -103,9 +103,9 @@ export class CopyOfRecordService {
     columns: ReportColumnDTO,
     results,
     displayName,
-    isDefault2,
+    opLevelRefMethod?: any,
   ): string {
-    let innerContent = this.addTableHeader(displayName, false, isDefault2);
+    let innerContent = this.addTableHeader(displayName, false, opLevelRefMethod);
 
     innerContent += '<div> <table class = "default">';
 
