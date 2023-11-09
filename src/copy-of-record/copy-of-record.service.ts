@@ -105,7 +105,6 @@ export class CopyOfRecordService {
 
   addDefaultTable(
     columns: ReportColumnDTO,
-    results: any,
     detail: ReportDetailDTO,
   ): string {
     let innerContent = this.addTableHeader(detail.displayName, false, detail);
@@ -122,7 +121,7 @@ export class CopyOfRecordService {
     const codeToDefinitions = new Map<string, string[]>(); //Prepopulate our table of code descriptions used for the table legend
 
     //Load column rows
-    for (const result of results) {
+    for (const result of detail.results) {
       innerContent += '<tr>';
       for (const column of columns.values) {
         //Populate the code definitions for the legend of this table
@@ -231,7 +230,6 @@ export class CopyOfRecordService {
         //Default table view
         innerContent += this.addDefaultTable(
           columns,
-          results,
           detail,
         );
       }
