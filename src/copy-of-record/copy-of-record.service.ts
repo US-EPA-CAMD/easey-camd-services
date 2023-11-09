@@ -1,3 +1,4 @@
+import { ReportDetailDTO } from './../dto/report-detail.dto';
 import { Injectable, StreamableFile } from '@nestjs/common';
 import { Logger } from '@us-epa-camd/easey-common/logger';
 import { copyOfRecordTemplate } from './template';
@@ -39,21 +40,24 @@ export class CopyOfRecordService {
   addTableHeader(
     title: string,
     isTest: boolean = false,
-    opLevelRefMethod?: any,
+    detail?: ReportDetailDTO,
   ): string {
-    let heading = '';
-    if (!opLevelRefMethod) {
-      heading = `<h3 class =${isTest ? 'test-header' : ''} > ${title} </h3>`;
-    } else {
-      heading = `<hr/><div>${title}</div><div>Reference Method Used: ${opLevelRefMethod["referenceMethodCode"]} - ${opLevelRefMethod["referenceMethodDescription"]}</div><hr/>`;
+    let heading = `<h3 class =${isTest ? 'test-header' : ''} > ${title} </h3>`;
+
+    if (detail && detail.templateType === "DEFAULT2") {
+      const opLevelRefMethod = detail.results[0];
+      const code = opLevelRefMethod["referenceMethodCode"];
+      const description = opLevelRefMethod["referenceMethodDescription"];
+      heading = `<hr/><div>${title}</div><div>Reference Method Used: ${code} - ${description}</div><hr/>`;
     }
+
     return heading;
   }
 
   addColTable(
     columns: ReportColumnDTO,
-    results,
-    displayName,
+    results: any,
+    displayName: string,
     columnCount: number,
     isTest: boolean = false,
   ): string {
@@ -101,11 +105,10 @@ export class CopyOfRecordService {
 
   addDefaultTable(
     columns: ReportColumnDTO,
-    results,
-    displayName,
-    opLevelRefMethod?: any,
+    results: any,
+    detail: ReportDetailDTO,
   ): string {
-    let innerContent = this.addTableHeader(displayName, false, opLevelRefMethod);
+    let innerContent = this.addTableHeader(detail.displayName, false, detail);
 
     innerContent += '<div> <table class = "default">';
 
@@ -225,14 +228,11 @@ export class CopyOfRecordService {
           isTest,
         );
       } else {
-        let isDefault2 = templateType === 'DEFAULT2';
-
         //Default table view
         innerContent += this.addDefaultTable(
           columns,
           results,
-          detail.displayName,
-          isDefault2,
+          detail,
         );
       }
     }

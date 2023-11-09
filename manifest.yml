@@ -7,6 +7,7 @@ applications:
       - nodejs_buildpack
     env:
       OPTIMIZE_MEMORY: true
+      EASEY_DB_SERVICE: ((dbSvc))
       EASEY_CAMD_SERVICES_HOST: ((host))
       EASEY_CAMD_SERVICES_PORT: ((port))
       EASEY_CAMD_SERVICES_PATH: ((path))
