@@ -447,7 +447,7 @@ export class SubmissionProcessService {
         submissionSetRecords,
         'COMPLETE',
         '',
-        set.hasCritErrors ? 'REQUIRE' : 'UPDATED',
+        set.hasCritErrors ? 'CRITERR' : 'UPDATED',
       );
 
       set.statusCode = 'COMPLETE';
