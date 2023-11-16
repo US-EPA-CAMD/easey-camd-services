@@ -29,7 +29,12 @@ export class MatsFileUploadController {
   @Post(':monPlanId/:locId/:testGroupCode/:testNumber/import')
   @ApiConsumes('multipart/form-data')
   @RoleGuard(
-    { enforceCheckout: true, pathParam: 'monPlanId' },
+    {
+      enforceCheckout: true,
+      pathParam: 'monPlanId',
+      requiredRoles: ['Submitter', 'Preparer', 'Sponsor'],
+      permissionsForFacility: ['DSQA', 'DPQA'],
+    },
     LookupType.MonitorPlan,
   )
   @ApiBody({

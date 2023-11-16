@@ -1,4 +1,4 @@
-import { Controller, UseGuards } from '@nestjs/common';
+import { Controller } from '@nestjs/common';
 import {
   Get,
   Put,
@@ -8,7 +8,6 @@ import {
   Body,
 } from '@nestjs/common/decorators';
 import {
-  ApiBearerAuth,
   ApiOkResponse,
   ApiOperation,
   ApiSecurity,
@@ -18,14 +17,14 @@ import {
   BadRequestResponse,
   NotFoundResponse,
 } from '../utilities/swagger-decorator.const';
-import { AuthGuard } from '@us-epa-camd/easey-common/guards';
 import { QaTestSummaryService } from './qa-test-summary.service';
 import { QaCertMaintParamsDto } from '../dto/qa-cert-maint-params.dto';
-import { User } from '@us-epa-camd/easey-common/decorators';
+import { RoleGuard, User } from '@us-epa-camd/easey-common/decorators';
 import { CurrentUser } from '@us-epa-camd/easey-common/interfaces';
 import { QaUpdateDto } from '../dto/qa-update.dto';
 import { SuccessMessageDTO } from '../dto/success-message.dto';
 import { QaTestSummaryMaintViewDTO } from '../dto/qa-test-summary-maint-vw.dto';
+import { LookupType } from '@us-epa-camd/easey-common/enums';
 @Controller()
 @ApiSecurity('APIKey')
 @ApiTags('QA Test Data Maintenance')
@@ -53,8 +52,7 @@ export class QaTestSummaryController {
   }
 
   @Put(':id')
-  @UseGuards(AuthGuard)
-  @ApiBearerAuth('Token')
+  @RoleGuard({ requiredRoles: ['ECMPS Admin'] }, LookupType.MonitorPlan)
   @ApiOkResponse({
     isArray: false,
     type: QaTestSummaryMaintViewDTO,
@@ -73,6 +71,7 @@ export class QaTestSummaryController {
   }
 
   @Delete(':id')
+  @RoleGuard({ requiredRoles: ['ECMPS Admin'] }, LookupType.MonitorPlan)
   @ApiOkResponse({
     isArray: false,
     type: SuccessMessageDTO,

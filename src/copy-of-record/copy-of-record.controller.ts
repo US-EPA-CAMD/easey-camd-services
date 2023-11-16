@@ -3,6 +3,8 @@ import { ApiQuery, ApiSecurity, ApiTags } from '@nestjs/swagger';
 import { CopyOfRecordService } from './copy-of-record.service';
 import { ReportParamsDTO } from '../dto/report-params.dto';
 import type { Response } from 'express';
+import { RoleGuard } from '@us-epa-camd/easey-common/decorators';
+import { LookupType } from '@us-epa-camd/easey-common/enums';
 
 @Controller()
 @ApiSecurity('APIKey')
@@ -55,6 +57,14 @@ export class CopyOfRecordController {
     required: false,
     explode: false,
   })
+  @RoleGuard(
+    {
+      queryParam: 'facilityId',
+      enforceCheckout: false,
+      enforceEvalSubmitCheck: false,
+    },
+    LookupType.Facility,
+  )
   generatePdfWorkspace(
     @Query() params: ReportParamsDTO,
     @Res({ passthrough: true }) res: Response,
