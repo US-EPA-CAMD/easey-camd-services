@@ -15,7 +15,13 @@ export class EvaluationController {
   @ApiOkResponse({
     description: 'Creates evaluation queue records for quartz',
   })
-  @RoleGuard({ bodyParam: 'items.*.monPlanId' }, LookupType.MonitorPlan)
+  @RoleGuard(
+    {
+      bodyParam: 'items.*.monPlanId',
+      requiredRoles: ['Preparer', 'Submitter', 'Sponsor'],
+    },
+    LookupType.MonitorPlan,
+  )
   async evaluate(@Body() params: EvaluationDTO): Promise<void> {
     await this.service.queueEvaluationRecords(params);
   }

@@ -108,4 +108,12 @@ export default registerAs('app', () => ({
     'EASEY_STREAMING_SERVICES',
     `https://${apiHost}/streaming-services`,
   ),
+  submissionSuccessMessage: getConfigValue(
+    'EASEY_CAMD_SERVICES_SUBMISSION_SUCCESS_MESSAGE',
+    '',
+  ),
+  submissionCritMessage: getConfigValue(
+    'EASEY_CAMD_SERVICES_SUBMISSION_CRIT_MESSAGE',
+    '',
+  ),
 }));

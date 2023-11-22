@@ -70,6 +70,7 @@ describe('-- Copy of Record Service --', () => {
   });
 
   it('should add a column table correctly', () => {
+
     const content = service.addColTable(
       columnDto,
       reportDto.results,
@@ -83,11 +84,10 @@ describe('-- Copy of Record Service --', () => {
   });
 
   it('should add a default table correctly', () => {
+    reportDto.displayName = 'Display';
     const content = service.addDefaultTable(
       columnDto,
-      reportDto.results,
-      'Display',
-      false,
+      reportDto,
     );
 
     expect(content).toEqual(

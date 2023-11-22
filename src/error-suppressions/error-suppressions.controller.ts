@@ -1,4 +1,4 @@
-import { Controller, UseGuards } from '@nestjs/common';
+import { Controller } from '@nestjs/common';
 import { Body, Get, Param, Put, Post, Query } from '@nestjs/common/decorators';
 import {
   ApiBearerAuth,
@@ -11,17 +11,17 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { CurrentUser } from '@us-epa-camd/easey-common/interfaces';
-import { User } from '@us-epa-camd/easey-common/decorators';
+import { RoleGuard, User } from '@us-epa-camd/easey-common/decorators';
 import { ErrorSuppressionsService } from './error-suppressions.service';
 import { ErrorSuppressionsDTO } from '../dto/error-suppressions.dto';
 import { ErrorSuppressionsParamsDTO } from '../dto/error-suppressions.params.dto';
-import { AuthGuard } from '@us-epa-camd/easey-common/guards';
 import { ErrorSuppressionsPayloadDTO } from '../dto/error-suppressions-payload.dto';
 import {
   ApiExcludeControllerByEnv,
   BadRequestResponse,
   NotFoundResponse,
 } from '../utilities/swagger-decorator.const';
+import { LookupType } from '@us-epa-camd/easey-common/enums';
 
 @Controller()
 @ApiSecurity('APIKey')
@@ -54,8 +54,7 @@ export class ErrorSuppressionsController {
   }
 
   @Put(':id')
-  @UseGuards(AuthGuard)
-  @ApiBearerAuth('Token')
+  @RoleGuard({ requiredRoles: ['ECMPS Admin'] }, LookupType.MonitorPlan)
   @ApiOkResponse({
     description: 'Deactivates the Error Suppression Record',
   })
@@ -67,8 +66,7 @@ export class ErrorSuppressionsController {
   }
 
   @Post()
-  @UseGuards(AuthGuard)
-  @ApiBearerAuth('Token')
+  @RoleGuard({ requiredRoles: ['ECMPS Admin'] }, LookupType.MonitorPlan)
   @ApiCreatedResponse({ description: 'Creates an Error Suppression Record' })
   async createErrorSuppression(
     @Body() payload: ErrorSuppressionsPayloadDTO,

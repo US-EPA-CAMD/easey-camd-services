@@ -387,6 +387,7 @@ export class MailEvalService {
     isSubmission: boolean,
     isSubmissionFailure: boolean = false,
     errorId: string = '',
+    hasCritErrors: boolean = false,
   ) {
     //Create our lookup map of eval codes to descriptions
     const statusCodes = await this.returnManager().query(
@@ -416,6 +417,17 @@ export class MailEvalService {
     let records;
 
     let templateContext: any = {};
+
+    templateContext['submissionMessage'] = '';
+    if (hasCritErrors) {
+      templateContext['submissionMessage'] = this.configService.get<string>(
+        'app.submissionCritMessage',
+      );
+    } else {
+      templateContext['submissionMessage'] = this.configService.get<string>(
+        'app.submissionSuccessMessage',
+      );
+    }
 
     if (isSubmissionFailure) {
       console.log('Sending Submission Failure Email');
