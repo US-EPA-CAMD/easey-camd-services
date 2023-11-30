@@ -8,6 +8,8 @@ import { smtpHost, smtpPort } from '../config/app.config';
 import { join } from 'path';
 import { MailEvalService } from './mail-eval.service';
 import { MailTemplateService } from './mail-template.service';
+import { DataSetModule } from '../dataset/dataset.module';
+import { CopyOfRecordModule } from '../copy-of-record/copy-of-record.module';
 
 @Module({
   imports: [
@@ -37,6 +39,8 @@ import { MailTemplateService } from './mail-template.service';
         },
       },
     }),
+    DataSetModule,
+    CopyOfRecordModule,
   ],
   controllers: [MailController],
   providers: [MailService, MailEvalService, MailTemplateService],
