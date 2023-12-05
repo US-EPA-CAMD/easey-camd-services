@@ -27,7 +27,6 @@ import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
 import { ReportParamsDTO } from '../dto/report-params.dto';
 import { DataSetService } from '../dataset/dataset.service';
 import { CopyOfRecordService } from '../copy-of-record/copy-of-record.service';
-import { doc } from 'prettier';
 
 //Formats and sends emissions evaluations emails
 @Injectable()
@@ -393,7 +392,73 @@ export class MailEvalService {
     records: Evaluation[],
     documents: object[],
   ) {
+
+    //Handle QA 
+    const testSumRecords = records.filter(r => r.processCode === "QA" && r.testSumIdentifier != null);
+    if(testSumRecords.length > 0){
+      const paramsTestSum = new ReportParamsDTO();
+      paramsTestSum.facilityId = set.orisCode;
+
+      let title = 'TEST_DETAIL_EVAL';
+      paramsTestSum.reportCode = 'TEST_EVAL';
+      paramsTestSum.testId = testSumRecords.map(tsr => tsr.testSumIdentifier);
+
+      const reportInformationTestSum = await this.dataSetService.getDataSet(
+        paramsTestSum,
+        true,
+      );
+
+      documents.push({
+        filename: `${set.orisCode}_${title}.html`,
+        content:
+          this.copyOfRecordService.generateCopyOfRecord(reportInformationTestSum),
+      });
+    }
+
+    const qaCertRecords = records.filter(r => r.processCode === "QA" && r.qaCertEventIdentifier != null);
+    if(qaCertRecords.length > 0){
+      const paramsCert = new ReportParamsDTO();
+      paramsCert.facilityId = set.orisCode;
+
+      let title = 'QCE_EVAL';
+      paramsCert.reportCode = 'QCE_EVAL';
+      paramsCert.qceId = qaCertRecords.map(qce => qce.qaCertEventIdentifier);
+
+      const reportInformationQCE = await this.dataSetService.getDataSet(
+        paramsCert,
+        true,
+      );
+
+      documents.push({
+        filename: `${set.orisCode}_${title}.html`,
+        content:
+          this.copyOfRecordService.generateCopyOfRecord(reportInformationQCE),
+      });
+    }
+
+    const teeRecords = records.filter(r => r.processCode === "QA" && r.testExtensionExemptionIdentifier != null);
+    if(teeRecords.length > 0){
+      const paramsTee = new ReportParamsDTO();
+      paramsTee.facilityId = set.orisCode;
+
+      let title = 'TEE_EVAL';
+      paramsTee.reportCode = 'TEE_EVAL';
+      paramsTee.qceId = qaCertRecords.map(qce => qce.qaCertEventIdentifier);
+
+      const reportInformationTEE = await this.dataSetService.getDataSet(
+        paramsTee,
+        true,
+      );
+
+      documents.push({
+        filename: `${set.orisCode}_${title}.html`,
+        content:
+          this.copyOfRecordService.generateCopyOfRecord(reportInformationTEE),
+      });
+    }
+
     for (const rec of records) {
+      if(rec.processCode !== "QA"){
       const params = new ReportParamsDTO();
       params.facilityId = set.orisCode;
 
@@ -401,22 +466,11 @@ export class MailEvalService {
 
       // Add Eval Report
       if (rec.processCode === 'MP') {
-        titleContext = 'MP_EVAL' + set.monPlanIdentifier;
+        titleContext = 'MP_EVAL_' + set.monPlanIdentifier;
         params.reportCode = 'MP_EVAL';
         params.monitorPlanId = set.monPlanIdentifier;
-      } else if (rec.testSumIdentifier != null) {
-        titleContext = 'TEST_DETAIL_EVAL';
-        params.reportCode = 'TEST_EVAL';
-        params.testId = [rec.testSumIdentifier];
-      } else if (rec.qaCertEventIdentifier != null) {
-        titleContext = 'QCE_EVAL';
-        params.reportCode = 'QCE_EVAL';
-        params.qceId = [rec.qaCertEventIdentifier];
-      } else if (rec.testExtensionExemptionIdentifier != null) {
-        titleContext = 'TEE_EVAL';
-        params.reportCode = 'TEE_EVAL';
-        params.teeId = [rec.testExtensionExemptionIdentifier];
-      } else if (rec.processCode === 'EM') {
+      } 
+      else if (rec.processCode === 'EM') {
         const rptPeriod: ReportingPeriod = await this.returnManager().findOne(
           ReportingPeriod,
           {
@@ -448,6 +502,7 @@ export class MailEvalService {
         content:
           this.copyOfRecordService.generateCopyOfRecord(reportInformation),
       });
+    }
     }
   }
 
