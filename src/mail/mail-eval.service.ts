@@ -24,6 +24,9 @@ import { QaCertEventGlobal } from '../entities/qa-cert-event-global.entity';
 import { QaTeeGlobal } from '../entities/qa-tee-global.entity';
 import { EmissionEvaluationGlobal } from '../entities/emission-evaluation-global.entity';
 import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
+import { ReportParamsDTO } from '../dto/report-params.dto';
+import { DataSetService } from '../dataset/dataset.service';
+import { CopyOfRecordService } from '../copy-of-record/copy-of-record.service';
 
 //Formats and sends emissions evaluations emails
 @Injectable()
@@ -31,6 +34,8 @@ export class MailEvalService {
   constructor(
     private readonly mailerService: MailerService,
     private readonly configService: ConfigService,
+    private dataSetService: DataSetService,
+    private copyOfRecordService: CopyOfRecordService,
   ) {}
 
   returnManager() {
@@ -347,6 +352,7 @@ export class MailEvalService {
     template: string,
     templateContext: any,
     attempt: number = 1,
+    attachments: object[] = [],
   ) {
     if (attempt < 3) {
       this.mailerService
@@ -356,6 +362,7 @@ export class MailEvalService {
           subject: subject, // Subject line
           template: template,
           context: templateContext,
+          attachments: attachments,
         })
         .then((success) => {
           console.log(success);
@@ -377,6 +384,125 @@ export class MailEvalService {
         new Error('Exceeded email attempt retry threshold'),
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
+    }
+  }
+
+  async buildEvalReports(
+    set: EvaluationSet,
+    records: Evaluation[],
+    documents: object[],
+  ) {
+
+    //Handle QA 
+    const testSumRecords = records.filter(r => r.processCode === "QA" && r.testSumIdentifier != null);
+    if(testSumRecords.length > 0){
+      const paramsTestSum = new ReportParamsDTO();
+      paramsTestSum.facilityId = set.orisCode;
+
+      let title = 'TEST_DETAIL_EVAL';
+      paramsTestSum.reportCode = 'TEST_EVAL';
+      paramsTestSum.testId = testSumRecords.map(tsr => tsr.testSumIdentifier);
+
+      const reportInformationTestSum = await this.dataSetService.getDataSet(
+        paramsTestSum,
+        true,
+      );
+
+      documents.push({
+        filename: `${set.orisCode}_${title}.html`,
+        content:
+          this.copyOfRecordService.generateCopyOfRecord(reportInformationTestSum),
+      });
+    }
+
+    const qaCertRecords = records.filter(r => r.processCode === "QA" && r.qaCertEventIdentifier != null);
+    if(qaCertRecords.length > 0){
+      const paramsCert = new ReportParamsDTO();
+      paramsCert.facilityId = set.orisCode;
+
+      let title = 'QCE_EVAL';
+      paramsCert.reportCode = 'QCE_EVAL';
+      paramsCert.qceId = qaCertRecords.map(qce => qce.qaCertEventIdentifier);
+
+      const reportInformationQCE = await this.dataSetService.getDataSet(
+        paramsCert,
+        true,
+      );
+
+      documents.push({
+        filename: `${set.orisCode}_${title}.html`,
+        content:
+          this.copyOfRecordService.generateCopyOfRecord(reportInformationQCE),
+      });
+    }
+
+    const teeRecords = records.filter(r => r.processCode === "QA" && r.testExtensionExemptionIdentifier != null);
+    if(teeRecords.length > 0){
+      const paramsTee = new ReportParamsDTO();
+      paramsTee.facilityId = set.orisCode;
+
+      let title = 'TEE_EVAL';
+      paramsTee.reportCode = 'TEE_EVAL';
+      paramsTee.qceId = qaCertRecords.map(qce => qce.qaCertEventIdentifier);
+
+      const reportInformationTEE = await this.dataSetService.getDataSet(
+        paramsTee,
+        true,
+      );
+
+      documents.push({
+        filename: `${set.orisCode}_${title}.html`,
+        content:
+          this.copyOfRecordService.generateCopyOfRecord(reportInformationTEE),
+      });
+    }
+
+    for (const rec of records) {
+      if(rec.processCode !== "QA"){
+      const params = new ReportParamsDTO();
+      params.facilityId = set.orisCode;
+
+      let titleContext = '';
+
+      // Add Eval Report
+      if (rec.processCode === 'MP') {
+        titleContext = 'MP_EVAL_' + set.monPlanIdentifier;
+        params.reportCode = 'MP_EVAL';
+        params.monitorPlanId = set.monPlanIdentifier;
+      } 
+      else if (rec.processCode === 'EM') {
+        const rptPeriod: ReportingPeriod = await this.returnManager().findOne(
+          ReportingPeriod,
+          {
+            where: { rptPeriodIdentifier: rec.rptPeriodIdentifier },
+          },
+        );
+
+        params.reportCode = 'EM_EVAL';
+        params.monitorPlanId = set.monPlanIdentifier;
+        params.year = rptPeriod.calendarYear;
+        params.quarter = rptPeriod.quarter;
+
+        titleContext =
+          'EM_EVAL_' +
+          params.monitorPlanId +
+          '_' +
+          params.year +
+          'q' +
+          params.quarter;
+      }
+
+      const reportInformation = await this.dataSetService.getDataSet(
+        params,
+        true,
+      );
+
+      documents.push({
+        filename: `${set.orisCode}_${titleContext}.html`,
+        content:
+          this.copyOfRecordService.generateCopyOfRecord(reportInformation),
+      });
+    }
     }
   }
 
@@ -429,6 +555,8 @@ export class MailEvalService {
       );
     }
 
+    const documents = [];
+
     if (isSubmissionFailure) {
       console.log('Sending Submission Failure Email');
 
@@ -458,6 +586,8 @@ export class MailEvalService {
         where: { evaluationSetIdentifier: setId },
       });
       setRecord = await this.returnManager().findOne(EvaluationSet, setId);
+
+      await this.buildEvalReports(setRecord, records, documents);
     }
 
     // Build the context for our email --------------------------------------
@@ -574,6 +704,14 @@ export class MailEvalService {
       );
     }
 
-    this.sendEmailWithRetry(to, from, subject, template, templateContext);
+    this.sendEmailWithRetry(
+      to,
+      from,
+      subject,
+      template,
+      templateContext,
+      1,
+      documents,
+    );
   }
 }
