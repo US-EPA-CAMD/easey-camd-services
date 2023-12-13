@@ -9,7 +9,7 @@ import { getConfigValue } from '@us-epa-camd/easey-common/utilities';
 
 const env = getConfigValue('EASEY_CAMD_SERVICES_ENV', 'local-dev');
 const disable = [
-  "dev", "tst", "test", "develop", "development", "local-dev"
+  "dev", "tst", "test", "develop", "development", "local-dev", "staging"
 ].includes(env) ? false : true;
 
 export const BadRequestResponse = () =>
