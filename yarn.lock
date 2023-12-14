@@ -988,7 +988,7 @@
   resolved "https://registry.yarnpkg.com/@eslint/js/-/js-8.55.0.tgz#b721d52060f369aa259cf97392403cb9ce892ec6"
   integrity sha512-qQfo2mxH5yVom1kacMtZZJFVdW+E70mqHMJvVg6WTLo+VBuQJ4TojZlfWBjK0ve5BdEeNAVxOsl/nvNMpJOaJA==
 
-"@golevelup/ts-jest@^0.3.3", "@golevelup/ts-jest@^0.3.4":
+"@golevelup/ts-jest@^0.3.3":
   version "0.3.8"
   resolved "https://registry.yarnpkg.com/@golevelup/ts-jest/-/ts-jest-0.3.8.tgz#d027662ba247c7d48d654a95682f0c720c00742e"
   integrity sha512-2H4XzpCHwoUs2P13tzwVzj+AYspbFGKwMr94WK5eHiDBKgx0j4QGgLQh1wgM18DjhN7jdntrzVMoQRie6kZhnw==
@@ -2122,11 +2122,6 @@
   resolved "https://registry.yarnpkg.com/@types/uuid/-/uuid-8.3.4.tgz#bd86a43617df0594787d38b735f55c805becf1bc"
   integrity sha512-c/I8ZRb51j+pYGAu5CrFMRxqZ2ke4y2grEBO5AUjgSkSk+qT2Ea+OdWElz/OiMf5MNpn2b17kuVBwZLQJXzihw==
 
-"@types/validator@^13.1.3":
-  version "13.11.7"
-  resolved "https://registry.yarnpkg.com/@types/validator/-/validator-13.11.7.tgz#99e19760297667ae46b7069ec8b96cbfe0a08b98"
-  integrity sha512-q0JomTsJ2I5Mv7dhHhQLGjMvX0JJm5dyZ1DXQySIUzU1UlwzB8bt+R6+LODUbz0UDIOvEzGc28tk27gBJw2N8Q==
-
 "@types/yargs-parser@*":
   version "21.0.3"
   resolved "https://registry.yarnpkg.com/@types/yargs-parser/-/yargs-parser-21.0.3.tgz#815e30b786d2e8f0dcd85fd5bcf5e1a04d008f15"
@@ -2219,18 +2214,17 @@
   resolved "https://registry.yarnpkg.com/@ungap/structured-clone/-/structured-clone-1.2.0.tgz#756641adb587851b5ccb3e095daf27ae581c8406"
   integrity sha512-zuVdFrMJiuCDQUMCzQaD6KL28MjnqqN8XnAqiEq9PNm/hCPTSGfrXCOfwj1ow4LFb/tNymJPwsNbVePc1xFqrQ==
 
-"@us-epa-camd/easey-common@14.2.2":
-  version "14.2.2"
-  resolved "https://npm.pkg.github.com/download/@US-EPA-CAMD/easey-common/14.2.2/5693038fecfc42f9236880652ca0ddd962bde099#5693038fecfc42f9236880652ca0ddd962bde099"
-  integrity sha512-oN6nQigrJu7T83OM8jliBAveaL4U1ZzTJP/1B6KQxn3HwOBfqFaNsEIHbKdpNEe85rhMXF7zD9o+5iCOzU9HMg==
+"@us-epa-camd/easey-common@11.4.2":
+  version "11.4.2"
+  resolved "https://npm.pkg.github.com/download/@US-EPA-CAMD/easey-common/11.4.2/c678ab0d36a62459bcf58262dc634667c02784c1#c678ab0d36a62459bcf58262dc634667c02784c1"
+  integrity sha512-btBxYQL6BCSDu+6zqnAnj/V8lqufjJaKiLxvjA8GO6XlopIn7vhIRmrRP17dnY8hbnr8VEBj5FTp3GDAXCJlWg==
   dependencies:
-    "@golevelup/ts-jest" "^0.3.4"
     "@nestjs/axios" "0.0.3"
     "@nestjs/common" "^8.1.1"
     "@nestjs/config" "^1.0.2"
     "@nestjs/core" "^8.1.1"
     "@nestjs/swagger" "^5.1.2"
-    class-validator "0.13.1"
+    class-validator "^0.13.1"
     dotenv "^10.0.0"
     express "^4.17.3"
     helmet "^4.6.0"
@@ -2925,15 +2919,6 @@ class-transformer@0.4.0:
   version "0.4.0"
   resolved "https://registry.yarnpkg.com/class-transformer/-/class-transformer-0.4.0.tgz#b52144117b423c516afb44cc1c76dbad31c2165b"
   integrity sha512-ETWD/H2TbWbKEi7m9N4Km5+cw1hNcqJSxlSYhsLsNjQzWWiZIYA1zafxpK9PwVfaZ6AqR5rrjPVUBGESm5tQUA==
-
-class-validator@0.13.1:
-  version "0.13.1"
-  resolved "https://registry.yarnpkg.com/class-validator/-/class-validator-0.13.1.tgz#381b2001ee6b9e05afd133671fbdf760da7dec67"
-  integrity sha512-zWIeYFhUitvAHBwNhDdCRK09hWx+P0HUwFE8US8/CxFpMVzkUK8RJl7yOIE+BVu2lxyPNgeOaFv78tLE47jBIg==
-  dependencies:
-    "@types/validator" "^13.1.3"
-    libphonenumber-js "^1.9.7"
-    validator "^13.5.2"
 
 class-validator@^0.13.1:
   version "0.13.2"
@@ -5021,7 +5006,7 @@ levn@^0.4.1:
     prelude-ls "^1.2.1"
     type-check "~0.4.0"
 
-libphonenumber-js@^1.9.43, libphonenumber-js@^1.9.7:
+libphonenumber-js@^1.9.43:
   version "1.10.51"
   resolved "https://registry.yarnpkg.com/libphonenumber-js/-/libphonenumber-js-1.10.51.tgz#a3b8c15db2721c3e5f7fe6759e2a524712b578e6"
   integrity sha512-vY2I+rQwrDQzoPds0JeTEpeWzbUJgqoV0O4v31PauHBb/e+1KCXKylHcDnBMgJZ9fH9mErsEbROJY3Z3JtqEmg==
@@ -6684,7 +6669,7 @@ v8-to-istanbul@^8.1.0:
     convert-source-map "^1.6.0"
     source-map "^0.7.3"
 
-validator@^13.5.2, validator@^13.7.0:
+validator@^13.7.0:
   version "13.11.0"
   resolved "https://registry.yarnpkg.com/validator/-/validator-13.11.0.tgz#23ab3fd59290c61248364eabf4067f04955fbb1b"
   integrity sha512-Ii+sehpSfZy+At5nPdnyMhx78fEoPDkR2XW/zimHEL3MyGJQOCQ7WeP20jPYRz7ZCpcKLB21NxuXHF3bxjStBQ==
