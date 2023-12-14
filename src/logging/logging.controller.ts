@@ -4,17 +4,17 @@ import {
   ApiSecurity,
   ApiInternalServerErrorResponse,
   ApiBearerAuth,
-  ApiExcludeController,
 } from '@nestjs/swagger';
 import { Controller, Post, Body, Req, UseGuards } from '@nestjs/common';
 import { LoggingService } from './logging.service';
 import { ClientTokenGuard } from '@us-epa-camd/easey-common/guards';
 import { ServerErrorDto } from '../dto/server-error.dto';
+import { ApiExcludeControllerByEnv } from '../utilities/swagger-decorator.const';
 
 @Controller()
 @ApiTags('Logging')
 @ApiSecurity('APIKey')
-@ApiExcludeController()
+@ApiExcludeControllerByEnv()
 @ApiSecurity('ClientId')
 @ApiBearerAuth('ClientToken')
 @UseGuards(ClientTokenGuard)

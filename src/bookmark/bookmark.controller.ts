@@ -3,7 +3,6 @@ import {
   ApiOkResponse,
   ApiSecurity,
   ApiBearerAuth,
-  ApiExcludeController,
 } from '@nestjs/swagger';
 
 import {
@@ -21,13 +20,14 @@ import { BookmarkService } from './bookmark.service';
 import { BoomarkPayloadDTO } from '../dto/bookmark-payload.dto';
 import { BookmarkCreatedDTO } from '../dto/bookmark-created.dto';
 import { BookmarkDTO } from '../dto/bookmark.dto';
+import { ApiExcludeControllerByEnv } from '../utilities/swagger-decorator.const';
 
 @Controller()
 @ApiSecurity('APIKey')
 @ApiTags('Bookmarks')
-@ApiExcludeController()
+@ApiExcludeControllerByEnv()
 export class BookmarkController {
-  constructor(private service: BookmarkService) {}
+  constructor(private service: BookmarkService) { }
 
   @Get(':id')
   @ApiOkResponse({

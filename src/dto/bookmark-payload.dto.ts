@@ -2,8 +2,10 @@ export class BoomarkPayloadDTO {
   dataType: string;
   dataSubType: string;
   filters: any;
-  dataPreview: {
-    rendered: boolean;
-    excludedColumns: string[];
-  };
+  dataPreview: DataPreview;
+}
+
+class DataPreview {
+  rendered: boolean;
+  excludedColumns: string[];
 }
