@@ -13,6 +13,7 @@ data-dictionary.json
 .DS_Store
 .env
 .env.*
+.envrc
 
 npm-debug.log*
 
