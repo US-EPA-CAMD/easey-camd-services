@@ -67,7 +67,7 @@
     "rimraf": "^3.0.2",
     "rxjs": "^7.4.0",
     "swagger-ui-express": "^4.6.0",
-    "typeorm": "0.2.45",
+    "typeorm": "0.3.0",
     "uuidv4": "^6.2.13"
   },
   "devDependencies": {
