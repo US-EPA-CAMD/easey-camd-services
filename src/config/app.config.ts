@@ -90,8 +90,17 @@ export default registerAs('app', () => ({
   ),
   // ENABLES DEBUG CONSOLE LOGS
   enableDebug: getConfigValueBoolean('EASEY_CAMD_SERVICES_ENABLE_DEBUG'),
-  // NEEDS TO BE SET IN .ENV FILE FOR LOCAL DEVELOPMENT
-  // FORMAT: { "userId": "", "roles": [ { "orisCode": 3, "role": "P" } ] }
+  /**
+   * Needs to be set in .env file for local development if `EASEY_EMISSIONS_API_ENABLE_AUTH_TOKEN` is false.
+   * Format:
+   *   {
+   *       "facilities": [
+   *           { "facId": number, "orisCode": number, "permissions": string[] }
+   *       ],
+   *       "roles": <"Preparer" | "Submitter" | "Sponsor">[],
+   *       "userId": string
+   *   }
+   */
   currentUser: getConfigValue(
     'EASEY_CAMD_SERVICES_CURRENT_USER',
     '{"userId": ""}',
