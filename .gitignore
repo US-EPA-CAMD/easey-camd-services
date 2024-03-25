@@ -5,6 +5,7 @@ data-dictionary.json
 # dependencies
 /node_modules
 /npm-packages-offline-cache
+.npmrc
 
 # production
 /dist
