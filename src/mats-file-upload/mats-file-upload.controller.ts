@@ -33,7 +33,7 @@ export class MatsFileUploadController {
       enforceCheckout: true,
       pathParam: 'monPlanId',
       requiredRoles: ['Submitter', 'Preparer', 'Sponsor'],
-      permissionsForFacility: ['DSQA', 'DPQA'],
+      permissionsForFacility: ['DSQA'],
     },
     LookupType.MonitorPlan,
   )

@@ -18,6 +18,11 @@ import { Plant } from '../entities/plant.entity';
 import { CountyCode } from '../entities/county-code.entity';
 import { ConfigService } from '@nestjs/config';
 import { MailEvalService } from './mail-eval.service';
+import { DataSetService } from '../dataset/dataset.service';
+import { CopyOfRecordService } from '../copy-of-record/copy-of-record.service';
+
+jest.mock('../dataset/dataset.service');
+jest.mock('../copy-of-record/copy-of-record.service');
 
 const mockEvalList = [new Evaluation(), new Evaluation(), new Evaluation()];
 
@@ -37,6 +42,8 @@ describe('Mail Eval Service', () => {
           }),
         },
         ConfigService,
+        DataSetService,
+        CopyOfRecordService
       ],
     }).compile();
 
