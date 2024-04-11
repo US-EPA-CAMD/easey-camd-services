@@ -9,6 +9,6 @@ import { DataSetService } from './dataset.service';
   imports: [TypeOrmModule.forFeature([DataSet])],
   controllers: [],
   providers: [DataSetRepository, DataSetService],
-  exports: [TypeOrmModule, DataSetService],
+  exports: [TypeOrmModule, DataSetRepository, DataSetService],
 })
 export class DataSetModule {}
