@@ -48,10 +48,7 @@ describe('DataSetService', () => {
     const module = await Test.createTestingModule({
       providers: [
         DataSetService,
-        {
-          provide: EntityManager,
-          useValue: { query: jest.fn() },
-        },
+        EntityManager,
         {
           provide: DataSetRepository,
           useFactory: mockRepository,

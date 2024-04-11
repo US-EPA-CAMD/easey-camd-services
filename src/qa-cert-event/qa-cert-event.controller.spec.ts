@@ -1,15 +1,16 @@
+import { HttpModule } from '@nestjs/axios';
+import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
+import { CurrentUser } from '@us-epa-camd/easey-common/interfaces';
+import { LoggerModule } from '@us-epa-camd/easey-common/logger';
+import { DataSource, EntityManager } from 'typeorm';
+
+import { QaCertEventMaintViewDTO } from '../dto/qa-cert-event-maint-vw.dto';
+import { QaCertMaintParamsDto } from '../dto/qa-cert-maint-params.dto';
+import { QaUpdateDto } from '../dto/qa-update.dto';
+import { QaCertEventMaintMap } from '../maps/qa-cert-event-maint.map';
 import { QaCertEventController } from './qa-cert-event.controller';
 import { QaCertEventService } from './qa-cert-event.service';
-import { ConfigService } from '@nestjs/config';
-import { LoggerModule } from '@us-epa-camd/easey-common/logger';
-import { HttpModule } from '@nestjs/axios';
-import { QaCertMaintParamsDto } from '../dto/qa-cert-maint-params.dto';
-import { EntityManager } from 'typeorm';
-import { CurrentUser } from '@us-epa-camd/easey-common/interfaces';
-import { QaUpdateDto } from '../dto/qa-update.dto';
-import { QaCertEventMaintViewDTO } from '../dto/qa-cert-event-maint-vw.dto';
-import { QaCertEventMaintMap } from '../maps/qa-cert-event-maint.map';
 
 describe('QaCertEventController', () => {
   let controller: QaCertEventController;
@@ -23,9 +24,13 @@ describe('QaCertEventController', () => {
       providers: [
         QaCertEventService,
         ConfigService,
+        {
+          provide: DataSource,
+          useValue: {},
+        },
         EntityManager,
         QaCertEventMaintMap,
-      ] ,
+      ],
     }).compile();
 
     controller = module.get<QaCertEventController>(QaCertEventController);

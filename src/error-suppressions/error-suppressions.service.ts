@@ -1,5 +1,4 @@
 import { Injectable, HttpStatus } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
 
 import { ErrorSuppressionsRepository } from './error-suppressions.repository';
@@ -12,7 +11,6 @@ import { ErrorSuppressionsPayloadDTO } from '../dto/error-suppressions-payload.d
 @Injectable()
 export class ErrorSuppressionsService {
   constructor(
-    @InjectRepository(ErrorSuppressionsRepository)
     private readonly repository: ErrorSuppressionsRepository,
     private readonly map: ErrorSuppressionsMap,
   ) {}

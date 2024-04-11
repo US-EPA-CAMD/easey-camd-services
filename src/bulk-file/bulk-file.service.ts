@@ -10,7 +10,6 @@ import { BulkFileMetadata } from '../entities/bulk-file-metadata.entity';
 @Injectable()
 export class BulkFileService {
   constructor(
-    @InjectRepository(BulkFileMetadataRepository)
     private readonly repository: BulkFileMetadataRepository,
     private readonly map: BulkFileMap,
     private readonly logger: Logger,

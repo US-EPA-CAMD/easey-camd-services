@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Logger } from '@us-epa-camd/easey-common/logger';
 import { JobLog } from '../entities/job-log.entity';
 import { StateCode } from '../entities/state-code.entity';
-import { getManager } from 'typeorm';
+import { EntityManager } from 'typeorm';
 import {
   ApportionedEmissionsQuarterlyDTO,
   ApportionedEmissionsStateDTO,
@@ -24,6 +24,7 @@ export class MassBulkFileService {
   private parentId: string;
 
   constructor(
+    private readonly entityManager: EntityManager,
     private readonly configService: ConfigService,
     private readonly logger: Logger,
   ) {
@@ -31,8 +32,8 @@ export class MassBulkFileService {
     this.apiUrl = configService.get<string>('app.streamingApiUrl');
   }
 
-  returnManager(): any {
-    return getManager();
+  returnManager() {
+    return this.entityManager;
   }
 
   async getStateCodes(stateCodes: string[]) {
@@ -50,7 +51,7 @@ export class MassBulkFileService {
     if (programCodes.length === 0 || programCodes[0] === '*') {
       // Return all of the state codes
       return (
-        await this.returnManager().find(ProgramCode, { where: { active: 1 } })
+        await this.returnManager().findBy(ProgramCode, { active: 1 })
       ).map((item) => item.prgCode);
     }
     return programCodes;
@@ -92,12 +93,21 @@ export class MassBulkFileService {
     return jobLog;
   }
 
-  async createJobLog(jobName: string, dataType: string, subType: string, stateCd: string, currentYear: number, quarter: number, prgCode: string, url: string, filename: string) {
+  async createJobLog(
+    jobName: string,
+    dataType: string,
+    subType: string,
+    stateCd: string,
+    currentYear: number,
+    quarter: number,
+    prgCode: string,
+    url: string,
+    filename: string,
+  ) {
     const jobLog = this.newJobLog(jobName);
     jobLog.year = currentYear;
     jobLog.quarter = quarter;
-    jobLog.programCode = prgCode,
-    jobLog.stateCode = stateCd;
+    (jobLog.programCode = prgCode), (jobLog.stateCode = stateCd);
     jobLog.dataType = dataType;
     jobLog.subType = subType;
     jobLog.url = `${this.apiUrl}/${url}`;
@@ -117,37 +127,41 @@ export class MassBulkFileService {
       currentYear++
     ) {
       for (const stateCd of stateCodes) {
-        for (const subType of params.subTypes) { 
+        for (const subType of params.subTypes) {
           const urlParams = `beginDate=${currentYear}-01-01&endDate=${currentYear}-12-31&stateCode=${stateCd}`;
 
-          promises.push(this.createJobLog(
-            `${subType}-Apportioned-Emissions-${stateCd}-${currentYear}`,
-            'Emissions',
-            subType,
-            stateCd,
-            currentYear,
-            null,
-            null,
-            `emissions/apportioned/${subType.toLowerCase()}?${urlParams}`,
-            `emissions/${subType.toLowerCase()}/state/emissions-${subType.toLowerCase()}-${currentYear}-${stateCd.toLowerCase()}.csv`
-          ));
+          promises.push(
+            this.createJobLog(
+              `${subType}-Apportioned-Emissions-${stateCd}-${currentYear}`,
+              'Emissions',
+              subType,
+              stateCd,
+              currentYear,
+              null,
+              null,
+              `emissions/apportioned/${subType.toLowerCase()}?${urlParams}`,
+              `emissions/${subType.toLowerCase()}/state/emissions-${subType.toLowerCase()}-${currentYear}-${stateCd.toLowerCase()}.csv`,
+            ),
+          );
 
           if (
             params.generateStateMATS &&
             currentYear >= 2015 &&
             subType === 'Hourly'
           ) {
-            promises.push(this.createJobLog(
-              `${subType}-MATS-${stateCd}-${currentYear}`,
-              'Mercury and Air Toxics Emissions (MATS)',
-              subType,
-              stateCd,
-              currentYear,
-              null,
-              null,
-              `emissions/apportioned/mats/hourly?${urlParams}`,
-              `mats/hourly/state/mats-hourly-${currentYear}-${stateCd.toLowerCase()}.csv`
-            ));
+            promises.push(
+              this.createJobLog(
+                `${subType}-MATS-${stateCd}-${currentYear}`,
+                'Mercury and Air Toxics Emissions (MATS)',
+                subType,
+                stateCd,
+                currentYear,
+                null,
+                null,
+                `emissions/apportioned/mats/hourly?${urlParams}`,
+                `mats/hourly/state/mats-hourly-${currentYear}-${stateCd.toLowerCase()}.csv`,
+              ),
+            );
           }
         }
       }
@@ -175,34 +189,38 @@ export class MassBulkFileService {
         const urlParams = `beginDate=${quarterDate.beginDate}&endDate=${quarterDate.endDate}`;
 
         for (const subType of params.subTypes) {
-          promises.push(this.createJobLog(
-            `${subType}-Apportioned-Emissions-Q${quarter}-${currentYear}`,
-            'Emissions',
-            subType,
-            null,
-            currentYear,
-            quarter,
-            null,
-            `emissions/apportioned/${subType.toLowerCase()}?${urlParams}`,
-            `emissions/${subType.toLowerCase()}/quarter/emissions-${subType.toLowerCase()}-${currentYear}-q${quarter}.csv`
-          ));
+          promises.push(
+            this.createJobLog(
+              `${subType}-Apportioned-Emissions-Q${quarter}-${currentYear}`,
+              'Emissions',
+              subType,
+              null,
+              currentYear,
+              quarter,
+              null,
+              `emissions/apportioned/${subType.toLowerCase()}?${urlParams}`,
+              `emissions/${subType.toLowerCase()}/quarter/emissions-${subType.toLowerCase()}-${currentYear}-q${quarter}.csv`,
+            ),
+          );
 
           if (
             params.generateQuarterMATS &&
             currentYear >= 2015 &&
             subType === 'Hourly'
           ) {
-            promises.push(this.createJobLog(
-              `${subType}-MATS-Q${quarter}-${currentYear}`,
-              'Mercury and Air Toxics Emissions (MATS)',
-              subType,
-              null,
-              currentYear,
-              quarter,
-              null,
-              `emissions/apportioned/mats/hourly?${urlParams}`,
-              `mats/hourly/quarter/mats-hourly-${currentYear}-q${quarter}.csv`
-            ));
+            promises.push(
+              this.createJobLog(
+                `${subType}-MATS-Q${quarter}-${currentYear}`,
+                'Mercury and Air Toxics Emissions (MATS)',
+                subType,
+                null,
+                currentYear,
+                quarter,
+                null,
+                `emissions/apportioned/mats/hourly?${urlParams}`,
+                `mats/hourly/quarter/mats-hourly-${currentYear}-q${quarter}.csv`,
+              ),
+            );
           }
         }
       }
@@ -226,7 +244,7 @@ export class MassBulkFileService {
         null,
         null,
         `facilities/attributes?year=${currentYear}`,
-        `facility/facility-${currentYear}.csv`
+        `facility/facility-${currentYear}.csv`,
       );
     }
   }
@@ -241,7 +259,7 @@ export class MassBulkFileService {
       null,
       'ARP',
       `emissions-compliance`,
-      `compliance/compliance-arpnox.csv`
+      `compliance/compliance-arpnox.csv`,
     );
   }
 
@@ -259,7 +277,7 @@ export class MassBulkFileService {
         null,
         cd,
         `allowance-holdings?${urlParams}`,
-        `allowance/holdings-${cd.toLowerCase()}.csv`
+        `allowance/holdings-${cd.toLowerCase()}.csv`,
       );
     }
   }
@@ -278,7 +296,7 @@ export class MassBulkFileService {
         null,
         cd,
         `allowance-compliance?${urlParams}`,
-        `compliance/compliance-${cd.toLowerCase()}.csv`
+        `compliance/compliance-${cd.toLowerCase()}.csv`,
       );
     }
   }
@@ -298,7 +316,7 @@ export class MassBulkFileService {
         null,
         cd,
         `allowance-transactions?${urlParams}`,
-        `allowance/transactions-${cd.toLowerCase()}.csv`
+        `allowance/transactions-${cd.toLowerCase()}.csv`,
       );
     }
   }

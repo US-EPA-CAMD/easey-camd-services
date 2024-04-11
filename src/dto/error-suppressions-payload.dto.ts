@@ -9,14 +9,17 @@ import {
 } from 'class-validator';
 import { CheckCatalogService } from '@us-epa-camd/easey-common/check-catalog';
 import { ErrorMessages } from '@us-epa-camd/easey-common/constants';
-import { IsValidCode, IsValidDate } from '@us-epa-camd/easey-common/pipes';
+import {
+  IsValidCode,
+  IsValidCodes,
+  IsValidDate,
+} from '@us-epa-camd/easey-common/pipes';
 import { Plant } from '../entities/plant.entity';
 import { EsReasonCode } from '../entities/es-reason-code.entity';
 import { CheckCatalogResult } from '../entities/check-catalog-result.entity';
 import { SeverityCode } from '../entities/severity-code.entity';
 import { EsMatchDataTypeCode } from '../entities/es-match-data-type-code.entity';
 import { EsMatchTimeTypeCode } from '../entities/es-match-time-type-code.entity';
-import { IsValidCodes } from '../pipes/is-valid-codes.pipe';
 import { MonitorLocation } from '../entities/monitor-location.entity';
 import { FindManyOptions, In } from 'typeorm';
 

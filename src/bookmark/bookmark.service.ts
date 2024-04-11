@@ -15,7 +15,6 @@ import { BookmarkMap } from '../maps/bookmark.map';
 @Injectable()
 export class BookmarkService {
   constructor(
-    @InjectRepository(BookmarkRepository)
     private readonly repository: BookmarkRepository,
     private readonly bookmarkMap: BookmarkMap,
     private readonly logger: Logger,

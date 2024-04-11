@@ -178,7 +178,7 @@ export class EvaluationService {
         await this.returnManager().save(emissionRecord);
       }
     } catch (e) {
-      console.log(e);
+      console.error(e);
       this.logger.log('Failed record queueing', {
         monPlanId: item.monPlanId,
       });

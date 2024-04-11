@@ -1,25 +1,26 @@
-import { EntityManager, MoreThanOrEqual } from 'typeorm';
 import { Injectable } from '@nestjs/common';
 import { Logger } from '@us-epa-camd/easey-common/logger';
-import { EvaluationItem } from '../dto/evaluation.dto';
+import { EntityManager, MoreThanOrEqual } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
+
+import { EvaluationItem } from '../dto/evaluation.dto';
+import { SubmissionsLastUpdatedResponseDTO } from '../dto/submission-last-updated.dto';
+import { SubmissionQueueDTO } from '../dto/submission-queue.dto';
+import { CheckSession } from '../entities/check-session.entity';
+import { CombinedSubmissions } from '../entities/combined-submissions.entity';
+import { EmissionEvaluationGlobal } from '../entities/emission-evaluation-global.entity';
+import { EmissionEvaluation } from '../entities/emission-evaluation.entity';
+import { MatsBulkFile } from '../entities/mats-bulk-file.entity';
 import { MonitorPlan } from '../entities/monitor-plan.entity';
 import { Plant } from '../entities/plant.entity';
 import { QaCertEvent } from '../entities/qa-cert-event.entity';
+import { QaSuppData } from '../entities/qa-supp.entity';
 import { QaTee } from '../entities/qa-tee.entity';
 import { ReportingPeriod } from '../entities/reporting-period.entity';
-import { EmissionEvaluation } from '../entities/emission-evaluation.entity';
-import { SubmissionSet } from '../entities/submission-set.entity';
 import { SubmissionQueue } from '../entities/submission-queue.entity';
-import { SubmissionQueueDTO } from '../dto/submission-queue.dto';
-import { QaSuppData } from '../entities/qa-supp.entity';
-import { MatsBulkFile } from '../entities/mats-bulk-file.entity';
-import { SubmissionsLastUpdatedResponseDTO } from '../dto/submission-last-updated.dto';
-import { CombinedSubmissions } from '../entities/combined-submissions.entity';
+import { SubmissionSet } from '../entities/submission-set.entity';
 import { CombinedSubmissionsMap } from '../maps/combined-submissions.map';
 import { EmissionsLastUpdatedMap } from '../maps/emissions-last-updated.map';
-import { EmissionEvaluationGlobal } from '../entities/emission-evaluation-global.entity';
-import { CheckSession } from '../entities/check-session.entity';
 
 @Injectable()
 export class SubmissionService {
@@ -30,7 +31,7 @@ export class SubmissionService {
     private readonly emissionsLastUpdatedMap: EmissionsLastUpdatedMap,
   ) {}
 
-  returnManager(): any {
+  returnManager() {
     return this.entityManager;
   }
 
@@ -62,15 +63,14 @@ export class SubmissionService {
 
       submissionSet.configuration = locations[0]['get_mp_location_list'];
 
-      const mp: MonitorPlan = await this.returnManager().findOne(
+      const mp: MonitorPlan = await this.returnManager().findOneBy(
         MonitorPlan,
-        item.monPlanId,
+        { monPlanIdentifier: item.monPlanId },
       );
 
-      const facility: Plant = await this.returnManager().findOne(
-        Plant,
-        mp.facIdentifier,
-      );
+      const facility: Plant = await this.returnManager().findOneBy(Plant, {
+        facIdentifier: mp.facIdentifier,
+      });
 
       submissionSet.facIdentifier = facility.facIdentifier;
       submissionSet.orisCode = facility.orisCode;
@@ -88,16 +88,14 @@ export class SubmissionService {
         mpRecord.statusCode = 'QUEUED';
         mpRecord.submittedOn = currentTime;
 
-        const cs: CheckSession = await this.returnManager().findOne(
+        const cs: CheckSession = await this.returnManager().findOneBy(
           CheckSession,
           {
-            where: {
-              monPlanId: item.monPlanId,
-              tesSumId: null,
-              qaCertEventId: null,
-              testExtensionExemptionId: null,
-              rptPeriodId: null,
-            },
+            monPlanId: item.monPlanId,
+            tesSumId: null,
+            qaCertEventId: null,
+            testExtensionExemptionId: null,
+            rptPeriodId: null,
           },
         );
 
@@ -108,9 +106,12 @@ export class SubmissionService {
       }
 
       for (const id of item.testSumIds) {
-        const ts: QaSuppData = await this.returnManager().findOne(QaSuppData, {
-          where: { testSumId: id },
-        });
+        const ts: QaSuppData = await this.returnManager().findOneBy(
+          QaSuppData,
+          {
+            testSumId: id,
+          },
+        );
         ts.submissionAvailabilityCode = 'PENDING'; //TODO FIND SUPP RECORD CORRESPONDING
 
         const tsRecord = new SubmissionQueue();
@@ -120,10 +121,10 @@ export class SubmissionService {
         tsRecord.testSumIdentifier = id;
         tsRecord.submittedOn = currentTime;
 
-        const cs: CheckSession = await this.returnManager().findOne(
+        const cs: CheckSession = await this.returnManager().findOneBy(
           CheckSession,
           {
-            where: { tesSumId: id },
+            tesSumId: id,
           },
         );
 
@@ -134,9 +135,9 @@ export class SubmissionService {
       }
 
       for (const id of item.qceIds) {
-        const qce: QaCertEvent = await this.returnManager().findOne(
+        const qce: QaCertEvent = await this.returnManager().findOneBy(
           QaCertEvent,
-          id,
+          { qaCertEventIdentifier: id },
         );
         qce.submissionAvailabilityCode = 'PENDING';
 
@@ -149,10 +150,10 @@ export class SubmissionService {
         qceRecord.qaCertEventIdentifier = id;
         qceRecord.submittedOn = currentTime;
 
-        const cs: CheckSession = await this.returnManager().findOne(
+        const cs: CheckSession = await this.returnManager().findOneBy(
           CheckSession,
           {
-            where: { qaCertEventId: id },
+            qaCertEventId: id,
           },
         );
 
@@ -163,7 +164,9 @@ export class SubmissionService {
       }
 
       for (const id of item.teeIds) {
-        const tee: QaTee = await this.returnManager().findOne(QaTee, id);
+        const tee: QaTee = await this.returnManager().findOneBy(QaTee, {
+          testExtensionExemptionIdentifier: id,
+        });
         tee.submissionAvailabilityCode = 'PENDING';
 
         const teeRecord = new SubmissionQueue();
@@ -174,10 +177,10 @@ export class SubmissionService {
         teeRecord.testExtensionExemptionIdentifier = id;
         teeRecord.submittedOn = currentTime;
 
-        const cs: CheckSession = await this.returnManager().findOne(
+        const cs: CheckSession = await this.returnManager().findOneBy(
           CheckSession,
           {
-            where: { testExtensionExemptionId: id },
+            testExtensionExemptionId: id,
           },
         );
 
@@ -188,17 +191,15 @@ export class SubmissionService {
       }
 
       for (const periodAbr of item.emissionsReportingPeriods) {
-        const rp = await this.returnManager().findOne(ReportingPeriod, {
-          where: { periodAbbreviation: periodAbr },
+        const rp = await this.returnManager().findOneBy(ReportingPeriod, {
+          periodAbbreviation: periodAbr,
         });
 
-        const ee: EmissionEvaluation = await this.returnManager().findOne(
+        const ee: EmissionEvaluation = await this.returnManager().findOneBy(
           EmissionEvaluation,
           {
-            where: {
-              monPlanIdentifier: item.monPlanId,
-              rptPeriodIdentifier: rp.rptPeriodIdentifier,
-            },
+            monPlanIdentifier: item.monPlanId,
+            rptPeriodIdentifier: rp.rptPeriodIdentifier,
           },
         );
 
@@ -213,13 +214,11 @@ export class SubmissionService {
         emissionRecord.rptPeriodIdentifier = rp.rptPeriodIdentifier;
         emissionRecord.submittedOn = currentTime;
 
-        const cs: CheckSession = await this.returnManager().findOne(
+        const cs: CheckSession = await this.returnManager().findOneBy(
           CheckSession,
           {
-            where: {
-              monPlanId: item.monPlanId,
-              rptPeriodId: rp.rptPeriodIdentifier,
-            },
+            monPlanId: item.monPlanId,
+            rptPeriodId: rp.rptPeriodIdentifier,
           },
         );
 
@@ -230,8 +229,8 @@ export class SubmissionService {
       }
 
       for (const matsId of item.matsBulkFiles) {
-        const mf = await this.returnManager().findOne(MatsBulkFile, {
-          where: { id: matsId },
+        const mf = await this.returnManager().findOneBy(MatsBulkFile, {
+          id: matsId,
         });
 
         mf.submissionAvailabilityCode = 'PENDING';

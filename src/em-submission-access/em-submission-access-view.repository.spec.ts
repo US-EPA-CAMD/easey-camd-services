@@ -1,5 +1,5 @@
 import { Test } from '@nestjs/testing';
-import { SelectQueryBuilder } from 'typeorm';
+import { EntityManager, SelectQueryBuilder } from 'typeorm';
 
 import { EmSubmissionAccessParamsDTO } from '../dto/em-submission-access.params.dto';
 import { EmSubmissionAccessViewRepository } from './em-submission-access-view.repository';
@@ -20,6 +20,7 @@ describe('EmSubmissionAccessViewRepository', () => {
     const module = await Test.createTestingModule({
       providers: [
         EmSubmissionAccessViewRepository,
+        EntityManager,
         {
           provide: SelectQueryBuilder,
           useFactory: mockQueryBuilder,

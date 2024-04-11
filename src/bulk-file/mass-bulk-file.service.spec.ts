@@ -1,6 +1,8 @@
 import { ConfigService } from '@nestjs/config';
+import { EntityManager } from 'typeorm';
 import { Test } from '@nestjs/testing';
 import { LoggerModule } from '@us-epa-camd/easey-common/logger';
+
 import {
   ApportionedEmissionsQuarterlyDTO,
   ApportionedEmissionsStateDTO,
@@ -9,33 +11,44 @@ import {
 } from '../dto/bulk-file-mass-generation.dto';
 import { MassBulkFileService } from './mass-bulk-file.service';
 
+const mockInsertion = jest.fn();
+
 describe('-- Mass Bulk File Service --', () => {
   let massBulkFileService: MassBulkFileService;
+
+  afterEach(() => {
+    mockInsertion.mockClear();
+  });
 
   beforeAll(async () => {
     const module = await Test.createTestingModule({
       imports: [LoggerModule],
-      providers: [ConfigService, MassBulkFileService],
+      providers: [
+        ConfigService,
+        MassBulkFileService,
+        {
+          provide: EntityManager,
+          useValue: {
+            query: jest.fn(),
+            find: jest.fn().mockImplementation((type) => {
+              switch (type.name) {
+                case 'StateCode':
+                  return [{ stateCode: 'MockState1' }];
+              }
+            }),
+            findBy: jest.fn().mockImplementation((type) => {
+              switch (type.name) {
+                case 'ProgramCode':
+                  return [{ prgCode: 'ARP' }];
+              }
+            }),
+            insert: mockInsertion,
+          },
+        },
+      ],
     }).compile();
 
-    const mockGetmanagerImplementation = {
-      find: jest.fn().mockImplementation((type) => {
-        switch (type.name) {
-          case 'StateCode':
-            return [{ stateCode: 'MockState1' }];
-          case 'ProgramCode':
-            return [{ prgCode: 'ARP' }];
-        }
-      }),
-
-      insert: jest.fn(),
-    };
-
     massBulkFileService = module.get(MassBulkFileService);
-
-    jest
-      .spyOn(massBulkFileService, 'returnManager')
-      .mockReturnValue(mockGetmanagerImplementation);
   });
 
   it('should be defined', async () => {
@@ -119,15 +132,9 @@ describe('-- Mass Bulk File Service --', () => {
       paramDTO.subTypes = ['Hourly'];
       paramDTO.generateStateMATS = true;
 
-      const mockInsertion = jest.fn();
-
       jest
         .spyOn(massBulkFileService, 'getStateCodes')
         .mockResolvedValue(['AL']);
-
-      jest
-        .spyOn(massBulkFileService, 'returnManager')
-        .mockReturnValue({ insert: mockInsertion });
 
       await massBulkFileService.generateStateApportionedEmissions(paramDTO);
 
@@ -144,12 +151,6 @@ describe('-- Mass Bulk File Service --', () => {
       paramDTO.quarters = [1];
       paramDTO.generateQuarterMATS = true;
 
-      const mockInsertion = jest.fn();
-
-      jest
-        .spyOn(massBulkFileService, 'returnManager')
-        .mockReturnValue({ insert: mockInsertion });
-
       await massBulkFileService.generateQuarterApportionedEmissions(paramDTO);
 
       expect(mockInsertion).toHaveBeenCalledTimes(4);
@@ -162,12 +163,6 @@ describe('-- Mass Bulk File Service --', () => {
       paramDTO.from = 2015;
       paramDTO.to = 2016;
 
-      const mockInsertion = jest.fn();
-
-      jest
-        .spyOn(massBulkFileService, 'returnManager')
-        .mockReturnValue({ insert: mockInsertion });
-
       await massBulkFileService.generateFacility(paramDTO);
 
       expect(mockInsertion).toHaveBeenCalledTimes(2);
@@ -176,12 +171,6 @@ describe('-- Mass Bulk File Service --', () => {
 
   describe('generateEmissionsCompliance', () => {
     it('Insert 1 record into the queue for the given parameters', async () => {
-      const mockInsertion = jest.fn();
-
-      jest
-        .spyOn(massBulkFileService, 'returnManager')
-        .mockReturnValue({ insert: mockInsertion });
-
       await massBulkFileService.generateEmissionsCompliance();
 
       expect(mockInsertion).toHaveBeenCalledTimes(1);
@@ -193,15 +182,9 @@ describe('-- Mass Bulk File Service --', () => {
       const paramDTO = new ProgramCodeDTO();
       paramDTO.programCodes = ['ARP', 'CO2'];
 
-      const mockInsertion = jest.fn();
-
       jest
         .spyOn(massBulkFileService, 'getProgramCodes')
         .mockResolvedValue(['ARP', 'CO2']);
-
-      jest
-        .spyOn(massBulkFileService, 'returnManager')
-        .mockReturnValue({ insert: mockInsertion });
 
       await massBulkFileService.generateAllowanceHoldings(paramDTO);
 
@@ -214,15 +197,9 @@ describe('-- Mass Bulk File Service --', () => {
       const paramDTO = new ProgramCodeDTO();
       paramDTO.programCodes = ['ARP', 'CO2'];
 
-      const mockInsertion = jest.fn();
-
       jest
         .spyOn(massBulkFileService, 'getProgramCodes')
         .mockResolvedValue(['ARP', 'CO2']);
-
-      jest
-        .spyOn(massBulkFileService, 'returnManager')
-        .mockReturnValue({ insert: mockInsertion });
 
       await massBulkFileService.generateAllowanceCompliance(paramDTO);
 
@@ -235,15 +212,9 @@ describe('-- Mass Bulk File Service --', () => {
       const paramDTO = new ProgramCodeDTO();
       paramDTO.programCodes = ['ARP', 'CO2'];
 
-      const mockInsertion = jest.fn();
-
       jest
         .spyOn(massBulkFileService, 'getProgramCodes')
         .mockResolvedValue(['ARP', 'CO2']);
-
-      jest
-        .spyOn(massBulkFileService, 'returnManager')
-        .mockReturnValue({ insert: mockInsertion });
 
       await massBulkFileService.generateAllowanceTransactions(paramDTO);
 

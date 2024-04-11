@@ -1,24 +1,22 @@
-import { Injectable, HttpStatus } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
-import { EmSubmissionAccessViewRepository } from './em-submission-access-view.repository';
-import { EmSubmissionAccessMap } from '../maps/em-submission-access.map';
-import { EmSubmissionAccessParamsDTO } from '../dto/em-submission-access.params.dto';
+import { currentDateTime } from '@us-epa-camd/easey-common/utilities/functions';
+
 import {
   EmSubmissionAccessCreateDTO,
   EmSubmissionAccessDTO,
   EmSubmissionAccessUpdateDTO,
 } from '../dto/em-submission-access.dto';
-import { EmSubmissionAccessRepository } from './em-submission-access.repository';
+import { EmSubmissionAccessParamsDTO } from '../dto/em-submission-access.params.dto';
 import { EmSubmissionAccess } from '../entities/em-submission-access.entity';
-import { currentDateTime } from '@us-epa-camd/easey-common/utilities/functions';
+import { EmSubmissionAccessMap } from '../maps/em-submission-access.map';
+import { EmSubmissionAccessViewRepository } from './em-submission-access-view.repository';
+import { EmSubmissionAccessRepository } from './em-submission-access.repository';
 
 @Injectable()
 export class EmSubmissionAccessService {
   constructor(
-    @InjectRepository(EmSubmissionAccessViewRepository)
     private readonly viewRepository: EmSubmissionAccessViewRepository,
-    @InjectRepository(EmSubmissionAccessRepository)
     private readonly repository: EmSubmissionAccessRepository,
     private readonly map: EmSubmissionAccessMap,
   ) {}
@@ -52,8 +50,8 @@ export class EmSubmissionAccessService {
         emissionStatusCode: 'APPRVD',
       });
       await this.repository.save(entity);
-      let emSubmissionAccess = await this.viewRepository.findOne({
-        where: { id: entity?.id },
+      let emSubmissionAccess = await this.viewRepository.findOneBy({
+        id: entity?.id,
       });
       const dto = await this.map.one(emSubmissionAccess);
       return dto;
@@ -89,8 +87,8 @@ export class EmSubmissionAccessService {
       throw new EaseyException(e, e.status);
     }
 
-    let emSubmissionAccess = await this.viewRepository.findOne({
-      where: { id: recordToUpdate?.id },
+    let emSubmissionAccess = await this.viewRepository.findOneBy({
+      id: recordToUpdate?.id,
     });
 
     const dto = await this.map.one(emSubmissionAccess);

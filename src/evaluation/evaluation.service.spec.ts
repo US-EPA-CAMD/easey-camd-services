@@ -1,14 +1,16 @@
 import { Test } from '@nestjs/testing';
 import { LoggerModule } from '@us-epa-camd/easey-common/logger';
-import { MonitorPlan } from '../entities/monitor-plan.entity';
+import { EntityManager } from 'typeorm';
+
 import { EvaluationDTO, EvaluationItem } from '../dto/evaluation.dto';
-import { EvaluationService } from './evaluation.service';
+import { EmissionEvaluation } from '../entities/emission-evaluation.entity';
+import { MonitorPlan } from '../entities/monitor-plan.entity';
 import { Plant } from '../entities/plant.entity';
-import { TestSummary } from '../entities/test-summary.entity';
 import { QaCertEvent } from '../entities/qa-cert-event.entity';
 import { QaTee } from '../entities/qa-tee.entity';
 import { ReportingPeriod } from '../entities/reporting-period.entity';
-import { EmissionEvaluation } from '../entities/emission-evaluation.entity';
+import { TestSummary } from '../entities/test-summary.entity';
+import { EvaluationService } from './evaluation.service';
 
 const dtoItem = new EvaluationItem();
 dtoItem.monPlanId = 'mock';
@@ -28,7 +30,7 @@ describe('-- Evaluation Service --', () => {
     const module = await Test.createTestingModule({
       imports: [LoggerModule],
       controllers: [],
-      providers: [EvaluationService],
+      providers: [EntityManager, EvaluationService],
     }).compile();
 
     service = module.get(EvaluationService);
@@ -48,7 +50,7 @@ describe('-- Evaluation Service --', () => {
         },
       ]),
 
-      findOne: jest.fn().mockImplementation((val) => {
+      findOneBy: jest.fn().mockImplementation((val) => {
         switch (val.name) {
           case 'MonitorPlan':
             const mp = new MonitorPlan();
@@ -76,7 +78,7 @@ describe('-- Evaluation Service --', () => {
       }),
 
       save: mockInsertion,
-    });
+    } as any);
 
     await service.queueEvaluationRecords(payloadDto);
 

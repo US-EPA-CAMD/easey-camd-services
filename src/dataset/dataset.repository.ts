@@ -1,12 +1,12 @@
-import { DataSource, Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { Injectable } from '@nestjs/common';
 
 import { DataSet } from '../entities/dataset.entity';
 
 @Injectable()
 export class DataSetRepository extends Repository<DataSet> {
-  constructor(private readonly dataSource: DataSource) {
-    super(DataSet, dataSource.manager);
+  constructor(entityManager: EntityManager) {
+    super(DataSet, entityManager);
   }
 
   async getDataSet(dataSetCode: string): Promise<DataSet> {
