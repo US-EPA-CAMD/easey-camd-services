@@ -1,7 +1,7 @@
 import { Template } from './../entities/template.entity';
 import { Test } from '@nestjs/testing';
+import { EntityManager } from 'typeorm';
 
-import { ReportParamsDTO } from './../dto/report-params.dto';
 import { DataSetRepository } from './dataset.repository';
 import { DataSetService } from './dataset.service';
 import { DataSet } from '../entities/dataset.entity';
@@ -48,6 +48,10 @@ describe('DataSetService', () => {
     const module = await Test.createTestingModule({
       providers: [
         DataSetService,
+        {
+          provide: EntityManager,
+          useValue: { query: jest.fn() },
+        },
         {
           provide: DataSetRepository,
           useFactory: mockRepository,

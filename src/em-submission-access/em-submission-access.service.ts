@@ -70,7 +70,7 @@ export class EmSubmissionAccessService {
     const currentTime = currentDateTime();
 
     try {
-      recordToUpdate = await this.repository.findOne(id);
+      recordToUpdate = await this.repository.findOneBy({ id });
       if (!recordToUpdate)
         throw new EaseyException(
           new Error(`Record with id ${id} not found`),

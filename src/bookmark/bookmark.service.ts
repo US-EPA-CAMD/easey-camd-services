@@ -48,7 +48,7 @@ export class BookmarkService {
   }
 
   async getBookmarkById(id: number): Promise<BookmarkDTO> {
-    const results = await this.repository.findOne(id);
+    const results = await this.repository.findOneBy({ bookmarkId: id });
     if (results === undefined) {
       throw new NotFoundException('Bookmark id does not exist');
     }
@@ -58,7 +58,7 @@ export class BookmarkService {
       bookmarkHitCount: results.bookmarkHitCount + 1,
     });
 
-    let updatedResults = await this.repository.findOne(id);
+    let updatedResults = await this.repository.findOneBy({ bookmarkId: id });
 
     return this.bookmarkMap.one(updatedResults);
   }

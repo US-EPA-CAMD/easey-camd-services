@@ -1,4 +1,4 @@
-import { MoreThanOrEqual, getManager } from 'typeorm';
+import { EntityManager, MoreThanOrEqual } from 'typeorm';
 import { Injectable } from '@nestjs/common';
 import { Logger } from '@us-epa-camd/easey-common/logger';
 import { EvaluationItem } from '../dto/evaluation.dto';
@@ -24,13 +24,14 @@ import { CheckSession } from '../entities/check-session.entity';
 @Injectable()
 export class SubmissionService {
   constructor(
+    private readonly entityManager: EntityManager,
     private readonly logger: Logger,
     private readonly combinedSubmissionMap: CombinedSubmissionsMap,
     private readonly emissionsLastUpdatedMap: EmissionsLastUpdatedMap,
   ) {}
 
   returnManager(): any {
-    return getManager();
+    return this.entityManager;
   }
 
   async queueRecord(
@@ -280,21 +281,20 @@ export class SubmissionService {
   ): Promise<SubmissionsLastUpdatedResponseDTO> {
     const dto = new SubmissionsLastUpdatedResponseDTO();
 
-    const clock: Date = (await getManager().query('SELECT now();'))[0].now;
+    const clock: Date = (await this.entityManager.query('SELECT now();'))[0]
+      .now;
 
     dto.submissionLogs = await this.combinedSubmissionMap.many(
-      await CombinedSubmissions.find({
-        where: {
-          submissionEndStateStageTime: MoreThanOrEqual(new Date(queryTime)),
-          statusCode: 'COMPLETE',
-          processCode: 'EM',
-        },
+      await CombinedSubmissions.findBy({
+        submissionEndStateStageTime: MoreThanOrEqual(new Date(queryTime)),
+        statusCode: 'COMPLETE',
+        processCode: 'EM',
       }),
     );
 
     dto.emissionReports = await this.emissionsLastUpdatedMap.many(
-      await EmissionEvaluationGlobal.find({
-        where: { lastUpdated: MoreThanOrEqual(new Date(queryTime)) },
+      await EmissionEvaluationGlobal.findBy({
+        lastUpdated: MoreThanOrEqual(new Date(queryTime).toISOString()),
       }),
     );
 

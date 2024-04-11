@@ -1,7 +1,6 @@
 import { Injectable, HttpStatus } from '@nestjs/common';
 import { EntityManager } from 'typeorm';
 import { QaTestSummaryMaintView } from '../entities/qa-test-summary-maint-vw.entity';
-import { InjectEntityManager } from '@nestjs/typeorm';
 import { currentDateTime } from '@us-epa-camd/easey-common/utilities/functions';
 import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
 import { QaUpdateDto } from '../dto/qa-update.dto';
@@ -10,7 +9,6 @@ import { QaTestSummaryMaintViewDTO } from '../dto/qa-test-summary-maint-vw.dto';
 @Injectable()
 export class QaTestSummaryService {
   constructor(
-    @InjectEntityManager()
     private readonly manager: EntityManager,
     private readonly map: QaTestSummaryMaintMap,
   ) {}
@@ -64,7 +62,9 @@ export class QaTestSummaryService {
         );
       });
 
-      recordToUpdate = await this.manager.findOne(QaTestSummaryMaintView, id);
+      recordToUpdate = await this.manager.findOneBy(QaTestSummaryMaintView, {
+        testSumId: id,
+      });
 
       if (!recordToUpdate)
         throw new EaseyException(

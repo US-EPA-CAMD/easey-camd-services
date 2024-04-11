@@ -33,7 +33,8 @@ export class ErrorSuppressionsService {
     let recordToUpdate: EsSpec;
 
     try {
-      recordToUpdate = await this.repository.findOne(id, {
+      recordToUpdate = await this.repository.findOne({
+        where: { id },
         relations: [
           'checkCatalogResult',
           'plant',
@@ -69,7 +70,8 @@ export class ErrorSuppressionsService {
       });
 
       await this.repository.save(entity);
-      const errorSuppression = await this.repository.findOne(entity?.id, {
+      const errorSuppression = await this.repository.findOne({
+        where: { id: entity?.id },
         relations: [
           'checkCatalogResult',
           'plant',

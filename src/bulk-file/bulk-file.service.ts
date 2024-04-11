@@ -21,7 +21,9 @@ export class BulkFileService {
   }
 
   async addBulkDataFile(bulkFileDTO: BulkFileInputDTO): Promise<BulkFileDTO> {
-    let record = await this.repository.findOne({ s3Path: bulkFileDTO.s3Path });
+    let record = await this.repository.findOneBy({
+      s3Path: bulkFileDTO.s3Path,
+    });
 
     if (record) {
       return this.updateBulkDataFile(record.s3Path, bulkFileDTO);
@@ -45,7 +47,7 @@ export class BulkFileService {
     s3Path: string,
     bulkFileDTO: BulkFileInputDTO,
   ): Promise<BulkFileDTO> {
-    const record = await this.repository.findOne({ s3Path });
+    const record = await this.repository.findOneBy({ s3Path });
 
     if (record) {
       record.filename = bulkFileDTO.filename;
@@ -61,10 +63,10 @@ export class BulkFileService {
   }
 
   async deleteBulkDataFile(s3Path: string): Promise<void> {
-    const record = await this.repository.findOne({ s3Path });
+    const record = await this.repository.findOneBy({ s3Path });
 
     if (record && record.s3Path === s3Path) {
-      await this.repository.delete(record);
+      await this.repository.delete({ filename: record.filename });
     }
   }
 }

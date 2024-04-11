@@ -1,5 +1,5 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { getManager } from 'typeorm';
+import { EntityManager } from 'typeorm';
 import { MailerService } from '@nestjs-modules/mailer';
 import { Evaluation } from '../entities/evaluation.entity';
 import { EvaluationSet } from '../entities/evaluation-set.entity';
@@ -32,6 +32,7 @@ import { CopyOfRecordService } from '../copy-of-record/copy-of-record.service';
 @Injectable()
 export class MailEvalService {
   constructor(
+    private readonly entityManager: EntityManager,
     private readonly mailerService: MailerService,
     private readonly configService: ConfigService,
     private dataSetService: DataSetService,
@@ -39,7 +40,7 @@ export class MailEvalService {
   ) {}
 
   returnManager() {
-    return getManager();
+    return this.entityManager;
   }
 
   getReportColors(evalStatusCd: string) {
@@ -53,11 +54,15 @@ export class MailEvalService {
     monitorSystem: string,
     componentId: string,
   ) {
-    const ms = await this.returnManager().findOne(MonitorSystem, monitorSystem);
+    const ms = await this.returnManager().findOneBy(MonitorSystem, {
+      monSystemIdentifier: monitorSystem,
+    });
     if (ms && ms.systemIdentifier) {
       return ms.systemIdentifier;
     }
-    const c = await this.returnManager().findOne(Component, componentId);
+    const c = await this.returnManager().findOneBy(Component, {
+      componentId,
+    });
     return c.componentIdentifier;
   }
 
@@ -87,10 +92,11 @@ export class MailEvalService {
       };
       for (const testRecord of records) {
         const newItem: any = {};
-        const testSumRecord = await this.returnManager().findOne(
-          !isSubmission ? TestSummary : TestSummaryGlobal,
-          testRecord.testSumIdentifier,
-        );
+        const testSumRecord: TestSummary | TestSummaryGlobal =
+          await this.returnManager().findOneBy(
+            !isSubmission ? TestSummary : TestSummaryGlobal,
+            { testSumIdentifier: testRecord.testSumIdentifier },
+          );
 
         if (testSumRecord) {
           newItem['System / Component Id'] =
@@ -102,12 +108,14 @@ export class MailEvalService {
           newItem['Test Type'] = testSumRecord.testTypeCode;
           newItem['Test Reason'] = testSumRecord.testReasonCode;
           newItem['Test Result'] = testSumRecord.testResultCode;
-          newItem['evalStatusCode'] = mappedStatusCodes.get(
-            testSumRecord.evalStatusCode,
-          );
-          const colors = this.getReportColors(testSumRecord.evalStatusCode);
-          newItem['reportColor'] = colors[0];
-          newItem['reportLineColor'] = colors[1];
+          if (testSumRecord instanceof TestSummary) {
+            newItem['evalStatusCode'] = mappedStatusCodes.get(
+              testSumRecord.evalStatusCode,
+            );
+            const colors = this.getReportColors(testSumRecord.evalStatusCode);
+            newItem['reportColor'] = colors[0];
+            newItem['reportLineColor'] = colors[1];
+          }
 
           newItem['reportUrl'] = `${this.configService.get<string>(
             'app.ecmpsHost',
@@ -146,10 +154,11 @@ export class MailEvalService {
       };
       for (const certRecord of records) {
         const newItem: any = {};
-        const certEventRecord = await this.returnManager().findOne(
-          !isSubmission ? QaCertEvent : QaCertEventGlobal,
-          certRecord.qaCertEventIdentifier,
-        );
+        const certEventRecord: QaCertEvent | QaCertEventGlobal =
+          await this.returnManager().findOneBy(
+            !isSubmission ? QaCertEvent : QaCertEventGlobal,
+            { qaCertEventIdentifier: certRecord.qaCertEventIdentifier },
+          );
 
         if (certEventRecord) {
           newItem['System / Component Id'] =
@@ -159,12 +168,14 @@ export class MailEvalService {
             );
           newItem['Cert Event Code'] = certEventRecord.qaCertEventCode;
           newItem['Required Test Code'] = certEventRecord.requiredTestCode;
-          newItem['evalStatusCode'] = mappedStatusCodes.get(
-            certEventRecord.evalStatusCode,
-          );
-          const colors = this.getReportColors(certEventRecord.evalStatusCode);
-          newItem['reportColor'] = colors[0];
-          newItem['reportLineColor'] = colors[1];
+          if (certEventRecord instanceof QaCertEvent) {
+            newItem['evalStatusCode'] = mappedStatusCodes.get(
+              certEventRecord.evalStatusCode,
+            );
+            const colors = this.getReportColors(certEventRecord.evalStatusCode);
+            newItem['reportColor'] = colors[0];
+            newItem['reportLineColor'] = colors[1];
+          }
 
           newItem['reportUrl'] = `${this.configService.get<string>(
             'app.ecmpsHost',
@@ -207,13 +218,17 @@ export class MailEvalService {
 
       for (const tee of records) {
         const newItem: any = {};
-        const teeRecord = await this.returnManager().findOne(
-          !isSubmission ? QaTee : QaTeeGlobal,
-          tee.testExtensionExemptionIdentifier,
-        );
-        const reportPeriodInfo = await this.returnManager().findOne(
+        const teeRecord: QaTee | QaTeeGlobal =
+          await this.returnManager().findOneBy(
+            !isSubmission ? QaTee : QaTeeGlobal,
+            {
+              testExtensionExemptionIdentifier:
+                tee.testExtensionExemptionIdentifier,
+            },
+          );
+        const reportPeriodInfo = await this.returnManager().findOneBy(
           ReportingPeriod,
-          teeRecord.rptPeriodIdentifier,
+          { rptPeriodIdentifier: teeRecord.rptPeriodIdentifier },
         );
 
         if (teeRecord) {
@@ -227,12 +242,14 @@ export class MailEvalService {
           newItem['Extension Exemption Code'] = teeRecord.extensExemptCode;
           newItem['Hours Used'] = teeRecord.hoursUsed;
           newItem['Span Scale Code'] = teeRecord.spanScaleCode;
-          newItem['evalStatusCode'] = mappedStatusCodes.get(
-            teeRecord.evalStatusCode,
-          );
-          const colors = this.getReportColors(teeRecord.evalStatusCode);
-          newItem['reportColor'] = colors[0];
-          newItem['reportLineColor'] = colors[1];
+          if (teeRecord instanceof QaTee) {
+            newItem['evalStatusCode'] = mappedStatusCodes.get(
+              teeRecord.evalStatusCode,
+            );
+            const colors = this.getReportColors(teeRecord.evalStatusCode);
+            newItem['reportColor'] = colors[0];
+            newItem['reportLineColor'] = colors[1];
+          }
 
           newItem['reportUrl'] = `${this.configService.get<string>(
             'app.ecmpsHost',
@@ -269,20 +286,18 @@ export class MailEvalService {
 
       for (const em of records) {
         const newItem: any = {};
-        const emissionsRecord: any = await this.returnManager().findOne(
+        const emissionsRecord: any = await this.returnManager().findOneBy(
           !isSubmission ? EmissionEvaluation : EmissionEvaluationGlobal,
           {
-            where: {
-              monPlanIdentifier: monitorPlanId,
-              rptPeriodIdentifier: em.rptPeriodIdentifier,
-            },
+            monPlanIdentifier: monitorPlanId,
+            rptPeriodIdentifier: em.rptPeriodIdentifier,
           },
         );
 
         if (emissionsRecord) {
-          const reportPeriodInfo = await this.returnManager().findOne(
+          const reportPeriodInfo = await this.returnManager().findOneBy(
             ReportingPeriod,
-            emissionsRecord.rptPeriodIdentifier,
+            { rptPeriodIdentifier: emissionsRecord.rptPeriodIdentifier },
           );
 
           newItem['Year / Quarter'] = reportPeriodInfo.periodAbbreviation;
@@ -317,9 +332,9 @@ export class MailEvalService {
 
       for (const matsRecord of records) {
         const newItem: any = {};
-        const mats: MatsBulkFile = await this.returnManager().findOne(
+        const mats: MatsBulkFile = await this.returnManager().findOneBy(
           MatsBulkFile,
-          matsRecord.matsBulkFileId,
+          { id: matsRecord.matsBulkFileId },
         );
 
         newItem['Test Type'] = mats.testTypeGroupDescription;
@@ -392,16 +407,17 @@ export class MailEvalService {
     records: Evaluation[],
     documents: object[],
   ) {
-
-    //Handle QA 
-    const testSumRecords = records.filter(r => r.processCode === "QA" && r.testSumIdentifier != null);
-    if(testSumRecords.length > 0){
+    //Handle QA
+    const testSumRecords = records.filter(
+      (r) => r.processCode === 'QA' && r.testSumIdentifier != null,
+    );
+    if (testSumRecords.length > 0) {
       const paramsTestSum = new ReportParamsDTO();
       paramsTestSum.facilityId = set.orisCode;
 
       let title = 'TEST_DETAIL_EVAL';
       paramsTestSum.reportCode = 'TEST_EVAL';
-      paramsTestSum.testId = testSumRecords.map(tsr => tsr.testSumIdentifier);
+      paramsTestSum.testId = testSumRecords.map((tsr) => tsr.testSumIdentifier);
 
       const reportInformationTestSum = await this.dataSetService.getDataSet(
         paramsTestSum,
@@ -410,19 +426,22 @@ export class MailEvalService {
 
       documents.push({
         filename: `${set.orisCode}_${title}.html`,
-        content:
-          this.copyOfRecordService.generateCopyOfRecord(reportInformationTestSum),
+        content: this.copyOfRecordService.generateCopyOfRecord(
+          reportInformationTestSum,
+        ),
       });
     }
 
-    const qaCertRecords = records.filter(r => r.processCode === "QA" && r.qaCertEventIdentifier != null);
-    if(qaCertRecords.length > 0){
+    const qaCertRecords = records.filter(
+      (r) => r.processCode === 'QA' && r.qaCertEventIdentifier != null,
+    );
+    if (qaCertRecords.length > 0) {
       const paramsCert = new ReportParamsDTO();
       paramsCert.facilityId = set.orisCode;
 
       let title = 'QCE_EVAL';
       paramsCert.reportCode = 'QCE_EVAL';
-      paramsCert.qceId = qaCertRecords.map(qce => qce.qaCertEventIdentifier);
+      paramsCert.qceId = qaCertRecords.map((qce) => qce.qaCertEventIdentifier);
 
       const reportInformationQCE = await this.dataSetService.getDataSet(
         paramsCert,
@@ -436,14 +455,17 @@ export class MailEvalService {
       });
     }
 
-    const teeRecords = records.filter(r => r.processCode === "QA" && r.testExtensionExemptionIdentifier != null);
-    if(teeRecords.length > 0){
+    const teeRecords = records.filter(
+      (r) =>
+        r.processCode === 'QA' && r.testExtensionExemptionIdentifier != null,
+    );
+    if (teeRecords.length > 0) {
       const paramsTee = new ReportParamsDTO();
       paramsTee.facilityId = set.orisCode;
 
       let title = 'TEE_EVAL';
       paramsTee.reportCode = 'TEE_EVAL';
-      paramsTee.qceId = qaCertRecords.map(qce => qce.qaCertEventIdentifier);
+      paramsTee.qceId = qaCertRecords.map((qce) => qce.qaCertEventIdentifier);
 
       const reportInformationTEE = await this.dataSetService.getDataSet(
         paramsTee,
@@ -458,51 +480,48 @@ export class MailEvalService {
     }
 
     for (const rec of records) {
-      if(rec.processCode !== "QA"){
-      const params = new ReportParamsDTO();
-      params.facilityId = set.orisCode;
+      if (rec.processCode !== 'QA') {
+        const params = new ReportParamsDTO();
+        params.facilityId = set.orisCode;
 
-      let titleContext = '';
+        let titleContext = '';
 
-      // Add Eval Report
-      if (rec.processCode === 'MP') {
-        titleContext = 'MP_EVAL_' + set.monPlanIdentifier;
-        params.reportCode = 'MP_EVAL';
-        params.monitorPlanId = set.monPlanIdentifier;
-      } 
-      else if (rec.processCode === 'EM') {
-        const rptPeriod: ReportingPeriod = await this.returnManager().findOne(
-          ReportingPeriod,
-          {
-            where: { rptPeriodIdentifier: rec.rptPeriodIdentifier },
-          },
+        // Add Eval Report
+        if (rec.processCode === 'MP') {
+          titleContext = 'MP_EVAL_' + set.monPlanIdentifier;
+          params.reportCode = 'MP_EVAL';
+          params.monitorPlanId = set.monPlanIdentifier;
+        } else if (rec.processCode === 'EM') {
+          const rptPeriod: ReportingPeriod =
+            await this.returnManager().findOneBy(ReportingPeriod, {
+              rptPeriodIdentifier: rec.rptPeriodIdentifier,
+            });
+
+          params.reportCode = 'EM_EVAL';
+          params.monitorPlanId = set.monPlanIdentifier;
+          params.year = rptPeriod.calendarYear;
+          params.quarter = rptPeriod.quarter;
+
+          titleContext =
+            'EM_EVAL_' +
+            params.monitorPlanId +
+            '_' +
+            params.year +
+            'q' +
+            params.quarter;
+        }
+
+        const reportInformation = await this.dataSetService.getDataSet(
+          params,
+          true,
         );
 
-        params.reportCode = 'EM_EVAL';
-        params.monitorPlanId = set.monPlanIdentifier;
-        params.year = rptPeriod.calendarYear;
-        params.quarter = rptPeriod.quarter;
-
-        titleContext =
-          'EM_EVAL_' +
-          params.monitorPlanId +
-          '_' +
-          params.year +
-          'q' +
-          params.quarter;
+        documents.push({
+          filename: `${set.orisCode}_${titleContext}.html`,
+          content:
+            this.copyOfRecordService.generateCopyOfRecord(reportInformation),
+        });
       }
-
-      const reportInformation = await this.dataSetService.getDataSet(
-        params,
-        true,
-      );
-
-      documents.push({
-        filename: `${set.orisCode}_${titleContext}.html`,
-        content:
-          this.copyOfRecordService.generateCopyOfRecord(reportInformation),
-      });
-    }
     }
   }
 
@@ -565,27 +584,33 @@ export class MailEvalService {
       records = await this.returnManager().find(SubmissionQueue, {
         where: { submissionSetIdentifier: setId },
       });
-      const supportEmail = await this.returnManager().findOne(ClientConfig, {
-        where: { name: 'ecmps-ui' },
+      const supportEmail = await this.returnManager().findOneBy(ClientConfig, {
+        name: 'ecmps-ui',
       });
 
       templateContext['errorId'] = errorId;
       templateContext['supportEmail'] = supportEmail.supportEmail;
-      setRecord = await this.returnManager().findOne(SubmissionSet, setId);
+      setRecord = await this.returnManager().findOneBy(SubmissionSet, {
+        submissionSetIdentifier: setId,
+      });
     } else if (isSubmission) {
       subject = `ECMPS Submission Confirmation | ${this.displayCurrentDate()}`;
       template = 'submissionTemplate';
       records = await this.returnManager().find(SubmissionQueue, {
         where: { submissionSetIdentifier: setId },
       });
-      setRecord = await this.returnManager().findOne(SubmissionSet, setId);
+      setRecord = await this.returnManager().findOneBy(SubmissionSet, {
+        submissionSetIdentifier: setId,
+      });
     } else {
       subject = `ECMPS Evaluation Report | ${this.displayCurrentDate()}`;
       template = 'massEvaluationTemplate';
       records = await this.returnManager().find(Evaluation, {
         where: { evaluationSetIdentifier: setId },
       });
-      setRecord = await this.returnManager().findOne(EvaluationSet, setId);
+      setRecord = await this.returnManager().findOneBy(EvaluationSet, {
+        evaluationSetIdentifier: setId,
+      });
 
       await this.buildEvalReports(setRecord, records, documents);
     }
@@ -596,18 +621,17 @@ export class MailEvalService {
 
     // Create Monitor Plan Section of Email
 
-    const mpRecord = await this.returnManager().findOne(
-      !(isSubmission || isSubmissionFailure) ? MonitorPlan : MonitorPlanGlobal,
-      setRecord.monPlanIdentifier,
-    );
-    const plant = await this.returnManager().findOne(
-      Plant,
-      mpRecord.facIdentifier,
-    );
-    const county = await this.returnManager().findOne(
-      CountyCode,
-      plant.countyCode,
-    );
+    const mpRecord: MonitorPlan | MonitorPlanGlobal =
+      await this.returnManager().findOneBy(
+        !isSubmission && !isSubmissionFailure ? MonitorPlan : MonitorPlanGlobal,
+        { monPlanIdentifier: setRecord.monPlanIdentifier },
+      );
+    const plant = await this.returnManager().findOneBy(Plant, {
+      facIdentifier: mpRecord.facIdentifier,
+    });
+    const county = await this.returnManager().findOneBy(CountyCode, {
+      countyCode: plant.countyCode,
+    });
 
     templateContext['monitorPlan'] = {
       keys: mpKeys,
@@ -626,11 +650,13 @@ export class MailEvalService {
 
     const mpChildRecord = records.find((r) => r.processCode === 'MP');
     if (mpChildRecord) {
-      const colors = this.getReportColors(mpRecord.evalStatusCode);
-      templateContext['monitorPlan'].items['evalStatus'] =
-        mappedStatusCodes.get(mpRecord.evalStatusCode);
-      templateContext['monitorPlan'].items['reportColor'] = colors[0];
-      templateContext['monitorPlan'].items['reportLineColor'] = colors[1];
+      if (mpRecord instanceof MonitorPlan) {
+        templateContext['monitorPlan'].items['evalStatus'] =
+          mappedStatusCodes.get(mpRecord.evalStatusCode);
+        const colors = this.getReportColors(mpRecord.evalStatusCode);
+        templateContext['monitorPlan'].items['reportColor'] = colors[0];
+        templateContext['monitorPlan'].items['reportLineColor'] = colors[1];
+      }
 
       templateContext['monitorPlan'].items[
         'reportUrl'

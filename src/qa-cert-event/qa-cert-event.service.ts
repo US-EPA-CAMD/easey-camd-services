@@ -50,7 +50,9 @@ export class QaCertEventService {
       WHERE qa_cert_event_id = $1`,
         [id, 'REQUIRE', userId, currentDateTime(), payload?.resubExplanation],
       );
-      recordToUpdate = await this.manager.findOne(QaCertEventMaintView, id);
+      recordToUpdate = await this.manager.findOneBy(QaCertEventMaintView, {
+        certEventId: id,
+      });
       if (!recordToUpdate)
         throw new EaseyException(
           new Error(`Record with id ${id} not found`),

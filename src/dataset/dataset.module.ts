@@ -1,13 +1,14 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
+import { DataSet } from '../entities/dataset.entity';
 import { DataSetRepository } from './dataset.repository';
 import { DataSetService } from './dataset.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([DataSetRepository])],
+  imports: [TypeOrmModule.forFeature([DataSet])],
   controllers: [],
-  providers: [DataSetService],
+  providers: [DataSetRepository, DataSetService],
   exports: [TypeOrmModule, DataSetService],
 })
 export class DataSetModule {}

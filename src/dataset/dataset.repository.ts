@@ -1,8 +1,14 @@
-import { EntityRepository, Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
+import { Injectable } from '@nestjs/common';
+
 import { DataSet } from '../entities/dataset.entity';
 
-@EntityRepository(DataSet)
+@Injectable()
 export class DataSetRepository extends Repository<DataSet> {
+  constructor(private readonly dataSource: DataSource) {
+    super(DataSet, dataSource.manager);
+  }
+
   async getDataSet(dataSetCode: string): Promise<DataSet> {
     return this.createQueryBuilder('ds')
       .innerJoinAndSelect('ds.tables', 'tbl')

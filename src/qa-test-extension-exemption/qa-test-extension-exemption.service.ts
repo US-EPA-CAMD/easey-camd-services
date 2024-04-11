@@ -51,7 +51,9 @@ export class QaTestExtensionExemptionService {
       WHERE test_extension_exemption_id = $1`,
         [id, 'REQUIRE', userId, currentDateTime(), payload?.resubExplanation],
       );
-      recordToUpdate = await this.manager.findOne(QaTeeMaintView, id);
+      recordToUpdate = await this.manager.findOneBy(QaTeeMaintView, {
+        testExtensionExemptionId: id,
+      });
       if (!recordToUpdate)
         throw new EaseyException(
           new Error(`Record with id ${id} not found`),

@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable, Param } from '@nestjs/common';
 import { Logger } from '@us-epa-camd/easey-common/logger';
 import { DataSetService } from '../dataset/dataset.service';
-import { getManager } from 'typeorm';
+import { EntityManager } from 'typeorm';
 import { SubmissionSet } from '../entities/submission-set.entity';
 import { SubmissionQueue } from '../entities/submission-queue.entity';
 import { CopyOfRecordService } from '../copy-of-record/copy-of-record.service';
@@ -41,6 +41,7 @@ export class SubmissionProcessService {
   private globalS3Client: S3Client;
 
   constructor(
+    private readonly entityManager: EntityManager,
     private readonly configService: ConfigService,
     private readonly logger: Logger,
     private dataSetService: DataSetService,
@@ -59,8 +60,8 @@ export class SubmissionProcessService {
     });
   }
 
-  returnManager(): any {
-    return getManager();
+  returnManager(): EntityManager {
+    return this.entityManager;
   }
 
   async addEvalReports(
@@ -93,12 +94,10 @@ export class SubmissionProcessService {
           params.reportCode = 'TEE_EVAL';
           params.teeId = [rec.testExtensionExemptionIdentifier];
         } else if (rec.processCode === 'EM') {
-          const rptPeriod: ReportingPeriod = await this.returnManager().findOne(
-            ReportingPeriod,
-            {
-              where: { rptPeriodIdentifier: rec.rptPeriodIdentifier },
-            },
-          );
+          const rptPeriod: ReportingPeriod =
+            await this.returnManager().findOneBy(ReportingPeriod, {
+              rptPeriodIdentifier: rec.rptPeriodIdentifier,
+            });
 
           params.reportCode = 'EM_EVAL';
           params.monitorPlanId = set.monPlanIdentifier;
@@ -171,10 +170,10 @@ export class SubmissionProcessService {
         const emRecord = records.find((r) => r.processCode === 'EM');
         params.reportCode = 'EM';
         params.monitorPlanId = set.monPlanIdentifier;
-        const rptPeriod: ReportingPeriod = await this.returnManager().findOne(
+        const rptPeriod: ReportingPeriod = await this.returnManager().findOneBy(
           ReportingPeriod,
           {
-            where: { rptPeriodIdentifier: emRecord.rptPeriodIdentifier },
+            rptPeriodIdentifier: emRecord.rptPeriodIdentifier,
           },
         );
 
@@ -206,7 +205,6 @@ export class SubmissionProcessService {
   async buildTransactions(
     set: SubmissionSet,
     record: SubmissionQueue,
-    documents: object[],
     transactions: any[],
     folderPath: string,
   ): Promise<void> {
@@ -248,12 +246,10 @@ export class SubmissionProcessService {
         break;
       case 'MATS':
         //Pull down the Mats Bulk File Object
-        const matsRecord: MatsBulkFile = await this.returnManager().findOne(
+        const matsRecord: MatsBulkFile = await this.returnManager().findOneBy(
           MatsBulkFile,
           {
-            where: {
-              id: record.matsBulkFileId,
-            },
+            id: record.matsBulkFileId,
           },
         );
 
@@ -298,10 +294,9 @@ export class SubmissionProcessService {
 
       switch (record.processCode) {
         case 'MP':
-          originRecord = await this.returnManager().findOne(
-            MonitorPlan,
-            set.monPlanIdentifier,
-          );
+          originRecord = await this.returnManager().findOneBy(MonitorPlan, {
+            monPlanIdentifier: set.monPlanIdentifier,
+          });
 
           break;
         case 'QA':
@@ -310,25 +305,22 @@ export class SubmissionProcessService {
               where: { testSumId: record.testSumIdentifier },
             });
           } else if (record.qaCertEventIdentifier) {
-            originRecord = await this.returnManager().findOne(
-              QaCertEvent,
-              record.qaCertEventIdentifier,
-            );
+            originRecord = await this.returnManager().findOneBy(QaCertEvent, {
+              qaCertEventIdentifier: record.qaCertEventIdentifier,
+            });
           } else {
-            originRecord = await this.returnManager().findOne(
-              QaTee,
-              record.testExtensionExemptionIdentifier,
-            );
+            originRecord = await this.returnManager().findOneBy(QaTee, {
+              testExtensionExemptionIdentifier:
+                record.testExtensionExemptionIdentifier,
+            });
           }
           break;
         case 'EM':
-          originRecord = await this.returnManager().findOne(
+          originRecord = await this.returnManager().findOneBy(
             EmissionEvaluation,
             {
-              where: {
-                monPlanIdentifier: set.monPlanIdentifier,
-                rptPeriodIdentifier: record.rptPeriodIdentifier,
-              },
+              monPlanIdentifier: set.monPlanIdentifier,
+              rptPeriodIdentifier: record.rptPeriodIdentifier,
             },
           );
 
@@ -477,7 +469,9 @@ export class SubmissionProcessService {
     let submissionSetRecords: SubmissionQueue[];
 
     try {
-      set = await this.returnManager().findOne(SubmissionSet, id);
+      set = await this.returnManager().findOneBy(SubmissionSet, {
+        submissionSetIdentifier: id,
+      });
 
       set.statusCode = 'WIP';
       set.endStageTime = currentDateTime();
@@ -487,6 +481,7 @@ export class SubmissionProcessService {
       submissionSetRecords = await this.returnManager().find(SubmissionQueue, {
         where: { submissionSetIdentifier: id },
       });
+      console.log(submissionSetRecords);
 
       await this.setRecordStatusCode(
         set,
@@ -522,7 +517,6 @@ export class SubmissionProcessService {
         await this.buildTransactions(
           set,
           submissionRecord,
-          documents,
           transactions,
           folderPath,
         );

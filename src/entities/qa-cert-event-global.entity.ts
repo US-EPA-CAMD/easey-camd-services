@@ -4,6 +4,9 @@ import { NumericColumnTransformer } from '@us-epa-camd/easey-common/transforms';
 
 @Entity({ name: 'camdecmps.qa_cert_event' })
 export class QaCertEventGlobal extends BaseEntity {
+  @PrimaryColumn({ name: 'qa_cert_event_id' })
+  qaCertEventIdentifier: string;
+
   @Column({ name: 'mon_loc_id' })
   monLOCIdentifier: string;
 
@@ -69,9 +72,6 @@ export class QaCertEventGlobal extends BaseEntity {
 
   @Column({ name: 'update_date' })
   updateDate: string;
-
-  @PrimaryColumn({ name: 'qa_cert_event_id' })
-  qaCertEventIdentifier: string;
 
   @Column({
     name: 'submission_id',
