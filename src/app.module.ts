@@ -7,9 +7,9 @@ import { dbConfig } from '@us-epa-camd/easey-common/config';
 import { LoggerModule } from '@us-epa-camd/easey-common/logger';
 import { CorsOptionsModule } from '@us-epa-camd/easey-common/cors-options';
 import {
-  IsValidCodeConstraint,
-  IsValidCodesConstraint,
-} from '@us-epa-camd/easey-common/constraints';
+  IsValidCodeValidator,
+  IsValidCodesValidator,
+} from '@us-epa-camd/easey-common/validators';
 
 import routes from './routes';
 import s3Config from './config/s3.config';
@@ -63,6 +63,6 @@ import { CopyOfRecordModule } from './copy-of-record/copy-of-record.module';
     MatsFileUploadModule,
     CopyOfRecordModule,
   ],
-  providers: [IsValidCodeConstraint, IsValidCodesConstraint],
+  providers: [IsValidCodeValidator, IsValidCodesValidator],
 })
 export class AppModule {}
