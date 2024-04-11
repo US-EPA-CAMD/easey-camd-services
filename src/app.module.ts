@@ -6,6 +6,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { dbConfig } from '@us-epa-camd/easey-common/config';
 import { LoggerModule } from '@us-epa-camd/easey-common/logger';
 import { CorsOptionsModule } from '@us-epa-camd/easey-common/cors-options';
+import {
+  IsValidCodeConstraint,
+  IsValidCodesConstraint,
+} from '@us-epa-camd/easey-common/constraints';
 
 import routes from './routes';
 import s3Config from './config/s3.config';
@@ -59,5 +63,6 @@ import { CopyOfRecordModule } from './copy-of-record/copy-of-record.module';
     MatsFileUploadModule,
     CopyOfRecordModule,
   ],
+  providers: [IsValidCodeConstraint, IsValidCodesConstraint],
 })
 export class AppModule {}
