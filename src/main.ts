@@ -1,10 +1,10 @@
-import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
-import { useContainer } from 'class-validator';
+import { NestFactory } from '@nestjs/core';
 import {
-  applySwagger,
   applyMiddleware,
+  applySwagger,
 } from '@us-epa-camd/easey-common/nestjs';
+import { useContainer } from 'class-validator';
 
 import { AppModule } from './app.module';
 
