@@ -2,7 +2,8 @@ import { ApiProperty } from '@nestjs/swagger';
 import {
   IsOptional,
   ValidationArguments,
-  IsEnum, IsNotEmpty,
+  IsEnum,
+  IsNotEmpty,
 } from 'class-validator';
 
 import { Status } from '../enums/status.enum';
@@ -11,32 +12,40 @@ import { Plant } from '../entities/plant.entity';
 import { IsValidCode, IsInRange } from '@us-epa-camd/easey-common/pipes';
 import { MonitorPlan } from '../entities/monitor-plan.entity';
 import { currentDateTime } from '@us-epa-camd/easey-common/utilities/functions';
-import {FindOneOptions} from "typeorm/find-options/FindOneOptions";
+import { FindOneOptions } from 'typeorm/find-options/FindOneOptions';
 
 export class EmSubmissionAccessParamsDTO {
   @ApiProperty()
-  @IsNotEmpty({message: () => 'Facility is required'})
-  @IsValidCode(Plant, {
-    message: (args: ValidationArguments) => {
-      return `The ${args.property} is not valid. Refer to the list of available facilityRecordIds for valid values '/facilities-mgmt/facilities'`;
-    },
-  },(args: ValidationArguments): FindOneOptions<Plant> => {
-    return {
-      where: {
-        orisCode: args.value,
+  @IsNotEmpty({ message: () => 'Facility is required' })
+  @IsValidCode(
+    Plant,
+    {
+      message: (args: ValidationArguments) => {
+        return `The ${args.property} is not valid. Refer to the list of available facilityRecordIds for valid values '/facilities-mgmt/facilities'`;
       },
-    };
-  })
+    },
+    (args: ValidationArguments): FindOneOptions<Plant> => {
+      return {
+        where: { orisCode: args.value },
+      };
+    },
+  )
   @Type(() => Number)
   orisCode?: number;
 
   @ApiProperty()
-  @IsNotEmpty({message: () => 'Configuration is required'})
-  @IsValidCode(MonitorPlan, {
-    message: (args: ValidationArguments) => {
-      return `The reported ${args.property} is invalid.`;
+  @IsNotEmpty({ message: () => 'Configuration is required' })
+  @IsValidCode(
+    MonitorPlan,
+    {
+      message: (args: ValidationArguments) => {
+        return `The reported ${args.property} is invalid.`;
+      },
     },
-  })
+    (args: ValidationArguments): FindOneOptions<MonitorPlan> => {
+      return { where: { monPlanIdentifier: args.value } };
+    },
+  )
   monitorPlanId?: string;
 
   @IsOptional()

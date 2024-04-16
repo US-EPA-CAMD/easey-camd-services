@@ -1,23 +1,25 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsDate,
-  IsNumber,
-  IsString,
-  ValidationArguments,
-  IsDateString,
-  IsOptional,
-} from 'class-validator';
-import { IsIsoFormat } from '@us-epa-camd/easey-common/pipes/is-iso-format.pipe';
 import { CheckCatalogService } from '@us-epa-camd/easey-common/check-catalog';
-import { IsValidCode, IsValidDate } from '@us-epa-camd/easey-common/pipes';
 import {
   ErrorMessages,
   propertyMetadata,
 } from '@us-epa-camd/easey-common/constants';
+import { IsValidCode, IsValidDate } from '@us-epa-camd/easey-common/pipes';
+import { IsIsoFormat } from '@us-epa-camd/easey-common/pipes/is-iso-format.pipe';
+import {
+  IsDate,
+  IsDateString,
+  IsNumber,
+  IsOptional,
+  IsString,
+  ValidationArguments,
+} from 'class-validator';
+import { FindOneOptions } from 'typeorm';
+
 import { EmissionStatusCode } from '../entities/emission-status-code.entity';
-import { SubmissionAvailiblityCode } from '../entities/submission-availiblity-code.entity';
-import { ReportingPeriod } from '../entities/reporting-period.entity';
 import { MonitorPlan } from '../entities/monitor-plan.entity';
+import { ReportingPeriod } from '../entities/reporting-period.entity';
+import { SubmissionAvailiblityCode } from '../entities/submission-availiblity-code.entity';
 import { IsValidCloseDate } from '../pipes/is-valid-close-date.pipe';
 
 const msgA =
@@ -30,13 +32,19 @@ export class EmSubmissionAccessUpdateDTO {
     name: propertyMetadata.emissionStatusCode.fieldLabels.value,
   })
   @IsString()
-  @IsValidCode(EmissionStatusCode, {
-    message: (args: ValidationArguments) => {
-      return CheckCatalogService.formatMessage(msgA, {
-        property: args.property,
-      });
+  @IsValidCode(
+    EmissionStatusCode,
+    {
+      message: (args: ValidationArguments) => {
+        return CheckCatalogService.formatMessage(msgA, {
+          property: args.property,
+        });
+      },
     },
-  })
+    (args: ValidationArguments): FindOneOptions<EmissionStatusCode> => {
+      return { where: { EmissionStatusCode: args.value } };
+    },
+  )
   emissionStatusCode: string;
 
   @IsString()
@@ -49,13 +57,19 @@ export class EmSubmissionAccessUpdateDTO {
     name: propertyMetadata.submissionAvailabilityCode.fieldLabels.value,
   })
   @IsString()
-  @IsValidCode(SubmissionAvailiblityCode, {
-    message: (args: ValidationArguments) => {
-      return CheckCatalogService.formatMessage(msgA, {
-        property: args.property,
-      });
+  @IsValidCode(
+    SubmissionAvailiblityCode,
+    {
+      message: (args: ValidationArguments) => {
+        return CheckCatalogService.formatMessage(msgA, {
+          property: args.property,
+        });
+      },
     },
-  })
+    (args: ValidationArguments): FindOneOptions<SubmissionAvailiblityCode> => {
+      return { where: { submissionAvailiblityCode: args.value } };
+    },
+  )
   submissionAvailabilityCode: string;
 
   @IsString()
@@ -111,11 +125,17 @@ export class EmSubmissionAccessCreateDTO extends EmSubmissionAccessUpdateDTO {
     name: propertyMetadata.monitorPlanReportingFreqDTOPlanId.fieldLabels.value,
   })
   @IsString()
-  @IsValidCode(MonitorPlan, {
-    message: (args: ValidationArguments) => {
-      return `The reported ${args.property} is invalid.`;
+  @IsValidCode(
+    MonitorPlan,
+    {
+      message: (args: ValidationArguments) => {
+        return `The reported ${args.property} is invalid.`;
+      },
     },
-  })
+    (args: ValidationArguments): FindOneOptions<MonitorPlan> => {
+      return { where: { monPlanIdentifier: args.value } };
+    },
+  )
   monitorPlanId: string;
 
   @ApiProperty({
@@ -124,11 +144,17 @@ export class EmSubmissionAccessCreateDTO extends EmSubmissionAccessUpdateDTO {
     name: propertyMetadata.emissions.reportingPeriodId.fieldLabels.value,
   })
   @IsNumber()
-  @IsValidCode(ReportingPeriod, {
-    message: (args: ValidationArguments) => {
-      return `The reported ${args.property} is invalid.`;
+  @IsValidCode(
+    ReportingPeriod,
+    {
+      message: (args: ValidationArguments) => {
+        return `The reported ${args.property} is invalid.`;
+      },
     },
-  })
+    (args: ValidationArguments): FindOneOptions<ReportingPeriod> => {
+      return { where: { rptPeriodIdentifier: args.value } };
+    },
+  )
   reportingPeriodId: number;
 }
 
