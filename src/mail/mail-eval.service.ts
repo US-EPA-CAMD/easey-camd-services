@@ -392,16 +392,17 @@ export class MailEvalService {
     records: Evaluation[],
     documents: object[],
   ) {
-
-    //Handle QA 
-    const testSumRecords = records.filter(r => r.processCode === "QA" && r.testSumIdentifier != null);
-    if(testSumRecords.length > 0){
+    //Handle QA
+    const testSumRecords = records.filter(
+      (r) => r.processCode === 'QA' && r.testSumIdentifier != null,
+    );
+    if (testSumRecords.length > 0) {
       const paramsTestSum = new ReportParamsDTO();
       paramsTestSum.facilityId = set.orisCode;
 
       let title = 'TEST_DETAIL_EVAL';
       paramsTestSum.reportCode = 'TEST_EVAL';
-      paramsTestSum.testId = testSumRecords.map(tsr => tsr.testSumIdentifier);
+      paramsTestSum.testId = testSumRecords.map((tsr) => tsr.testSumIdentifier);
 
       const reportInformationTestSum = await this.dataSetService.getDataSet(
         paramsTestSum,
@@ -410,19 +411,22 @@ export class MailEvalService {
 
       documents.push({
         filename: `${set.orisCode}_${title}.html`,
-        content:
-          this.copyOfRecordService.generateCopyOfRecord(reportInformationTestSum),
+        content: this.copyOfRecordService.generateCopyOfRecord(
+          reportInformationTestSum,
+        ),
       });
     }
 
-    const qaCertRecords = records.filter(r => r.processCode === "QA" && r.qaCertEventIdentifier != null);
-    if(qaCertRecords.length > 0){
+    const qaCertRecords = records.filter(
+      (r) => r.processCode === 'QA' && r.qaCertEventIdentifier != null,
+    );
+    if (qaCertRecords.length > 0) {
       const paramsCert = new ReportParamsDTO();
       paramsCert.facilityId = set.orisCode;
 
       let title = 'QCE_EVAL';
       paramsCert.reportCode = 'QCE_EVAL';
-      paramsCert.qceId = qaCertRecords.map(qce => qce.qaCertEventIdentifier);
+      paramsCert.qceId = qaCertRecords.map((qce) => qce.qaCertEventIdentifier);
 
       const reportInformationQCE = await this.dataSetService.getDataSet(
         paramsCert,
@@ -436,14 +440,19 @@ export class MailEvalService {
       });
     }
 
-    const teeRecords = records.filter(r => r.processCode === "QA" && r.testExtensionExemptionIdentifier != null);
-    if(teeRecords.length > 0){
+    const teeRecords = records.filter(
+      (r) =>
+        r.processCode === 'QA' && r.testExtensionExemptionIdentifier != null,
+    );
+    if (teeRecords.length > 0) {
       const paramsTee = new ReportParamsDTO();
       paramsTee.facilityId = set.orisCode;
 
       let title = 'TEE_EVAL';
       paramsTee.reportCode = 'TEE_EVAL';
-      paramsTee.qceId = qaCertRecords.map(qce => qce.qaCertEventIdentifier);
+      paramsTee.teeId = teeRecords.map(
+        (tee) => tee.testExtensionExemptionIdentifier,
+      );
 
       const reportInformationTEE = await this.dataSetService.getDataSet(
         paramsTee,
@@ -458,51 +467,50 @@ export class MailEvalService {
     }
 
     for (const rec of records) {
-      if(rec.processCode !== "QA"){
-      const params = new ReportParamsDTO();
-      params.facilityId = set.orisCode;
+      if (rec.processCode !== 'QA') {
+        const params = new ReportParamsDTO();
+        params.facilityId = set.orisCode;
 
-      let titleContext = '';
+        let titleContext = '';
 
-      // Add Eval Report
-      if (rec.processCode === 'MP') {
-        titleContext = 'MP_EVAL_' + set.monPlanIdentifier;
-        params.reportCode = 'MP_EVAL';
-        params.monitorPlanId = set.monPlanIdentifier;
-      } 
-      else if (rec.processCode === 'EM') {
-        const rptPeriod: ReportingPeriod = await this.returnManager().findOne(
-          ReportingPeriod,
-          {
-            where: { rptPeriodIdentifier: rec.rptPeriodIdentifier },
-          },
+        // Add Eval Report
+        if (rec.processCode === 'MP') {
+          titleContext = 'MP_EVAL_' + set.monPlanIdentifier;
+          params.reportCode = 'MP_EVAL';
+          params.monitorPlanId = set.monPlanIdentifier;
+        } else if (rec.processCode === 'EM') {
+          const rptPeriod: ReportingPeriod = await this.returnManager().findOne(
+            ReportingPeriod,
+            {
+              where: { rptPeriodIdentifier: rec.rptPeriodIdentifier },
+            },
+          );
+
+          params.reportCode = 'EM_EVAL';
+          params.monitorPlanId = set.monPlanIdentifier;
+          params.year = rptPeriod.calendarYear;
+          params.quarter = rptPeriod.quarter;
+
+          titleContext =
+            'EM_EVAL_' +
+            params.monitorPlanId +
+            '_' +
+            params.year +
+            'q' +
+            params.quarter;
+        }
+
+        const reportInformation = await this.dataSetService.getDataSet(
+          params,
+          true,
         );
 
-        params.reportCode = 'EM_EVAL';
-        params.monitorPlanId = set.monPlanIdentifier;
-        params.year = rptPeriod.calendarYear;
-        params.quarter = rptPeriod.quarter;
-
-        titleContext =
-          'EM_EVAL_' +
-          params.monitorPlanId +
-          '_' +
-          params.year +
-          'q' +
-          params.quarter;
+        documents.push({
+          filename: `${set.orisCode}_${titleContext}.html`,
+          content:
+            this.copyOfRecordService.generateCopyOfRecord(reportInformation),
+        });
       }
-
-      const reportInformation = await this.dataSetService.getDataSet(
-        params,
-        true,
-      );
-
-      documents.push({
-        filename: `${set.orisCode}_${titleContext}.html`,
-        content:
-          this.copyOfRecordService.generateCopyOfRecord(reportInformation),
-      });
-    }
     }
   }
 
