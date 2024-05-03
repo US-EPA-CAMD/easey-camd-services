@@ -446,7 +446,7 @@ export class MailEvalService {
 
       let title = 'TEE_EVAL';
       paramsTee.reportCode = 'TEE_EVAL';
-      paramsTee.teeId = teeRecords.map(qce => qce.testExtensionExemptionIdentifier);
+      paramsTee.teeId = teeRecords.map(tee => tee.testExtensionExemptionIdentifier);
 
       const reportInformationTEE = await this.dataSetService.getDataSet(
         paramsTee,
