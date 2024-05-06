@@ -90,7 +90,7 @@ describe('Mail Eval Service', () => {
     } as any as EntityManager;
 
     jest.spyOn(service, 'returnManager').mockReturnValue(mockManager);
-    expect(await service.getSystemComponentIdentifier('', '')).toEqual(
+    expect(await service.getSystemComponentIdentifier(ms.systemIdentifier, '')).toEqual(
       'MOCK-S',
     );
   });

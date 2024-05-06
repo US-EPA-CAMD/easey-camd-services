@@ -54,11 +54,13 @@ export class MailEvalService {
     monitorSystem: string,
     componentId: string,
   ) {
-    const ms = await this.returnManager().findOneBy(MonitorSystem, {
-      monSystemIdentifier: monitorSystem,
-    });
-    if (ms && ms.systemIdentifier) {
-      return ms.systemIdentifier;
+    if (monitorSystem) {
+      const ms = await this.returnManager().findOneBy(MonitorSystem, {
+        monSystemIdentifier: monitorSystem,
+      });
+      if (ms && ms.systemIdentifier) {
+        return ms.systemIdentifier;
+      }
     }
     const c = await this.returnManager().findOneBy(Component, {
       componentId,
@@ -465,7 +467,9 @@ export class MailEvalService {
 
       let title = 'TEE_EVAL';
       paramsTee.reportCode = 'TEE_EVAL';
-      paramsTee.qceId = qaCertRecords.map((qce) => qce.qaCertEventIdentifier);
+      paramsTee.teeId = teeRecords.map(
+        (tee) => tee.testExtensionExemptionIdentifier,
+      );
 
       const reportInformationTEE = await this.dataSetService.getDataSet(
         paramsTee,
