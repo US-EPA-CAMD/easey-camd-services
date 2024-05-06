@@ -210,14 +210,15 @@ export class SubmissionProcessService {
     folderPath: string,
   ): Promise<void> {
     switch (record.processCode) {
-      case 'MP':
+      case 'MP': {
         transactions.push({
           command:
             'CALL camdecmps.copy_monitor_plan_from_workspace_to_global($1)',
           params: [set.monPlanIdentifier],
         });
         break;
-      case 'QA':
+      }
+      case 'QA': {
         if (record.testSumIdentifier) {
           transactions.push({
             command:
@@ -238,14 +239,16 @@ export class SubmissionProcessService {
           });
         }
         break;
-      case 'EM':
+      }
+      case 'EM': {
         transactions.push({
           command:
             'CALL camdecmps.copy_emissions_from_workspace_to_global($1, $2)',
           params: [set.monPlanIdentifier, record.rptPeriodIdentifier],
         });
         break;
-      case 'MATS':
+      }
+      case 'MATS': {
         //Pull down the Mats Bulk File Object
         const matsRecord: MatsBulkFile = await this.returnManager().findOneBy(
           MatsBulkFile,
@@ -277,6 +280,7 @@ export class SubmissionProcessService {
         );
 
         break;
+      }
     }
   }
 

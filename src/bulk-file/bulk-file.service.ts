@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { Logger } from '@us-epa-camd/easey-common/logger';
+
 import { BulkFileDTO } from '../dto/bulk_file.dto';
 import { BulkFileInputDTO } from '../dto/bulk_file_input.dto';
-import { BulkFileMetadataRepository } from './bulk-file.repository';
-import { BulkFileMap } from '../maps/bulk-file-map';
 import { BulkFileMetadata } from '../entities/bulk-file-metadata.entity';
+import { BulkFileMap } from '../maps/bulk-file-map';
+import { BulkFileMetadataRepository } from './bulk-file.repository';
 
 @Injectable()
 export class BulkFileService {

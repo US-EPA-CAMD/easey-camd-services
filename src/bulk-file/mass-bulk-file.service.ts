@@ -107,7 +107,8 @@ export class MassBulkFileService {
     const jobLog = this.newJobLog(jobName);
     jobLog.year = currentYear;
     jobLog.quarter = quarter;
-    (jobLog.programCode = prgCode), (jobLog.stateCode = stateCd);
+    jobLog.programCode = prgCode;
+    jobLog.stateCode = stateCd;
     jobLog.dataType = dataType;
     jobLog.subType = subType;
     jobLog.url = `${this.apiUrl}/${url}`;

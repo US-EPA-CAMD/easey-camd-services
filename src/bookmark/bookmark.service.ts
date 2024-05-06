@@ -3,7 +3,6 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { Logger } from '@us-epa-camd/easey-common/logger';
 
 import { BookmarkRepository } from './bookmark.repository';

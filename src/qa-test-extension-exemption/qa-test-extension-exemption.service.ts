@@ -1,5 +1,4 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { InjectEntityManager } from '@nestjs/typeorm';
 import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
 import { currentDateTime } from '@us-epa-camd/easey-common/utilities/functions';
 import { EntityManager } from 'typeorm';
