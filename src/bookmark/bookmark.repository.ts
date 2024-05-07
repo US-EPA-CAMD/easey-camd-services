@@ -1,5 +1,11 @@
-import { EntityRepository, Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
+import { Injectable } from '@nestjs/common';
+
 import { Bookmark } from '../entities/bookmark.entity';
 
-@EntityRepository(Bookmark)
-export class BookmarkRepository extends Repository<Bookmark> {}
+@Injectable()
+export class BookmarkRepository extends Repository<Bookmark> {
+  constructor(entityManager: EntityManager) {
+    super(Bookmark, entityManager);
+  }
+}

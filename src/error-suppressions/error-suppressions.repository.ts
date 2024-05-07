@@ -1,11 +1,16 @@
-import { EntityRepository, Repository } from 'typeorm';
+import { Injectable } from '@nestjs/common';
+import { EntityManager, Repository } from 'typeorm';
 
 import { EsSpec } from '../entities/es-spec.entity';
 import { ErrorSuppressionsParamsDTO } from '../dto/error-suppressions.params.dto';
 import { QueryBuilderHelper } from '../utilities/query-builder.helper';
 
-@EntityRepository(EsSpec)
+@Injectable()
 export class ErrorSuppressionsRepository extends Repository<EsSpec> {
+  constructor(entityManager: EntityManager) {
+    super(EsSpec, entityManager);
+  }
+
   async getErrorSuppressions(
     params: ErrorSuppressionsParamsDTO,
   ): Promise<EsSpec[]> {

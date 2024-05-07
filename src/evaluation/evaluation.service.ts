@@ -1,4 +1,4 @@
-import { getManager } from 'typeorm';
+import { EntityManager } from 'typeorm';
 import { Injectable } from '@nestjs/common';
 import { Logger } from '@us-epa-camd/easey-common/logger';
 import { EvaluationDTO, EvaluationItem } from '../dto/evaluation.dto';
@@ -15,10 +15,13 @@ import { EmissionEvaluation } from '../entities/emission-evaluation.entity';
 
 @Injectable()
 export class EvaluationService {
-  constructor(private readonly logger: Logger) {}
+  constructor(
+    private readonly entityManager: EntityManager,
+    private readonly logger: Logger,
+  ) {}
 
-  returnManager(): any {
-    return getManager();
+  returnManager(): EntityManager {
+    return this.entityManager;
   }
 
   async queueRecord(
@@ -44,15 +47,14 @@ export class EvaluationService {
 
       evaluationSet.configuration = locations[0]['get_mp_location_list'];
 
-      const mp: MonitorPlan = await this.returnManager().findOne(
+      const mp: MonitorPlan = await this.returnManager().findOneBy(
         MonitorPlan,
-        item.monPlanId,
+        { monPlanIdentifier: item.monPlanId },
       );
 
-      const facility: Plant = await this.returnManager().findOne(
-        Plant,
-        mp.facIdentifier,
-      );
+      const facility: Plant = await this.returnManager().findOneBy(Plant, {
+        facIdentifier: mp.facIdentifier,
+      });
 
       evaluationSet.orisCode = facility.orisCode;
       evaluationSet.facIdentifier = facility.facIdentifier;
@@ -75,7 +77,9 @@ export class EvaluationService {
       }
 
       for (const id of item.testSumIds) {
-        const ts = await this.returnManager().findOne(TestSummary, id);
+        const ts = await this.returnManager().findOneBy(TestSummary, {
+          testSumIdentifier: id,
+        });
         ts.evalStatusCode = 'INQ';
 
         const tsRecord = new Evaluation();
@@ -96,7 +100,9 @@ export class EvaluationService {
       }
 
       for (const id of item.qceIds) {
-        const qce = await this.returnManager().findOne(QaCertEvent, id);
+        const qce = await this.returnManager().findOneBy(QaCertEvent, {
+          qaCertEventIdentifier: id,
+        });
         qce.evalStatusCode = 'INQ';
 
         const qceRecord = new Evaluation();
@@ -117,7 +123,9 @@ export class EvaluationService {
       }
 
       for (const id of item.teeIds) {
-        const tee = await this.returnManager().findOne(QaTee, id);
+        const tee = await this.returnManager().findOneBy(QaTee, {
+          testExtensionExemptionIdentifier: id,
+        });
         tee.evalStatusCode = 'INQ';
 
         const teeRecord = new Evaluation();
@@ -138,15 +146,13 @@ export class EvaluationService {
       }
 
       for (const periodAbr of item.emissionsReportingPeriods) {
-        const rp = await this.returnManager().findOne(ReportingPeriod, {
-          where: { periodAbbreviation: periodAbr },
+        const rp = await this.returnManager().findOneBy(ReportingPeriod, {
+          periodAbbreviation: periodAbr,
         });
 
-        const ee = await this.returnManager().findOne(EmissionEvaluation, {
-          where: {
-            monPlanIdentifier: item.monPlanId,
-            rptPeriodIdentifier: rp.rptPeriodIdentifier,
-          },
+        const ee = await this.returnManager().findOneBy(EmissionEvaluation, {
+          monPlanIdentifier: item.monPlanId,
+          rptPeriodIdentifier: rp.rptPeriodIdentifier,
         });
 
         ee.evalStatusCode = 'INQ';
@@ -172,7 +178,7 @@ export class EvaluationService {
         await this.returnManager().save(emissionRecord);
       }
     } catch (e) {
-      console.log(e);
+      console.error(e);
       this.logger.log('Failed record queueing', {
         monPlanId: item.monPlanId,
       });

@@ -1,13 +1,15 @@
-import { Test } from '@nestjs/testing';
 import { HttpModule } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
-import { SubmissionController } from './submission.controller';
-import { SubmissionService } from './submission.service';
-import { SubmissionQueueDTO } from '../dto/submission-queue.dto';
-import { SubmissionProcessService } from './submission-process.service';
+import { Test } from '@nestjs/testing';
+import { DataSource } from 'typeorm';
+
 import { ProcessParamsDTO } from '../dto/process-params.dto';
+import { SubmissionQueueDTO } from '../dto/submission-queue.dto';
 import { CombinedSubmissionsMap } from '../maps/combined-submissions.map';
 import { EmissionsLastUpdatedMap } from '../maps/emissions-last-updated.map';
+import { SubmissionProcessService } from './submission-process.service';
+import { SubmissionController } from './submission.controller';
+import { SubmissionService } from './submission.service';
 
 jest.mock('./submission.service');
 jest.mock('./submission-process.service');
@@ -20,6 +22,10 @@ describe('-- Submission Controller --', () => {
       imports: [HttpModule],
       controllers: [SubmissionController],
       providers: [
+        {
+          provide: DataSource,
+          useValue: {},
+        },
         SubmissionService,
         SubmissionProcessService,
         ConfigService,

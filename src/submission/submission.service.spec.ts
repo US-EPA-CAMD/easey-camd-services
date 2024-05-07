@@ -1,10 +1,13 @@
 import { Test } from '@nestjs/testing';
+import { EntityManager } from 'typeorm';
 import { LoggerModule } from '@us-epa-camd/easey-common/logger';
+
 import { MonitorPlan } from '../entities/monitor-plan.entity';
 import { EvaluationItem } from '../dto/evaluation.dto';
 import { Plant } from '../entities/plant.entity';
 import { QaCertEvent } from '../entities/qa-cert-event.entity';
 import { QaTee } from '../entities/qa-tee.entity';
+import { MatsBulkFile } from '../entities/mats-bulk-file.entity';
 import { ReportingPeriod } from '../entities/reporting-period.entity';
 import { EmissionEvaluation } from '../entities/emission-evaluation.entity';
 import { SubmissionService } from './submission.service';
@@ -21,6 +24,7 @@ dtoItem.testSumIds = ['mock', 'mock'];
 dtoItem.qceIds = ['mock'];
 dtoItem.teeIds = ['mock'];
 dtoItem.emissionsReportingPeriods = ['2020 Q1'];
+dtoItem.matsBulkFiles = [];
 
 const payloadDto = new SubmissionQueueDTO();
 payloadDto.items = [dtoItem, dtoItem];
@@ -36,6 +40,7 @@ describe('-- Submission Service --', () => {
         SubmissionService,
         CombinedSubmissionsMap,
         EmissionsLastUpdatedMap,
+        EntityManager,
       ],
     }).compile();
 
@@ -56,7 +61,7 @@ describe('-- Submission Service --', () => {
         },
       ]),
 
-      findOne: jest.fn().mockImplementation((val) => {
+      findOneBy: jest.fn().mockImplementation((val) => {
         switch (val.name) {
           case 'MonitorPlan':
             const mp = new MonitorPlan();
@@ -82,12 +87,14 @@ describe('-- Submission Service --', () => {
             return cs;
           case 'EmissionEvaluation':
             return new EmissionEvaluation();
+          case 'MatsBulkFile':
+            return new MatsBulkFile();
         }
         return false;
       }),
 
       save: mockInsertion,
-    });
+    } as any as EntityManager);
 
     await service.queueSubmissionRecords(payloadDto);
 
