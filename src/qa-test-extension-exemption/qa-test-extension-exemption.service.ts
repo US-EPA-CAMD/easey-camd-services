@@ -1,17 +1,16 @@
-import { Injectable, HttpStatus } from '@nestjs/common';
-import { InjectEntityManager } from '@nestjs/typeorm';
-import { EntityManager } from 'typeorm';
-import { QaTeeMaintView } from '../entities/qa-tee-maint-vw.entity';
-import { currentDateTime } from '@us-epa-camd/easey-common/utilities/functions';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
-import { QaUpdateDto } from '../dto/qa-update.dto';
-import { QaTeeMaintMap } from '../maps/qa-tee-maint.map';
+import { currentDateTime } from '@us-epa-camd/easey-common/utilities/functions';
+import { EntityManager } from 'typeorm';
+
 import { QaTeeMaintViewDTO } from '../dto/qa-tee-maint-vw.dto';
+import { QaUpdateDto } from '../dto/qa-update.dto';
+import { QaTeeMaintView } from '../entities/qa-tee-maint-vw.entity';
+import { QaTeeMaintMap } from '../maps/qa-tee-maint.map';
 
 @Injectable()
 export class QaTestExtensionExemptionService {
   constructor(
-    @InjectEntityManager()
     private readonly manager: EntityManager,
     private readonly map: QaTeeMaintMap,
   ) {}
@@ -51,7 +50,9 @@ export class QaTestExtensionExemptionService {
       WHERE test_extension_exemption_id = $1`,
         [id, 'REQUIRE', userId, currentDateTime(), payload?.resubExplanation],
       );
-      recordToUpdate = await this.manager.findOne(QaTeeMaintView, id);
+      recordToUpdate = await this.manager.findOneBy(QaTeeMaintView, {
+        testExtensionExemptionId: id,
+      });
       if (!recordToUpdate)
         throw new EaseyException(
           new Error(`Record with id ${id} not found`),

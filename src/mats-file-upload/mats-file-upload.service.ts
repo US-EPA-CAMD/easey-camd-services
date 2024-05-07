@@ -34,12 +34,13 @@ export class MatsFileUploadService {
     testNumber: string,
     userId: string,
   ) {
-    const monitorPlan: MonitorPlan = await MonitorPlan.findOne(monPlanId, {
+    const monitorPlan: MonitorPlan = await MonitorPlan.findOne({
+      where: { monPlanIdentifier: monPlanId },
       relations: ['plant'],
     });
-    const testTypeCodeEntity: TestTypeCode = await TestTypeCode.findOne(
+    const testTypeCodeEntity: TestTypeCode = await TestTypeCode.findOneBy({
       testTypeCode,
-    );
+    });
 
     const date = new Date();
     const year = date.getFullYear();

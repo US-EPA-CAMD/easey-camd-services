@@ -1,6 +1,11 @@
-import { EntityRepository, Repository } from 'typeorm';
+import { Injectable } from '@nestjs/common';
+import { EntityManager, Repository } from 'typeorm';
 
 import { EmSubmissionAccess } from '../entities/em-submission-access.entity';
 
-@EntityRepository(EmSubmissionAccess)
-export class EmSubmissionAccessRepository extends Repository<EmSubmissionAccess> {}
+@Injectable()
+export class EmSubmissionAccessRepository extends Repository<EmSubmissionAccess> {
+  constructor(entityManager: EntityManager) {
+    super(EmSubmissionAccess, entityManager);
+  }
+}

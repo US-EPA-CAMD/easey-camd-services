@@ -1,4 +1,5 @@
 import { Test } from '@nestjs/testing';
+import { EntityManager } from 'typeorm';
 import { LoggerModule } from '@us-epa-camd/easey-common/logger';
 
 import { ErrorSuppressionsController } from './error-suppressions.controller';
@@ -30,6 +31,7 @@ describe('-- Error Suppressions Controller --', () => {
       imports: [LoggerModule],
       controllers: [ErrorSuppressionsController],
       providers: [
+        EntityManager,
         ErrorSuppressionsService,
         ErrorSuppressionsRepository,
         ErrorSuppressionsMap,

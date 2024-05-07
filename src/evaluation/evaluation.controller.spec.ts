@@ -1,9 +1,11 @@
 import { Test } from '@nestjs/testing';
+import { ConfigService } from '@nestjs/config';
 import { HttpModule } from '@nestjs/axios';
+import { DataSource } from 'typeorm';
+
 import { EvaluationController } from './evaluation.controller';
 import { EvaluationService } from './evaluation.service';
 import { EvaluationDTO } from '../dto/evaluation.dto';
-import { ConfigService } from '@nestjs/config';
 
 jest.mock('./evaluation.service');
 
@@ -14,7 +16,14 @@ describe('-- Evaluation Controller --', () => {
     const module = await Test.createTestingModule({
       imports: [HttpModule],
       controllers: [EvaluationController],
-      providers: [EvaluationService, ConfigService],
+      providers: [
+        {
+          provide: DataSource,
+          useValue: {},
+        },
+        EvaluationService,
+        ConfigService,
+      ],
     }).compile();
 
     controller = module.get(EvaluationController);

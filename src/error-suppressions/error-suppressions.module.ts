@@ -14,7 +14,12 @@ import { ErrorSuppressionsMap } from '../maps/error-suppressions.map';
     HttpModule,
   ],
   controllers: [ErrorSuppressionsController],
-  providers: [ConfigService, ErrorSuppressionsService, ErrorSuppressionsMap],
+  providers: [
+    ConfigService,
+    ErrorSuppressionsRepository,
+    ErrorSuppressionsService,
+    ErrorSuppressionsMap,
+  ],
   exports: [TypeOrmModule],
 })
 export class ErrorSuppressionsModule {}

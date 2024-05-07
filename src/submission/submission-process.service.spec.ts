@@ -1,19 +1,21 @@
+import { HttpService } from '@nestjs/axios';
+import { ConfigService } from '@nestjs/config';
+import { EntityManager } from 'typeorm';
 import { Test } from '@nestjs/testing';
 import { LoggerModule } from '@us-epa-camd/easey-common/logger';
-import { SubmissionProcessService } from './submission-process.service';
-import { DataSetService } from '../dataset/dataset.service';
-import { CopyOfRecordService } from '../copy-of-record/copy-of-record.service';
-import { SubmissionSet } from '../entities/submission-set.entity';
-import { SubmissionQueue } from '../entities/submission-queue.entity';
 import * as fsFunctions from 'fs';
+import { Observable, of } from 'rxjs';
+
+import { CopyOfRecordService } from '../copy-of-record/copy-of-record.service';
+import { DataSetService } from '../dataset/dataset.service';
 import { ReportDTO } from '../dto/report.dto';
-import { ConfigService } from '@nestjs/config';
-import { HttpService } from '@nestjs/axios';
+import { EmissionEvaluation } from '../entities/emission-evaluation.entity';
 import { MonitorPlan } from '../entities/monitor-plan.entity';
 import { QaSuppData } from '../entities/qa-supp.entity';
-import { EmissionEvaluation } from '../entities/emission-evaluation.entity';
-import { Observable, of } from 'rxjs';
+import { SubmissionQueue } from '../entities/submission-queue.entity';
+import { SubmissionSet } from '../entities/submission-set.entity';
 import { MailEvalService } from '../mail/mail-eval.service';
+import { SubmissionProcessService } from './submission-process.service';
 
 jest.mock('@aws-sdk/client-s3');
 
@@ -27,6 +29,7 @@ describe('-- Submission Process Service --', () => {
       providers: [
         ConfigService,
         SubmissionProcessService,
+        EntityManager,
         {
           provide: MailEvalService,
           useFactory: () => ({
@@ -69,7 +72,7 @@ describe('-- Submission Process Service --', () => {
     set.activityId = 'mock';
 
     jest.spyOn(service, 'returnManager').mockReturnValue({
-      findOne: jest.fn().mockImplementation((val) => {
+      findOneBy: jest.fn().mockImplementation((val) => {
         switch (val.name) {
           case 'SubmissionSet':
             return set;
@@ -89,10 +92,10 @@ describe('-- Submission Process Service --', () => {
 
       transaction: jest.fn(),
 
-      find: jest.fn().mockResolvedValue([new SubmissionQueue()]),
+      findBy: jest.fn().mockResolvedValue([new SubmissionQueue()]),
 
       save: jest.fn(),
-    });
+    } as any as EntityManager);
   });
 
   it('should be defined', async () => {
@@ -109,7 +112,7 @@ describe('-- Submission Process Service --', () => {
     set.facIdentifier = 1;
     set.monPlanIdentifier = 'mockMP';
 
-    await service.buildTransactions(set, record, [], mockTransactions, '');
+    await service.buildTransactions(set, record, mockTransactions, '');
 
     expect(mockTransactions.length).toBe(1);
   });
@@ -120,7 +123,7 @@ describe('-- Submission Process Service --', () => {
     const mockEm = new EmissionEvaluation();
 
     jest.spyOn(service, 'returnManager').mockReturnValue({
-      findOne: jest.fn().mockImplementation((val) => {
+      findOneBy: jest.fn().mockImplementation((val) => {
         switch (val.name) {
           case 'MonitorPlan':
             return mockMP;
@@ -135,7 +138,7 @@ describe('-- Submission Process Service --', () => {
       query: jest.fn(),
 
       save: jest.fn(),
-    });
+    } as any as EntityManager);
 
     const set = new SubmissionSet();
     set.facIdentifier = 1;
