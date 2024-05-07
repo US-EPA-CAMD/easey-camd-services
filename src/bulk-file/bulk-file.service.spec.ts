@@ -10,7 +10,7 @@ import { BulkFileService } from './bulk-file.service';
 
 const mockRepository = () => ({
   find: jest.fn(),
-  findOne: jest.fn(),
+  findOneBy: jest.fn(),
   insert: jest.fn(),
   update: jest.fn(),
 });
@@ -57,14 +57,14 @@ describe('-- Bulk File Service --', () => {
       const dto = new BulkFileDTO();
 
       jest.spyOn(bulkFileService, 'updateBulkDataFile').mockResolvedValue(dto);
-      bulkFileRepo.findOne = jest.fn().mockResolvedValue(true);
+      bulkFileRepo.findOneBy = jest.fn().mockResolvedValue(true);
       expect(await bulkFileService.addBulkDataFile(params)).toBe(dto);
     });
 
     it('should add metadata for repo successfully given a non-found record', async () => {
       const params = new BulkFileInputDTO();
 
-      bulkFileRepo.findOne = jest.fn().mockResolvedValue(null);
+      bulkFileRepo.findOneBy = jest.fn().mockResolvedValue(null);
       expect((await bulkFileService.addBulkDataFile(params)).filename).toEqual(
         'Test',
       );

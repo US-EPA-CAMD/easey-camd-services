@@ -1,5 +1,5 @@
 import { Test } from '@nestjs/testing';
-import { SelectQueryBuilder } from 'typeorm';
+import { EntityManager, SelectQueryBuilder } from 'typeorm';
 
 import { DataSetRepository } from './dataset.repository';
 
@@ -18,6 +18,7 @@ describe('DataSetRepository', () => {
     const module = await Test.createTestingModule({
       providers: [
         DataSetRepository,
+        EntityManager,
         {
           provide: SelectQueryBuilder,
           useFactory: mockQueryBuilder,

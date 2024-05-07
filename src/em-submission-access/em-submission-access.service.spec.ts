@@ -14,13 +14,13 @@ import { EmSubmissionAccess } from '../entities/em-submission-access.entity';
 
 const mockViewRepository = () => ({
   getEmSubmissionAccess: jest.fn(),
-  findOne: jest.fn(),
+  findOneBy: jest.fn(),
 });
 
 const mockRepository = () => ({
   save: jest.fn(),
   create: jest.fn(),
-  findOne: jest.fn(),
+  findOneBy: jest.fn(),
 });
 
 const mockMap = () => ({
@@ -76,7 +76,7 @@ describe('EmSubmissionAccessService', () => {
     const mockedDto = genEmSubmissionAccess<EmSubmissionAccessDTO>()[0];
     map.one.mockReturnValue(mockedDto);
     let payload = new EmSubmissionAccessCreateDTO();
-    viewRepository.findOne.mockResolvedValue(new EmSubmissionAccess());
+    viewRepository.findOneBy.mockResolvedValue(new EmSubmissionAccess());
     const result = await service.createEmSubmissionAccess(payload, 'user');
     expect(result).toEqual(mockedDto);
   });
@@ -85,7 +85,7 @@ describe('EmSubmissionAccessService', () => {
     const mockedDto = genEmSubmissionAccess<EmSubmissionAccessDTO>()[0];
     map.one.mockReturnValue(mockedDto);
     let payload = new EmSubmissionAccessUpdateDTO();
-    repository.findOne.mockResolvedValue(new EmSubmissionAccess());
+    repository.findOneBy.mockResolvedValue(new EmSubmissionAccess());
     const result = await service.updateEmSubmissionAccess(
       mockedDto.id,
       payload,

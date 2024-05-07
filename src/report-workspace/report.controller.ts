@@ -32,7 +32,7 @@ export class ReportWorkspaceController {
     description: 'Retrieves list of workspace reports available.',
   })
   async getAvailableReports() {
-    return this.service.getAvailableDataSets(true);
+    return this.service.getAvailableDataSets();
   }
 
   @Get()

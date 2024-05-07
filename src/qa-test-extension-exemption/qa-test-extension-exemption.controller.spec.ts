@@ -1,15 +1,16 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { QaTestExtensionExemptionController } from './qa-test-extension-exemption.controller';
-import { QaTestExtensionExemptionService } from './qa-test-extension-exemption.service';
 import { HttpModule } from '@nestjs/axios';
-import { LoggerModule } from '@us-epa-camd/easey-common/logger';
 import { ConfigService } from '@nestjs/config';
-import { QaCertMaintParamsDto } from '../dto/qa-cert-maint-params.dto';
-import { EntityManager } from 'typeorm';
+import { Test, TestingModule } from '@nestjs/testing';
 import { CurrentUser } from '@us-epa-camd/easey-common/interfaces';
+import { LoggerModule } from '@us-epa-camd/easey-common/logger';
+import { DataSource, EntityManager } from 'typeorm';
+
+import { QaCertMaintParamsDto } from '../dto/qa-cert-maint-params.dto';
+import { QaTeeMaintViewDTO } from '../dto/qa-tee-maint-vw.dto';
 import { QaUpdateDto } from '../dto/qa-update.dto';
 import { QaTeeMaintMap } from '../maps/qa-tee-maint.map';
-import { QaTeeMaintViewDTO } from '../dto/qa-tee-maint-vw.dto';
+import { QaTestExtensionExemptionController } from './qa-test-extension-exemption.controller';
+import { QaTestExtensionExemptionService } from './qa-test-extension-exemption.service';
 
 describe('QaTestExtensionExemptionController', () => {
   let controller: QaTestExtensionExemptionController;
@@ -21,6 +22,10 @@ describe('QaTestExtensionExemptionController', () => {
       imports: [HttpModule, LoggerModule],
       controllers: [QaTestExtensionExemptionController],
       providers: [
+        {
+          provide: DataSource,
+          useValue: {},
+        },
         QaTestExtensionExemptionService,
         ConfigService,
         EntityManager,
