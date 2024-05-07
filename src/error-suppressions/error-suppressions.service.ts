@@ -1,5 +1,4 @@
 import { Injectable, HttpStatus } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
 
 import { ErrorSuppressionsRepository } from './error-suppressions.repository';
@@ -12,7 +11,6 @@ import { ErrorSuppressionsPayloadDTO } from '../dto/error-suppressions-payload.d
 @Injectable()
 export class ErrorSuppressionsService {
   constructor(
-    @InjectRepository(ErrorSuppressionsRepository)
     private readonly repository: ErrorSuppressionsRepository,
     private readonly map: ErrorSuppressionsMap,
   ) {}
@@ -33,7 +31,8 @@ export class ErrorSuppressionsService {
     let recordToUpdate: EsSpec;
 
     try {
-      recordToUpdate = await this.repository.findOne(id, {
+      recordToUpdate = await this.repository.findOne({
+        where: { id },
         relations: [
           'checkCatalogResult',
           'plant',
@@ -69,7 +68,8 @@ export class ErrorSuppressionsService {
       });
 
       await this.repository.save(entity);
-      const errorSuppression = await this.repository.findOne(entity?.id, {
+      const errorSuppression = await this.repository.findOne({
+        where: { id: entity?.id },
         relations: [
           'checkCatalogResult',
           'plant',

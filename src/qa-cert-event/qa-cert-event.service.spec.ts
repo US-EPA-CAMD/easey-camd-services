@@ -34,7 +34,7 @@ describe('QaCertEventService', () => {
 
   it('should successfully update and return data', async () => {
     jest.spyOn(entityManager, 'query').mockResolvedValue([[], 1]);
-    jest.spyOn(entityManager, 'findOne').mockResolvedValue({});
+    jest.spyOn(entityManager, 'findOneBy').mockResolvedValue({});
 
     const result = await service.updateSubmissionStatus(
       'id',
@@ -48,7 +48,7 @@ describe('QaCertEventService', () => {
     jest.spyOn(entityManager, 'query').mockResolvedValue([[], 1]);
 
     jest
-      .spyOn(entityManager, 'findOne')
+      .spyOn(entityManager, 'findOneBy')
       .mockRejectedValue(new EaseyException(new Error('Error'), 500));
 
     let errored = false;

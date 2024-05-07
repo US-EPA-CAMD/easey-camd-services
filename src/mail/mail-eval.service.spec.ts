@@ -43,7 +43,8 @@ describe('Mail Eval Service', () => {
         },
         ConfigService,
         DataSetService,
-        CopyOfRecordService
+        EntityManager,
+        CopyOfRecordService,
       ],
     }).compile();
 
@@ -51,7 +52,7 @@ describe('Mail Eval Service', () => {
     wrapperService = module.get(MailerService);
 
     const mockManager = {
-      findOne: jest.fn().mockImplementation((val) => {
+      findOneBy: jest.fn().mockImplementation((val) => {
         switch (val.name) {
           case 'ClientConfig':
             return new ClientConfig();
@@ -80,7 +81,7 @@ describe('Mail Eval Service', () => {
     ms.systemIdentifier = 'MOCK-S';
 
     const mockManager = {
-      findOne: jest.fn().mockImplementation((val) => {
+      findOneBy: jest.fn().mockImplementation((val) => {
         switch (val.name) {
           case 'MonitorSystem':
             return ms;
@@ -89,7 +90,7 @@ describe('Mail Eval Service', () => {
     } as any as EntityManager;
 
     jest.spyOn(service, 'returnManager').mockReturnValue(mockManager);
-    expect(await service.getSystemComponentIdentifier('', '')).toEqual(
+    expect(await service.getSystemComponentIdentifier(ms.systemIdentifier, '')).toEqual(
       'MOCK-S',
     );
   });
@@ -98,7 +99,7 @@ describe('Mail Eval Service', () => {
     const c = new Component();
     c.componentIdentifier = 'MOCK-C';
     const mockManager = {
-      findOne: jest.fn().mockImplementation((val) => {
+      findOneBy: jest.fn().mockImplementation((val) => {
         switch (val.name) {
           case 'MonitorSystem':
             return undefined;
@@ -118,7 +119,7 @@ describe('Mail Eval Service', () => {
     const ts = new TestSummary();
 
     const mockManager = {
-      findOne: jest.fn().mockImplementation((val) => {
+      findOneBy: jest.fn().mockImplementation((val) => {
         switch (val.name) {
           case 'TestSummary':
             return ts;
@@ -149,7 +150,7 @@ describe('Mail Eval Service', () => {
   it('format cert event data context correctly', async () => {
     const ce = new QaCertEvent();
     const mockManager = {
-      findOne: jest.fn().mockImplementation((val) => {
+      findOneBy: jest.fn().mockImplementation((val) => {
         switch (val.name) {
           case 'QaCertEvent':
             return ce;
@@ -180,7 +181,7 @@ describe('Mail Eval Service', () => {
   it('format tee data context correctly', async () => {
     const tee = new QaTee();
     const mockManager = {
-      findOne: jest.fn().mockImplementation((val) => {
+      findOneBy: jest.fn().mockImplementation((val) => {
         switch (val.name) {
           case 'QaTee':
             return tee;
@@ -217,7 +218,7 @@ describe('Mail Eval Service', () => {
     rp.periodAbbreviation = 'MOCK';
 
     const mockManager = {
-      findOne: jest.fn().mockImplementation((val) => {
+      findOneBy: jest.fn().mockImplementation((val) => {
         switch (val.name) {
           case 'EmissionEvaluation':
             return emission;
@@ -251,7 +252,7 @@ describe('Mail Eval Service', () => {
     mockMpRecord.processCode = 'MP';
 
     const mockManager = {
-      findOne: jest.fn().mockImplementation((val) => {
+      findOneBy: jest.fn().mockImplementation((val) => {
         switch (val.name) {
           case 'EvaluationSet':
             return new EvaluationSet();

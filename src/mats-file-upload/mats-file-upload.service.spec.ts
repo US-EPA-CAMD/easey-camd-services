@@ -36,7 +36,7 @@ describe('MatsFileUploadService', () => {
     const testTypecode: TestTypeCode = { testTypeCodeDescription: '' } as any;
 
     jest.spyOn(MonitorPlan, 'findOne').mockResolvedValue(mockPlan);
-    jest.spyOn(TestTypeCode, 'findOne').mockResolvedValue(testTypecode);
+    jest.spyOn(TestTypeCode, 'findOneBy').mockResolvedValue(testTypecode);
     jest.spyOn(service, 'uploadFile').mockResolvedValue(null);
 
     jest.spyOn(MatsBulkFile, 'create').mockReturnValue(null);
