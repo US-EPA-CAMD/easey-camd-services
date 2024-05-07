@@ -1,17 +1,18 @@
+import { ConfigService } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
 import { LoggerModule } from '@us-epa-camd/easey-common/logger';
+import { EntityManager } from 'typeorm';
 
-import { ConfigService } from '@nestjs/config';
-import { BookmarkService } from './bookmark.service';
-import { BookmarkRepository } from './bookmark.repository';
-import { Bookmark } from '../entities/bookmark.entity';
 import { BookmarkCreatedDTO } from '../dto/bookmark-created.dto';
+import { Bookmark } from '../entities/bookmark.entity';
 import { BookmarkMap } from '../maps/bookmark.map';
+import { BookmarkRepository } from './bookmark.repository';
+import { BookmarkService } from './bookmark.service';
 
 const mockRepository = () => ({
   save: jest.fn(),
   create: jest.fn(),
-  findOne: jest.fn(),
+  findOneBy: jest.fn(),
   update: jest.fn(),
 });
 
@@ -43,6 +44,7 @@ describe('-- Bookmark Service --', () => {
         BookmarkMap,
         ConfigService,
         BookmarkService,
+        EntityManager,
         {
           provide: BookmarkRepository,
           useFactory: mockRepository,
@@ -116,7 +118,7 @@ describe('-- Bookmark Service --', () => {
         5,
       );
       const results = await bookmarkMap.one(bookmark);
-      repository.findOne.mockReturnValue(bookmark);
+      repository.findOneBy.mockReturnValue(bookmark);
       expect(await service.getBookmarkById(bookmarkId)).toStrictEqual(results);
     });
   });

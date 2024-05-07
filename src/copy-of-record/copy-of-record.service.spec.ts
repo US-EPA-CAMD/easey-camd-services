@@ -1,4 +1,5 @@
 import { Test } from '@nestjs/testing';
+import { EntityManager } from 'typeorm';
 import { LoggerModule } from '@us-epa-camd/easey-common/logger';
 import { CopyOfRecordService } from './copy-of-record.service';
 import { ReportDTO } from '../dto/report.dto';
@@ -46,7 +47,7 @@ describe('-- Copy of Record Service --', () => {
     const module = await Test.createTestingModule({
       imports: [LoggerModule],
       controllers: [],
-      providers: [CopyOfRecordService, DataSetService],
+      providers: [CopyOfRecordService, DataSetService, EntityManager],
     }).compile();
 
     service = module.get(CopyOfRecordService);
@@ -70,7 +71,6 @@ describe('-- Copy of Record Service --', () => {
   });
 
   it('should add a column table correctly', () => {
-
     const content = service.addColTable(
       columnDto,
       reportDto.results,
@@ -85,10 +85,7 @@ describe('-- Copy of Record Service --', () => {
 
   it('should add a default table correctly', () => {
     reportDto.displayName = 'Display';
-    const content = service.addDefaultTable(
-      columnDto,
-      reportDto,
-    );
+    const content = service.addDefaultTable(columnDto, reportDto);
 
     expect(content).toEqual(
       `<h3 class = > Display </h3><div> <table class = \"default\"><tr><th> Facility Name </th><th> Facility ID (ORISPL) </th><th> State </th><th> County </th><th> Latitude </th><th> Longitude </th></tr><tr><td> Cholla </td><td> 113 </td><td> AZ </td><td> Navajo County </td><td> 34.9394 </td><td> -110.3033 </td></tr></table> </div>`,

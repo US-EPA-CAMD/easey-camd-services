@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { getManager } from 'typeorm';
+import { EntityManager } from 'typeorm';
 import { CreateMailDto } from '../dto/create-mail.dto';
 import { Logger } from '@us-epa-camd/easey-common/logger';
 import { ClientConfig } from '../entities/client-config.entity';
@@ -8,18 +8,19 @@ import { MailerService } from '@nestjs-modules/mailer';
 @Injectable()
 export class MailService {
   constructor(
+    private readonly entityManager: EntityManager,
     private readonly logger: Logger,
     private readonly mailerService: MailerService,
   ) {}
 
   returnManager() {
-    return getManager();
+    return this.entityManager;
   }
 
   async sendEmail(clientId: string, payload: CreateMailDto): Promise<void> {
-    const dbRecord = await this.returnManager().findOne<ClientConfig>(
+    const dbRecord = await this.returnManager().findOneBy<ClientConfig>(
       ClientConfig,
-      clientId,
+      { id: clientId },
     );
 
     this.mailerService

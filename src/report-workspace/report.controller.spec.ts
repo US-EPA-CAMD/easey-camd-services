@@ -1,13 +1,13 @@
-import { Test } from '@nestjs/testing';
 import { HttpModule } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
+import { Test } from '@nestjs/testing';
+import { EntityManager } from 'typeorm';
 
-import { DataSetService } from '../dataset/dataset.service';
-import { ReportWorkspaceController } from './report.controller';
 import { DataSetRepository } from '../dataset/dataset.repository';
-
-import { ReportDTO } from '../dto/report.dto';
+import { DataSetService } from '../dataset/dataset.service';
 import { ReportParamsDTO } from '../dto/report-params.dto';
+import { ReportDTO } from '../dto/report.dto';
+import { ReportWorkspaceController } from './report.controller';
 
 describe('-- Report Controller --', () => {
   let controller: ReportWorkspaceController;
@@ -17,7 +17,12 @@ describe('-- Report Controller --', () => {
     const module = await Test.createTestingModule({
       imports: [HttpModule],
       controllers: [ReportWorkspaceController],
-      providers: [ConfigService, DataSetService, DataSetRepository],
+      providers: [
+        ConfigService,
+        DataSetService,
+        DataSetRepository,
+        EntityManager,
+      ],
     }).compile();
 
     controller = module.get(ReportWorkspaceController);

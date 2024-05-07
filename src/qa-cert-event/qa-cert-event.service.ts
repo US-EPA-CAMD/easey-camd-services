@@ -1,16 +1,16 @@
-import { Injectable, HttpStatus } from '@nestjs/common';
-import { InjectEntityManager } from '@nestjs/typeorm';
-import { EntityManager } from 'typeorm';
-import { QaCertEventMaintView } from '../entities/qa-cert-event-maint-vw.entity';
-import { currentDateTime } from '@us-epa-camd/easey-common/utilities/functions';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
-import { QaUpdateDto } from '../dto/qa-update.dto';
+import { currentDateTime } from '@us-epa-camd/easey-common/utilities/functions';
+import { EntityManager } from 'typeorm';
+
 import { QaCertEventMaintViewDTO } from '../dto/qa-cert-event-maint-vw.dto';
+import { QaUpdateDto } from '../dto/qa-update.dto';
+import { QaCertEventMaintView } from '../entities/qa-cert-event-maint-vw.entity';
 import { QaCertEventMaintMap } from '../maps/qa-cert-event-maint.map';
+
 @Injectable()
 export class QaCertEventService {
   constructor(
-    @InjectEntityManager()
     private readonly manager: EntityManager,
     private readonly map: QaCertEventMaintMap,
   ) {}
@@ -50,7 +50,9 @@ export class QaCertEventService {
       WHERE qa_cert_event_id = $1`,
         [id, 'REQUIRE', userId, currentDateTime(), payload?.resubExplanation],
       );
-      recordToUpdate = await this.manager.findOne(QaCertEventMaintView, id);
+      recordToUpdate = await this.manager.findOneBy(QaCertEventMaintView, {
+        certEventId: id,
+      });
       if (!recordToUpdate)
         throw new EaseyException(
           new Error(`Record with id ${id} not found`),
