@@ -284,7 +284,7 @@ export class SubmissionService {
       .now;
 
     dto.submissionLogs = await this.combinedSubmissionMap.many(
-      await CombinedSubmissions.findBy({
+      await this.entityManager.findBy(CombinedSubmissions, {
         submissionEndStateStageTime: MoreThanOrEqual(new Date(queryTime)),
         statusCode: 'COMPLETE',
         processCode: 'EM',
@@ -292,7 +292,7 @@ export class SubmissionService {
     );
 
     dto.emissionReports = await this.emissionsLastUpdatedMap.many(
-      await EmissionEvaluationGlobal.findBy({
+      await this.entityManager.findBy(EmissionEvaluationGlobal, {
         lastUpdated: MoreThanOrEqual(new Date(queryTime).toISOString()),
       }),
     );

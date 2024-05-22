@@ -1,15 +1,20 @@
+import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
-import { MonitorPlan } from '../entities/monitor-plan.entity';
+import { EntityManager } from 'typeorm';
+
 import { MatsBulkFile } from '../entities/mats-bulk-file.entity';
+import { MonitorPlan } from '../entities/monitor-plan.entity';
 import { TestTypeCode } from '../entities/test-type-code.entity';
 
 @Injectable()
 export class MatsFileUploadService {
   private s3Client: S3Client;
 
-  constructor(private readonly configService: ConfigService) {}
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly entityManager: EntityManager,
+  ) {}
 
   async uploadFile(file: Buffer, bucketLocation: string) {
     this.s3Client = new S3Client({
@@ -34,13 +39,19 @@ export class MatsFileUploadService {
     testNumber: string,
     userId: string,
   ) {
-    const monitorPlan: MonitorPlan = await MonitorPlan.findOne({
-      where: { monPlanIdentifier: monPlanId },
-      relations: ['plant'],
-    });
-    const testTypeCodeEntity: TestTypeCode = await TestTypeCode.findOneBy({
-      testTypeCode,
-    });
+    const monitorPlan: MonitorPlan = await this.entityManager.findOne(
+      MonitorPlan,
+      {
+        where: { monPlanIdentifier: monPlanId },
+        relations: ['plant'],
+      },
+    );
+    const testTypeCodeEntity: TestTypeCode = await this.entityManager.findOneBy(
+      TestTypeCode,
+      {
+        testTypeCode,
+      },
+    );
 
     const date = new Date();
     const year = date.getFullYear();
