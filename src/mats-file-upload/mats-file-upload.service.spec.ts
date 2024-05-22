@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { EntityManager } from 'typeorm';
 import { MatsFileUploadService } from './mats-file-upload.service';
 import { ConfigService } from '@nestjs/config';
 import { MonitorPlan } from '../entities/monitor-plan.entity';
@@ -10,13 +11,15 @@ jest.mock('@aws-sdk/client-s3');
 
 describe('MatsFileUploadService', () => {
   let service: MatsFileUploadService;
+  let entityManager: EntityManager;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [ConfigService, MatsFileUploadService],
+      providers: [ConfigService, MatsFileUploadService, EntityManager],
     }).compile();
 
     service = module.get(MatsFileUploadService);
+    entityManager = module.get(EntityManager);
   });
 
   it('should be defined', async () => {
@@ -35,8 +38,8 @@ describe('MatsFileUploadService', () => {
     const mockPlan: MonitorPlan = { plant: new Plant() } as any;
     const testTypecode: TestTypeCode = { testTypeCodeDescription: '' } as any;
 
-    jest.spyOn(MonitorPlan, 'findOne').mockResolvedValue(mockPlan);
-    jest.spyOn(TestTypeCode, 'findOneBy').mockResolvedValue(testTypecode);
+    jest.spyOn(entityManager, 'findOne').mockResolvedValue(mockPlan);
+    jest.spyOn(entityManager, 'findOneBy').mockResolvedValue(testTypecode);
     jest.spyOn(service, 'uploadFile').mockResolvedValue(null);
 
     jest.spyOn(MatsBulkFile, 'create').mockReturnValue(null);
