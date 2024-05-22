@@ -1,6 +1,7 @@
 import { ReportDetailDTO } from './../dto/report-detail.dto';
 import { Injectable, StreamableFile } from '@nestjs/common';
 import { Logger } from '@us-epa-camd/easey-common/logger';
+import { EntityManager } from 'typeorm';
 import { copyOfRecordTemplate } from './template';
 import { certTemplate } from './cert-template';
 import { ReportDTO } from '../dto/report.dto';
@@ -17,6 +18,7 @@ export class CopyOfRecordService {
   constructor(
     private readonly logger: Logger,
     private dataService: DataSetService,
+    private readonly entityManager: EntityManager,
   ) {}
 
   addDocumentHeader(content: string, title: string): string {
@@ -246,7 +248,7 @@ export class CopyOfRecordService {
 
     const htmlContent = this.generateCopyOfRecord(reportInformation, true);
 
-    const plant: Plant = await Plant.findOneBy({
+    const plant: Plant = await this.entityManager.findOneBy(Plant, {
       orisCode: params.facilityId,
     });
 
