@@ -42,8 +42,8 @@ describe('MatsFileUploadService', () => {
     jest.spyOn(entityManager, 'findOneBy').mockResolvedValue(testTypecode);
     jest.spyOn(service, 'uploadFile').mockResolvedValue(null);
 
-    jest.spyOn(MatsBulkFile, 'create').mockReturnValue(null);
-    jest.spyOn(MatsBulkFile, 'save').mockImplementation(mockSave);
+    jest.spyOn(entityManager, 'create').mockReturnValue(null);
+    jest.spyOn(entityManager, 'save').mockImplementation(mockSave);
 
     const file: Express.Multer.File = {
       buffer: Buffer.from(''),
