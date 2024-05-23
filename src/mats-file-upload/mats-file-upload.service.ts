@@ -80,21 +80,24 @@ export class MatsFileUploadService {
 
     await this.uploadFile(file.buffer, bucketLocation);
 
-    const matsBulkFileRecord: MatsBulkFile = MatsBulkFile.create({
-      location: locId,
-      facIdentifier: monitorPlan.plant.facIdentifier,
-      testTypeGroup: testTypeCode,
-      testTypeGroupDescription: testTypeCodeEntity.testTypeCodeDescription,
-      orisCode: monitorPlan.plant.orisCode,
-      facilityName: monitorPlan.plant.facilityName,
-      monPlanIdentifier: monPlanId,
-      testNumber,
-      fileName: file.originalname,
-      userId,
-      bucketLocation: bucketLocation,
-      addDate: new Date(),
-    });
+    const matsBulkFileRecord: MatsBulkFile = this.entityManager.create(
+      MatsBulkFile,
+      {
+        location: locId,
+        facIdentifier: monitorPlan.plant.facIdentifier,
+        testTypeGroup: testTypeCode,
+        testTypeGroupDescription: testTypeCodeEntity.testTypeCodeDescription,
+        orisCode: monitorPlan.plant.orisCode,
+        facilityName: monitorPlan.plant.facilityName,
+        monPlanIdentifier: monPlanId,
+        testNumber,
+        fileName: file.originalname,
+        userId,
+        bucketLocation: bucketLocation,
+        addDate: new Date(),
+      },
+    );
 
-    await MatsBulkFile.save(matsBulkFileRecord);
+    await this.entityManager.save(MatsBulkFile, matsBulkFileRecord);
   }
 }
