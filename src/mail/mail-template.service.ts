@@ -85,9 +85,11 @@ export class MailTemplateService {
       });
       if (record) {
         //Call into the template email service
-        const template = await this.entityManager.findOneBy(EmailTemplate, {
-          templateIdentifier: record.templateIdentifier,
-        });
+        const template =
+          record.templateIdentifier &&
+          (await this.entityManager.findOneBy(EmailTemplate, {
+            templateIdentifier: record.templateIdentifier,
+          }));
 
         let context; //Extract context
         if (record.context) {

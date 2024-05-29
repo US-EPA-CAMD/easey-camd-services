@@ -171,15 +171,14 @@ export class SubmissionProcessService {
         const emRecord = records.find((r) => r.processCode === 'EM');
         params.reportCode = 'EM';
         params.monitorPlanId = set.monPlanIdentifier;
-        const rptPeriod: ReportingPeriod = await this.returnManager().findOneBy(
-          ReportingPeriod,
-          {
+        const rptPeriod: ReportingPeriod =
+          emRecord.rptPeriodIdentifier &&
+          (await this.returnManager().findOneBy(ReportingPeriod, {
             rptPeriodIdentifier: emRecord.rptPeriodIdentifier,
-          },
-        );
+          }));
 
-        params.year = rptPeriod.calendarYear;
-        params.quarter = rptPeriod.quarter;
+        params.year = rptPeriod?.calendarYear;
+        params.quarter = rptPeriod?.quarter;
 
         titleContext =
           'EM_' +

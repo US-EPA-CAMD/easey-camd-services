@@ -51,7 +51,7 @@ export class EmSubmissionAccessService {
       });
       await this.repository.save(entity);
       let emSubmissionAccess = await this.viewRepository.findOneBy({
-        id: entity?.id,
+        id: entity.id,
       });
       const dto = await this.map.one(emSubmissionAccess);
       return dto;
@@ -88,7 +88,7 @@ export class EmSubmissionAccessService {
     }
 
     let emSubmissionAccess = await this.viewRepository.findOneBy({
-      id: recordToUpdate?.id,
+      id: recordToUpdate.id,
     });
 
     const dto = await this.map.one(emSubmissionAccess);
