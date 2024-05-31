@@ -200,6 +200,7 @@ describe('Mail Eval Service', () => {
       .spyOn(service, 'getReportColors')
       .mockReturnValue(['#FF6862', '#FF6862']);
     jest.spyOn(service, 'returnManager').mockReturnValue(mockManager);
+    mockEvalList.forEach((e) => (e.testExtensionExemptionIdentifier = 'MOCK'));
     const result = await service.formatTeeContext(
       {},
       mockEvalList,
