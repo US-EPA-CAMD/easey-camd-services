@@ -233,10 +233,11 @@ export class MailEvalService {
                 tee.testExtensionExemptionIdentifier,
             },
           ));
-        const reportPeriodInfo = await this.returnManager().findOneBy(
-          ReportingPeriod,
-          { rptPeriodIdentifier: teeRecord.rptPeriodIdentifier },
-        );
+        const reportPeriodInfo =
+          teeRecord &&
+          (await this.returnManager().findOneBy(ReportingPeriod, {
+            rptPeriodIdentifier: teeRecord.rptPeriodIdentifier,
+          }));
 
         if (teeRecord) {
           newItem['System / Component Id'] =
@@ -244,7 +245,7 @@ export class MailEvalService {
               teeRecord.monSystemIdentifier,
               teeRecord.componentIdentifier,
             );
-          newItem['Year / Quarter'] = reportPeriodInfo.periodAbbreviation;
+          newItem['Year / Quarter'] = reportPeriodInfo?.periodAbbreviation;
           newItem['Fuel Code'] = teeRecord.fuelCode;
           newItem['Extension Exemption Code'] = teeRecord.extensExemptCode;
           newItem['Hours Used'] = teeRecord.hoursUsed;

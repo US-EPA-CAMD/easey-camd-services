@@ -19,7 +19,7 @@ const mockViewRepository = () => ({
 
 const mockRepository = () => ({
   save: jest.fn(),
-  create: jest.fn(),
+  create: jest.fn().mockReturnValue(new EmSubmissionAccess()),
   findOneBy: jest.fn(),
 });
 

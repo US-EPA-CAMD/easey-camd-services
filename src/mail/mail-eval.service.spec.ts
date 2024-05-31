@@ -90,9 +90,9 @@ describe('Mail Eval Service', () => {
     } as any as EntityManager;
 
     jest.spyOn(service, 'returnManager').mockReturnValue(mockManager);
-    expect(await service.getSystemComponentIdentifier(ms.systemIdentifier, '')).toEqual(
-      'MOCK-S',
-    );
+    expect(
+      await service.getSystemComponentIdentifier(ms.systemIdentifier, ''),
+    ).toEqual('MOCK-S');
   });
 
   it('get system / component id correctly with just component present', async () => {
@@ -110,9 +110,9 @@ describe('Mail Eval Service', () => {
     } as any as EntityManager;
 
     jest.spyOn(service, 'returnManager').mockReturnValue(mockManager);
-    expect(await service.getSystemComponentIdentifier('', '')).toEqual(
-      'MOCK-C',
-    );
+    expect(
+      await service.getSystemComponentIdentifier('', 'AAA-AAAAAAA'),
+    ).toEqual('MOCK-C');
   });
 
   it('format test data context correctly', async () => {
@@ -134,6 +134,7 @@ describe('Mail Eval Service', () => {
       .spyOn(service, 'getReportColors')
       .mockReturnValue(['#FF6862', '#FF6862']);
     jest.spyOn(service, 'returnManager').mockReturnValue(mockManager);
+    mockEvalList.forEach((e) => (e.testSumIdentifier = 'MOCK'));
     const result = await service.formatTestDataContext(
       {},
       mockEvalList,
@@ -165,6 +166,7 @@ describe('Mail Eval Service', () => {
       .spyOn(service, 'getReportColors')
       .mockReturnValue(['#FF6862', '#FF6862']);
     jest.spyOn(service, 'returnManager').mockReturnValue(mockManager);
+    mockEvalList.forEach((e) => (e.qaCertEventIdentifier = 'MOCK'));
     const result = await service.formatCertEventsContext(
       {},
       mockEvalList,
@@ -238,7 +240,7 @@ describe('Mail Eval Service', () => {
     const result = await service.formatEmissionsContext(
       {},
       mockEvalList,
-      3,
+      '3',
       1,
       new Map(),
       false,
