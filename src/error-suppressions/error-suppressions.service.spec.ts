@@ -16,7 +16,7 @@ const mockRepository = () => ({
   getErrorSuppressions: jest.fn(),
   findOne: jest.fn(),
   save: jest.fn(),
-  create: jest.fn(),
+  create: jest.fn().mockReturnValue(new EsSpec()),
 });
 const mockMap = () => ({
   many: jest.fn(),

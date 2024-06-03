@@ -69,7 +69,7 @@ export class ErrorSuppressionsService {
 
       await this.repository.save(entity);
       const errorSuppression = await this.repository.findOne({
-        where: { id: entity?.id },
+        where: { id: entity.id },
         relations: [
           'checkCatalogResult',
           'plant',

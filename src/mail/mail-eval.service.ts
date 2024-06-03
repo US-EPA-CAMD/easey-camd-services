@@ -62,18 +62,20 @@ export class MailEvalService {
         return ms.systemIdentifier;
       }
     }
-    const c = await this.returnManager().findOneBy(Component, {
-      componentId,
-    });
-    return c.componentIdentifier;
+    if (componentId) {
+      const c = await this.returnManager().findOneBy(Component, {
+        componentId,
+      });
+      return c.componentIdentifier;
+    }
   }
 
   async formatTestDataContext(
-    templateContext,
-    records,
-    orisCode,
-    mappedStatusCodes,
-    isSubmission,
+    templateContext: Record<string, any>,
+    records: Array<Evaluation | SubmissionQueue>,
+    orisCode: number | null,
+    mappedStatusCodes: Map<string, string>,
+    isSubmission: boolean,
   ) {
     const testDataKeys = [
       'System / Component Id',
@@ -94,11 +96,12 @@ export class MailEvalService {
       };
       for (const testRecord of records) {
         const newItem: any = {};
-        const testSumRecord: TestSummary | TestSummaryGlobal =
-          await this.returnManager().findOneBy(
+        const testSumRecord: TestSummary | TestSummaryGlobal | null =
+          testRecord.testSumIdentifier &&
+          (await this.returnManager().findOneBy(
             !isSubmission ? TestSummary : TestSummaryGlobal,
             { testSumIdentifier: testRecord.testSumIdentifier },
-          );
+          ));
 
         if (testSumRecord) {
           newItem['System / Component Id'] =
@@ -133,11 +136,11 @@ export class MailEvalService {
   }
 
   async formatCertEventsContext(
-    templateContext,
-    records,
-    orisCode,
-    mappedStatusCodes,
-    isSubmission,
+    templateContext: Record<string, any>,
+    records: Array<Evaluation | SubmissionQueue>,
+    orisCode: number | null,
+    mappedStatusCodes: Map<string, string>,
+    isSubmission: boolean,
   ) {
     const certEventKeys = [
       'System / Component Id',
@@ -156,11 +159,12 @@ export class MailEvalService {
       };
       for (const certRecord of records) {
         const newItem: any = {};
-        const certEventRecord: QaCertEvent | QaCertEventGlobal =
-          await this.returnManager().findOneBy(
+        const certEventRecord: QaCertEvent | QaCertEventGlobal | null =
+          certRecord.qaCertEventIdentifier &&
+          (await this.returnManager().findOneBy(
             !isSubmission ? QaCertEvent : QaCertEventGlobal,
             { qaCertEventIdentifier: certRecord.qaCertEventIdentifier },
-          );
+          ));
 
         if (certEventRecord) {
           newItem['System / Component Id'] =
@@ -193,11 +197,11 @@ export class MailEvalService {
   }
 
   async formatTeeContext(
-    templateContext,
-    records,
-    orisCode,
-    mappedStatusCodes,
-    isSubmission,
+    templateContext: Record<string, any>,
+    records: Array<Evaluation | SubmissionQueue>,
+    orisCode: number | null,
+    mappedStatusCodes: Map<string, string>,
+    isSubmission: boolean,
   ) {
     const teeKeys = [
       'System / Component Id',
@@ -220,18 +224,20 @@ export class MailEvalService {
 
       for (const tee of records) {
         const newItem: any = {};
-        const teeRecord: QaTee | QaTeeGlobal =
-          await this.returnManager().findOneBy(
+        const teeRecord: QaTee | QaTeeGlobal | null =
+          tee.testExtensionExemptionIdentifier &&
+          (await this.returnManager().findOneBy(
             !isSubmission ? QaTee : QaTeeGlobal,
             {
               testExtensionExemptionIdentifier:
                 tee.testExtensionExemptionIdentifier,
             },
-          );
-        const reportPeriodInfo = await this.returnManager().findOneBy(
-          ReportingPeriod,
-          { rptPeriodIdentifier: teeRecord.rptPeriodIdentifier },
-        );
+          ));
+        const reportPeriodInfo =
+          teeRecord &&
+          (await this.returnManager().findOneBy(ReportingPeriod, {
+            rptPeriodIdentifier: teeRecord.rptPeriodIdentifier,
+          }));
 
         if (teeRecord) {
           newItem['System / Component Id'] =
@@ -239,7 +245,7 @@ export class MailEvalService {
               teeRecord.monSystemIdentifier,
               teeRecord.componentIdentifier,
             );
-          newItem['Year / Quarter'] = reportPeriodInfo.periodAbbreviation;
+          newItem['Year / Quarter'] = reportPeriodInfo?.periodAbbreviation;
           newItem['Fuel Code'] = teeRecord.fuelCode;
           newItem['Extension Exemption Code'] = teeRecord.extensExemptCode;
           newItem['Hours Used'] = teeRecord.hoursUsed;
@@ -267,12 +273,12 @@ export class MailEvalService {
   }
 
   async formatEmissionsContext(
-    templateContext,
-    records,
-    monitorPlanId,
-    orisCode,
-    mappedStatusCodes,
-    isSubmission,
+    templateContext: Record<string, any>,
+    records: Array<Evaluation | SubmissionQueue>,
+    monitorPlanId: string,
+    orisCode: number | null,
+    mappedStatusCodes: Map<string, string>,
+    isSubmission: boolean,
   ) {
     const emissionsKeys = ['Year / Quarter'];
 
@@ -288,13 +294,14 @@ export class MailEvalService {
 
       for (const em of records) {
         const newItem: any = {};
-        const emissionsRecord: any = await this.returnManager().findOneBy(
-          !isSubmission ? EmissionEvaluation : EmissionEvaluationGlobal,
-          {
-            monPlanIdentifier: monitorPlanId,
-            rptPeriodIdentifier: em.rptPeriodIdentifier,
-          },
-        );
+        const emissionsRecord: EmissionEvaluation | EmissionEvaluationGlobal =
+          await this.returnManager().findOneBy(
+            !isSubmission ? EmissionEvaluation : EmissionEvaluationGlobal,
+            {
+              monPlanIdentifier: monitorPlanId,
+              rptPeriodIdentifier: em.rptPeriodIdentifier,
+            },
+          );
 
         if (emissionsRecord) {
           const reportPeriodInfo = await this.returnManager().findOneBy(
@@ -303,12 +310,14 @@ export class MailEvalService {
           );
 
           newItem['Year / Quarter'] = reportPeriodInfo.periodAbbreviation;
-          newItem['evalStatusCode'] = mappedStatusCodes.get(
-            emissionsRecord.evalStatusCode,
-          );
-          const colors = this.getReportColors(emissionsRecord.evalStatusCode);
-          newItem['reportColor'] = colors[0];
-          newItem['reportLineColor'] = colors[1];
+          if (emissionsRecord instanceof EmissionEvaluation) {
+            newItem['evalStatusCode'] = mappedStatusCodes.get(
+              emissionsRecord.evalStatusCode,
+            );
+            const colors = this.getReportColors(emissionsRecord.evalStatusCode);
+            newItem['reportColor'] = colors[0];
+            newItem['reportLineColor'] = colors[1];
+          }
 
           newItem['reportUrl'] = `${this.configService.get<string>(
             'app.ecmpsHost',
@@ -323,7 +332,10 @@ export class MailEvalService {
     return templateContext;
   }
 
-  async formatMATSContext(templateContext, records) {
+  async formatMATSContext(
+    templateContext: Record<string, any>,
+    records: SubmissionQueue[],
+  ) {
     const matsKeys = ['Test Type', 'Test Number', 'File Name'];
 
     if (records.length > 0) {
@@ -334,14 +346,15 @@ export class MailEvalService {
 
       for (const matsRecord of records) {
         const newItem: any = {};
-        const mats: MatsBulkFile = await this.returnManager().findOneBy(
-          MatsBulkFile,
-          { id: matsRecord.matsBulkFileId },
-        );
+        const mats: MatsBulkFile =
+          matsRecord.matsBulkFileId &&
+          (await this.returnManager().findOneBy(MatsBulkFile, {
+            id: matsRecord.matsBulkFileId,
+          }));
 
-        newItem['Test Type'] = mats.testTypeGroupDescription;
-        newItem['Test Number'] = mats.testNumber;
-        newItem['File Name'] = mats.fileName;
+        newItem['Test Type'] = mats?.testTypeGroupDescription;
+        newItem['Test Number'] = mats?.testNumber;
+        newItem['File Name'] = mats?.fileName;
 
         templateContext['mats'].items.push(newItem);
       }
@@ -405,8 +418,8 @@ export class MailEvalService {
   }
 
   async buildEvalReports(
-    set: EvaluationSet,
-    records: Evaluation[],
+    set: EvaluationSet | SubmissionSet,
+    records: Array<Evaluation | SubmissionQueue>,
     documents: object[],
   ) {
     //Handle QA
@@ -497,14 +510,15 @@ export class MailEvalService {
           params.monitorPlanId = set.monPlanIdentifier;
         } else if (rec.processCode === 'EM') {
           const rptPeriod: ReportingPeriod =
-            await this.returnManager().findOneBy(ReportingPeriod, {
+            rec.rptPeriodIdentifier &&
+            (await this.returnManager().findOneBy(ReportingPeriod, {
               rptPeriodIdentifier: rec.rptPeriodIdentifier,
-            });
+            }));
 
           params.reportCode = 'EM_EVAL';
           params.monitorPlanId = set.monPlanIdentifier;
-          params.year = rptPeriod.calendarYear;
-          params.quarter = rptPeriod.quarter;
+          params.year = rptPeriod?.calendarYear;
+          params.quarter = rptPeriod?.quarter;
 
           titleContext =
             'EM_EVAL_' +
@@ -562,8 +576,8 @@ export class MailEvalService {
 
     let subject;
     let template;
-    let setRecord;
-    let records;
+    let setRecord: SubmissionSet | EvaluationSet;
+    let records: Array<SubmissionQueue | Evaluation>;
 
     let templateContext: any = {};
 
@@ -633,9 +647,11 @@ export class MailEvalService {
     const plant = await this.returnManager().findOneBy(Plant, {
       facIdentifier: mpRecord.facIdentifier,
     });
-    const county = await this.returnManager().findOneBy(CountyCode, {
-      countyCode: plant.countyCode,
-    });
+    const county =
+      plant.countyCode &&
+      (await this.returnManager().findOneBy(CountyCode, {
+        countyCode: plant.countyCode,
+      }));
 
     templateContext['monitorPlan'] = {
       keys: mpKeys,
@@ -645,7 +661,7 @@ export class MailEvalService {
           ['Configuration']: setRecord.configuration,
           ['Oris Code']: plant.orisCode,
           ['State Code']: plant.state,
-          ['County']: county.countyName,
+          ['County']: county?.countyName,
           ['Longitude']: plant.longitude,
           ['Latitude']: plant.latitude,
         },
@@ -730,7 +746,7 @@ export class MailEvalService {
       );
       templateContext = await this.formatMATSContext(
         templateContext,
-        matsDataChildRecords,
+        matsDataChildRecords as SubmissionQueue[],
       );
     }
 
