@@ -47,7 +47,7 @@ export class BookmarkService {
 
   async getBookmarkById(id: number): Promise<BookmarkDTO> {
     const results = await this.repository.findOneBy({ bookmarkId: id });
-    if (results === undefined) {
+    if (!results) {
       throw new NotFoundException('Bookmark id does not exist');
     }
 
