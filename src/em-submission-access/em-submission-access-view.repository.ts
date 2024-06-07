@@ -1,10 +1,15 @@
-import { EntityRepository, Repository } from 'typeorm';
+import { Injectable } from '@nestjs/common';
+import { EntityManager, Repository } from 'typeorm';
 
 import { EmSubmissionAccessParamsDTO } from '../dto/em-submission-access.params.dto';
 import { EmSubmissionAccessView } from '../entities/em-submission-access-vw.entity';
 
-@EntityRepository(EmSubmissionAccessView)
+@Injectable()
 export class EmSubmissionAccessViewRepository extends Repository<EmSubmissionAccessView> {
+  constructor(entityManager: EntityManager) {
+    super(EmSubmissionAccessView, entityManager);
+  }
+
   async getEmSubmissionAccess(
     params: EmSubmissionAccessParamsDTO,
   ): Promise<EmSubmissionAccessView[]> {

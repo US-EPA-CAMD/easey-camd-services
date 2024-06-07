@@ -1,6 +1,7 @@
 import { ReportDetailDTO } from './../dto/report-detail.dto';
 import { Injectable, StreamableFile } from '@nestjs/common';
 import { Logger } from '@us-epa-camd/easey-common/logger';
+import { EntityManager } from 'typeorm';
 import { copyOfRecordTemplate } from './template';
 import { certTemplate } from './cert-template';
 import { ReportDTO } from '../dto/report.dto';
@@ -17,6 +18,7 @@ export class CopyOfRecordService {
   constructor(
     private readonly logger: Logger,
     private dataService: DataSetService,
+    private readonly entityManager: EntityManager,
   ) {}
 
   addDocumentHeader(content: string, title: string): string {
@@ -44,10 +46,10 @@ export class CopyOfRecordService {
   ): string {
     let heading = `<h3 class =${isTest ? 'test-header' : ''} > ${title} </h3>`;
 
-    if (detail && detail.templateType === "DEFAULT2") {
+    if (detail && detail.templateType === 'DEFAULT2') {
       const opLevelRefMethod = detail.results[0];
-      const code = opLevelRefMethod["referenceMethodCode"];
-      const description = opLevelRefMethod["referenceMethodDescription"];
+      const code = opLevelRefMethod['referenceMethodCode'];
+      const description = opLevelRefMethod['referenceMethodDescription'];
       heading = `<hr/><div>${title}</div><div>Reference Method Used: ${code} - ${description}</div><hr/>`;
     }
 
@@ -103,10 +105,7 @@ export class CopyOfRecordService {
     return innerContent;
   }
 
-  addDefaultTable(
-    columns: ReportColumnDTO,
-    detail: ReportDetailDTO,
-  ): string {
+  addDefaultTable(columns: ReportColumnDTO, detail: ReportDetailDTO): string {
     let innerContent = this.addTableHeader(detail.displayName, false, detail);
 
     innerContent += '<div> <table class = "default">';
@@ -228,10 +227,7 @@ export class CopyOfRecordService {
         );
       } else {
         //Default table view
-        innerContent += this.addDefaultTable(
-          columns,
-          detail,
-        );
+        innerContent += this.addDefaultTable(columns, detail);
       }
     }
 
@@ -252,8 +248,8 @@ export class CopyOfRecordService {
 
     const htmlContent = this.generateCopyOfRecord(reportInformation, true);
 
-    const plant: Plant = await Plant.findOne({
-      where: { orisCode: params.facilityId },
+    const plant: Plant = await this.entityManager.findOneBy(Plant, {
+      orisCode: params.facilityId,
     });
 
     let responseFileName;

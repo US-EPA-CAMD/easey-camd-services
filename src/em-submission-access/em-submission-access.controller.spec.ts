@@ -1,7 +1,7 @@
 import { ConfigService } from '@nestjs/config';
 import { LoggerModule } from '@us-epa-camd/easey-common/logger';
 import { HttpModule } from '@nestjs/axios';
-import { EntityManager } from 'typeorm';
+import { DataSource, EntityManager } from 'typeorm';
 import { EmSubmissionAccessService } from './em-submission-access.service';
 import { Test, TestingModule } from '@nestjs/testing';
 import {
@@ -39,6 +39,10 @@ describe('EmSubmissionAccessController', () => {
         EmSubmissionAccessRepository,
         ConfigService,
         EntityManager,
+        {
+          provide: DataSource,
+          useValue: {},
+        },
       ],
     }).compile();
 

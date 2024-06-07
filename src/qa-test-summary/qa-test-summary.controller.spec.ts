@@ -1,15 +1,16 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { QaTestSummaryController } from './qa-test-summary.controller';
-import { QaTestSummaryService } from './qa-test-summary.service';
-import { LoggerModule } from '@us-epa-camd/easey-common/logger';
 import { HttpModule } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
-import { QaCertMaintParamsDto } from '../dto/qa-cert-maint-params.dto';
-import { EntityManager } from 'typeorm';
+import { Test, TestingModule } from '@nestjs/testing';
 import { CurrentUser } from '@us-epa-camd/easey-common/interfaces';
+import { LoggerModule } from '@us-epa-camd/easey-common/logger';
+import { DataSource, EntityManager } from 'typeorm';
+
+import { QaCertMaintParamsDto } from '../dto/qa-cert-maint-params.dto';
+import { QaTestSummaryMaintViewDTO } from '../dto/qa-test-summary-maint-vw.dto';
 import { QaUpdateDto } from '../dto/qa-update.dto';
 import { QaTestSummaryMaintMap } from '../maps/qa-test-summary-maint.map';
-import { QaTestSummaryMaintViewDTO } from '../dto/qa-test-summary-maint-vw.dto';
+import { QaTestSummaryController } from './qa-test-summary.controller';
+import { QaTestSummaryService } from './qa-test-summary.service';
 
 describe('QaTestSummaryController', () => {
   let controller: QaTestSummaryController;
@@ -21,6 +22,10 @@ describe('QaTestSummaryController', () => {
       imports: [LoggerModule, HttpModule],
       controllers: [QaTestSummaryController],
       providers: [
+        {
+          provide: DataSource,
+          useValue: {},
+        },
         QaTestSummaryService,
         ConfigService,
         EntityManager,

@@ -1,5 +1,5 @@
 import { Test } from '@nestjs/testing';
-import { SelectQueryBuilder } from 'typeorm';
+import { EntityManager, SelectQueryBuilder } from 'typeorm';
 
 import { ErrorSuppressionsParamsDTO } from '../dto/error-suppressions.params.dto';
 import { ErrorSuppressionsRepository } from './error-suppressions.repository';
@@ -34,6 +34,7 @@ describe('ErrorSuppressionsRepository', () => {
   beforeEach(async () => {
     const module = await Test.createTestingModule({
       providers: [
+        EntityManager,
         ErrorSuppressionsRepository,
         {
           provide: SelectQueryBuilder,

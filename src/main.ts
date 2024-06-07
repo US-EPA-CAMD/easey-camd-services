@@ -1,15 +1,17 @@
-import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
+import { NestFactory } from '@nestjs/core';
 import {
-  applySwagger,
   applyMiddleware,
+  applySwagger,
 } from '@us-epa-camd/easey-common/nestjs';
+import { useContainer } from 'class-validator';
 
 import { AppModule } from './app.module';
 
 export async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  useContainer(app.select(AppModule), { fallbackOnErrors: true });
   await applyMiddleware(AppModule, app, true);
   await applySwagger(app);
 
@@ -22,12 +24,12 @@ export async function bootstrap() {
   server.setTimeout(1800000);
 
   if (enableDebug) {
-  console.log('config: ', configService.get('app'));
-  console.log('s3Config: ', configService.get('s3Config'));
-  console.log('matsConfig: ', configService.get('matsConfig'));
-  console.log(
-    `Application is running on: ${await app.getUrl()}/${appPath}/swagger`,
-  );
+    console.log('config: ', configService.get('app'));
+    console.log('s3Config: ', configService.get('s3Config'));
+    console.log('matsConfig: ', configService.get('matsConfig'));
+    console.log(
+      `Application is running on: ${await app.getUrl()}/${appPath}/swagger`,
+    );
   }
 }
 

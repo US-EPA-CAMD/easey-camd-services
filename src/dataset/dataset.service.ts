@@ -1,6 +1,5 @@
-import { getManager } from 'typeorm';
+import { EntityManager } from 'typeorm';
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { BadRequestException } from '@nestjs/common/exceptions';
 
 import { ReportDTO } from '../dto/report.dto';
@@ -17,11 +16,11 @@ export class DataSetService {
   private reportColumns: ReportColumnDTO[];
 
   constructor(
-    @InjectRepository(DataSetRepository)
+    private readonly entityManager: EntityManager,
     private readonly repository: DataSetRepository,
   ) {}
 
-  async getAvailableDataSets(isWorkspace: boolean = false) {
+  async getAvailableDataSets() {
     const results = await this.repository.find({
       where: { groupCode: 'REPORT' },
     });
@@ -68,7 +67,7 @@ export class DataSetService {
 
     if (params.reportCode === 'TEST_DETAIL') {
       const promises = [];
-      const tests = await getManager().query(
+      const tests = await this.entityManager.query(
         `
         SELECT
           test_sum_id AS "id",
@@ -130,7 +129,10 @@ export class DataSetService {
       : table.template.displayName;
     detailDto.templateCode = table.template.code;
     detailDto.templateType = table.template.type;
-    detailDto.results = await getManager().query(table.sqlStatement, sqlParams);
+    detailDto.results = await this.entityManager.query(
+      table.sqlStatement,
+      sqlParams,
+    );
 
     if (detailDto.results.length > 0) {
       let columnDto = this.reportColumns.find(

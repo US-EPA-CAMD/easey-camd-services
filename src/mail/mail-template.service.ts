@@ -1,5 +1,5 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { getManager } from 'typeorm';
+import { EntityManager } from 'typeorm';
 import { MailerService } from '@nestjs-modules/mailer';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
@@ -12,13 +12,14 @@ import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
 @Injectable()
 export class MailTemplateService {
   constructor(
+    private readonly entityManager: EntityManager,
     private readonly mailerService: MailerService,
     private readonly configService: ConfigService,
     private readonly httpService: HttpService,
   ) {}
 
   returnManager() {
-    return getManager();
+    return this.entityManager;
   }
 
   async getAndFormatTemplate(templateUrl, context): Promise<string> {
@@ -79,13 +80,16 @@ export class MailTemplateService {
 
   async sendEmailRecord(queueId: number): Promise<void> {
     try {
-      const record = await getManager().findOne(EmailToSend, queueId);
+      const record = await this.entityManager.findOneBy(EmailToSend, {
+        toSendIdentifier: queueId,
+      });
       if (record) {
         //Call into the template email service
-        const template = await getManager().findOne(
-          EmailTemplate,
-          record.templateIdentifier,
-        );
+        const template =
+          record.templateIdentifier &&
+          (await this.entityManager.findOneBy(EmailTemplate, {
+            templateIdentifier: record.templateIdentifier,
+          }));
 
         let context; //Extract context
         if (record.context) {
@@ -103,7 +107,7 @@ export class MailTemplateService {
         );
 
         record.statusCode = 'COMPLETE';
-        await getManager().save(record);
+        await this.entityManager.save(record);
       }
     } catch (e) {
       throw new EaseyException(e, HttpStatus.INTERNAL_SERVER_ERROR);

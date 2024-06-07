@@ -2,6 +2,8 @@ import { HttpModule } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
 import { LoggerModule } from '@us-epa-camd/easey-common/logger';
+import { EntityManager } from 'typeorm';
+
 import { LoggingController } from './logging.controller';
 import { LoggingService } from './logging.service';
 
@@ -13,7 +15,7 @@ describe('-- Logging Controller --', () => {
     const module = await Test.createTestingModule({
       imports: [LoggerModule, HttpModule],
       controllers: [LoggingController],
-      providers: [ConfigService, LoggingService],
+      providers: [ConfigService, EntityManager, LoggingService],
     }).compile();
 
     controller = module.get(LoggingController);
