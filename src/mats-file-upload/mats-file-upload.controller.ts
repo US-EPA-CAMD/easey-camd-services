@@ -67,11 +67,14 @@ export class MatsFileUploadController {
         `Uploaded file exceeds maximum size of ${MAX_UPLOAD_SIZE_MB}MB`,
       );
     if (
-      !['application/pdf', 'application/xml', 'text/xml'].includes(
+      ![
+        'application/pdf', 'application/xml', 'text/xml',
+        'application/json', 'text/json'
+      ].includes(
         file.mimetype,
       )
     )
-      fileErrors.push('Only XML and PDF files may be uploaded');
+      fileErrors.push('Only XML, PDF, and JSON files may be uploaded');
 
     if (fileErrors.length > 0) {
       throw new EaseyException(
