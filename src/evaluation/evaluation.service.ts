@@ -1,4 +1,4 @@
-import { EntityManager } from 'typeorm';
+import { EntityManager, In } from 'typeorm';
 import { Injectable } from '@nestjs/common';
 import { Logger } from '@us-epa-camd/easey-common/logger';
 import { EvaluationDTO, EvaluationItem } from '../dto/evaluation.dto';
@@ -76,27 +76,36 @@ export class EvaluationService {
         await this.returnManager().save(mp);
       }
 
-      for (const id of item.testSumIds) {
-        const ts = await this.returnManager().findOneBy(TestSummary, {
-          testSumIdentifier: id,
-        });
-        ts.evalStatusCode = 'INQ';
+      const testSumIdsOrderdList = await this.returnManager()
+        .getRepository(TestSummary)
+        .createQueryBuilder('ts')
+        .select(['ts.test_sum_id'])
+        .where({ testSumIdentifier: In(item.testSumIds) })
+        .orderBy(
+          `(case when ts.test_type_cd='RATA' then 1 when ts.test_type_cd='F2LREF' then 2 when ts.test_type_cd='F2LCHK' then 3 when ts.test_type_cd='FFACC' then 4 when ts.test_type_cd='FFACCTT' then 4 when ts.test_type_cd='PEI' then 4 when ts.test_type_cd='FF2LBAS' then 5 when ts.test_type_cd='FF2LTST' then 6 else null end)`,
+        )
+        .getRawMany();
 
-        const tsRecord = new Evaluation();
-        tsRecord.evaluationSetIdentifier = set_id;
-        tsRecord.processCode = 'QA';
+      if (testSumIdsOrderdList?.length) {
+        for (const testSummary of testSumIdsOrderdList) {
+          const ts = await this.returnManager().findOneBy(TestSummary, {
+            testSumIdentifier: testSummary.test_sum_id,
+          });
 
-        if (item.submitMonPlan === false) {
-          tsRecord.statusCode = 'QUEUED';
-        } else {
-          tsRecord.statusCode = 'PENDING';
+          ts.evalStatusCode = 'INQ';
+          const tsRecord = new Evaluation();
+          tsRecord.evaluationSetIdentifier = set_id;
+          tsRecord.processCode = 'QA';
+          if (item.submitMonPlan === false) {
+            tsRecord.statusCode = 'QUEUED';
+          } else {
+            tsRecord.statusCode = 'PENDING';
+          }
+          tsRecord.testSumIdentifier = testSummary.test_sum_id;
+          tsRecord.submittedOn = currentTime;
+          await this.returnManager().save(ts);
+          await this.returnManager().save(tsRecord);
         }
-
-        tsRecord.testSumIdentifier = id;
-        tsRecord.submittedOn = currentTime;
-
-        await this.returnManager().save(ts);
-        await this.returnManager().save(tsRecord);
       }
 
       for (const id of item.qceIds) {

@@ -49,6 +49,25 @@ describe('-- Evaluation Service --', () => {
           unitid: 'mockName',
         },
       ]),
+      getRepository: jest.fn().mockImplementation(() => {
+        return {
+          createQueryBuilder: jest.fn().mockImplementation(() => {
+            return {
+              select: jest.fn().mockImplementation(() => {
+                return {
+                  where: jest.fn().mockImplementation(() => {
+                    return {
+                      orderBy: jest.fn().mockImplementation(() => {
+                        return { getRawMany: jest.fn().mockReturnValue(dtoItem.testSumIds) };
+                      }),
+                    };
+                  }),
+                };
+              }),
+            };
+          }),
+        };
+      }),
 
       findOneBy: jest.fn().mockImplementation((val) => {
         switch (val.name) {
