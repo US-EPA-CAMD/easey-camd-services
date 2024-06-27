@@ -53,14 +53,10 @@ describe('-- Evaluation Service --', () => {
         return {
           createQueryBuilder: jest.fn().mockImplementation(() => {
             return {
-              select: jest.fn().mockImplementation(() => {
+              where: jest.fn().mockImplementation(() => {
                 return {
-                  where: jest.fn().mockImplementation(() => {
-                    return {
-                      orderBy: jest.fn().mockImplementation(() => {
-                        return { getRawMany: jest.fn().mockReturnValue(dtoItem.testSumIds) };
-                      }),
-                    };
+                  orderBy: jest.fn().mockImplementation(() => {
+                    return { getMany: jest.fn().mockReturnValue([{},{}]) };
                   }),
                 };
               }),
