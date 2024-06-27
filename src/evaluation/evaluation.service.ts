@@ -76,23 +76,18 @@ export class EvaluationService {
         await this.returnManager().save(mp);
       }
 
-      const testSumIdsOrderdList = await this.returnManager()
+      const testSumsOrderedList = await this.returnManager()
         .getRepository(TestSummary)
         .createQueryBuilder('ts')
-        .select(['ts.test_sum_id'])
         .where({ testSumIdentifier: In(item.testSumIds) })
         .orderBy(
           `(case when ts.test_type_cd='RATA' then 1 when ts.test_type_cd='F2LREF' then 2 when ts.test_type_cd='F2LCHK' then 3 when ts.test_type_cd='FFACC' then 4 when ts.test_type_cd='FFACCTT' then 4 when ts.test_type_cd='PEI' then 4 when ts.test_type_cd='FF2LBAS' then 5 when ts.test_type_cd='FF2LTST' then 6 else null end)`,
         )
-        .getRawMany();
+        .getMany();
 
-      if (testSumIdsOrderdList?.length) {
-        for (const testSummary of testSumIdsOrderdList) {
-          const ts = await this.returnManager().findOneBy(TestSummary, {
-            testSumIdentifier: testSummary.test_sum_id,
-          });
-
-          ts.evalStatusCode = 'INQ';
+      if (testSumsOrderedList?.length) {
+        for (const testSummary of testSumsOrderedList) {
+          testSummary.evalStatusCode = 'INQ';
           const tsRecord = new Evaluation();
           tsRecord.evaluationSetIdentifier = set_id;
           tsRecord.processCode = 'QA';
@@ -101,9 +96,9 @@ export class EvaluationService {
           } else {
             tsRecord.statusCode = 'PENDING';
           }
-          tsRecord.testSumIdentifier = testSummary.test_sum_id;
+          tsRecord.testSumIdentifier = testSummary.testSumIdentifier;
           tsRecord.submittedOn = currentTime;
-          await this.returnManager().save(ts);
+          await this.returnManager().save(testSummary);
           await this.returnManager().save(tsRecord);
         }
       }
