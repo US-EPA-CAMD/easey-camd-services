@@ -570,8 +570,6 @@ export class MailEvalService {
       'Oris Code',
       'State Code',
       'County',
-      'Longitude',
-      'Latitude',
     ];
 
     let subject;
@@ -662,8 +660,6 @@ export class MailEvalService {
           ['Oris Code']: plant.orisCode,
           ['State Code']: plant.state,
           ['County']: county?.countyName,
-          ['Longitude']: plant.longitude,
-          ['Latitude']: plant.latitude,
         },
       ],
     };
