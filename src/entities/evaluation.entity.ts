@@ -34,4 +34,7 @@ export class Evaluation extends BaseEntity {
 
   @Column({ name: 'status_cd' })
   statusCode: string;
+
+  @Column({ name: 'eval_status_cd' })
+  evalStatusCode?: string;
 }
