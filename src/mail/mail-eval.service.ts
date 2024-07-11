@@ -407,6 +407,7 @@ export class MailEvalService {
             template,
             templateContext,
             attempt + 1,
+            attachments
           );
         });
     } else {
