@@ -18,7 +18,7 @@ export class EvaluationController {
   @RoleGuard(
     {
       bodyParam: 'items.*.monPlanId',
-      requiredRoles: ['Preparer', 'Submitter', 'Sponsor'],
+      requiredRoles: ['Preparer', 'Submitter', 'Sponsor', 'Initial Authorizer'],
     },
     LookupType.MonitorPlan,
   )
