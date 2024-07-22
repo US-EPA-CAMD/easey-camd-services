@@ -56,6 +56,7 @@ export class SubmissionService {
       submissionSet.submittedOn = currentTime;
       submissionSet.statusCode = 'QUEUED';
 
+      console.log(`Preparing to query locations for monPlanId: ${item.monPlanId}`);
       const locations = await this.returnManager().query(
         `SELECT camdecmpsaux.get_mp_location_list($1);`,
         [item.monPlanId],
@@ -63,20 +64,26 @@ export class SubmissionService {
 
       submissionSet.configuration = locations[0]['get_mp_location_list'];
 
+      console.log(`Fetching MonitorPlan for monPlanId: ${item.monPlanId}`);
       const mp: MonitorPlan = await this.returnManager().findOneBy(
         MonitorPlan,
         { monPlanIdentifier: item.monPlanId },
       );
+      console.log('MonitorPlan fetch result:', mp);
 
+      console.log(`Fetching Plant for facIdentifier: ${mp.facIdentifier}`);
       const facility: Plant = await this.returnManager().findOneBy(Plant, {
         facIdentifier: mp.facIdentifier,
       });
+
 
       submissionSet.facIdentifier = facility.facIdentifier;
       submissionSet.orisCode = facility.orisCode;
       submissionSet.facName = facility.facilityName;
 
+      console.log('Saving SubmissionSet:', submissionSet);
       await this.returnManager().save(SubmissionSet, submissionSet);
+      console.log('SubmissionSet saved successfully');
 
       if (item.submitMonPlan === true) {
         //Create monitor plan queue record
