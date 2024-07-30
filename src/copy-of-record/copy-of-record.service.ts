@@ -19,7 +19,7 @@ export class CopyOfRecordService {
     private readonly logger: Logger,
     private dataService: DataSetService,
     private readonly entityManager: EntityManager,
-  ) {}
+  ) { }
 
   addDocumentHeader(content: string, title: string): string {
     const date = new Date();
@@ -54,6 +54,11 @@ export class CopyOfRecordService {
     }
 
     return heading;
+  }
+  addEvaluationPassTable() {
+    let innerContent = this.addTableHeader('Evaluation Results', false);
+    innerContent += '<div class = "col-table-container">Evaluation has passed without errors</div>';
+    return innerContent;
   }
 
   addColTable(
@@ -197,7 +202,7 @@ export class CopyOfRecordService {
     return documentContent;
   }
 
-  generateCopyOfRecord(data: ReportDTO, isPdf: boolean = false): string {
+  generateCopyOfRecord(data: ReportDTO, isPdf: boolean = false, evalStatusCodes: Set<string> = new Set()): string {
     let documentContent = copyOfRecordTemplate;
     documentContent = this.addDocumentHeader(documentContent, data.displayName);
     let innerContent = '';
@@ -225,6 +230,9 @@ export class CopyOfRecordService {
           parseInt(templateType.charAt(0)),
           isTest,
         );
+        if (evalStatusCodes.size == 1 && evalStatusCodes.has('PASS')) {
+          innerContent += this.addEvaluationPassTable();
+        }
       } else {
         //Default table view
         innerContent += this.addDefaultTable(columns, detail);

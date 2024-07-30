@@ -484,14 +484,18 @@ export class SubmissionProcessService {
     let submissionSetRecords: SubmissionQueue[];
 
     try {
+      this.logger.log(`Fetching SubmissionSet for submissionSetIdentifier: ${id}`);
       set = await this.returnManager().findOneBy(SubmissionSet, {
         submissionSetIdentifier: id,
       });
+      this.logger.log('Retrieved SubmissionSet', set);
 
       set.statusCode = 'WIP';
       set.endStageTime = currentDateTime();
 
+      this.logger.log('Attempting to save SubmissionSet', set);
       await this.returnManager().save(set);
+      this.logger.log('Successfully saved SubmissionSet');
 
       submissionSetRecords = await this.returnManager().findBy(
         SubmissionQueue,

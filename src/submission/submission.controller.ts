@@ -41,7 +41,7 @@ export class SubmissionController {
       'Creates submission queue records for quartz copy of record process',
   })
   @RoleGuard(
-    { bodyParam: 'items.*.monPlanId', requiredRoles: ['Submitter', 'Sponsor'] },
+    { bodyParam: 'items.*.monPlanId', requiredRoles: ['Submitter', 'Sponsor', 'Initial Authorizer'] },
     LookupType.MonitorPlan,
   )
   async queue(@Body() params: SubmissionQueueDTO): Promise<void> {

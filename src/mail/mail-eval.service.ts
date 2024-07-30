@@ -391,6 +391,7 @@ export class MailEvalService {
             template,
             templateContext,
             attempt + 1,
+            attachments
           );
         });
     } else {
@@ -422,11 +423,20 @@ export class MailEvalService {
         paramsTestSum,
         true,
       );
+      const evalStatusCodes = new Set(
+        testSumRecords.map((tsr) => {
+          if ('evalStatusCode' in tsr) {
+            return tsr.evalStatusCode;
+          }
+        }),
+      );
 
       documents.push({
         filename: `${set.orisCode}_${title}.html`,
         content: this.copyOfRecordService.generateCopyOfRecord(
           reportInformationTestSum,
+          false,
+          evalStatusCodes,
         ),
       });
     }
@@ -447,10 +457,21 @@ export class MailEvalService {
         true,
       );
 
+      const evalStatusCodes = new Set(
+        qaCertRecords.map((qce) => {
+          if ('evalStatusCode' in qce) {
+            return qce.evalStatusCode;
+          }
+        }),
+      );
+
       documents.push({
         filename: `${set.orisCode}_${title}.html`,
-        content:
-          this.copyOfRecordService.generateCopyOfRecord(reportInformationQCE),
+        content: this.copyOfRecordService.generateCopyOfRecord(
+          reportInformationQCE,
+          false,
+          evalStatusCodes,
+        ),
       });
     }
 
@@ -473,10 +494,21 @@ export class MailEvalService {
         true,
       );
 
+      const evalStatusCodes = new Set(
+        teeRecords.map((tee) => {
+          if ('evalStatusCode' in tee) {
+            return tee.evalStatusCode;
+          }
+        }),
+      );
+
       documents.push({
         filename: `${set.orisCode}_${title}.html`,
-        content:
-          this.copyOfRecordService.generateCopyOfRecord(reportInformationTEE),
+        content: this.copyOfRecordService.generateCopyOfRecord(
+          reportInformationTEE,
+          false,
+          evalStatusCodes,
+        ),
       });
     }
 
@@ -486,13 +518,20 @@ export class MailEvalService {
         params.facilityId = set.orisCode;
 
         let titleContext = '';
-
+        const evalStatusCodes = new Set<string>();
         // Add Eval Report
         if (rec.processCode === 'MP') {
+          if ('evalStatusCode' in rec) {
+            evalStatusCodes.add(rec.evalStatusCode);
+          }
+
           titleContext = 'MP_EVAL_' + set.monPlanIdentifier;
           params.reportCode = 'MP_EVAL';
           params.monitorPlanId = set.monPlanIdentifier;
         } else if (rec.processCode === 'EM') {
+          if ('evalStatusCode' in rec) {
+            evalStatusCodes.add(rec.evalStatusCode);
+          }
           const rptPeriod: ReportingPeriod =
             rec.rptPeriodIdentifier &&
             (await this.returnManager().findOneBy(ReportingPeriod, {
@@ -520,8 +559,11 @@ export class MailEvalService {
 
         documents.push({
           filename: `${set.orisCode}_${titleContext}.html`,
-          content:
-            this.copyOfRecordService.generateCopyOfRecord(reportInformation),
+          content: this.copyOfRecordService.generateCopyOfRecord(
+            reportInformation,
+            false,
+            evalStatusCodes,
+          ),
         });
       }
     }
