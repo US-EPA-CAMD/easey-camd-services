@@ -1043,7 +1043,8 @@ export class SubmissionProcessService {
     }
 
     // Use a regular expression to extract content between <body> tags
-    const bodyContentMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+    const bodyRegex = /<body[^>]*>([\s\S]*?)<\/body>/i;
+    const bodyContentMatch = bodyRegex.exec(html);
 
     // Return the content if found, otherwise return an empty string
     return bodyContentMatch ? bodyContentMatch[1].trim() : '';
