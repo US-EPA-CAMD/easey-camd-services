@@ -436,11 +436,10 @@ export class SubmissionProcessService {
           async (transactionalEntityManager) => {
             try {
               for (const trans of transactions) {
-                // TODO uncomment
-                /*await transactionalEntityManager.query(
+                await transactionalEntityManager.query(
                   trans.command,
                   trans.params,
-                );*/
+                );
               }
             } catch (error) {
               this.logger.error("successCleanup: error while cleaning up ", error)
@@ -598,6 +597,7 @@ export class SubmissionProcessService {
       }
 
       // Handle Certification Statements
+
       const obs = this.httpService.get(
         `${this.configService.get<string>(
           'app.authApi.uri',
@@ -634,16 +634,7 @@ export class SubmissionProcessService {
 
       formData.append('activityId', set.activityId);
 
-      // TODO Remove the following ... testing only
-      this.successCleanup(
-        folderPath,
-        set,
-        submissionSetRecords,
-        transactions,
-      );
-
-      //TODO uncomment the following
-      /*const signObs = this.httpService.post(
+      const signObs = this.httpService.post(
         `${this.configService.get<string>('app.authApi.uri')}/sign`,
         formData,
         {
@@ -674,7 +665,7 @@ export class SubmissionProcessService {
             transactions,
           );
         },
-      });*/
+      });
     } catch (e) {
       this.logger.error("processSubmissionSet: error while processing submission set. ", e)
       await this.handleError(set, submissionSetRecords, e, false);
@@ -694,9 +685,6 @@ export class SubmissionProcessService {
     //Retrieve the severity codes so that we can find the submission queue record with the highest severity code
     //to use as the email subject
     const severityCodes: SeverityCode[] = await this.returnManager().find(SeverityCode);
-    /*const severityCodes = await this.returnManager().query(
-      'SELECT severity_cd, severity_level, severity_cd_description FROM camdecmpsmd.severity_code',
-    );*/
 
     // Get complete data for all file types for Submission
     const submissionSet = await this.returnManager().findOneBy(SubmissionSet, {
@@ -737,48 +725,6 @@ export class SubmissionProcessService {
         ],
       },
 
-      //Combine all QA records together so that we can send one email
-      /*qaRecords: {
-        processCode: 'QA',
-        records: [
-          ...submissionQueueRecords.filter(
-            (r) => r.processCode === 'QA' && r.testSumIdentifier !== null
-          ),
-          ...submissionQueueRecords.filter(
-            (r) => r.processCode === 'QA' && r.qaCertEventIdentifier !== null
-          ),
-          ...submissionQueueRecords.filter(
-            (r) => r.processCode === 'QA' && r.testExtensionExemptionIdentifier !== null
-          ),
-        ],
-      },*/
-
-      /*qaTestSumRecords: {
-        processCode: 'QA',
-        records: submissionQueueRecords.filter(
-          (r) => r.processCode === 'QA' && r.testSumIdentifier !== null
-        )
-      },
-
-      qaCertEventRecords: {
-        processCode: 'QA',
-        records: submissionQueueRecords.filter(
-          (r) => r.processCode === 'QA' && r.qaCertEventIdentifier !== null
-        )
-      },
-
-      qaTeeRecords: {
-        processCode: 'QA',
-        records: submissionQueueRecords.filter(
-          (r) => r.processCode === 'QA' && r.testExtensionExemptionIdentifier !== null
-        )
-      },*/
-
-      /*EM: {
-        processCode: 'EM',
-        records: submissionQueueRecords.filter((r) => r.processCode === 'EM')
-      },*/
-
       //We need to process EM records differently. WE will send a separate email for each EM record in the
       //submission queue table. Therefore, we will store them separately.
       ...submissionQueueRecords
@@ -818,7 +764,7 @@ export class SubmissionProcessService {
           rptPeriod: rptPeriod,
           toEmail: to,
           fromEmail: from,
-          //ccEmail: ?  // TODO
+          //ccEmail: ?  // TODO, dependent on Issue/ticket #6183
           isSubmissionFailure: isSubmissionFailure,
           submissionError: errorId,
         });
@@ -892,8 +838,7 @@ export class SubmissionProcessService {
 
     //6. Finally, send the email
     this.logger.debug('Sending email with attachment ...');
-    // TODO uncomment
-    /*this.mailEvalService.sendEmailWithRetry(
+    this.mailEvalService.sendEmailWithRetry(
       submissionEmailParamsDto.toEmail,
       submissionEmailParamsDto.fromEmail,
       subject,
@@ -901,7 +846,7 @@ export class SubmissionProcessService {
       submissionEmailParamsDto.templateContext,
       1,
       feedbackAttachmentDocuments,
-    );*/
+    );
 
   }
 
@@ -965,36 +910,6 @@ export class SubmissionProcessService {
     submissionEmailParamsDto.orisCode = facilityItem.state;
     submissionEmailParamsDto.stateCode = facilityItem.mon_location_ids;
     submissionEmailParamsDto.unitStackPipe = facilityItem.location_name;
-
-
-    //Submission Set information, such as facility, etc.  At this point, it has been submitted. We get data from MonitorPlanGlobal (not MonitorPlan).
-    /*
-    const mpRecord: MonitorPlanGlobal =
-      await this.returnManager().findOneBy( MonitorPlanGlobal,
-        { monPlanIdentifier: submissionSet.monPlanIdentifier },
-      );
-
-    const plant = await this.returnManager().findOne(Plant,
-      {
-        where: { facIdentifier: mpRecord.facIdentifier },
-        relations: ['units', 'stackPipes'],
-      },
-    );
-
-    const county =
-      plant.countyCode &&
-      (await this.returnManager().findOneBy(CountyCode, {
-        countyCode: plant.countyCode,
-      }));
-
-    //Gather the unit/stack/pipe value
-    let unitStackPipe = '';
-
-    if (plant && plant.units && plant.units.length > 0) {
-      unitStackPipe = plant.units.map(unit => unit.name).join(', ');
-    } else if (plant && plant.stackPipes && plant.stackPipes.length > 0) {
-      unitStackPipe = plant.stackPipes.map(stackPipe => stackPipe.name).join(', ');
-    } */
 
     const mpKeys = [
       'submissionType',
@@ -1104,15 +1019,10 @@ export class SubmissionProcessService {
     let highestSeverityRecord : HighestSeverityRecord;
     let maxSeverityLevel = -Infinity;
 
-    //let maxSeveritySubmissionQueue: SubmissionQueue | null = null;
-    //let maxSeverityCode: SeverityCode | null = null;
-
     submissionQueueRecords.forEach((record) => {
       const severityCode = severityCodeMap.get(record.severityCode);
       if (severityCode !== undefined && severityCode.severityLevel > maxSeverityLevel) {
         maxSeverityLevel = severityCode.severityLevel;
-        /*maxSeveritySubmissionQueue = record;
-        maxSeverityCode = severityCode;*/
         highestSeverityRecord = {submissionQueue: record, severityCode: severityCode};
       }
     });
