@@ -17,7 +17,6 @@ import { ConfigService } from '@nestjs/config';
 import { SubmissionQueue } from '../entities/submission-queue.entity';
 import { SubmissionSet } from '../entities/submission-set.entity';
 import { MatsBulkFile } from '../entities/mats-bulk-file.entity';
-import { ClientConfig } from '../entities/client-config.entity';
 import { MonitorPlanGlobal } from '../entities/monitor-plan-global.entity';
 import { TestSummaryGlobal } from '../entities/test-summary-global.entity';
 import { QaCertEventGlobal } from '../entities/qa-cert-event-global.entity';
@@ -75,7 +74,6 @@ export class MailEvalService {
     records: Array<Evaluation | SubmissionQueue>,
     orisCode: number | null,
     mappedStatusCodes: Map<string, string>,
-    isSubmission: boolean,
   ) {
     const testDataKeys = [
       'System / Component Id',
@@ -85,9 +83,7 @@ export class MailEvalService {
       'Test Result',
     ];
 
-    if (!isSubmission) {
-      testDataKeys.push('Evaluation Status Code');
-    }
+    testDataKeys.push('Evaluation Status Code');
 
     if (records.length > 0) {
       templateContext['testData'] = {
@@ -99,7 +95,7 @@ export class MailEvalService {
         const testSumRecord: TestSummary | TestSummaryGlobal | null =
           testRecord.testSumIdentifier &&
           (await this.returnManager().findOneBy(
-            !isSubmission ? TestSummary : TestSummaryGlobal,
+            TestSummary,
             { testSumIdentifier: testRecord.testSumIdentifier },
           ));
 
@@ -140,7 +136,6 @@ export class MailEvalService {
     records: Array<Evaluation | SubmissionQueue>,
     orisCode: number | null,
     mappedStatusCodes: Map<string, string>,
-    isSubmission: boolean,
   ) {
     const certEventKeys = [
       'System / Component Id',
@@ -148,9 +143,7 @@ export class MailEvalService {
       'Required Test Code',
     ];
 
-    if (!isSubmission) {
-      certEventKeys.push('Evaluation Status Code');
-    }
+    certEventKeys.push('Evaluation Status Code');
 
     if (records.length > 0) {
       templateContext['certEvents'] = {
@@ -161,8 +154,7 @@ export class MailEvalService {
         const newItem: any = {};
         const certEventRecord: QaCertEvent | QaCertEventGlobal | null =
           certRecord.qaCertEventIdentifier &&
-          (await this.returnManager().findOneBy(
-            !isSubmission ? QaCertEvent : QaCertEventGlobal,
+          (await this.returnManager().findOneBy(QaCertEvent,
             { qaCertEventIdentifier: certRecord.qaCertEventIdentifier },
           ));
 
@@ -201,7 +193,6 @@ export class MailEvalService {
     records: Array<Evaluation | SubmissionQueue>,
     orisCode: number | null,
     mappedStatusCodes: Map<string, string>,
-    isSubmission: boolean,
   ) {
     const teeKeys = [
       'System / Component Id',
@@ -212,9 +203,7 @@ export class MailEvalService {
       'Span Scale Code',
     ];
 
-    if (!isSubmission) {
-      teeKeys.push('Evaluation Status Code');
-    }
+    teeKeys.push('Evaluation Status Code');
 
     if (records.length > 0) {
       templateContext['teeEvents'] = {
@@ -226,8 +215,7 @@ export class MailEvalService {
         const newItem: any = {};
         const teeRecord: QaTee | QaTeeGlobal | null =
           tee.testExtensionExemptionIdentifier &&
-          (await this.returnManager().findOneBy(
-            !isSubmission ? QaTee : QaTeeGlobal,
+          (await this.returnManager().findOneBy(QaTee,
             {
               testExtensionExemptionIdentifier:
                 tee.testExtensionExemptionIdentifier,
@@ -278,13 +266,10 @@ export class MailEvalService {
     monitorPlanId: string,
     orisCode: number | null,
     mappedStatusCodes: Map<string, string>,
-    isSubmission: boolean,
   ) {
     const emissionsKeys = ['Year / Quarter'];
 
-    if (!isSubmission) {
-      emissionsKeys.push('Evaluation Status Code');
-    }
+    emissionsKeys.push('Evaluation Status Code');
 
     if (records.length > 0) {
       templateContext['emissions'] = {
@@ -295,8 +280,7 @@ export class MailEvalService {
       for (const em of records) {
         const newItem: any = {};
         const emissionsRecord: EmissionEvaluation | EmissionEvaluationGlobal =
-          await this.returnManager().findOneBy(
-            !isSubmission ? EmissionEvaluation : EmissionEvaluationGlobal,
+          await this.returnManager().findOneBy(EmissionEvaluation,
             {
               monPlanIdentifier: monitorPlanId,
               rptPeriodIdentifier: em.rptPeriodIdentifier,
@@ -547,10 +531,6 @@ export class MailEvalService {
     to: string,
     from: string,
     setId: string,
-    isSubmission: boolean,
-    isSubmissionFailure: boolean = false,
-    errorId: string = '',
-    hasCritErrors: boolean = false,
   ) {
     //Create our lookup map of eval codes to descriptions
     const statusCodes = await this.returnManager().query(
@@ -578,68 +558,26 @@ export class MailEvalService {
     let records: Array<SubmissionQueue | Evaluation>;
 
     let templateContext: any = {};
-
-    templateContext['submissionMessage'] = '';
-    if (hasCritErrors) {
-      templateContext['submissionMessage'] = this.configService.get<string>(
-        'app.submissionCritMessage',
-      );
-    } else {
-      templateContext['submissionMessage'] = this.configService.get<string>(
-        'app.submissionSuccessMessage',
-      );
-    }
-
     const documents = [];
 
-    if (isSubmissionFailure) {
-      console.log('Sending Submission Failure Email');
+    subject = `ECMPS Evaluation Report | ${this.displayCurrentDate()}`;
+    template = 'massEvaluationTemplate';
+    records = await this.returnManager().find(Evaluation, {
+      where: { evaluationSetIdentifier: setId },
+    });
+    setRecord = await this.returnManager().findOneBy(EvaluationSet, {
+      evaluationSetIdentifier: setId,
+    });
 
-      subject = `ECMPS Submission Process Failure | ${this.displayCurrentDate()}`;
-      template = 'submissionFailureTemplate';
-      records = await this.returnManager().find(SubmissionQueue, {
-        where: { submissionSetIdentifier: setId },
-      });
-      const supportEmail = await this.returnManager().findOneBy(ClientConfig, {
-        name: 'ecmps-ui',
-      });
-
-      templateContext['errorId'] = errorId;
-      templateContext['supportEmail'] = supportEmail.supportEmail;
-      setRecord = await this.returnManager().findOneBy(SubmissionSet, {
-        submissionSetIdentifier: setId,
-      });
-    } else if (isSubmission) {
-      subject = `ECMPS Submission Confirmation | ${this.displayCurrentDate()}`;
-      template = 'submissionTemplate';
-      records = await this.returnManager().find(SubmissionQueue, {
-        where: { submissionSetIdentifier: setId },
-      });
-      setRecord = await this.returnManager().findOneBy(SubmissionSet, {
-        submissionSetIdentifier: setId,
-      });
-    } else {
-      subject = `ECMPS Evaluation Report | ${this.displayCurrentDate()}`;
-      template = 'massEvaluationTemplate';
-      records = await this.returnManager().find(Evaluation, {
-        where: { evaluationSetIdentifier: setId },
-      });
-      setRecord = await this.returnManager().findOneBy(EvaluationSet, {
-        evaluationSetIdentifier: setId,
-      });
-
-      await this.buildEvalReports(setRecord, records, documents);
-    }
+    await this.buildEvalReports(setRecord, records, documents);
 
     // Build the context for our email --------------------------------------
     templateContext['dateEvaluated'] = this.displayCurrentDate();
     templateContext['cdxUrl'] = this.configService.get<string>('app.cdxUrl');
 
     // Create Monitor Plan Section of Email
-
     const mpRecord: MonitorPlan | MonitorPlanGlobal =
-      await this.returnManager().findOneBy(
-        !isSubmission && !isSubmissionFailure ? MonitorPlan : MonitorPlanGlobal,
+      await this.returnManager().findOneBy( MonitorPlan,
         { monPlanIdentifier: setRecord.monPlanIdentifier },
       );
     const plant = await this.returnManager().findOneBy(Plant, {
@@ -683,13 +621,6 @@ export class MailEvalService {
       }&monitorPlanId=${mpRecord.monPlanIdentifier}`;
     }
 
-    if (isSubmission || isSubmissionFailure) {
-      templateContext['monPlanSubmitted'] = false;
-      if (mpChildRecord) {
-        templateContext['monPlanSubmitted'] = true;
-      }
-    }
-
     //Create QA Section of Email ----------------------------------------
     const testDataChildRecords = records.filter(
       (r) => r.processCode === 'QA' && r.testSumIdentifier !== null,
@@ -699,7 +630,6 @@ export class MailEvalService {
       testDataChildRecords,
       plant.orisCode,
       mappedStatusCodes,
-      isSubmission || isSubmissionFailure,
     );
 
     const certChildRecords = records.filter(
@@ -710,7 +640,6 @@ export class MailEvalService {
       certChildRecords,
       plant.orisCode,
       mappedStatusCodes,
-      isSubmission || isSubmissionFailure,
     );
 
     const teeChildRecords = records.filter(
@@ -722,7 +651,6 @@ export class MailEvalService {
       teeChildRecords,
       plant.orisCode,
       mappedStatusCodes,
-      isSubmission || isSubmissionFailure,
     );
 
     //Create Emissions Section of Email
@@ -733,18 +661,7 @@ export class MailEvalService {
       mpRecord.monPlanIdentifier,
       plant.orisCode,
       mappedStatusCodes,
-      isSubmission || isSubmissionFailure,
     );
-
-    if (isSubmission || isSubmissionFailure) {
-      const matsDataChildRecords = records.filter(
-        (r) => r.processCode === 'MATS',
-      );
-      templateContext = await this.formatMATSContext(
-        templateContext,
-        matsDataChildRecords as SubmissionQueue[],
-      );
-    }
 
     this.sendEmailWithRetry(
       to,

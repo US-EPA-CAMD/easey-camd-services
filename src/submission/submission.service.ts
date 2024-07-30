@@ -112,7 +112,6 @@ export class SubmissionService {
             testSumId: id,
           },
         );
-        ts.submissionAvailabilityCode = 'PENDING'; //TODO FIND SUPP RECORD CORRESPONDING
 
         const tsRecord = new SubmissionQueue();
         tsRecord.submissionSetIdentifier = set_id;
@@ -129,9 +128,12 @@ export class SubmissionService {
         );
 
         tsRecord.severityCode = cs?.severityCode || 'NONE';
-
-        await this.returnManager().save(ts);
         await this.returnManager().save(tsRecord);
+
+        if (ts) {
+          ts.submissionAvailabilityCode = 'PENDING'; //TODO FIND SUPP RECORD CORRESPONDING
+          await this.returnManager().save(ts);
+        }
       }
 
       for (const id of item.qceIds) {
@@ -139,7 +141,6 @@ export class SubmissionService {
           QaCertEvent,
           { qaCertEventIdentifier: id },
         );
-        qce.submissionAvailabilityCode = 'PENDING';
 
         const qceRecord = new SubmissionQueue();
         qceRecord.submissionSetIdentifier = set_id;
@@ -158,16 +159,18 @@ export class SubmissionService {
         );
 
         qceRecord.severityCode = cs?.severityCode || 'NONE';
-
-        await this.returnManager().save(qce);
         await this.returnManager().save(qceRecord);
+        if (qce) {
+          qce.submissionAvailabilityCode = 'PENDING';
+          await this.returnManager().save(qce);
+        }
       }
 
       for (const id of item.teeIds) {
         const tee: QaTee = await this.returnManager().findOneBy(QaTee, {
           testExtensionExemptionIdentifier: id,
         });
-        tee.submissionAvailabilityCode = 'PENDING';
+
 
         const teeRecord = new SubmissionQueue();
         teeRecord.submissionSetIdentifier = set_id;
@@ -185,9 +188,11 @@ export class SubmissionService {
         );
 
         teeRecord.severityCode = cs?.severityCode || 'NONE';
-
-        await this.returnManager().save(tee);
         await this.returnManager().save(teeRecord);
+        if (tee) {
+          tee.submissionAvailabilityCode = 'PENDING';
+          await this.returnManager().save(tee);
+        }
       }
 
       for (const periodAbr of item.emissionsReportingPeriods) {
@@ -202,8 +207,6 @@ export class SubmissionService {
             rptPeriodIdentifier: rp.rptPeriodIdentifier,
           },
         );
-
-        ee.submissionAvailabilityCode = 'PENDING';
 
         const emissionRecord = new SubmissionQueue();
         emissionRecord.submissionSetIdentifier = set_id;
@@ -224,16 +227,17 @@ export class SubmissionService {
 
         emissionRecord.severityCode = cs?.severityCode || 'NONE';
 
-        await this.returnManager().save(ee);
         await this.returnManager().save(emissionRecord);
+        if (ee) {
+          ee.submissionAvailabilityCode = 'PENDING';
+          await this.returnManager().save(ee);
+        }
       }
 
       for (const matsId of item.matsBulkFiles) {
         const mf = await this.returnManager().findOneBy(MatsBulkFile, {
           id: matsId,
         });
-
-        mf.submissionAvailabilityCode = 'PENDING';
 
         const matsRecord = new SubmissionQueue();
         matsRecord.submissionSetIdentifier = set_id;
@@ -246,8 +250,12 @@ export class SubmissionService {
 
         matsRecord.severityCode = 'NONE';
 
-        await this.returnManager().save(mf);
+
         await this.returnManager().save(matsRecord);
+        if (mf) {
+          mf.submissionAvailabilityCode = 'PENDING';
+          await this.returnManager().save(mf);
+        }
       }
     } catch (e) {
       console.log(e);

@@ -8,6 +8,7 @@ import { CopyOfRecordModule } from '../copy-of-record/copy-of-record.module';
 import { MailModule } from '../mail/mail.module';
 import { CombinedSubmissionsMap } from '../maps/combined-submissions.map';
 import { EmissionsLastUpdatedMap } from '../maps/emissions-last-updated.map';
+import { SubmissionFeedbackRecordService } from './submission-feedback-record.service';
 
 @Module({
   imports: [HttpModule, DataSetModule, CopyOfRecordModule, MailModule],
@@ -15,6 +16,7 @@ import { EmissionsLastUpdatedMap } from '../maps/emissions-last-updated.map';
   providers: [
     SubmissionService,
     SubmissionProcessService,
+    SubmissionFeedbackRecordService,
     CombinedSubmissionsMap,
     EmissionsLastUpdatedMap,
   ],

@@ -6,8 +6,8 @@
 
   <style>
     h2 {background-color: #005ea2; color: white; padding: 5px} div
-    {border-bottom: 1px solid grey; padding:40px} img {padding: 10px}; body
-    {margin: 10px}; table { font-family: Arial, Helvetica, sans-serif;
+    {border-bottom: 1px solid grey; padding:40px} img {padding: 10px} body
+    {margin: 10px} table { font-family: Arial, Helvetica, sans-serif;
     border-collapse: collapse; width: 100%; } table td, table th { border: 1px
     solid #ddd; padding: 8px; } table tr:nth-child(even){background-color:
     #f2f2f2;} table th { padding-top: 12px; padding-bottom: 12px; text-align:
@@ -16,121 +16,33 @@
   </style>
 
   <body>
-    <div>
-      <h1> Submission Confirmation Report </h1>
-      <h4> {{dateEvaluated}} </h4>
-      <p> {{submissionMessage}} <a href="{{cdxUrl}}">here</a>. </p>
-    </div>
-    <div>
-      <h2> Monitoring Plan </h2>
-      <table>
-        {{#each monitorPlan.keys}}
-          <th> {{this}} </th>
-        {{/each}}
-        {{#each monitorPlan.items}}
-          <tr>
-            {{#each ../monitorPlan.keys}}
-              <td> {{lookup .. this}} </td>
-            {{/each}}
-          </tr>
-        {{/each}}
-      </table>
-      <h4> Monitor Plan Record Submitted: {{monPlanSubmitted}} </h4>
-    </div>
-    {{#if testData}}
-      <div>
-        <h2> Test Data </h2>
-        <table>
-          {{#each testData.keys}}
-            <th> {{this}} </th>
-          {{/each}}
-          {{#each testData.items}}
-            <tr>
-              {{#each ../testData.keys}}
-                {{#if (notEquals this "Evaluation Status Code")}}
-                  <td> {{lookup .. this}} </td>
-                {{/if}}
-              {{/each}}
-            </tr>
-          {{/each}}
-        </table>
-      </div>
-    {{/if}}
-    {{#if certEvents}}
-      <div>
-        <h2> QA Certification Events </h2>
-        <table>
-          {{#each certEvents.keys}}
-            <th> {{this}} </th>
-          {{/each}}
-          {{#each certEvents.items}}
-            <tr>
-              {{#each ../certEvents.keys}}
-                {{#if (notEquals this "Evaluation Status Code")}}
-                  <td> {{lookup .. this}} </td>
-                {{/if}}
-              {{/each}}
-            </tr>
-          {{/each}}
-        </table>
-      </div>
-    {{/if}}
-    {{#if teeEvents}}
-      <div>
-        <h2> Test Extension Exemptions Data </h2>
-        <table>
-          {{#each teeEvents.keys}}
-            <th> {{this}} </th>
-          {{/each}}
-          {{#each teeEvents.items}}
-            <tr>
-              {{#each ../teeEvents.keys}}
-                {{#if (notEquals this "Evaluation Status Code")}}
-                  <td> {{lookup .. this}} </td>
-                {{/if}}
-              {{/each}}
-            </tr>
-          {{/each}}
-        </table>
-      </div>
-    {{/if}}
-    {{#if emissions}}
-      <div>
-        <h2> Emissions </h2>
-        <table>
-          {{#each emissions.keys}}
-            <th> {{this}} </th>
-          {{/each}}
-          {{#each emissions.items}}
-            <tr>
-              {{#each ../emissions.keys}}
-                {{#if (notEquals this "Evaluation Status Code")}}
-                  <td> {{lookup .. this}} </td>
-                {{/if}}
-              {{/each}}
-            </tr>
-          {{/each}}
-        </table>
-      </div>
-    {{/if}}
-    {{#if mats}}
-      <div>
-        <h2> MATS Bulk Files </h2>
-        <table>
-          {{#each mats.keys}}
-            <th> {{this}} </th>
-          {{/each}}
-          {{#each mats.items}}
-            <tr>
-              {{#each ../mats.keys}}
-                {{#if (notEquals this "Evaluation Status Code")}}
-                  <td> {{lookup .. this}} </td>
-                {{/if}}
-              {{/each}}
-            </tr>
-          {{/each}}
-        </table>
-      </div>
-    {{/if}}
+
+  <div>
+    <p>
+      {{#if isCritical1Error}}
+        The U.S. Environmental Protection Agency (EPA) has received your recent Emissions Collection and Monitoring Plan System (ECMPS) submission as identified below. Because there were "Critical Level 1" errors in your submission, your data were not loaded into the EPA’s database. A resubmission without "Critical Level 1" errors will be required before your data can be loaded. Please review the attached feedback report, which describes all data errors identified by the EPA and provides guidance in resolving those errors.
+      {{else}}
+        The U.S. Environmental Protection Agency (EPA) has received and loaded your recent Emissions Collection and Monitoring Plan System (ECMPS) submission as identified below. Please review the attached feedback report, which describes all data errors identified by the EPA (if errors were found) and provides guidance in resolving those errors.
+      {{/if}}
+    </p>
+
+    <p>
+      {{monitorPlan.item.submissionType}} submission for {{monitorPlan.item.facilityName}}, {{monitorPlan.item.stateCode}}, Oris Code {{monitorPlan.item.orisCode}}, Location ID(s) {{monitorPlan.item.configuration}}. Submitted on {{monitorPlan.item.submissionDateDisplay}}.
+    </p>
+
+    <p>
+      For the person who submitted this file, a record of this submission is available to view in CDX. To view this submission record, log into CDX using your credentials and select the Submission History tab. This page will show your most recent submissions.
+    </p>
+    <p>
+      If you have any questions regarding this correspondence, please contact <a href="{{supportEmail}}">{{supportEmail}}</a> and/or your EPA Monitoring/Emissions Reporting analyst. For analyst contact information, see <a href="{{cdxUrl}}">CAMD Staff Contacts.</a>
+    </p>
+    <p>
+      To: {{toEmail}}
+    </p>
+    <p>
+      CC: {{ccEmail}}
+    </p>
+  </div>
+
   </body>
 </html>
