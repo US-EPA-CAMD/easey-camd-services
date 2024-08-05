@@ -265,23 +265,22 @@ export class SubmissionProcessService {
           },
         );
 
-        const response = await this.importS3Client.send(
+        const getObjectResponse = await this.importS3Client.send(
           new GetObjectCommand({
             Bucket: this.configService.get<string>('matsConfig.importBucket'),
             Key: matsRecord.bucketLocation,
           }),
         );
-        const responseString = await response.Body.transformToString();
 
-        writeFileSync(
-          `${folderPath}/MATS_${set.monPlanIdentifier}_${matsRecord.testTypeGroup}_${matsRecord.testNumber}_${matsRecord.fileName}`,
-          responseString,
-        );
+        //Read file content as a byte-array instead of as a string. This correctly processes binary and non-binarry files.
+        const filePath = `${folderPath}/MATS_${set.monPlanIdentifier}_${matsRecord.testTypeGroup}_${matsRecord.testNumber}_${matsRecord.fileName}`;
+        const bodyContents = await getObjectResponse.Body.transformToByteArray();
+        writeFileSync(filePath, Buffer.from(bodyContents));
 
         //Upload the Mats Bulk File Object to the global bucket
         await this.globalS3Client.send(
           new PutObjectCommand({
-            Body: responseString,
+            Body: createReadStream(filePath),
             Key: matsRecord.bucketLocation,
             Bucket: this.configService.get<string>('matsConfig.globalBucket'),
           }),
