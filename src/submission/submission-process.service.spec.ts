@@ -16,6 +16,7 @@ import { SubmissionQueue } from '../entities/submission-queue.entity';
 import { SubmissionSet } from '../entities/submission-set.entity';
 import { MailEvalService } from '../mail/mail-eval.service';
 import { SubmissionProcessService } from './submission-process.service';
+import { SubmissionFeedbackRecordService } from './submission-feedback-record.service';
 
 jest.mock('@aws-sdk/client-s3');
 
@@ -61,6 +62,17 @@ describe('-- Submission Process Service --', () => {
             generateCopyOfRecordCert: jest.fn().mockResolvedValue(''),
           }),
         },
+        {
+          provide: SubmissionFeedbackRecordService,
+          useFactory: () => ({
+            createSubmissionFeedbackEmailAttachment: jest.fn().mockReturnValue('content'),
+            replaceAttachmentHeaderContents: jest.fn().mockReturnValue('content'),
+            generateSummaryTableForUnitStack: jest.fn().mockReturnValue('content'),
+            addDefaultTable: jest.fn().mockReturnValue('content'),
+            addTableHeader: jest.fn().mockReturnValue('content'),
+            getSubmissionReceiptTableContent: jest.fn().mockReturnValue('content'),
+          }),
+        },
       ],
     }).compile();
 
@@ -93,6 +105,8 @@ describe('-- Submission Process Service --', () => {
       transaction: jest.fn(),
 
       findBy: jest.fn().mockResolvedValue([new SubmissionQueue()]),
+
+      find: jest.fn().mockResolvedValue([new SubmissionQueue()]),
 
       save: jest.fn(),
     } as any as EntityManager);
@@ -202,4 +216,51 @@ describe('-- Submission Process Service --', () => {
       await service.processSubmissionSet('');
     }).not.toThrowError();
   });
+
+  // addEvalReports
+  it('should add evaluation reports correctly', async () => {
+    const set = new SubmissionSet();
+    set.orisCode = 12345;
+    set.monPlanIdentifier = 'mockMP';
+
+    const record1 = new SubmissionQueue();
+    record1.processCode = 'MP';
+    record1.severityCode = 'CRIT1';
+
+    const records = [record1];
+    const documents = [];
+
+    const mockReportDTO = new ReportDTO();
+    jest.spyOn(service['dataSetService'], 'getDataSet').mockResolvedValue(mockReportDTO);
+    jest.spyOn(service['copyOfRecordService'], 'generateCopyOfRecord').mockReturnValue('mockReport');
+
+    await service.addEvalReports(set, records, documents);
+
+    expect(documents.length).toBe(1);
+    expect(documents[0].documentTitle).toEqual('12345_MP_EVALmockMP');
+    expect(documents[0].context).toEqual('mockReport');
+  });
+
+  //handleError
+  it('should handle errors correctly', async () => {
+    const set = new SubmissionSet();
+    set.userEmail = 'test@example.com';
+    set.submissionSetIdentifier = 'mockSetId';
+
+    const queue = [new SubmissionQueue()];
+    const error = new Error('mock error');
+
+    jest.spyOn(service, 'setRecordStatusCode').mockResolvedValue();
+    jest.spyOn(service.returnManager(), 'save').mockResolvedValue({});
+    jest.spyOn(service, 'sendFeedbackReportEmail').mockResolvedValue();
+    jest.spyOn(service['logger'], 'error').mockImplementation(jest.fn());
+
+    // Ensure the method call and catch the thrown error
+    await expect(service.handleError(set, queue, error, false)).rejects.toThrow('mock error');
+
+    expect(set.statusCode).toEqual('ERROR');
+    expect(set.details).toEqual(JSON.stringify(error));
+    expect(service['logger'].error).toHaveBeenCalled();
+  });
+
 });
