@@ -44,7 +44,7 @@ export class MailService {
     } catch (e) {
       throw new EaseyException(e.message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
-    this.logger.info('Successfully sent an email', {
+    this.logger.log('Successfully sent an email', {
       from: payload.fromEmail,
     });
   }
