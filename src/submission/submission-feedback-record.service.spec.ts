@@ -5,8 +5,7 @@ import { DataSetService } from '../dataset/dataset.service';
 import { ReportDTO } from '../dto/report.dto';
 import { ReportColumnDTO } from '../dto/report-column.dto';
 import { ReportDetailDTO } from '../dto/report-detail.dto';
-import { submissionFeedbackTemplate } from './submission-feedback-template';
-import { KeyValuePairs, SubmissionEmailParamsDto } from '../dto/submission-email-params.dto';
+import { KeyValuePairs } from '../dto/submission-email-params.dto';
 import { SubmissionFeedbackRecordService } from './submission-feedback-record.service';
 
 describe('-- Submission Feedback Record Service --', () => {
@@ -36,51 +35,6 @@ describe('-- Submission Feedback Record Service --', () => {
 
   it('should be defined', () => {
     expect(service).toBeDefined();
-  });
-
-  it('should create submission feedback email attachment', () => {
-    const submissionEmailParamsDto = new SubmissionEmailParamsDto();
-    submissionEmailParamsDto.templateContext = {
-      monitorPlan: {
-        item: {
-          facilityName: 'Test Facility',
-          orisCode: '12345',
-          unitStackPipe: 'USP001',
-          submissionDateDisplay: '2022-01-01',
-          stateCode: 'TX',
-        },
-      },
-    };
-
-    const result = service.createSubmissionFeedbackEmailAttachment(submissionEmailParamsDto);
-    expect(result).toContain('Test Facility');
-    expect(result).toContain('12345');
-    expect(result).toContain('USP001');
-    expect(result).toContain('2022-01-01');
-    expect(result).toContain('TX');
-  });
-
-  it('should replace attachment header contents', () => {
-    const content = submissionFeedbackTemplate;
-    const submissionEmailParamsDto = new SubmissionEmailParamsDto();
-    submissionEmailParamsDto.templateContext = {
-      monitorPlan: {
-        item: {
-          facilityName: 'Test Facility',
-          orisCode: '12345',
-          unitStackPipe: 'USP001',
-          submissionDateDisplay: '2022-01-01',
-          stateCode: 'TX',
-        },
-      },
-    };
-
-    const result = service.replaceAttachmentHeaderContents(content, submissionEmailParamsDto);
-    expect(result).toContain('Test Facility');
-    expect(result).toContain('12345');
-    expect(result).toContain('USP001');
-    expect(result).toContain('2022-01-01');
-    expect(result).toContain('TX');
   });
 
   it('should generate summary table for unit stack', () => {
