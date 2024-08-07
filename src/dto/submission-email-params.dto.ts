@@ -17,6 +17,7 @@ export class SubmissionEmailParamsDto {
   orisCode              : string;
   stateCode             : string;
   unitStackPipe         : string;
+  monPlanStatus         : string;
 
   templateContext: any = {};
 
@@ -24,6 +25,7 @@ export class SubmissionEmailParamsDto {
   ccEmail : string;
   fromEmail: string;
   subjectEmail: string;
+  epaAnalystLink: string;
   isSubmissionFailure: boolean;
   submissionError: string;
 

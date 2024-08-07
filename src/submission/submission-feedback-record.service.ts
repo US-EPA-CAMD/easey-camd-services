@@ -1,12 +1,11 @@
 import { ReportDetailDTO } from './../dto/report-detail.dto';
-import { Injectable, StreamableFile } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Logger } from '@us-epa-camd/easey-common/logger';
 import { EntityManager } from 'typeorm';
 import { ReportDTO } from '../dto/report.dto';
 import { ReportColumnDTO } from '../dto/report-column.dto';
 import { DataSetService } from '../dataset/dataset.service';
-import { submissionFeedbackTemplate } from './submission-feedback-template';
-import { KeyValuePairs, SubmissionEmailParamsDto } from '../dto/submission-email-params.dto';
+import { KeyValuePairs } from '../dto/submission-email-params.dto';
 
 @Injectable()
 export class SubmissionFeedbackRecordService {
@@ -15,23 +14,6 @@ export class SubmissionFeedbackRecordService {
     private dataService: DataSetService,
     private readonly entityManager: EntityManager,
   ) {}
-
-  createSubmissionFeedbackEmailAttachment(submissionEmailParamsDto : SubmissionEmailParamsDto): string {
-    let documentContent = submissionFeedbackTemplate;
-    documentContent = this.replaceAttachmentHeaderContents(documentContent, submissionEmailParamsDto);
-    return documentContent;
-  }
-
-  replaceAttachmentHeaderContents(content: string, submissionEmailParamsDto : SubmissionEmailParamsDto): string {
-
-    content = content.replace(/{{FACILITY_NAME}}/g, submissionEmailParamsDto.templateContext['monitorPlan'].item.facilityName);
-    content = content.replace(/{{FACILITY_ID}}/g, submissionEmailParamsDto.templateContext['monitorPlan'].item.orisCode);
-    content = content.replace(/{{UNIT_STACK_PIPE_ID}}/g, submissionEmailParamsDto.templateContext['monitorPlan'].item.unitStackPipe);
-    content = content.replace(/{{SUBMISSION_DATE}}/g, submissionEmailParamsDto.templateContext['monitorPlan'].item.submissionDateDisplay);
-    content = content.replace(/{{STATE}}/g, submissionEmailParamsDto.templateContext['monitorPlan'].item.stateCode);
-
-    return content;
-  }
 
   generateSummaryTableForUnitStack(data: ReportDTO, locationId: string): string {
     let summaryTableContent = '';

@@ -43,11 +43,16 @@ import {
 } from '../dto/submission-email-params.dto';
 import { SubmissionFeedbackRecordService } from './submission-feedback-record.service';
 import { SeverityCode } from '../entities/severity-code.entity';
+import { join } from 'path';
+import * as fs from 'node:fs';
+import Handlebars from 'handlebars';
+import { registerSubmissionHelpers } from './submission.handlebars.helpers';
 
 @Injectable()
 export class SubmissionProcessService {
   private importS3Client: S3Client;
   private globalS3Client: S3Client;
+  private submissionFeedbackTemplate: Handlebars.TemplateDelegate;
 
   constructor(
     private readonly entityManager: EntityManager,
@@ -68,6 +73,12 @@ export class SubmissionProcessService {
       credentials: this.configService.get('matsConfig.globalCredentials'),
       region: this.configService.get('matsConfig.globalRegion'),
     });
+
+    //Template processing
+    registerSubmissionHelpers();
+    const templatePath = join(__dirname, 'templates/submissionFeedbackTemplate.hbs');
+    const templateSource = fs.readFileSync(templatePath, 'utf8');
+    this.submissionFeedbackTemplate = Handlebars.compile(templateSource);
   }
 
   returnManager(): EntityManager {
@@ -783,7 +794,7 @@ export class SubmissionProcessService {
     const submissionRecords = submissionEmailParamsDto.submissionRecords;
     this.logger.debug('Sending ${firstSubmissionQueue.processCode} submission feedback email.' );
 
-    //Set common template context values here
+    //Set common template context parameter values here
     this.logger.debug('Setting common template context parameters with ', {submissionEmailParamsDto});
     await this.setCommonParams(submissionEmailParamsDto);
 
@@ -793,27 +804,22 @@ export class SubmissionProcessService {
     const subject = await this.getEmailSubject(submissionEmailParamsDto);
     this.logger.debug('with subject: ', subject);
 
-    //2. Create the first page of the attachment page
-    this.logger.debug('Creating the submission feedback email attachment. ');
-    let attachmentContent = this.submissionFeedbackRecordService.createSubmissionFeedbackEmailAttachment(submissionEmailParamsDto);
-
     //Add table 1 of the email attachment content
     this.logger.debug('Creating table 1 ( Submission Receipt and Feedback Status Level Information) of the attachment. ');
     const submissionReceiptData = await this.gatherSubmissionReceiptData(submissionEmailParamsDto);
     let submissionReceiptTableContent = this.submissionFeedbackRecordService.getSubmissionReceiptTableContent(submissionReceiptData);
     submissionReceiptTableContent = submissionReceiptTableContent?.trim() ? submissionReceiptTableContent : 'No Data Available';
-    attachmentContent = attachmentContent.replace('{{TABLE_1}}', submissionReceiptTableContent);
+    submissionEmailParamsDto.templateContext['submissionReceiptTableContent'] = submissionReceiptTableContent;
 
     //3. If this is an EM, create the second page of the attachment, which is the EM quarterly summary page
+    let emissionSummaryContent = '';
     if (submissionEmailParamsDto.processCode === 'EM') {
       this.logger.debug('Creating the emissions quarterly summary content of the attachment. ');
-      let emissionSummaryContent = await this.getEmissionsSummaryReport(submissionEmailParamsDto);
+      emissionSummaryContent = await this.getEmissionsSummaryReport(submissionEmailParamsDto);
       emissionSummaryContent = emissionSummaryContent?.trim() ? emissionSummaryContent : 'No Data Available';
       emissionSummaryContent = '<h3>Table 2: Cumulative Data Summary -- EPA-Accepted Values</h3> <div> ' + emissionSummaryContent + '</div>';
-      attachmentContent = attachmentContent.replace('{{SUMMARY_DATA}}', emissionSummaryContent);
-    } else {
-      attachmentContent = attachmentContent.replace('{{SUMMARY_DATA}}', '');
     }
+    submissionEmailParamsDto.templateContext['emissionSummaryContent'] = emissionSummaryContent;
 
     //4. Create the evaluation pages for that file type
     this.logger.debug('Creating the evaluation reports of the attachment. ');
@@ -824,7 +830,10 @@ export class SubmissionProcessService {
       evaluationReportsContent += this.extractBodyContent(report.content);
     }
     evaluationReportsContent = evaluationReportsContent?.trim() ? evaluationReportsContent : 'No Data Available';
-    attachmentContent = attachmentContent.replace('{{EVALUATION_RESULTS}}', evaluationReportsContent);
+    submissionEmailParamsDto.templateContext['evaluationReportsContent'] = evaluationReportsContent;
+
+    //Apply the context parameters to the template
+    let attachmentContent = this.submissionFeedbackTemplate(submissionEmailParamsDto.templateContext);
 
     //5. Combine all the content into one attachment file
     this.logger.debug('Compiling all attachment contents in to one attachment file. ');
@@ -850,25 +859,24 @@ export class SubmissionProcessService {
   }
 
   private async gatherSubmissionReceiptData(submissionEmailParamsDto : SubmissionEmailParamsDto) : Promise<KeyValuePairs> {
-    let submissionType = await this.getSubmissionType(submissionEmailParamsDto);
+    let submissionTypeText = submissionEmailParamsDto.processCode;
     if (submissionEmailParamsDto.processCode === 'EM') {
-      submissionType = submissionType + ' for ' + submissionEmailParamsDto.rptPeriod.periodAbbreviation;
+      submissionTypeText = submissionEmailParamsDto.processCode + ' for ' + submissionEmailParamsDto.rptPeriod.periodAbbreviation;
     }
 
-    const epaAnalystLink = this.configService.get<string>('app.epaAnalystLink')?.trim() ?? '';
-
     const submissionReceiptData: KeyValuePairs = {
-      'Report Received for Facility ID (ORIS Code):': submissionEmailParamsDto.templateContext['monitorPlan'].item.orisCode,
-      'Facility Name:': submissionEmailParamsDto.templateContext['monitorPlan'].item.facilityName,
-      'State:': submissionEmailParamsDto.templateContext['monitorPlan'].item.stateCode,
-      'Monitoring Location(s):': submissionEmailParamsDto.templateContext['monitorPlan'].item.configuration,
-      'Submission Type:': submissionType,
+      'Report Received for Facility ID (ORIS Code):': submissionEmailParamsDto.orisCode,
+      'Facility Name:': submissionEmailParamsDto.facilityName,
+      'State:': submissionEmailParamsDto.stateCode,
+      'Monitoring Location(s):': submissionEmailParamsDto.submissionSet.configuration,
+      'Monitoring Plan Status:': submissionEmailParamsDto.monPlanStatus,
+      'Submission Type:': submissionTypeText,
       'Feedback Status Level:': submissionEmailParamsDto?.highestSeverityRecord?.severityCode?.severityCodeDescription,
       'Submission Date/Time:': submissionEmailParamsDto.templateContext['monitorPlan'].item.submissionDateDisplay,
       'Submitter User ID:': submissionEmailParamsDto.submissionSet.userIdentifier,
       'Submission ID:': submissionEmailParamsDto.submissionSet.submissionSetIdentifier,
       'Resubmission Required:': isResubmissionRequired(submissionEmailParamsDto.highestSeverityRecord) ? 'Yes' : 'No',
-      'EPA Analyst:': { label: 'View Analyst', url: epaAnalystLink },
+      'EPA Analyst:': { label: 'View Analyst', url: submissionEmailParamsDto.epaAnalystLink },
     };
 
     return submissionReceiptData;
@@ -879,6 +887,7 @@ export class SubmissionProcessService {
     const submissionSet = submissionEmailParamsDto.submissionSet;
     const toEmail = submissionEmailParamsDto.toEmail;
     const ccEmail = submissionEmailParamsDto.ccEmail;
+    submissionEmailParamsDto.epaAnalystLink = this.configService.get<string>('app.epaAnalystLink')?.trim() ?? '';;
 
     const facilityInfoList = await this.returnManager().query(
       `
@@ -906,9 +915,29 @@ export class SubmissionProcessService {
     const facilityItem = facilityInfoList.length > 0 ? facilityInfoList[0] : {};
     submissionEmailParamsDto.monLocationIds = facilityItem.mon_location_ids;
     submissionEmailParamsDto.facilityName = facilityItem.facility_name;
-    submissionEmailParamsDto.orisCode = facilityItem.state;
-    submissionEmailParamsDto.stateCode = facilityItem.mon_location_ids;
+    submissionEmailParamsDto.orisCode = facilityItem.oris_code;
+    submissionEmailParamsDto.stateCode = facilityItem.state;
     submissionEmailParamsDto.unitStackPipe = facilityItem.location_name;
+
+    //Get the monitoring plan status
+    const monPlanStatus = await this.returnManager().query(
+      `
+          SELECT mp.MON_PLAN_ID, 
+                 rpBegin.BEGIN_DATE as begin_date, 
+                 rpEnd.END_DATE as end_date, 
+                 CASE WHEN NOW() < rpBegin.BEGIN_DATE THEN 'FUTURE' 
+                     WHEN END_RPT_PERIOD_ID IS NOT NULL AND NOW() > camdecmpswks.Date_Add('quarter', 1, rpEnd.END_DATE) THEN 'RETIRED' 
+                     WHEN END_RPT_PERIOD_ID IS NOT NULL AND NOW() > rpEnd.END_DATE THEN 'RETIRNG' 
+                     ELSE 'ACTIVE' END AS mon_plan_status 
+          FROM camdecmpswks.MONITOR_PLAN mp 
+              LEFT OUTER JOIN camdecmpsmd.reporting_period rpBegin on rpBegin.RPT_PERIOD_ID = mp.BEGIN_RPT_PERIOD_ID 
+              LEFT OUTER JOIN camdecmpsmd.reporting_period rpEnd on rpEnd.RPT_PERIOD_ID = mp.END_RPT_PERIOD_ID 
+          where mp.mon_plan_id = $1
+      `,
+      [submissionSet.monPlanIdentifier],
+    );
+    submissionEmailParamsDto.monPlanStatus = monPlanStatus.length > 0 ? monPlanStatus[0].mon_plan_status : 'N/A';
+
 
     const mpKeys = [
       'submissionType',
@@ -924,7 +953,7 @@ export class SubmissionProcessService {
     submissionEmailParamsDto.templateContext['monitorPlan'] = {
       keys: mpKeys,
       item: {
-        'submissionType': this.getSubmissionType(submissionEmailParamsDto),
+        'submissionType': await this.getSubmissionType(submissionEmailParamsDto),
         'facilityName': submissionEmailParamsDto.facilityName || 'NA',
         'configuration': submissionSet.configuration,
         'orisCode': submissionEmailParamsDto.orisCode || 'NA',
@@ -934,6 +963,9 @@ export class SubmissionProcessService {
       },
     };
 
+    submissionEmailParamsDto.templateContext['processCode'] = submissionEmailParamsDto.processCode;
+    submissionEmailParamsDto.templateContext['processCodeName'] = await this.getProcessCodeName(submissionEmailParamsDto);
+    submissionEmailParamsDto.templateContext['severityLevelCode'] = submissionEmailParamsDto?.highestSeverityRecord?.severityCode?.severityCode;
     submissionEmailParamsDto.templateContext['isCritical1Error'] = isCritical1Severity(submissionEmailParamsDto.highestSeverityRecord);
 
     //Set the contact us email
@@ -957,6 +989,17 @@ export class SubmissionProcessService {
     };
 
     return submissionTypeNames[submissionEmailParamsDto.processCode];
+  }
+
+  async getProcessCodeName(submissionEmailParamsDto : SubmissionEmailParamsDto) {
+    const processCodeNames = {
+      'MP': 'monitoring plan',
+      'QA': 'QA and certification data',
+      'EM': 'quarterly emissions report',
+      'MATS': 'MATS',
+    };
+
+    return processCodeNames[submissionEmailParamsDto.processCode];
   }
 
   private async getEmailSubject(submissionEmailParamsDto : SubmissionEmailParamsDto): Promise<string> {
