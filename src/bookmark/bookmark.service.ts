@@ -3,7 +3,6 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { Logger } from '@us-epa-camd/easey-common/logger';
 
 import { BookmarkRepository } from './bookmark.repository';
@@ -15,7 +14,6 @@ import { BookmarkMap } from '../maps/bookmark.map';
 @Injectable()
 export class BookmarkService {
   constructor(
-    @InjectRepository(BookmarkRepository)
     private readonly repository: BookmarkRepository,
     private readonly bookmarkMap: BookmarkMap,
     private readonly logger: Logger,
@@ -48,8 +46,8 @@ export class BookmarkService {
   }
 
   async getBookmarkById(id: number): Promise<BookmarkDTO> {
-    const results = await this.repository.findOne(id);
-    if (results === undefined) {
+    const results = await this.repository.findOneBy({ bookmarkId: id });
+    if (!results) {
       throw new NotFoundException('Bookmark id does not exist');
     }
 
@@ -58,7 +56,7 @@ export class BookmarkService {
       bookmarkHitCount: results.bookmarkHitCount + 1,
     });
 
-    let updatedResults = await this.repository.findOne(id);
+    let updatedResults = await this.repository.findOneBy({ bookmarkId: id });
 
     return this.bookmarkMap.one(updatedResults);
   }

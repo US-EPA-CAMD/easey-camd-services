@@ -6,6 +6,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { dbConfig } from '@us-epa-camd/easey-common/config';
 import { LoggerModule } from '@us-epa-camd/easey-common/logger';
 import { CorsOptionsModule } from '@us-epa-camd/easey-common/cors-options';
+import {
+  DbLookupValidator,
+  IsValidCodesValidator,
+} from '@us-epa-camd/easey-common/validators';
 
 import routes from './routes';
 import s3Config from './config/s3.config';
@@ -34,5 +38,6 @@ import { MailModule } from './mail/mail.module';
     LoggingModule,
     MailModule,
   ],
+  providers: [DbLookupValidator, IsValidCodesValidator],
 })
 export class AppModule {}

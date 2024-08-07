@@ -1,10 +1,10 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { getManager } from 'typeorm';
+import { EntityManager } from 'typeorm';
 import { CreateMailDto } from '../dto/create-mail.dto';
 import { Logger } from '@us-epa-camd/easey-common/logger';
 import { ConfigService } from '@nestjs/config';
 import { ClientConfig } from '../entities/client-config.entity';
-import { LoggingException } from '@us-epa-camd/easey-common/exceptions';
+import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
 
 const nodeEmailer = require('nodemailer');
 let transporter = null;
@@ -12,6 +12,7 @@ let transporter = null;
 @Injectable()
 export class MailService {
   constructor(
+    private readonly entityManager: EntityManager,
     private readonly configService: ConfigService,
     private readonly logger: Logger,
   ) {
@@ -23,13 +24,13 @@ export class MailService {
   }
 
   returnManager() {
-    return getManager();
+    return this.entityManager;
   }
 
   async sendEmail(clientId: string, payload: CreateMailDto): Promise<void> {
-    const dbRecord = await this.returnManager().findOne<ClientConfig>(
+    const dbRecord = await this.returnManager().findOneBy<ClientConfig>(
       ClientConfig,
-      clientId,
+      { id: clientId },
     );
     console.log(dbRecord);
 
@@ -41,7 +42,7 @@ export class MailService {
         text: payload.message,
       });
     } catch (e) {
-      throw new LoggingException(e.message, HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new EaseyException(e.message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
     this.logger.info('Successfully sent an email', {
       from: payload.fromEmail,
