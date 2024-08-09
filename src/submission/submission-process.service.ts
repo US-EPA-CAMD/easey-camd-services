@@ -743,11 +743,6 @@ export class SubmissionProcessService {
           acc[`EM_${index}`] = { processCode: 'EM', records: [record] };
           return acc;
         }, {}),
-
-      MATS: {
-        processCode: 'MATS',
-        records: submissionQueueRecords.filter((r) => r.processCode === 'MATS')
-      }
     };
 
     const promises = [];
@@ -985,7 +980,6 @@ export class SubmissionProcessService {
       'MP': 'Monitoring Plan',
       'QA': 'QA Test',
       'EM': 'Emissions',
-      'MATS': 'MATS',
     };
 
     return submissionTypeNames[submissionEmailParamsDto.processCode];
@@ -996,7 +990,6 @@ export class SubmissionProcessService {
       'MP': 'monitoring plan',
       'QA': 'QA and certification data',
       'EM': 'quarterly emissions report',
-      'MATS': 'MATS',
     };
 
     return processCodeNames[submissionEmailParamsDto.processCode];
