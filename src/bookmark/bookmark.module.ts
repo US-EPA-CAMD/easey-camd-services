@@ -9,12 +9,9 @@ import { BookmarkRepository } from './bookmark.repository';
 import { BookmarkMap } from '../maps/bookmark.map';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([BookmarkRepository]),
-    HttpModule,
-  ],
+  imports: [TypeOrmModule.forFeature([BookmarkRepository]), HttpModule],
   controllers: [BookmarkController],
-  providers: [ConfigService, BookmarkService, BookmarkMap],
+  providers: [ConfigService, BookmarkRepository, BookmarkService, BookmarkMap],
   exports: [TypeOrmModule],
 })
 export class BookmarkModule {}

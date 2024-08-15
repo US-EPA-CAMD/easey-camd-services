@@ -18,7 +18,7 @@ describe('Mail Service', () => {
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [LoggerModule, HttpModule],
-      providers: [MailService, ConfigService],
+      providers: [EntityManager, MailService, ConfigService],
     }).compile();
 
     service = module.get(MailService);

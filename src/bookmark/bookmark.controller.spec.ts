@@ -1,15 +1,18 @@
+import { HttpModule } from '@nestjs/axios';
+import { ConfigService } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
 import { LoggerModule } from '@us-epa-camd/easey-common/logger';
+import { EntityManager } from 'typeorm';
 
-import { BookmarkRepository } from './bookmark.repository';
-import { BookmarkController } from './bookmark.controller';
-import { BookmarkService } from './bookmark.service';
 import { BookmarkCreatedDTO } from '../dto/bookmark-created.dto';
 import { BoomarkPayloadDTO } from '../dto/bookmark-payload.dto';
-import { BookmarkMap } from '../maps/bookmark.map';
 import { BookmarkDTO } from '../dto/bookmark.dto';
-import { ConfigService } from '@nestjs/config';
-import { HttpModule } from '@nestjs/axios';
+import { BookmarkMap } from '../maps/bookmark.map';
+import { BookmarkController } from './bookmark.controller';
+import { BookmarkRepository } from './bookmark.repository';
+import { BookmarkService } from './bookmark.service';
+
+const mockRepository = () => ({});
 
 describe('-- Bookmark Controller --', () => {
   let controller: BookmarkController;
@@ -20,8 +23,12 @@ describe('-- Bookmark Controller --', () => {
       imports: [LoggerModule, HttpModule],
       controllers: [BookmarkController],
       providers: [
+        {
+          provide: BookmarkRepository,
+          useFactory: mockRepository,
+        },
+        EntityManager,
         BookmarkMap,
-        BookmarkRepository,
         BookmarkService,
         ConfigService,
       ],

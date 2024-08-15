@@ -1,9 +1,11 @@
+import { createMock } from '@golevelup/ts-jest';
 import { ConfigService } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
+import { EntityManager } from 'typeorm';
 import { LoggerModule } from '@us-epa-camd/easey-common/logger';
-import { LoggingService } from './logging.service';
-import { createMock } from '@golevelup/ts-jest';
+
 import { ServerErrorDto } from '../dto/server-error.dto';
+import { LoggingService } from './logging.service';
 
 describe('-- Logging Controller --', () => {
   let service: LoggingService;
@@ -12,7 +14,7 @@ describe('-- Logging Controller --', () => {
     const module = await Test.createTestingModule({
       imports: [LoggerModule],
       controllers: [],
-      providers: [ConfigService, LoggingService],
+      providers: [ConfigService, EntityManager, LoggingService],
     }).compile();
 
     service = module.get(LoggingService);
@@ -28,11 +30,11 @@ describe('-- Logging Controller --', () => {
       request.headers['x-client-id'] = '';
 
       const mockedManager = {
-        findOne: jest.fn().mockResolvedValue({ apiRecord: '' }),
+        findOneBy: jest.fn().mockResolvedValue({ apiRecord: '' }),
       };
 
       jest.spyOn(service, 'returnManager').mockImplementation(() => {
-        return mockedManager;
+        return mockedManager as any;
       });
 
       const errorDto = new ServerErrorDto();
@@ -41,7 +43,7 @@ describe('-- Logging Controller --', () => {
 
       await service.logServerError(request, errorDto);
 
-      expect(mockedManager.findOne).toHaveBeenCalled();
+      expect(mockedManager.findOneBy).toHaveBeenCalled();
     });
   });
 });
