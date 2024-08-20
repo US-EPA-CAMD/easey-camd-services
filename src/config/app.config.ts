@@ -94,6 +94,7 @@ export default registerAs('app', () => ({
   ),
   // ENABLES DEBUG CONSOLE LOGS
   enableDebug: getConfigValueBoolean('EASEY_CAMD_SERVICES_ENABLE_DEBUG'),
+  sqlLogging: getConfigValueBoolean('EASEY_DB_SQL_LOGGING',false),
   /**
    * Needs to be set in .env file for local development if `EASEY_EMISSIONS_API_ENABLE_AUTH_TOKEN` is false.
    * Format:
