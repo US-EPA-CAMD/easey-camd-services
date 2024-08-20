@@ -35,11 +35,24 @@ import { ReportingPeriod } from '../entities/reporting-period.entity';
 import { SubmissionQueue } from '../entities/submission-queue.entity';
 import { SubmissionSet } from '../entities/submission-set.entity';
 import { MailEvalService } from '../mail/mail-eval.service';
+import { ClientConfig } from '../entities/client-config.entity';
+import {
+  HighestSeverityRecord,
+  isCritical1Severity, isResubmissionRequired, KeyValuePairs,
+  SubmissionEmailParamsDto,
+} from '../dto/submission-email-params.dto';
+import { SubmissionFeedbackRecordService } from './submission-feedback-record.service';
+import { SeverityCode } from '../entities/severity-code.entity';
+import { join } from 'path';
+import * as fs from 'node:fs';
+import Handlebars from 'handlebars';
+import { registerSubmissionHelpers } from './submission.handlebars.helpers';
 
 @Injectable()
 export class SubmissionProcessService {
   private importS3Client: S3Client;
   private globalS3Client: S3Client;
+  private submissionFeedbackTemplate: Handlebars.TemplateDelegate;
 
   constructor(
     private readonly entityManager: EntityManager,
@@ -49,6 +62,7 @@ export class SubmissionProcessService {
     private copyOfRecordService: CopyOfRecordService,
     private readonly httpService: HttpService,
     private mailEvalService: MailEvalService,
+    private submissionFeedbackRecordService: SubmissionFeedbackRecordService,
   ) {
     this.importS3Client = new S3Client({
       credentials: this.configService.get('matsConfig.importCredentials'),
@@ -59,6 +73,12 @@ export class SubmissionProcessService {
       credentials: this.configService.get('matsConfig.globalCredentials'),
       region: this.configService.get('matsConfig.globalRegion'),
     });
+
+    //Template processing
+    registerSubmissionHelpers();
+    const templatePath = join(__dirname, 'templates/submissionFeedbackTemplate.hbs');
+    const templateSource = fs.readFileSync(templatePath, 'utf8');
+    this.submissionFeedbackTemplate = Handlebars.compile(templateSource);
   }
 
   returnManager(): EntityManager {
@@ -256,23 +276,22 @@ export class SubmissionProcessService {
           },
         );
 
-        const response = await this.importS3Client.send(
+        const getObjectResponse = await this.importS3Client.send(
           new GetObjectCommand({
             Bucket: this.configService.get<string>('matsConfig.importBucket'),
             Key: matsRecord.bucketLocation,
           }),
         );
-        const responseString = await response.Body.transformToString();
 
-        writeFileSync(
-          `${folderPath}/MATS_${set.monPlanIdentifier}_${matsRecord.testTypeGroup}_${matsRecord.testNumber}_${matsRecord.fileName}`,
-          responseString,
-        );
+        //Read file content as a byte-array instead of as a string. This correctly processes binary and non-binarry files.
+        const filePath = `${folderPath}/MATS_${set.monPlanIdentifier}_${matsRecord.testTypeGroup}_${matsRecord.testNumber}_${matsRecord.fileName}`;
+        const bodyContents = await getObjectResponse.Body.transformToByteArray();
+        writeFileSync(filePath, Buffer.from(bodyContents));
 
         //Upload the Mats Bulk File Object to the global bucket
         await this.globalS3Client.send(
           new PutObjectCommand({
-            Body: responseString,
+            Body: createReadStream(filePath),
             Key: matsRecord.bucketLocation,
             Bucket: this.configService.get<string>('matsConfig.globalBucket'),
           }),
@@ -365,7 +384,7 @@ export class SubmissionProcessService {
     }
   }
 
-  async handleError(set: SubmissionSet, queue: SubmissionQueue[], e: Error) {
+  async handleError(set: SubmissionSet, queue: SubmissionQueue[], e: Error, submissionSucceeded: boolean) {
     set.details = JSON.stringify(e);
     set.statusCode = 'ERROR';
     set.endStageTime = currentDateTime();
@@ -392,14 +411,17 @@ export class SubmissionProcessService {
 
     this.logger.error(e.message, e.stack, 'submission', logMetadata);
 
-    await this.mailEvalService.sendMassEvalEmail(
-      set.userEmail,
-      this.configService.get<string>('app.defaultFromEmail'),
-      set.submissionSetIdentifier,
-      false,
-      true,
-      errorId,
-    );
+    //If the submission did not succeed, do not send feedback email...
+    if (submissionSucceeded) {
+      this.logger.debug("Sending feedback Email...");
+      await this.sendFeedbackReportEmail(
+        set.userEmail,
+        this.configService.get<string>('app.defaultFromEmail'),
+        set.submissionSetIdentifier,
+        true,
+        errorId
+      );
+    }
 
     throw new EaseyException(e, HttpStatus.INTERNAL_SERVER_ERROR);
   }
@@ -430,7 +452,8 @@ export class SubmissionProcessService {
                 );
               }
             } catch (error) {
-              await this.handleError(set, submissionSetRecords, error);
+              this.logger.error("successCleanup: error while cleaning up ", error)
+              await this.handleError(set, submissionSetRecords, error, true);
             }
           },
         );
@@ -448,17 +471,16 @@ export class SubmissionProcessService {
       set.endStageTime = currentDateTime();
       await this.returnManager().save(set);
     } catch (e) {
-      await this.handleError(set, submissionSetRecords, e);
+      this.logger.error("successCleanup: error while cleaning up ... ", e)
+      await this.handleError(set, submissionSetRecords, e, true);
     }
 
-    this.mailEvalService.sendMassEvalEmail(
+    this.sendFeedbackReportEmail(
       set.userEmail,
       this.configService.get<string>('app.defaultFromEmail'),
       set.submissionSetIdentifier,
-      true,
       false,
-      '',
-      set.hasCritErrors,
+      ''
     );
 
     this.logger.log('Finished processing copy of record');
@@ -636,7 +658,7 @@ export class SubmissionProcessService {
       signObs.subscribe({
         //Handle transmission cleanup / error handling
         error: (e) => {
-          this.handleError(set, submissionSetRecords, e);
+          this.handleError(set, submissionSetRecords, e, true);
           rmSync(folderPath, {
             recursive: true,
             maxRetries: 5,
@@ -655,7 +677,418 @@ export class SubmissionProcessService {
         },
       });
     } catch (e) {
-      await this.handleError(set, submissionSetRecords, e);
+      this.logger.error("processSubmissionSet: error while processing submission set. ", e)
+      await this.handleError(set, submissionSetRecords, e, false);
     }
+  }
+
+  async sendFeedbackReportEmail(
+    to: string,
+    from: string,
+    setId: string,
+    isSubmissionFailure: boolean,
+    errorId: string = '',
+  ) {
+
+    this.logger.debug('Starting sending feedback reports email ', { setId});
+
+    //Retrieve the severity codes so that we can find the submission queue record with the highest severity code
+    //to use as the email subject
+    const severityCodes: SeverityCode[] = await this.returnManager().find(SeverityCode);
+
+    // Get complete data for all file types for Submission
+    const submissionSet = await this.returnManager().findOneBy(SubmissionSet, {
+      submissionSetIdentifier: setId,
+    });
+    this.logger.debug(`Retrieved submission set with ID: ${submissionSet ? submissionSet.submissionSetIdentifier : null}`);
+
+    const submissionQueueRecords = await this.returnManager().find(SubmissionQueue, {
+      where: { submissionSetIdentifier: setId },
+    });
+    this.logger.debug(`Number of retrieved submission queue records: ${Array.isArray(submissionQueueRecords) ? submissionQueueRecords.length : 0}`);
+
+    //Send a separate feedback email for the submission, with evaluation reports attached for each file type. First group the submissionQueueRecords by file type.
+    const submissionRecordsByFileType = {
+
+      MP: {
+        processCode: 'MP',
+        records: [submissionQueueRecords.find((r) => r.processCode === 'MP')].filter(Boolean)
+      },
+
+      // Separate QA records based on severityCode so that CRIT1 records are sent in one feedback email whereas
+      // Non-CRIT1 are sent in a separate email.
+      qaCriticalRecords: {
+        processCode: 'QA',
+        records: [
+          ...submissionQueueRecords.filter(
+            (r) => r.processCode === 'QA' && r.severityCode === 'CRIT1' && (r.testSumIdentifier !== null || r.qaCertEventIdentifier !== null || r.testExtensionExemptionIdentifier !== null)
+          ),
+        ],
+      },
+
+      qaNonCriticalRecords: {
+        processCode: 'QA',
+        records: [
+          ...submissionQueueRecords.filter(
+            (r) => r.processCode === 'QA' && r.severityCode !== 'CRIT1' && (r.testSumIdentifier !== null || r.qaCertEventIdentifier !== null || r.testExtensionExemptionIdentifier !== null)
+          ),
+        ],
+      },
+
+      //We need to process EM records differently. WE will send a separate email for each EM record in the
+      //submission queue table. Therefore, we will store them separately.
+      ...submissionQueueRecords
+        .filter((r) => r.processCode === 'EM')
+        .reduce((acc, record, index) => {
+          acc[`EM_${index}`] = { processCode: 'EM', records: [record] };
+          return acc;
+        }, {}),
+
+      MATS: {
+        processCode: 'MATS',
+        records: submissionQueueRecords.filter((r) => r.processCode === 'MATS')
+      }
+    };
+
+    const promises = [];
+
+    //Now, loop through each submission grouping and send one email for each group (file type)
+    for (const [key, { processCode, records }] of Object.entries(submissionRecordsByFileType)) {
+
+      this.logger.debug(`Number of ${key} submission records to process: ${records.length}`);
+      if (records.length > 0) {
+
+        //If it is an EM record, then we need reporting period information
+        let rptPeriod : ReportingPeriod = null;
+        if (processCode === 'EM') {
+          rptPeriod = await this.returnManager().findOneBy(ReportingPeriod, {
+            rptPeriodIdentifier: records[0].rptPeriodIdentifier,
+          });
+        }
+
+        const submissionEmailParamsDto = new SubmissionEmailParamsDto({
+          submissionSet: submissionSet,
+          submissionRecords: records,
+          highestSeverityRecord: await this.findRecordWithHighestSeverityLevel(records, severityCodes),
+          processCode: processCode,
+          rptPeriod: rptPeriod,
+          toEmail: to,
+          fromEmail: from,
+          //ccEmail: ?  // TODO, dependent on Issue/ticket #6183
+          isSubmissionFailure: isSubmissionFailure,
+          submissionError: errorId,
+        });
+
+        //Send the feedback email
+        this.logger.debug('Sending feedback email with params ', {submissionEmailParamsDto});
+        promises.push(this.sendFeedbackEmail(submissionEmailParamsDto));
+      }
+    }
+
+    // Wait for all promises to resolve
+    await Promise.all(promises);
+  }
+
+  async sendFeedbackEmail(submissionEmailParamsDto : SubmissionEmailParamsDto) {
+    const submissionSet = submissionEmailParamsDto.submissionSet;
+    const submissionRecords = submissionEmailParamsDto.submissionRecords;
+    this.logger.debug('Sending ${firstSubmissionQueue.processCode} submission feedback email.' );
+
+    //Set common template context parameter values here
+    this.logger.debug('Setting common template context parameters with ', {submissionEmailParamsDto});
+    await this.setCommonParams(submissionEmailParamsDto);
+
+    //1. Create the email content
+    this.logger.debug('Creating the email content. ');
+    const emailTemplate = 'submissionTemplate';
+    const subject = await this.getEmailSubject(submissionEmailParamsDto);
+    this.logger.debug('with subject: ', subject);
+
+    //Add table 1 of the email attachment content
+    this.logger.debug('Creating table 1 ( Submission Receipt and Feedback Status Level Information) of the attachment. ');
+    const submissionReceiptData = await this.gatherSubmissionReceiptData(submissionEmailParamsDto);
+    let submissionReceiptTableContent = this.submissionFeedbackRecordService.getSubmissionReceiptTableContent(submissionReceiptData);
+    submissionReceiptTableContent = submissionReceiptTableContent?.trim() ? submissionReceiptTableContent : 'No Data Available';
+    submissionEmailParamsDto.templateContext['submissionReceiptTableContent'] = submissionReceiptTableContent;
+
+    //3. If this is an EM, create the second page of the attachment, which is the EM quarterly summary page
+    let emissionSummaryContent = '';
+    if (submissionEmailParamsDto.processCode === 'EM') {
+      this.logger.debug('Creating the emissions quarterly summary content of the attachment. ');
+      emissionSummaryContent = await this.getEmissionsSummaryReport(submissionEmailParamsDto);
+      emissionSummaryContent = emissionSummaryContent?.trim() ? emissionSummaryContent : 'No Data Available';
+      emissionSummaryContent = '<h3>Table 2: Cumulative Data Summary -- EPA-Accepted Values</h3> <div> ' + emissionSummaryContent + '</div>';
+    }
+    submissionEmailParamsDto.templateContext['emissionSummaryContent'] = emissionSummaryContent;
+
+    //4. Create the evaluation pages for that file type
+    this.logger.debug('Creating the evaluation reports of the attachment. ');
+    const evaluationReportDocuments = [];
+    await this.mailEvalService.buildEvalReports(submissionSet, submissionRecords, evaluationReportDocuments);
+    let evaluationReportsContent = '';
+    for (const report of evaluationReportDocuments) {
+      evaluationReportsContent += this.extractBodyContent(report.content);
+    }
+    evaluationReportsContent = evaluationReportsContent?.trim() ? evaluationReportsContent : 'No Data Available';
+    submissionEmailParamsDto.templateContext['evaluationReportsContent'] = evaluationReportsContent;
+
+    //Apply the context parameters to the template
+    let attachmentContent = this.submissionFeedbackTemplate(submissionEmailParamsDto.templateContext);
+
+    //5. Combine all the content into one attachment file
+    this.logger.debug('Compiling all attachment contents in to one attachment file. ');
+    const submissionFeedbackAttachmentFileName='SUBMISSION_FEEDBACK';
+    const feedbackAttachmentDocuments = [];
+    feedbackAttachmentDocuments.push({
+      filename: `${submissionSet.orisCode}_${submissionFeedbackAttachmentFileName}.html`,
+      content: attachmentContent,
+    });
+
+    //6. Finally, send the email
+    this.logger.debug('Sending email with attachment ...');
+    this.mailEvalService.sendEmailWithRetry(
+      submissionEmailParamsDto.toEmail,
+      submissionEmailParamsDto.fromEmail,
+      subject,
+      emailTemplate,
+      submissionEmailParamsDto.templateContext,
+      1,
+      feedbackAttachmentDocuments,
+    );
+
+  }
+
+  private async gatherSubmissionReceiptData(submissionEmailParamsDto : SubmissionEmailParamsDto) : Promise<KeyValuePairs> {
+    let submissionTypeText = submissionEmailParamsDto.processCode;
+    if (submissionEmailParamsDto.processCode === 'EM') {
+      submissionTypeText = submissionEmailParamsDto.processCode + ' for ' + submissionEmailParamsDto.rptPeriod.periodAbbreviation;
+    }
+
+    const submissionReceiptData: KeyValuePairs = {
+      'Report Received for Facility ID (ORIS Code):': submissionEmailParamsDto.orisCode,
+      'Facility Name:': submissionEmailParamsDto.facilityName,
+      'State:': submissionEmailParamsDto.stateCode,
+      'Monitoring Location(s):': submissionEmailParamsDto.submissionSet.configuration,
+      'Monitoring Plan Status:': submissionEmailParamsDto.monPlanStatus,
+      'Submission Type:': submissionTypeText,
+      'Feedback Status Level:': submissionEmailParamsDto?.highestSeverityRecord?.severityCode?.severityCodeDescription,
+      'Submission Date/Time:': submissionEmailParamsDto.templateContext['monitorPlan'].item.submissionDateDisplay,
+      'Submitter User ID:': submissionEmailParamsDto.submissionSet.userIdentifier,
+      'Submission ID:': submissionEmailParamsDto.submissionSet.submissionSetIdentifier,
+      'Resubmission Required:': isResubmissionRequired(submissionEmailParamsDto.highestSeverityRecord) ? 'Yes' : 'No',
+      'EPA Analyst:': { label: 'View Analyst', url: submissionEmailParamsDto.epaAnalystLink },
+    };
+
+    return submissionReceiptData;
+  }
+
+  private async setCommonParams(submissionEmailParamsDto : SubmissionEmailParamsDto): Promise<void> {
+
+    const submissionSet = submissionEmailParamsDto.submissionSet;
+    const toEmail = submissionEmailParamsDto.toEmail;
+    const ccEmail = submissionEmailParamsDto.ccEmail;
+    submissionEmailParamsDto.epaAnalystLink = this.configService.get<string>('app.epaAnalystLink')?.trim() ?? '';;
+
+    const facilityInfoList = await this.returnManager().query(
+      `
+          select  fac.oris_code,
+                  fac.facility_name,
+                  string_agg(coalesce(unt.Unitid, stp.Stack_Name), ', ') as location_name,
+                  fac.state,
+                  string_agg(mpl.mon_loc_id, ', ') as mon_location_ids
+          from  camdecmps.MONITOR_PLAN_LOCATION mpl
+                    join camdecmps.MONITOR_LOCATION loc
+                         on loc.Mon_Loc_Id = mpl.Mon_Loc_Id
+                    left join camd.UNIT unt
+                              on unt.Unit_Id = loc.Unit_Id
+                    left join camdecmps.STACK_PIPE stp
+                              on stp.Stack_Pipe_Id = loc.Stack_Pipe_Id
+                    join camd.PLANT fac
+                         on fac.Fac_Id in (unt.Fac_Id, stp.Fac_Id)
+          where  mpl.mon_plan_id = $1
+          group by fac.oris_code, fac.facility_name, fac.state
+      `,
+      [submissionSet.monPlanIdentifier],
+    );
+
+    //There should only be one result item coming from the query
+    const facilityItem = facilityInfoList.length > 0 ? facilityInfoList[0] : {};
+    submissionEmailParamsDto.monLocationIds = facilityItem.mon_location_ids;
+    submissionEmailParamsDto.facilityName = facilityItem.facility_name;
+    submissionEmailParamsDto.orisCode = facilityItem.oris_code;
+    submissionEmailParamsDto.stateCode = facilityItem.state;
+    submissionEmailParamsDto.unitStackPipe = facilityItem.location_name;
+
+    //Get the monitoring plan status
+    const monPlanStatus = await this.returnManager().query(
+      `
+          SELECT mp.MON_PLAN_ID, 
+                 rpBegin.BEGIN_DATE as begin_date, 
+                 rpEnd.END_DATE as end_date, 
+                 CASE WHEN NOW() < rpBegin.BEGIN_DATE THEN 'FUTURE' 
+                     WHEN END_RPT_PERIOD_ID IS NOT NULL AND NOW() > camdecmpswks.Date_Add('quarter', 1, rpEnd.END_DATE) THEN 'RETIRED' 
+                     WHEN END_RPT_PERIOD_ID IS NOT NULL AND NOW() > rpEnd.END_DATE THEN 'RETIRNG' 
+                     ELSE 'ACTIVE' END AS mon_plan_status 
+          FROM camdecmpswks.MONITOR_PLAN mp 
+              LEFT OUTER JOIN camdecmpsmd.reporting_period rpBegin on rpBegin.RPT_PERIOD_ID = mp.BEGIN_RPT_PERIOD_ID 
+              LEFT OUTER JOIN camdecmpsmd.reporting_period rpEnd on rpEnd.RPT_PERIOD_ID = mp.END_RPT_PERIOD_ID 
+          where mp.mon_plan_id = $1
+      `,
+      [submissionSet.monPlanIdentifier],
+    );
+    submissionEmailParamsDto.monPlanStatus = monPlanStatus.length > 0 ? monPlanStatus[0].mon_plan_status : 'N/A';
+
+
+    const mpKeys = [
+      'submissionType',
+      'facilityName',
+      'configuration',
+      'orisCode',
+      'stateCode',
+      'county',
+      'unitStackPipe',
+      'submissionDateDisplay',
+    ];
+
+    submissionEmailParamsDto.templateContext['monitorPlan'] = {
+      keys: mpKeys,
+      item: {
+        'submissionType': await this.getSubmissionType(submissionEmailParamsDto),
+        'facilityName': submissionEmailParamsDto.facilityName || 'NA',
+        'configuration': submissionSet.configuration,
+        'orisCode': submissionEmailParamsDto.orisCode || 'NA',
+        'stateCode': submissionEmailParamsDto.stateCode || 'NA',
+        'unitStackPipe': submissionEmailParamsDto.unitStackPipe || 'NA',
+        'submissionDateDisplay': await this.getDisplayDate(submissionSet.submittedOn),
+      },
+    };
+
+    submissionEmailParamsDto.templateContext['processCode'] = submissionEmailParamsDto.processCode;
+    submissionEmailParamsDto.templateContext['processCodeName'] = await this.getProcessCodeName(submissionEmailParamsDto);
+    submissionEmailParamsDto.templateContext['severityLevelCode'] = submissionEmailParamsDto?.highestSeverityRecord?.severityCode?.severityCode;
+    submissionEmailParamsDto.templateContext['isCritical1Error'] = isCritical1Severity(submissionEmailParamsDto.highestSeverityRecord);
+
+    //Set the contact us email
+    const supportEmailRecord = await this.returnManager().findOneBy(ClientConfig, {
+      name: 'ecmps-ui',
+    });
+    submissionEmailParamsDto.templateContext['supportEmail'] = supportEmailRecord.supportEmail?.trim() ?? '';
+    submissionEmailParamsDto.templateContext['cdxUrl'] = this.configService.get<string>('app.cdxUrl')?.trim() ?? '';
+
+    //Set to and cc emails
+    submissionEmailParamsDto.templateContext['toEmail'] = toEmail;
+    submissionEmailParamsDto.templateContext['ccEmail'] = ccEmail;
+  }
+
+  async getSubmissionType(submissionEmailParamsDto : SubmissionEmailParamsDto) {
+    const submissionTypeNames = {
+      'MP': 'Monitoring Plan',
+      'QA': 'QA Test',
+      'EM': 'Emissions',
+      'MATS': 'MATS',
+    };
+
+    return submissionTypeNames[submissionEmailParamsDto.processCode];
+  }
+
+  async getProcessCodeName(submissionEmailParamsDto : SubmissionEmailParamsDto) {
+    const processCodeNames = {
+      'MP': 'monitoring plan',
+      'QA': 'QA and certification data',
+      'EM': 'quarterly emissions report',
+      'MATS': 'MATS',
+    };
+
+    return processCodeNames[submissionEmailParamsDto.processCode];
+  }
+
+  private async getEmailSubject(submissionEmailParamsDto : SubmissionEmailParamsDto): Promise<string> {
+
+    const highestSeveritySubmissionQueueRecord = submissionEmailParamsDto?.highestSeverityRecord?.submissionQueue;
+    const fileTypeAbbrev = highestSeveritySubmissionQueueRecord?.processCode;
+    const orisCode = submissionEmailParamsDto.submissionSet.orisCode;
+    const unitStackPipe = submissionEmailParamsDto.templateContext['monitorPlan'].item.unitStackPipe;
+    const severityLevelDescription = submissionEmailParamsDto?.highestSeverityRecord?.severityCode?.severityCodeDescription;
+
+    return `${fileTypeAbbrev} Feedback for ORIS Code ${orisCode} ${unitStackPipe} (${severityLevelDescription})`;
+  }
+
+  async getDisplayDate (date : Date): Promise<string>   {
+    return date.toLocaleDateString('en-US', {
+      timeZone: 'America/New_York',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: 'numeric',
+    });
+  }
+
+  async getEmissionsSummaryReport (submissionEmailParamsDto : SubmissionEmailParamsDto): Promise<string>   {
+    const submissionSet = submissionEmailParamsDto.submissionSet;
+    const emSubmissionRecords = submissionEmailParamsDto.submissionRecords;
+
+    let reportParams = new ReportParamsDTO();
+    reportParams.monitorPlanId = submissionSet.monPlanIdentifier;
+    //reportParams.reportingPeriodIds = emSubmissionRecords.map((esr) => esr.rptPeriodIdentifier);
+    reportParams.reportingPeriodIds = emSubmissionRecords.map((esr) => esr.rptPeriodIdentifier).join(',');
+    reportParams.reportCode = 'EM_QRT_SUM';
+    const monLocationIds = submissionEmailParamsDto.monLocationIds.split(',').map(item => item.trim());
+    const promises = [];
+
+    //Loop through the location IDs and get the data
+    for (const monLocationId of monLocationIds) {
+      reportParams.locationId = monLocationId;
+      const promise = this.dataSetService.getDataSet(reportParams).then(report => {
+        return this.submissionFeedbackRecordService.generateSummaryTableForUnitStack(report, reportParams.locationId);
+      });
+
+      promises.push(promise);
+    }
+
+    const results = await Promise.all(promises);
+    return results.join('<br><br>'); //Aggregate the results
+  }
+
+  async findRecordWithHighestSeverityLevel(submissionQueueRecords: SubmissionQueue [], severityCodes: SeverityCode[]): Promise<HighestSeverityRecord> {
+    // Create a mapping of severityCode to severity_level
+    const severityCodeMap = new Map<string, SeverityCode>();
+    severityCodes.forEach((severityCode) => {
+      severityCodeMap.set(severityCode.severityCode, severityCode);
+    });
+
+    // Find the record with the maximum severity_level
+    let highestSeverityRecord : HighestSeverityRecord;
+    let maxSeverityLevel = -Infinity;
+
+    submissionQueueRecords.forEach((record) => {
+      const severityCode = severityCodeMap.get(record.severityCode);
+      if (severityCode !== undefined && severityCode.severityLevel > maxSeverityLevel) {
+        maxSeverityLevel = severityCode.severityLevel;
+        highestSeverityRecord = {submissionQueue: record, severityCode: severityCode};
+      }
+    });
+
+    if (highestSeverityRecord) {
+      return highestSeverityRecord;
+    } else { // No records found for some reason, return the first available one or return null.
+      return {
+        submissionQueue: submissionQueueRecords.length > 0 ? submissionQueueRecords[0] : null,
+        severityCode: submissionQueueRecords.length > 0 ? severityCodeMap.get(submissionQueueRecords[0].severityCode) || null : null,
+      };
+    }
+  }
+
+  extractBodyContent(html: string): string {
+    if (!html) {
+      return '';
+    }
+
+    // Use a regular expression to extract content between <body> tags
+    const bodyRegex = /<body[^>]*>([\s\S]*?)<\/body>/i;
+    const bodyContentMatch = bodyRegex.exec(html);
+
+    // Return the content if found, otherwise return an empty string
+    return bodyContentMatch ? bodyContentMatch[1].trim() : '';
   }
 }

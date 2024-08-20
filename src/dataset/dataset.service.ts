@@ -12,8 +12,6 @@ import { ReportColumnDTO } from '../dto/report-column.dto';
 
 @Injectable()
 export class DataSetService {
-  private hasFacilityInfo: boolean;
-  private reportColumns: ReportColumnDTO[];
 
   constructor(
     private readonly entityManager: EntityManager,
@@ -38,6 +36,8 @@ export class DataSetService {
     dataSet: DataSet,
     params: ReportParamsDTO,
     test: { id: string; code: string },
+    reportColumns: ReportColumnDTO[],
+    hasFacilityInfo: boolean,
   ): Promise<ReportDetailDTO[]> {
     let detailDef = dataSet.tables.filter(
       (tbl) =>
@@ -49,12 +49,13 @@ export class DataSetService {
       detailDef = [detailDef[2], detailDef[0], detailDef[1]];
     }
 
-    return this.getDataSetResults(schema, detailDef, params, test.id);
+    return this.getDataSetResults(schema, detailDef, params, reportColumns, hasFacilityInfo, test.id);
   }
 
   async getDataSet(params: ReportParamsDTO, isWorkspace: boolean = false) {
-    this.reportColumns = [];
-    this.hasFacilityInfo = false;
+    const reportColumns: ReportColumnDTO[] = [];
+    let hasFacilityInfo = false;
+
     const report = new ReportDTO();
     const schema = isWorkspace ? 'camdecmpswks' : 'camdecmps';
     const dataSet = await this.repository.getDataSet(params.reportCode);
@@ -78,7 +79,7 @@ export class DataSetService {
       );
 
       tests.forEach((test: { id: string; code: string }) => {
-        promises.push(this.getTestDataSet(schema, dataSet, params, test));
+        promises.push(this.getTestDataSet(schema, dataSet, params, test, reportColumns, hasFacilityInfo));
       });
 
       await Promise.all(promises);
@@ -92,10 +93,12 @@ export class DataSetService {
         schema,
         dataSet.tables,
         params,
+        reportColumns,
+        hasFacilityInfo
       );
     }
 
-    report.columns = this.reportColumns;
+    report.columns = reportColumns;
     report.details = report.details.filter(
       (detail) => detail.results.length > 0,
     );
@@ -107,6 +110,8 @@ export class DataSetService {
     schema: string,
     table: DataTable,
     params: ReportParamsDTO,
+    reportColumns: ReportColumnDTO[],
+    hasFacilityInfo: boolean,
     testId?: string,
   ): Promise<ReportDetailDTO> {
     table.sqlStatement = table.sqlStatement.replace(/{SCHEMA}/, schema);
@@ -135,7 +140,7 @@ export class DataSetService {
     );
 
     if (detailDto.results.length > 0) {
-      let columnDto = this.reportColumns.find(
+      let columnDto = reportColumns.find(
         (column) => column.code === table.templateCode,
       );
 
@@ -148,7 +153,7 @@ export class DataSetService {
             displayName: column.displayName,
           };
         });
-        this.reportColumns.push(columnDto);
+        reportColumns.push(columnDto);
       }
     }
 
@@ -159,16 +164,18 @@ export class DataSetService {
     schema: string,
     tables: DataTable[],
     params: ReportParamsDTO,
+    reportColumns: ReportColumnDTO[],
+    hasFacilityInfo: boolean,
     testId?: string,
   ): Promise<ReportDetailDTO[]> {
     const promises = [];
     const FACINFO = 'FACINFO';
 
     tables.forEach((tbl) => {
-      if (!this.hasFacilityInfo || !tbl.templateCode.includes(FACINFO)) {
-        promises.push(this.getDataSetResult(schema, tbl, params, testId));
-        if (!this.hasFacilityInfo && tbl.templateCode.includes(FACINFO)) {
-          this.hasFacilityInfo = true;
+      if (!hasFacilityInfo || !tbl.templateCode.includes(FACINFO)) {
+        promises.push(this.getDataSetResult(schema, tbl, params, reportColumns, hasFacilityInfo, testId));
+        if (!hasFacilityInfo && tbl.templateCode.includes(FACINFO)) {
+          hasFacilityInfo = true;
         }
       }
     });

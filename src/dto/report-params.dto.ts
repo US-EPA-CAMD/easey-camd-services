@@ -44,4 +44,14 @@ export class ReportParamsDTO {
   @ApiProperty({ required: false })
   @IsOptional()
   quarter?: number;
+
+  //Added for Emissions page of the Submission Feedback Email Attachment
+  @ApiProperty({ required: false })
+  @IsOptional()
+  locationId?: string;
+
+  @ApiProperty({ isArray: true, required: false })
+  @IsOptional()
+  @Transform(({ value }) => value.split('|').map((item: string) => Number(item.trim())))
+  reportingPeriodIds?: string;
 }

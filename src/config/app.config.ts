@@ -64,6 +64,10 @@ export default registerAs('app', () => ({
     'EASEY_CAMD_SERVICES_CDX_URL',
     'https://dev.epacdx.net/',
   ),
+  epaAnalystLink: getConfigValue(
+    'EASEY_CAMD_SERVICES_EPA_ANALYST_LINK',
+    'https://www.epa.gov/power-sector/business-center-and-emissions-monitoring-contacts#MonitoringContacts',
+  ),
   enableAuthToken: getConfigValueBoolean(
     'EASEY_CAMD_SERVICES_ENABLE_AUTH_TOKEN',
     true,

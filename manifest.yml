@@ -35,6 +35,7 @@ applications:
       EASEY_CAMD_SERVICES_DEFAULT_FROM_EMAIL: noreply@epa.gov
       EASEY_CAMD_SERVICES_MAX_MATS_UPLOAD_SIZE: 100
       EASEY_CAMD_SERVICES_CDX_URL: ((cdxUrl))
+      EASEY_CAMD_SERVICES_EPA_ANALYST_LINK: ((epaAnalystLink))
       EASEY_CAMD_SERVICES_SUBMISSION_SUCCESS_MESSAGE: The following items were submitted successfully. View / download past submissions
       EASEY_CAMD_SERVICES_SUBMISSION_CRIT_MESSAGE: Files submitted in this batch were submitted with Critical Errors. The copy of record has been processed for every record, but the data has not been submitted. View / download the copy of records
       TZ: America/New_York

@@ -77,8 +77,8 @@ export class CopyOfRecordService {
       groups.push([]);
     }
 
-    for (let i = 0; i < columns.values.length; i++) {
-      groups[i % columnCount].push([
+    for (let i = 0; i < (columns?.values?.length ?? 0); i++) {
+        groups[i % columnCount].push([
         columns.values[i].displayName,
         columns.values[i].name,
       ]);

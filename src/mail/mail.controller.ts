@@ -70,8 +70,7 @@ export class MailController {
     await this.mailEvalService.sendMassEvalEmail(
       payload.toEmail,
       payload.fromEmail,
-      payload.evaluationSetId,
-      false,
+      payload.evaluationSetId
     );
   }
 
