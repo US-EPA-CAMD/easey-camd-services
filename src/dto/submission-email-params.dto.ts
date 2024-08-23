@@ -14,7 +14,7 @@ export class SubmissionEmailParamsDto {
   rptPeriod             : ReportingPeriod; //For EM records only
   monLocationIds        : string;   //Comma separated list
   facilityName          : string;
-  orisCode              : string;
+  orisCode              : number;
   stateCode             : string;
   unitStackPipe         : string;
   monPlanStatus         : string;

@@ -47,6 +47,7 @@ import { join } from 'path';
 import * as fs from 'node:fs';
 import Handlebars from 'handlebars';
 import { registerSubmissionHelpers } from './submission.handlebars.helpers';
+import { RecipientListService } from './recipient-list.service';
 
 @Injectable()
 export class SubmissionProcessService {
@@ -63,9 +64,10 @@ export class SubmissionProcessService {
     private readonly httpService: HttpService,
     private mailEvalService: MailEvalService,
     private submissionFeedbackRecordService: SubmissionFeedbackRecordService,
+    private recipientListService: RecipientListService,
   ) {
     this.importS3Client = new S3Client({
-      credentials: this.configService.get('matsConfig.importCredentials'),
+      credentials: this.configService.get('matsConfig.iRecipientListServicemportCredentials'),
       region: this.configService.get('matsConfig.importRegion'),
     });
 
@@ -769,7 +771,6 @@ export class SubmissionProcessService {
           rptPeriod: rptPeriod,
           toEmail: to,
           fromEmail: from,
-          //ccEmail: ?  // TODO, dependent on Issue/ticket #6183
           isSubmissionFailure: isSubmissionFailure,
           submissionError: errorId,
         });
@@ -792,6 +793,25 @@ export class SubmissionProcessService {
     //Set common template context parameter values here
     this.logger.debug('Setting common template context parameters with ', {submissionEmailParamsDto});
     await this.setCommonParams(submissionEmailParamsDto);
+
+    //Get the recipients list from the recipient's list API
+    submissionEmailParamsDto.ccEmail = await this.recipientListService.getEmailRecipients(
+      'SUBMISSIONCONFIRMATION',
+      submissionEmailParamsDto.orisCode,
+      submissionSet.userIdentifier,
+      submissionEmailParamsDto.processCode,
+      false
+    );
+
+    //If there are no recipients defined, log and return quietly. Process the next file type.
+    if (!submissionEmailParamsDto.ccEmail) {
+      this.logger.error('No email recipients found; Processing next file type...');
+      return;
+    }
+
+    //Set to and cc emails
+    submissionEmailParamsDto.templateContext['toEmail'] = submissionEmailParamsDto.toEmail;
+    submissionEmailParamsDto.templateContext['ccEmail'] = submissionEmailParamsDto.ccEmail;
 
     //1. Create the email content
     this.logger.debug('Creating the email content. ');
@@ -853,6 +873,7 @@ export class SubmissionProcessService {
     this.logger.debug('Sending email with attachment ...');
     this.mailEvalService.sendEmailWithRetry(
       submissionEmailParamsDto.toEmail,
+      submissionEmailParamsDto.ccEmail,
       submissionEmailParamsDto.fromEmail,
       subject,
       emailTemplate,
@@ -860,7 +881,6 @@ export class SubmissionProcessService {
       1,
       feedbackAttachmentDocuments,
     );
-
   }
 
   private async gatherSubmissionReceiptData(submissionEmailParamsDto : SubmissionEmailParamsDto) : Promise<KeyValuePairs> {
@@ -870,7 +890,7 @@ export class SubmissionProcessService {
     }
 
     const submissionReceiptData: KeyValuePairs = {
-      'Report Received for Facility ID (ORIS Code):': submissionEmailParamsDto.orisCode,
+      'Report Received for Facility ID (ORIS Code):': submissionEmailParamsDto.orisCode?.toString(),
       'Facility Name:': submissionEmailParamsDto.facilityName,
       'State:': submissionEmailParamsDto.stateCode,
       'Monitoring Location(s):': submissionEmailParamsDto.submissionSet.configuration,
@@ -890,9 +910,7 @@ export class SubmissionProcessService {
   private async setCommonParams(submissionEmailParamsDto : SubmissionEmailParamsDto): Promise<void> {
 
     const submissionSet = submissionEmailParamsDto.submissionSet;
-    const toEmail = submissionEmailParamsDto.toEmail;
-    const ccEmail = submissionEmailParamsDto.ccEmail;
-    submissionEmailParamsDto.epaAnalystLink = this.configService.get<string>('app.epaAnalystLink')?.trim() ?? '';;
+    submissionEmailParamsDto.epaAnalystLink = this.configService.get<string>('app.epaAnalystLink')?.trim() ?? '';
 
     const facilityInfoList = await this.returnManager().query(
       `
@@ -979,10 +997,6 @@ export class SubmissionProcessService {
     });
     submissionEmailParamsDto.templateContext['supportEmail'] = supportEmailRecord.supportEmail?.trim() ?? '';
     submissionEmailParamsDto.templateContext['cdxUrl'] = this.configService.get<string>('app.cdxUrl')?.trim() ?? '';
-
-    //Set to and cc emails
-    submissionEmailParamsDto.templateContext['toEmail'] = toEmail;
-    submissionEmailParamsDto.templateContext['ccEmail'] = ccEmail;
   }
 
   async getSubmissionType(submissionEmailParamsDto : SubmissionEmailParamsDto) {

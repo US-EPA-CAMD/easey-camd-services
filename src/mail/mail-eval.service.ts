@@ -361,6 +361,7 @@ export class MailEvalService {
 
   async sendEmailWithRetry(
     to: string,
+    cc: string,
     from: string,
     subject: string,
     template: string,
@@ -372,6 +373,7 @@ export class MailEvalService {
       this.mailerService
         .sendMail({
           to: to, // List of receivers email address
+          cc: cc,
           from: from,
           subject: subject, // Subject line
           template: template,
@@ -386,6 +388,7 @@ export class MailEvalService {
           console.log('Attempting to send failed email request'); //
           this.sendEmailWithRetry(
             to,
+            cc,
             from,
             subject,
             template,
@@ -571,6 +574,7 @@ export class MailEvalService {
 
   async sendMassEvalEmail(
     to: string,
+    cc: string,
     from: string,
     setId: string,
   ) {
@@ -707,6 +711,7 @@ export class MailEvalService {
 
     this.sendEmailWithRetry(
       to,
+      cc,
       from,
       subject,
       template,

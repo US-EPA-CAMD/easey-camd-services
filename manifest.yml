@@ -39,6 +39,7 @@ applications:
       EASEY_CAMD_SERVICES_SUBMISSION_SUCCESS_MESSAGE: The following items were submitted successfully. View / download past submissions
       EASEY_CAMD_SERVICES_SUBMISSION_CRIT_MESSAGE: Files submitted in this batch were submitted with Critical Errors. The copy of record has been processed for every record, but the data has not been submitted. View / download the copy of records
       TZ: America/New_York
+      EASEY_CAMD_SERVICES_RECIPIENT_LIST_API: ((recipientsListApi))
     routes:
       - route: ((host))/((path))
     services:
