@@ -132,5 +132,5 @@ export default registerAs('app', () => ({
     'EASEY_CAMD_SERVICES_SUBMISSION_CRIT_MESSAGE',
     '',
   ),
-  recipientsListApi: getConfigValue('EASEY_CAMD_SERVICES_RECIPIENT_LIST_API', 'https://cbsstagei.epa.gov/CBSD/api/auth-mgmt/emailRecipients'),
+  recipientsListApi: getConfigValue('EASEY_CAMD_SERVICES_RECIPIENT_LIST_API', 'https://cbsstagei.epa.gov/CBSD'),
 }));

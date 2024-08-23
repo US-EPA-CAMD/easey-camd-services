@@ -278,7 +278,7 @@ describe('Mail Eval Service', () => {
     jest.spyOn(service, 'formatTeeContext').mockResolvedValue({});
     jest.spyOn(service, 'formatEmissionsContext').mockResolvedValue({});
 
-    await service.sendMassEvalEmail('', '', '');
+    await service.sendMassEvalEmail('', '', '', '');
     expect(wrapperService.sendMail).toHaveBeenCalled();
   });
 });

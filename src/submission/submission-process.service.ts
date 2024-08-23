@@ -797,7 +797,7 @@ export class SubmissionProcessService {
     //Get the recipients list from the recipient's list API
     submissionEmailParamsDto.ccEmail = await this.recipientListService.getEmailRecipients(
       'SUBMISSIONCONFIRMATION',
-      submissionEmailParamsDto.orisCode,
+      submissionEmailParamsDto.facId,
       submissionSet.userIdentifier,
       submissionEmailParamsDto.processCode,
       false
@@ -914,7 +914,8 @@ export class SubmissionProcessService {
 
     const facilityInfoList = await this.returnManager().query(
       `
-          select  fac.oris_code,
+          select  fac.fac_id,
+                  fac.oris_code,
                   fac.facility_name,
                   string_agg(coalesce(unt.Unitid, stp.Stack_Name), ', ') as location_name,
                   fac.state,
@@ -929,7 +930,7 @@ export class SubmissionProcessService {
                     join camd.PLANT fac
                          on fac.Fac_Id in (unt.Fac_Id, stp.Fac_Id)
           where  mpl.mon_plan_id = $1
-          group by fac.oris_code, fac.facility_name, fac.state
+          group by fac.fac_id, fac.oris_code, fac.facility_name, fac.state
       `,
       [submissionSet.monPlanIdentifier],
     );
@@ -938,6 +939,7 @@ export class SubmissionProcessService {
     const facilityItem = facilityInfoList.length > 0 ? facilityInfoList[0] : {};
     submissionEmailParamsDto.monLocationIds = facilityItem.mon_location_ids;
     submissionEmailParamsDto.facilityName = facilityItem.facility_name;
+    submissionEmailParamsDto.facId = facilityItem.fac_id;
     submissionEmailParamsDto.orisCode = facilityItem.oris_code;
     submissionEmailParamsDto.stateCode = facilityItem.state;
     submissionEmailParamsDto.unitStackPipe = facilityItem.location_name;
