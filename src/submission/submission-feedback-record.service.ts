@@ -21,14 +21,15 @@ export class SubmissionFeedbackRecordService {
     // Process each detail from the report
     for (const detail of data.details) {
       const columns = data.columns.find((x) => x.code === detail.templateCode);
-      summaryTableContent += this.addDefaultTable(columns, detail, locationId);
+      let header = `<b> Unit/Stack/Pipe ID: ${locationId} </b>`;
+      summaryTableContent += this.addTable(columns, detail, header);
     }
 
     return summaryTableContent;
   }
 
-  addDefaultTable(columns: ReportColumnDTO, detail: ReportDetailDTO, locationId: string): string {
-    let innerContent = this.addTableHeader(locationId);
+  addTable(columns: ReportColumnDTO, detail: ReportDetailDTO, header: string): string {
+    let innerContent = header;
     innerContent += '<div> <table class = "default">';
 
     //Load column headings
@@ -56,10 +57,6 @@ export class SubmissionFeedbackRecordService {
     return innerContent;
   }
 
-  addTableHeader(locationId: string): string {
-    return `<b> Unit/Stack/Pipe ID: ${locationId} </b>`;
-  }
-
   getSubmissionReceiptTableContent(pairs: KeyValuePairs): string {
     let innerContent = '<div> <table class = "col-table">';
 
@@ -77,6 +74,19 @@ export class SubmissionFeedbackRecordService {
     innerContent += '</table> </div>';
 
     return innerContent;
+  }
+
+  generateQATable(data: ReportDTO): string {
+    let qaTableContent = '';
+
+    // There should only be one detail here.
+    for (const detail of data.details) {
+      const columns = data.columns.find((x) => x.code === detail.templateCode);
+      let header = `<b> ${data.displayName} </b>`;
+      qaTableContent += this.addTable(columns, detail, header);
+    }
+
+    return qaTableContent;
   }
 
 }

@@ -743,11 +743,6 @@ export class SubmissionProcessService {
           acc[`EM_${index}`] = { processCode: 'EM', records: [record] };
           return acc;
         }, {}),
-
-      MATS: {
-        processCode: 'MATS',
-        records: submissionQueueRecords.filter((r) => r.processCode === 'MATS')
-      }
     };
 
     const promises = [];
@@ -821,7 +816,17 @@ export class SubmissionProcessService {
     }
     submissionEmailParamsDto.templateContext['emissionSummaryContent'] = emissionSummaryContent;
 
-    //4. Create the evaluation pages for that file type
+    //4. Create QA feedback reports
+    let qaFeedbackContent = '';
+    if (submissionEmailParamsDto.processCode === 'QA') {
+      this.logger.debug('Creating the qa feedback content of the attachment. ');
+      qaFeedbackContent = await this.getQAFeedbackReport(submissionEmailParamsDto);
+      qaFeedbackContent = qaFeedbackContent?.trim() ? qaFeedbackContent : 'No Data Available';
+      qaFeedbackContent = '<h3>Table 2: List of Tests, Certification Events, and Extension/Exemptions</h3> <div> ' + qaFeedbackContent + '</div>';
+    }
+    submissionEmailParamsDto.templateContext['qaFeedbackContent'] = qaFeedbackContent;
+
+    //5. Create the evaluation pages for that file type
     this.logger.debug('Creating the evaluation reports of the attachment. ');
     const evaluationReportDocuments = [];
     await this.mailEvalService.buildEvalReports(submissionSet, submissionRecords, evaluationReportDocuments);
@@ -835,7 +840,7 @@ export class SubmissionProcessService {
     //Apply the context parameters to the template
     let attachmentContent = this.submissionFeedbackTemplate(submissionEmailParamsDto.templateContext);
 
-    //5. Combine all the content into one attachment file
+    //6. Combine all the content into one attachment file
     this.logger.debug('Compiling all attachment contents in to one attachment file. ');
     const submissionFeedbackAttachmentFileName='SUBMISSION_FEEDBACK';
     const feedbackAttachmentDocuments = [];
@@ -844,7 +849,7 @@ export class SubmissionProcessService {
       content: attachmentContent,
     });
 
-    //6. Finally, send the email
+    //7. Finally, send the email
     this.logger.debug('Sending email with attachment ...');
     this.mailEvalService.sendEmailWithRetry(
       submissionEmailParamsDto.toEmail,
@@ -985,7 +990,6 @@ export class SubmissionProcessService {
       'MP': 'Monitoring Plan',
       'QA': 'QA Test',
       'EM': 'Emissions',
-      'MATS': 'MATS',
     };
 
     return submissionTypeNames[submissionEmailParamsDto.processCode];
@@ -996,7 +1000,6 @@ export class SubmissionProcessService {
       'MP': 'monitoring plan',
       'QA': 'QA and certification data',
       'EM': 'quarterly emissions report',
-      'MATS': 'MATS',
     };
 
     return processCodeNames[submissionEmailParamsDto.processCode];
@@ -1047,7 +1050,66 @@ export class SubmissionProcessService {
     }
 
     const results = await Promise.all(promises);
-    return results.join('<br><br>'); //Aggregate the results
+
+    // Filter out empty or null results
+    const nonEmptyResults = results.filter(result => result && result.trim().length > 0);
+
+    // Join the non-empty results, or return an empty string if all are empty
+    return nonEmptyResults.length > 0 ? nonEmptyResults.join('<br><br>') : '';
+  }
+
+  async getQAFeedbackReport (submissionEmailParamsDto : SubmissionEmailParamsDto): Promise<string>   {
+    const submissionSet = submissionEmailParamsDto.submissionSet;
+    const testSubmissionRecords = submissionEmailParamsDto.submissionRecords;
+
+    const promises = [];
+
+    //Get QAT Data
+    let testReportParams = new ReportParamsDTO();
+    testReportParams.reportCode = 'QAT_FEEDBACK';
+    testReportParams.testId = testSubmissionRecords
+      .filter((r) => r.testSumIdentifier !== null)
+      .map((o) => o.testSumIdentifier);
+    if (testReportParams.testId?.length > 0) {
+      const promiseQat = this.dataSetService.getDataSet(testReportParams).then(report => {
+        return this.submissionFeedbackRecordService.generateQATable(report);
+      });
+      promises.push(promiseQat);
+    }
+
+    //Get QCE Data
+    let qceReportParams = new ReportParamsDTO();
+    qceReportParams.reportCode = 'QCE_FEEDBACK';
+    qceReportParams.qceId = testSubmissionRecords
+      .filter((r) => r.qaCertEventIdentifier !== null)
+      .map((o) => o.qaCertEventIdentifier);
+    if (qceReportParams.qceId?.length > 0) {
+      const promiseQce = this.dataSetService.getDataSet(qceReportParams).then(report => {
+        return this.submissionFeedbackRecordService.generateQATable(report);
+      });
+      promises.push(promiseQce);
+    }
+
+    //Get TEE Data
+    let teeReportParams = new ReportParamsDTO();
+    teeReportParams.reportCode = 'TEE_FEEDBACK';
+    teeReportParams.teeId = testSubmissionRecords
+      .filter((r) => r.testExtensionExemptionIdentifier !== null)
+      .map((o) => o.testExtensionExemptionIdentifier);
+    if (teeReportParams.teeId?.length > 0) {
+      const promiseTee = this.dataSetService.getDataSet(teeReportParams).then(report => {
+        return this.submissionFeedbackRecordService.generateQATable(report);
+      });
+      promises.push(promiseTee);
+    }
+
+    const results = await Promise.all(promises);
+
+    // Filter out empty or null results
+    const nonEmptyResults = results.filter(result => result && result.trim().length > 0);
+
+    // Join the non-empty results, or return an empty string if all are empty
+    return nonEmptyResults.length > 0 ? nonEmptyResults.join('<br><br>') : '';
   }
 
   async findRecordWithHighestSeverityLevel(submissionQueueRecords: SubmissionQueue [], severityCodes: SeverityCode[]): Promise<HighestSeverityRecord> {

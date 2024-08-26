@@ -75,17 +75,12 @@ describe('-- Submission Feedback Record Service --', () => {
       results: [{ column1: 'value1', column2: 'value2' }],
     } as ReportDetailDTO;
 
-    const result = service.addDefaultTable(columns, detail, 'USP001');
+    const result = service.addTable(columns, detail, 'Unit/Stack/Pipe ID: USP001');
     expect(result).toContain('Unit/Stack/Pipe ID: USP001');
     expect(result).toContain('<th> Column 1 </th>');
     expect(result).toContain('<th> Column 2 </th>');
     expect(result).toContain('<td> value1 </td>');
     expect(result).toContain('<td> value2 </td>');
-  });
-
-  it('should add table header', () => {
-    const result = service.addTableHeader('USP001');
-    expect(result).toContain('Unit/Stack/Pipe ID: USP001');
   });
 
   it('should get submission receipt table content', () => {
