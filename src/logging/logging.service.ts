@@ -25,7 +25,7 @@ export class LoggingService {
       id: request.headers['x-client-id'],
     });
 
-    this.logger.error(errorDto.errorMessage, undefined, undefined, {
+    this.logger.info(errorDto.errorMessage, {
       appName: dbRecord.name,
       ...errorDto.metadata,
     });
