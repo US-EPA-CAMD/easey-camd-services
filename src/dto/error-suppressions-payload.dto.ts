@@ -71,14 +71,14 @@ export class ErrorSuppressionsPayloadDTO {
   @IsOptional()
   @IsValidCodes(
     MonitorLocation,
-    (args: ValidationArguments): FindManyOptions<MonitorLocation> => {
+    (args: ValidationArguments): Array<FindManyOptions<MonitorLocation>> => {
       if (typeof args.value !== 'string') {
         return null;
       }
       const locations = args.value.split(',').map((item) => item.trim());
-      return {
-        where: [
-          {
+      return [
+        {
+          where: {
             unit: {
               plant: {
                 facIdentifier: args.object['facilityId'],
@@ -86,7 +86,9 @@ export class ErrorSuppressionsPayloadDTO {
               name: In(locations),
             },
           },
-          {
+        },
+        {
+          where: {
             stackPipe: {
               plant: {
                 facIdentifier: args.object['facilityId'],
@@ -94,10 +96,8 @@ export class ErrorSuppressionsPayloadDTO {
               name: In(locations),
             },
           },
-        ],
-        relations: ['unit', 'stackPipe'],
-        loadEagerRelations: true,
-      };
+        },
+      ];
     },
     {
       message: (args: ValidationArguments) => {

@@ -116,17 +116,11 @@ export class Plant extends BaseEntity {
   updateDate: string;
 
   @OneToMany(() => Unit, (unit) => unit.plant)
-  @JoinColumn({ name: 'unit_id' })
   units: Unit[];
 
   @OneToMany(() => StackPipe, (stackPipe) => stackPipe.plant)
-  @JoinColumn({ name: 'stack_pipe_id' })
   stackPipes: StackPipe[];
 
-  @OneToMany(
-    () => MonitorPlan,
-    plan => plan.plant,
-  )
+  @OneToMany(() => MonitorPlan, (plan) => plan.plant)
   monitorPlans: MonitorPlan[];
-
 }
