@@ -10,13 +10,11 @@ import {
   IsString,
   ValidationArguments,
 } from 'class-validator';
-import { FindManyOptions, In } from 'typeorm';
 
 import { CheckCatalogResult } from '../entities/check-catalog-result.entity';
 import { EsMatchDataTypeCode } from '../entities/es-match-data-type-code.entity';
 import { EsMatchTimeTypeCode } from '../entities/es-match-time-type-code.entity';
 import { EsReasonCode } from '../entities/es-reason-code.entity';
-import { MonitorLocation } from '../entities/monitor-location.entity';
 import { Plant } from '../entities/plant.entity';
 import { SeverityCode } from '../entities/severity-code.entity';
 import { IsValidLocations } from '../pipes/is-valid-locations.pipe';
