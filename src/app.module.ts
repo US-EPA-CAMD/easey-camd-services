@@ -6,16 +6,14 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { dbConfig } from '@us-epa-camd/easey-common/config';
 import { LoggerModule } from '@us-epa-camd/easey-common/logger';
 import { CorsOptionsModule } from '@us-epa-camd/easey-common/cors-options';
-import {
-  DbLookupValidator,
-  IsValidCodesValidator,
-} from '@us-epa-camd/easey-common/validators';
+import { DbLookupValidator } from '@us-epa-camd/easey-common/validators';
 
 import routes from './routes';
 import s3Config from './config/s3.config';
 import appConfig from './config/app.config';
 import matsConfig from './config/mats.config';
 import { TypeOrmConfigService } from './config/typeorm.config';
+import { IsValidLocationsValidator } from './validators/is-valid-locations.validator';
 
 import { BulkFileModule } from './bulk-file/bulk-file.module';
 import { BookmarkModule } from './bookmark/bookmark.module';
@@ -63,6 +61,6 @@ import { CopyOfRecordModule } from './copy-of-record/copy-of-record.module';
     MatsFileUploadModule,
     CopyOfRecordModule,
   ],
-  providers: [DbLookupValidator, IsValidCodesValidator],
+  providers: [DbLookupValidator, IsValidLocationsValidator],
 })
 export class AppModule {}
