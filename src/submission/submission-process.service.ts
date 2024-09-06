@@ -788,7 +788,7 @@ export class SubmissionProcessService {
   async sendFeedbackEmail(submissionEmailParamsDto : SubmissionEmailParamsDto) {
     const submissionSet = submissionEmailParamsDto.submissionSet;
     const submissionRecords = submissionEmailParamsDto.submissionRecords;
-    this.logger.debug('Sending ${firstSubmissionQueue.processCode} submission feedback email.' );
+    this.logger.debug(`Sending ${submissionEmailParamsDto.processCode} submission feedback email.`);
 
     //Set common template context parameter values here
     this.logger.debug('Setting common template context parameters with ', {submissionEmailParamsDto});
