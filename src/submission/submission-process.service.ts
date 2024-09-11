@@ -37,6 +37,7 @@ import { SubmissionSet } from '../entities/submission-set.entity';
 import { MailEvalService } from '../mail/mail-eval.service';
 import { ClientConfig } from '../entities/client-config.entity';
 import {
+  hasNonNoneSeverity,
   HighestSeverityRecord,
   isCritical1Severity, isResubmissionRequired, KeyValuePairs,
   SubmissionEmailParamsDto,
@@ -827,15 +828,20 @@ export class SubmissionProcessService {
     submissionEmailParamsDto.templateContext['qaFeedbackContent'] = qaFeedbackContent;
 
     //5. Create the evaluation pages for that file type
-    this.logger.debug('Creating the evaluation reports of the attachment. ');
-    const evaluationReportDocuments = [];
-    await this.mailEvalService.buildEvalReports(submissionSet, submissionRecords, evaluationReportDocuments);
+
     let evaluationReportsContent = '';
-    for (const report of evaluationReportDocuments) {
-      evaluationReportsContent += this.extractBodyContent(report.content);
+    //Only generate the evaluation report section, if there is an error
+    if (hasNonNoneSeverity(submissionEmailParamsDto.highestSeverityRecord)) {
+      this.logger.debug('Creating the evaluation reports of the attachment. ');
+      const evaluationReportDocuments = [];
+      await this.mailEvalService.buildEvalReports(submissionSet, submissionRecords, evaluationReportDocuments);
+
+      for (const report of evaluationReportDocuments) {
+        evaluationReportsContent += this.extractBodyContent(report.content);
+      }
+      evaluationReportsContent = evaluationReportsContent?.trim() ? evaluationReportsContent : 'No Data Available';
+      submissionEmailParamsDto.templateContext['evaluationReportsContent'] = evaluationReportsContent;
     }
-    evaluationReportsContent = evaluationReportsContent?.trim() ? evaluationReportsContent : 'No Data Available';
-    submissionEmailParamsDto.templateContext['evaluationReportsContent'] = evaluationReportsContent;
 
     //Apply the context parameters to the template
     let attachmentContent = this.submissionFeedbackTemplate(submissionEmailParamsDto.templateContext);
@@ -972,6 +978,7 @@ export class SubmissionProcessService {
     submissionEmailParamsDto.templateContext['processCodeName'] = await this.getProcessCodeName(submissionEmailParamsDto);
     submissionEmailParamsDto.templateContext['severityLevelCode'] = submissionEmailParamsDto?.highestSeverityRecord?.severityCode?.severityCode;
     submissionEmailParamsDto.templateContext['isCritical1Error'] = isCritical1Severity(submissionEmailParamsDto.highestSeverityRecord);
+    submissionEmailParamsDto.templateContext['hasNonNoneSeverity'] = hasNonNoneSeverity(submissionEmailParamsDto.highestSeverityRecord);
 
     //Set the contact us email
     const supportEmailRecord = await this.returnManager().findOneBy(ClientConfig, {

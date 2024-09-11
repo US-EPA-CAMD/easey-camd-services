@@ -88,16 +88,14 @@ export class SubmissionService {
         mpRecord.statusCode = 'QUEUED';
         mpRecord.submittedOn = currentTime;
 
-        const cs: CheckSession = await this.returnManager().findOneBy(
-          CheckSession,
-          {
-            monPlanId: item.monPlanId,
-            tesSumId: null,
-            qaCertEventId: null,
-            testExtensionExemptionId: null,
-            rptPeriodId: null,
-          },
-        );
+        const cs: CheckSession = await this.returnManager()
+          .createQueryBuilder(CheckSession, 'cs')
+          .where('cs.monPlanId = :monPlanId', { monPlanId: item.monPlanId })
+          .andWhere('cs.tesSumId IS NULL')
+          .andWhere('cs.qaCertEventId IS NULL')
+          .andWhere('cs.testExtensionExemptionId IS NULL')
+          .andWhere('cs.rptPeriodId IS NULL')
+          .getOne();
 
         mpRecord.severityCode = cs?.severityCode || 'NONE';
 
