@@ -795,13 +795,15 @@ export class SubmissionProcessService {
     await this.setCommonParams(submissionEmailParamsDto);
 
     //Get the recipients list from the recipient's list API
-    submissionEmailParamsDto.ccEmail = await this.recipientListService.getEmailRecipients(
+    const recipientsListApiEnabled = this.configService.get<boolean>('app.recipientsListApiEnabled');
+
+    submissionEmailParamsDto.ccEmail = recipientsListApiEnabled ? await this.recipientListService.getEmailRecipients(
       'SUBMISSIONCONFIRMATION',
       submissionEmailParamsDto.facId,
       submissionSet.userIdentifier,
       submissionEmailParamsDto.processCode,
       false
-    );
+    ) : '';
 
     //If there are no recipients defined, log and return quietly. Process the next file type.
     if (!submissionEmailParamsDto.ccEmail) {
