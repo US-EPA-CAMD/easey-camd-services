@@ -8,3 +8,4 @@ importMatsS3Bucket: cg-4f56c44b-64ff-45e7-b346-87ee77ca1dad
 ecmpsHost: https://ecmps-tst.app.cloud.gov
 cdxUrl: https://test.epacdx.net/
 epaAnalystLink: https://www.epa.gov/power-sector/business-center-and-emissions-monitoring-contacts#MonitoringContacts
+recipientsListApi: https://cbsstagei.epa.gov/CBS/api/auth-mgmt/emailRecipients

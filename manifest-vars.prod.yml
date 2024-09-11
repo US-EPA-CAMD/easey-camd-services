@@ -6,3 +6,4 @@ campdDatasetsS3Bucket: cg-93dcd25e-017b-456d-a8e2-91ef127da888
 ecmpsHost: https://ecmps.epa.gov
 cdxUrl: https://cdx.epa.gov/
 epaAnalystLink: https://www.epa.gov/power-sector/business-center-and-emissions-monitoring-contacts#MonitoringContacts
+recipientsListApi: https://camd.epa.gov/CBS/api/auth-mgmt/emailRecipients

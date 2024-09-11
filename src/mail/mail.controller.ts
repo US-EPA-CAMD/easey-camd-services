@@ -69,6 +69,7 @@ export class MailController {
   async sendMassEval(@Body() payload: MassEvalParamsDTO) {
     await this.mailEvalService.sendMassEvalEmail(
       payload.toEmail,
+      '',
       payload.fromEmail,
       payload.evaluationSetId
     );
