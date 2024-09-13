@@ -806,12 +806,6 @@ export class SubmissionProcessService {
       false
     ) : '';
 
-    //If there are no recipients defined, log and return quietly. Process the next file type.
-    if (!submissionEmailParamsDto.ccEmail) {
-      this.logger.error('No email recipients found; Processing next file type...');
-      return;
-    }
-
     //Set to and cc emails
     submissionEmailParamsDto.templateContext['toEmail'] = submissionEmailParamsDto.toEmail;
     submissionEmailParamsDto.templateContext['ccEmail'] = submissionEmailParamsDto.ccEmail;
