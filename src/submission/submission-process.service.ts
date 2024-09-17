@@ -718,8 +718,7 @@ export class SubmissionProcessService {
         records: [submissionQueueRecords.find((r) => r.processCode === 'MP')].filter(Boolean)
       },
 
-      // Separate QA records based on severityCode so that CRIT1 records are sent in one feedback email whereas
-      // Non-CRIT1 are sent in a separate email.
+      // Separate QA records based on severityCode so that CRIT1 records are sent in one feedback email whereas Non-CRIT1 are sent in a separate email.
       qaCriticalRecords: {
         processCode: 'QA',
         records: [
@@ -922,12 +921,12 @@ export class SubmissionProcessService {
                   string_agg(coalesce(unt.Unitid, stp.Stack_Name), ', ') as location_name,
                   fac.state,
                   string_agg(mpl.mon_loc_id, ', ') as mon_location_ids
-          from  camdecmps.MONITOR_PLAN_LOCATION mpl
-                    join camdecmps.MONITOR_LOCATION loc
+          from  camdecmpswks.MONITOR_PLAN_LOCATION mpl
+                    join camdecmpswks.MONITOR_LOCATION loc
                          on loc.Mon_Loc_Id = mpl.Mon_Loc_Id
-                    left join camd.UNIT unt
+                    left join camdecmpswks.UNIT unt
                               on unt.Unit_Id = loc.Unit_Id
-                    left join camdecmps.STACK_PIPE stp
+                    left join camdecmpswks.STACK_PIPE stp
                               on stp.Stack_Pipe_Id = loc.Stack_Pipe_Id
                     join camd.PLANT fac
                          on fac.Fac_Id in (unt.Fac_Id, stp.Fac_Id)
@@ -1061,7 +1060,7 @@ export class SubmissionProcessService {
     //Loop through the location IDs and get the data
     for (const monLocationId of monLocationIds) {
       reportParams.locationId = monLocationId;
-      const promise = this.dataSetService.getDataSet(reportParams).then(report => {
+      const promise = this.dataSetService.getDataSet(reportParams, true).then(report => {
         return this.submissionFeedbackRecordService.generateSummaryTableForUnitStack(report, reportParams.locationId);
       });
 
@@ -1090,7 +1089,7 @@ export class SubmissionProcessService {
       .filter((r) => r.testSumIdentifier !== null)
       .map((o) => o.testSumIdentifier);
     if (testReportParams.testId?.length > 0) {
-      const promiseQat = this.dataSetService.getDataSet(testReportParams).then(report => {
+      const promiseQat = this.dataSetService.getDataSet(testReportParams, true).then(report => {
         return this.submissionFeedbackRecordService.generateQATable(report);
       });
       promises.push(promiseQat);
@@ -1103,7 +1102,7 @@ export class SubmissionProcessService {
       .filter((r) => r.qaCertEventIdentifier !== null)
       .map((o) => o.qaCertEventIdentifier);
     if (qceReportParams.qceId?.length > 0) {
-      const promiseQce = this.dataSetService.getDataSet(qceReportParams).then(report => {
+      const promiseQce = this.dataSetService.getDataSet(qceReportParams, true).then(report => {
         return this.submissionFeedbackRecordService.generateQATable(report);
       });
       promises.push(promiseQce);
@@ -1116,7 +1115,7 @@ export class SubmissionProcessService {
       .filter((r) => r.testExtensionExemptionIdentifier !== null)
       .map((o) => o.testExtensionExemptionIdentifier);
     if (teeReportParams.teeId?.length > 0) {
-      const promiseTee = this.dataSetService.getDataSet(teeReportParams).then(report => {
+      const promiseTee = this.dataSetService.getDataSet(teeReportParams, true).then(report => {
         return this.submissionFeedbackRecordService.generateQATable(report);
       });
       promises.push(promiseTee);
