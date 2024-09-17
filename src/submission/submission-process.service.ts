@@ -1077,7 +1077,6 @@ export class SubmissionProcessService {
   }
 
   async getQAFeedbackReport (submissionEmailParamsDto : SubmissionEmailParamsDto): Promise<string>   {
-    const submissionSet = submissionEmailParamsDto.submissionSet;
     const testSubmissionRecords = submissionEmailParamsDto.submissionRecords;
 
     const promises = [];
