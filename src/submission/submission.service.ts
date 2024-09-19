@@ -91,6 +91,7 @@ export class SubmissionService {
         const cs: CheckSession = await this.returnManager()
           .createQueryBuilder(CheckSession, 'cs')
           .where('cs.monPlanId = :monPlanId', { monPlanId: item.monPlanId })
+          .andWhere('cs.processCode = :processCode', { processCode: 'MP' })
           .andWhere('cs.tesSumId IS NULL')
           .andWhere('cs.qaCertEventId IS NULL')
           .andWhere('cs.testExtensionExemptionId IS NULL')
