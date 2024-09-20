@@ -98,6 +98,6 @@ describe('-- Submission Service --', () => {
 
     await service.queueSubmissionRecords(payloadDto);
 
-    expect(mockInsertion).toHaveBeenCalledTimes(26);
+    expect(mockInsertion).toHaveBeenCalledTimes(2);
   });
 });

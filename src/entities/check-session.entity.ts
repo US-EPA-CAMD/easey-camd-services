@@ -22,4 +22,7 @@ export class CheckSession extends BaseEntity {
 
   @Column({ name: 'severity_cd' })
   severityCode: string;
+
+  @Column({ name: 'process_cd' })
+  processCode: string;
 }
