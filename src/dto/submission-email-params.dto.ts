@@ -48,6 +48,14 @@ export function isResubmissionRequired(record: HighestSeverityRecord): boolean {
   return record?.submissionQueue?.severityCode?.toUpperCase() === 'CRIT1' || record?.submissionQueue?.severityCode?.toUpperCase() === 'CRIT2';
 }
 
+export function isNoError(record: HighestSeverityRecord): boolean {
+  return record?.submissionQueue?.severityCode?.toUpperCase() === 'NONE';
+}
+
+export function hasNonNoneSeverity(record: HighestSeverityRecord): boolean {
+  return !isNoError(record);
+}
+
 export type KeyValuePairs = {
   [key: string]: string | { label: string; url: string };
 };
