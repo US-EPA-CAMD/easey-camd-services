@@ -57,7 +57,7 @@ export class SubmissionService {
       submissionSet.statusCode = 'QUEUED';
 
       const locations = await this.returnManager().query(
-        `SELECT camdecmpsaux.get_mp_location_list($1);`,
+        `SELECT camdecmpswks.get_mp_location_list($1);`,
         [item.monPlanId],
       );
 
