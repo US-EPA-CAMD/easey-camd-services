@@ -228,12 +228,13 @@ export class SubmissionProcessService {
   async buildTransactions(
     set: SubmissionSet,
     record: SubmissionQueue,
-    transactions: any[],
+    copyTransactions: any[],
+    deleteTransactions: any[],
     folderPath: string,
   ): Promise<void> {
     switch (record.processCode) {
       case 'MP': {
-        transactions.push({
+        copyTransactions.push({
           command:
             'CALL camdecmps.copy_monitor_plan_from_workspace_to_global($1)',
           params: [set.monPlanIdentifier],
@@ -242,19 +243,24 @@ export class SubmissionProcessService {
       }
       case 'QA': {
         if (record.testSumIdentifier) {
-          transactions.push({
+          copyTransactions.push({
             command:
               'CALL camdecmps.copy_qa_test_summary_from_workspace_to_global($1)',
             params: [record.testSumIdentifier],
           });
+          deleteTransactions.push({
+            command:
+              'CALL camdecmps.delete_qa_test_summary_from_workspace($1)',
+            params: [record.testSumIdentifier],
+          });
         } else if (record.qaCertEventIdentifier) {
-          transactions.push({
+          copyTransactions.push({
             command:
               'CALL camdecmps.copy_qa_qce_data_from_workspace_to_global($1)',
             params: [record.qaCertEventIdentifier],
           });
         } else {
-          transactions.push({
+          copyTransactions.push({
             command:
               'CALL camdecmps.copy_qa_tee_data_from_workspace_to_global($1)',
             params: [record.testExtensionExemptionIdentifier],
@@ -263,9 +269,14 @@ export class SubmissionProcessService {
         break;
       }
       case 'EM': {
-        transactions.push({
+        copyTransactions.push({
           command:
             'CALL camdecmps.copy_emissions_from_workspace_to_global($1, $2)',
+          params: [set.monPlanIdentifier, record.rptPeriodIdentifier],
+        });
+        deleteTransactions.push({
+          command:
+            'CALL camdecmps.delete_emissions_from_workspace($1, $2)',
           params: [set.monPlanIdentifier, record.rptPeriodIdentifier],
         });
         break;
@@ -387,7 +398,7 @@ export class SubmissionProcessService {
     }
   }
 
-  async handleError(set: SubmissionSet, queue: SubmissionQueue[], e: Error, submissionSucceeded: boolean) {
+  async handleError(set: SubmissionSet, queue: SubmissionQueue[], e: Error) {
     set.details = JSON.stringify(e);
     set.statusCode = 'ERROR';
     set.endStageTime = currentDateTime();
@@ -414,18 +425,6 @@ export class SubmissionProcessService {
 
     this.logger.error(e.message, e.stack, 'submission', logMetadata);
 
-    //If the submission did not succeed, do not send feedback email...
-    if (submissionSucceeded) {
-      this.logger.debug("Sending feedback Email...");
-      await this.sendFeedbackReportEmail(
-        set.userEmail,
-        this.configService.get<string>('app.defaultFromEmail'),
-        set.submissionSetIdentifier,
-        true,
-        errorId
-      );
-    }
-
     throw new EaseyException(e, HttpStatus.INTERNAL_SERVER_ERROR);
   }
 
@@ -433,7 +432,8 @@ export class SubmissionProcessService {
     folderPath,
     set: SubmissionSet,
     submissionSetRecords,
-    transactions,
+    copyTransactions,
+    deleteTransactions,
   ) {
     try {
       rmSync(folderPath, {
@@ -443,20 +443,50 @@ export class SubmissionProcessService {
         force: true,
       });
 
+      //Copy data from workspace to global
       if (!set.hasCritErrors) {
         await this.returnManager().transaction(
           //Copy records from workspace to global
           async (transactionalEntityManager) => {
             try {
-              for (const trans of transactions) {
+              for (const trans of copyTransactions) {
                 await transactionalEntityManager.query(
                   trans.command,
                   trans.params,
                 );
               }
             } catch (error) {
-              this.logger.error("successCleanup: error while cleaning up ", error)
-              await this.handleError(set, submissionSetRecords, error, true);
+              this.logger.error("successCleanup: error while copying data from workspace to global ", error)
+              await this.handleError(set, submissionSetRecords, error);
+            }
+          },
+        );
+      }
+
+      //Send feedback status emails
+      await this.sendFeedbackReportEmail(
+        set.userEmail,
+        this.configService.get<string>('app.defaultFromEmail'),
+        set.submissionSetIdentifier,
+        false,
+        ''
+      );
+
+      //Once we are done sending feedback reports, delete data from workspace
+      if (!set.hasCritErrors) {
+        await this.returnManager().transaction(
+          //Copy records from workspace to global
+          async (transactionalEntityManager) => {
+            try {
+              for (const trans of deleteTransactions) {
+                await transactionalEntityManager.query(
+                  trans.command,
+                  trans.params,
+                );
+              }
+            } catch (error) {
+              this.logger.error("successCleanup: error while deleting data from workspace ", error)
+              await this.handleError(set, submissionSetRecords, error);
             }
           },
         );
@@ -475,16 +505,8 @@ export class SubmissionProcessService {
       await this.returnManager().save(set);
     } catch (e) {
       this.logger.error("successCleanup: error while cleaning up ... ", e)
-      await this.handleError(set, submissionSetRecords, e, true);
+      await this.handleError(set, submissionSetRecords, e);
     }
-
-    this.sendFeedbackReportEmail(
-      set.userEmail,
-      this.configService.get<string>('app.defaultFromEmail'),
-      set.submissionSetIdentifier,
-      false,
-      ''
-    );
 
     this.logger.log('Finished processing copy of record');
   }
@@ -544,13 +566,15 @@ export class SubmissionProcessService {
 
       // Iterate each record in the submission queue linked to the set and create a promise that resolves with the addition of document html string in the documents array
       const documents = [];
-      const transactions: any = [];
+      const copyTransactions: any = [];
+      const deleteTransactions: any = [];
 
       for (const submissionRecord of submissionSetRecords) {
         await this.buildTransactions(
           set,
           submissionRecord,
-          transactions,
+          copyTransactions,
+          deleteTransactions,
           folderPath,
         );
       }
@@ -661,7 +685,7 @@ export class SubmissionProcessService {
       signObs.subscribe({
         //Handle transmission cleanup / error handling
         error: (e) => {
-          this.handleError(set, submissionSetRecords, e, true);
+          this.handleError(set, submissionSetRecords, e);
           rmSync(folderPath, {
             recursive: true,
             maxRetries: 5,
@@ -675,13 +699,14 @@ export class SubmissionProcessService {
             folderPath,
             set,
             submissionSetRecords,
-            transactions,
+            copyTransactions,
+            deleteTransactions,
           );
         },
       });
     } catch (e) {
       this.logger.error("processSubmissionSet: error while processing submission set. ", e)
-      await this.handleError(set, submissionSetRecords, e, false);
+      await this.handleError(set, submissionSetRecords, e);
     }
   }
 
