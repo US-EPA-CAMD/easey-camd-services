@@ -137,7 +137,7 @@ describe('-- Submission Process Service --', () => {
     set.facIdentifier = 1;
     set.monPlanIdentifier = 'mockMP';
 
-    await service.buildTransactions(set, record, mockTransactions, '');
+    await service.buildTransactions(set, record, mockTransactions, mockTransactions, '');
 
     expect(mockTransactions.length).toBe(1);
   });
@@ -206,6 +206,7 @@ describe('-- Submission Process Service --', () => {
         new SubmissionSet(),
         [new SubmissionQueue()],
         [],
+        [],
       );
     }).not.toThrowError();
   });
@@ -267,7 +268,7 @@ describe('-- Submission Process Service --', () => {
     jest.spyOn(service['logger'], 'error').mockImplementation(jest.fn());
 
     // Ensure the method call and catch the thrown error
-    await expect(service.handleError(set, queue, error, false)).rejects.toThrow('mock error');
+    await expect(service.handleError(set, queue, error)).rejects.toThrow('mock error');
 
     expect(set.statusCode).toEqual('ERROR');
     expect(set.details).toEqual(JSON.stringify(error));
