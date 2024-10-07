@@ -1086,7 +1086,7 @@ export class SubmissionProcessService {
     for (const monLocationId of monLocationIds) {
       reportParams.locationId = monLocationId;
       const promise = this.dataSetService.getDataSet(reportParams, true).then(report => {
-        return this.submissionFeedbackRecordService.generateSummaryTableForUnitStack(report, reportParams.locationId);
+        return this.submissionFeedbackRecordService.generateSummaryTableForUnitStack(report, submissionEmailParamsDto.unitStackPipe);
       });
 
       promises.push(promise);
