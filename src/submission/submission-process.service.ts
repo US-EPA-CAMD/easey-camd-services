@@ -40,7 +40,7 @@ import {
   hasNonNoneSeverity,
   HighestSeverityRecord,
   isCritical1Severity, isResubmissionRequired, KeyValuePairs,
-  SubmissionEmailParamsDto,
+  SubmissionEmailParamsDto, SubmissionFeedbackEmailData,
 } from '../dto/submission-email-params.dto';
 import { SubmissionFeedbackRecordService } from './submission-feedback-record.service';
 import { SeverityCode } from '../entities/severity-code.entity';
@@ -228,13 +228,12 @@ export class SubmissionProcessService {
   async buildTransactions(
     set: SubmissionSet,
     record: SubmissionQueue,
-    copyTransactions: any[],
-    deleteTransactions: any[],
+    transactions: any[],
     folderPath: string,
   ): Promise<void> {
     switch (record.processCode) {
       case 'MP': {
-        copyTransactions.push({
+        transactions.push({
           command:
             'CALL camdecmps.copy_monitor_plan_from_workspace_to_global($1)',
           params: [set.monPlanIdentifier],
@@ -243,24 +242,19 @@ export class SubmissionProcessService {
       }
       case 'QA': {
         if (record.testSumIdentifier) {
-          copyTransactions.push({
+          transactions.push({
             command:
               'CALL camdecmps.copy_qa_test_summary_from_workspace_to_global($1)',
             params: [record.testSumIdentifier],
           });
-          deleteTransactions.push({
-            command:
-              'CALL camdecmps.delete_qa_test_summary_from_workspace($1)',
-            params: [record.testSumIdentifier],
-          });
         } else if (record.qaCertEventIdentifier) {
-          copyTransactions.push({
+          transactions.push({
             command:
               'CALL camdecmps.copy_qa_qce_data_from_workspace_to_global($1)',
             params: [record.qaCertEventIdentifier],
           });
         } else {
-          copyTransactions.push({
+          transactions.push({
             command:
               'CALL camdecmps.copy_qa_tee_data_from_workspace_to_global($1)',
             params: [record.testExtensionExemptionIdentifier],
@@ -269,14 +263,9 @@ export class SubmissionProcessService {
         break;
       }
       case 'EM': {
-        copyTransactions.push({
+        transactions.push({
           command:
             'CALL camdecmps.copy_emissions_from_workspace_to_global($1, $2)',
-          params: [set.monPlanIdentifier, record.rptPeriodIdentifier],
-        });
-        deleteTransactions.push({
-          command:
-            'CALL camdecmps.delete_emissions_from_workspace($1, $2)',
           params: [set.monPlanIdentifier, record.rptPeriodIdentifier],
         });
         break;
@@ -432,8 +421,7 @@ export class SubmissionProcessService {
     folderPath,
     set: SubmissionSet,
     submissionSetRecords,
-    copyTransactions,
-    deleteTransactions,
+    transactions,
   ) {
     try {
       rmSync(folderPath, {
@@ -443,13 +431,22 @@ export class SubmissionProcessService {
         force: true,
       });
 
-      //Copy data from workspace to global
+      // Get feedback email data
+      const submissionFeedbackEmailDataList = await this.collectFeedbackReportDataForEmail(
+        set.userEmail,
+        this.configService.get<string>('app.defaultFromEmail'),
+        set.submissionSetIdentifier,
+        false,
+        '',
+      );
+
+      //Once we are done sending feedback reports, copy data from workspace to global and delete workspace data
       if (!set.hasCritErrors) {
         await this.returnManager().transaction(
           //Copy records from workspace to global
           async (transactionalEntityManager) => {
             try {
-              for (const trans of copyTransactions) {
+              for (const trans of transactions) {
                 await transactionalEntityManager.query(
                   trans.command,
                   trans.params,
@@ -463,32 +460,25 @@ export class SubmissionProcessService {
         );
       }
 
-      //Send feedback status emails
-      await this.sendFeedbackReportEmail(
-        set.userEmail,
-        this.configService.get<string>('app.defaultFromEmail'),
-        set.submissionSetIdentifier,
-        false,
-        ''
-      );
+      // Send all feedback status emails once the copy/delete transaction is over
+      this.logger.debug('Sending emails with feedback attachment ...');
+      for (const submissionFeedbackEmailData of submissionFeedbackEmailDataList) {
 
-      //Once we are done sending feedback reports, delete data from workspace
-      if (!set.hasCritErrors) {
-        await this.returnManager().transaction(
-          //Copy records from workspace to global
-          async (transactionalEntityManager) => {
-            try {
-              for (const trans of deleteTransactions) {
-                await transactionalEntityManager.query(
-                  trans.command,
-                  trans.params,
-                );
-              }
-            } catch (error) {
-              this.logger.error("successCleanup: error while deleting data from workspace ", error)
-              await this.handleError(set, submissionSetRecords, error);
-            }
-          },
+        this.logger.debug('Sending email feedback...', {
+          toEmail: submissionFeedbackEmailData.toEmail,
+          ccEmail: submissionFeedbackEmailData.ccEmail,
+          subject: submissionFeedbackEmailData.subject,
+        });
+
+        await this.mailEvalService.sendEmailWithRetry(
+          submissionFeedbackEmailData.toEmail,
+          submissionFeedbackEmailData.ccEmail,
+          submissionFeedbackEmailData.fromEmail,
+          submissionFeedbackEmailData.subject,
+          submissionFeedbackEmailData.emailTemplate,
+          submissionFeedbackEmailData.templateContext,
+          1,
+          submissionFeedbackEmailData.feedbackAttachmentDocuments,
         );
       }
 
@@ -566,15 +556,13 @@ export class SubmissionProcessService {
 
       // Iterate each record in the submission queue linked to the set and create a promise that resolves with the addition of document html string in the documents array
       const documents = [];
-      const copyTransactions: any = [];
-      const deleteTransactions: any = [];
+      const transactions: any = [];
 
       for (const submissionRecord of submissionSetRecords) {
         await this.buildTransactions(
           set,
           submissionRecord,
-          copyTransactions,
-          deleteTransactions,
+          transactions,
           folderPath,
         );
       }
@@ -699,8 +687,7 @@ export class SubmissionProcessService {
             folderPath,
             set,
             submissionSetRecords,
-            copyTransactions,
-            deleteTransactions,
+            transactions,
           );
         },
       });
@@ -710,13 +697,13 @@ export class SubmissionProcessService {
     }
   }
 
-  async sendFeedbackReportEmail(
+  async collectFeedbackReportDataForEmail(
     to: string,
     from: string,
     setId: string,
     isSubmissionFailure: boolean,
     errorId: string = '',
-  ) {
+  ) : Promise<SubmissionFeedbackEmailData[]> {
 
     this.logger.debug('Starting sending feedback reports email ', { setId});
 
@@ -802,15 +789,19 @@ export class SubmissionProcessService {
 
         //Send the feedback email
         this.logger.debug('Sending feedback email with params ', {submissionEmailParamsDto});
-        promises.push(this.sendFeedbackEmail(submissionEmailParamsDto));
+        promises.push(this.getSubmissionFeedbackEmailData(submissionEmailParamsDto));
+
       }
     }
 
     // Wait for all promises to resolve
-    await Promise.all(promises);
+    const submissionFeedbackEmailDataList = await Promise.all(promises);await Promise.all(promises);
+
+    // Return the array of SubmissionFeedbackEmailData
+    return submissionFeedbackEmailDataList;
   }
 
-  async sendFeedbackEmail(submissionEmailParamsDto : SubmissionEmailParamsDto) {
+  async getSubmissionFeedbackEmailData(submissionEmailParamsDto: SubmissionEmailParamsDto): Promise<SubmissionFeedbackEmailData> {
     const submissionSet = submissionEmailParamsDto.submissionSet;
     const submissionRecords = submissionEmailParamsDto.submissionRecords;
     this.logger.debug(`Sending ${submissionEmailParamsDto.processCode} submission feedback email.`);
@@ -895,16 +886,14 @@ export class SubmissionProcessService {
       content: attachmentContent,
     });
 
-    //7. Finally, send the email
-    this.logger.debug('Sending email with attachment ...');
-    this.mailEvalService.sendEmailWithRetry(
+    //7. Finally, return the collected email data
+    return new SubmissionFeedbackEmailData(
       submissionEmailParamsDto.toEmail,
       submissionEmailParamsDto.ccEmail,
       submissionEmailParamsDto.fromEmail,
       subject,
       emailTemplate,
       submissionEmailParamsDto.templateContext,
-      1,
       feedbackAttachmentDocuments,
     );
   }

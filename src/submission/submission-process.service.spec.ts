@@ -19,6 +19,7 @@ import { SubmissionProcessService } from './submission-process.service';
 import { SubmissionFeedbackRecordService } from './submission-feedback-record.service';
 import { SeverityCode } from '../entities/severity-code.entity';
 import { RecipientListService } from './recipient-list.service';
+import { SubmissionFeedbackEmailData } from '../dto/submission-email-params.dto';
 
 jest.mock('@aws-sdk/client-s3');
 
@@ -137,7 +138,7 @@ describe('-- Submission Process Service --', () => {
     set.facIdentifier = 1;
     set.monPlanIdentifier = 'mockMP';
 
-    await service.buildTransactions(set, record, mockTransactions, mockTransactions, '');
+    await service.buildTransactions(set, record, mockTransactions, '');
 
     expect(mockTransactions.length).toBe(1);
   });
@@ -206,7 +207,6 @@ describe('-- Submission Process Service --', () => {
         new SubmissionSet(),
         [new SubmissionQueue()],
         [],
-        [],
       );
     }).not.toThrowError();
   });
@@ -264,7 +264,7 @@ describe('-- Submission Process Service --', () => {
 
     jest.spyOn(service, 'setRecordStatusCode').mockResolvedValue();
     jest.spyOn(service.returnManager(), 'save').mockResolvedValue({});
-    jest.spyOn(service, 'sendFeedbackReportEmail').mockResolvedValue();
+    jest.spyOn(service, 'collectFeedbackReportDataForEmail').mockResolvedValue([{} as SubmissionFeedbackEmailData]);
     jest.spyOn(service['logger'], 'error').mockImplementation(jest.fn());
 
     // Ensure the method call and catch the thrown error
