@@ -31,7 +31,7 @@ export class SubmissionProcessService {
     this.logger.log(`Processing submission set: ${id}`);
 
     let set: SubmissionSet;
-    let submissionSetRecords: SubmissionQueue[];
+    let submissionQueueRecords: SubmissionQueue[];
     let folderPath: string;
 
     try {
@@ -42,8 +42,8 @@ export class SubmissionProcessService {
 
       // Update the submission set and submission queue statuses to 'WIP'
       await this.submissionSetHelper.updateSubmissionSetStatus(set, 'WIP');
-      submissionSetRecords = await this.entityManager.find(SubmissionQueue, { where: { submissionSetIdentifier: id },});
-      await this.submissionSetHelper.setRecordStatusCode(set, submissionSetRecords, 'WIP', '', 'PENDING');
+      submissionQueueRecords = await this.entityManager.find(SubmissionQueue, { where: { submissionSetIdentifier: id },});
+      await this.submissionSetHelper.setRecordStatusCode(set, submissionQueueRecords, 'WIP', '', 'PENDING');
       this.logger.log(`Updating submission records to IP status.`);
 
       folderPath = path.join(__dirname, uuidv4());
@@ -51,11 +51,11 @@ export class SubmissionProcessService {
 
       // Build transactions
       const transactions: any = [];
-      await this.transactionService.buildTransactions(set, submissionSetRecords, folderPath, transactions);
+      await this.transactionService.buildTransactions(set, submissionQueueRecords, folderPath, transactions);
       this.logger.log(`Completed building transactions...`);
 
       // Build documents
-      const documents = await this.documentService.buildDocumentsAndWriteToFile(set, submissionSetRecords, folderPath);
+      const documents = await this.documentService.buildDocumentsAndWriteToFile(set, submissionQueueRecords, folderPath);
       this.logger.log(`Completed building documents, successfully written to local file system...`);
 
       // Send documents for signing
@@ -64,10 +64,10 @@ export class SubmissionProcessService {
 
       // Get feedback email data before the call to copyToOfficial, which deletes data from workspace
       this.logger.log(`Collecting data for sending feedback reports...`);
-      const submissionFeedbackEmailDataList = await this.submissionEmailService.collectFeedbackReportDataForEmail(set, submissionSetRecords);
+      const submissionFeedbackEmailDataList = await this.submissionEmailService.collectFeedbackReportDataForEmail(set, submissionQueueRecords);
 
       // Copy records from workspace to official
-      await this.copyToOfficial(set, submissionSetRecords);
+      await this.copyToOfficial(set, submissionQueueRecords);
 
       // Send all feedback status emails once the copy/delete transaction is over
       this.logger.debug('Sending emails with feedback attachment ...');
@@ -91,12 +91,12 @@ export class SubmissionProcessService {
       }
 
       // Update the submission set and submission queue statuses to 'COMPLETE'
-      await this.submissionSetHelper.setRecordStatusCode(set, submissionSetRecords, 'COMPLETE', '', set.hasCritErrors ? 'CRITERR' : 'UPDATED');
+      await this.submissionSetHelper.setRecordStatusCode(set, submissionQueueRecords, 'COMPLETE', '', set.hasCritErrors ? 'CRITERR' : 'UPDATED');
       await this.submissionSetHelper.updateSubmissionSetStatus(set, 'COMPLETE');
 
     } catch (e) {
       this.logger.error('Error while processing submission set: ' + set?.submissionSetIdentifier, e.stack, 'SubmissionProcessService');
-      await this.errorHandlerService.handleError(set, submissionSetRecords, e);
+      await this.errorHandlerService.handleError(set, submissionQueueRecords, e);
     } finally {
       await this.cleanup(folderPath);
     }
