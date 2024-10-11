@@ -35,7 +35,7 @@ export class SubmissionService {
     return this.entityManager;
   }
 
-  async queueRecord(
+  private async queueRecord(
     userId: string,
     userEmail: string,
     activityId: string,
@@ -44,12 +44,16 @@ export class SubmissionService {
   ): Promise<void> {
     try {
       const currentTime = new Date();
-      const set_id = uuidv4();
+      const setId = uuidv4();
+
+      this.logger.log(
+        `Queueing record. setId: ${setId}, MonPlanId: ${item?.monPlanId || 'N/A'}, UserId: ${userId || 'N/A'}`,
+      );
 
       const submissionSet = new SubmissionSet();
       submissionSet.hasCritErrors = hasCritErrors;
       submissionSet.activityId = activityId;
-      submissionSet.submissionSetIdentifier = set_id;
+      submissionSet.submissionSetIdentifier = setId;
       submissionSet.monPlanIdentifier = item.monPlanId;
       submissionSet.userIdentifier = userId;
       submissionSet.userEmail = userEmail;
@@ -79,11 +83,12 @@ export class SubmissionService {
       await this.returnManager().save(SubmissionSet, submissionSet);
 
       if (item.submitMonPlan === true) {
+        this.logger.log(`Creating a monitoring plan record. setId: ${setId}, MonPlanId: ${item?.monPlanId || 'N/A'}`,);
         //Create monitor plan queue record
         mp.submissionAvailabilityCode = 'PENDING';
 
         const mpRecord = new SubmissionQueue();
-        mpRecord.submissionSetIdentifier = set_id;
+        mpRecord.submissionSetIdentifier = setId;
         mpRecord.processCode = 'MP';
         mpRecord.statusCode = 'QUEUED';
         mpRecord.submittedOn = currentTime;
@@ -98,12 +103,14 @@ export class SubmissionService {
           .andWhere('cs.rptPeriodId IS NULL')
           .getOne();
 
+        this.logger.log(`Retrieved severity code of ${cs?.severityCode} from CheckSession`,);
         mpRecord.severityCode = cs?.severityCode || 'NONE';
 
         await this.returnManager().save(mpRecord);
         await this.returnManager().save(mp);
       }
 
+      this.logger.log(`Queueing ${item?.testSumIds?.length} test summary records.`,);
       for (const id of item.testSumIds) {
         const ts: QaSuppData = await this.returnManager().findOneBy(
           QaSuppData,
@@ -112,8 +119,9 @@ export class SubmissionService {
           },
         );
 
+        this.logger.log(`Queueing test summary with ID ${id} ...`,);
         const tsRecord = new SubmissionQueue();
-        tsRecord.submissionSetIdentifier = set_id;
+        tsRecord.submissionSetIdentifier = setId;
         tsRecord.processCode = 'QA';
         tsRecord.statusCode = 'QUEUED';
         tsRecord.testSumIdentifier = id;
@@ -135,6 +143,7 @@ export class SubmissionService {
         }
       }
 
+      this.logger.log(`Queueing ${item?.qceIds?.length} QCE records.`,);
       for (const id of item.qceIds) {
         const qce: QaCertEvent = await this.returnManager().findOneBy(
           QaCertEvent,
@@ -142,7 +151,7 @@ export class SubmissionService {
         );
 
         const qceRecord = new SubmissionQueue();
-        qceRecord.submissionSetIdentifier = set_id;
+        qceRecord.submissionSetIdentifier = setId;
         qceRecord.processCode = 'QA';
 
         qceRecord.statusCode = 'QUEUED';
@@ -157,6 +166,7 @@ export class SubmissionService {
           },
         );
 
+        this.logger.log(`Queueing QCE with ID ${id} ...`,);
         qceRecord.severityCode = cs?.severityCode || 'NONE';
         await this.returnManager().save(qceRecord);
         if (qce) {
@@ -165,14 +175,15 @@ export class SubmissionService {
         }
       }
 
+      this.logger.log(`Queueing ${item?.teeIds?.length} TEE records.`,);
       for (const id of item.teeIds) {
         const tee: QaTee = await this.returnManager().findOneBy(QaTee, {
           testExtensionExemptionIdentifier: id,
         });
 
-
+        this.logger.log(`Queueing TEE with ID ${id} ...`,);
         const teeRecord = new SubmissionQueue();
-        teeRecord.submissionSetIdentifier = set_id;
+        teeRecord.submissionSetIdentifier = setId;
         teeRecord.processCode = 'QA';
         teeRecord.statusCode = 'QUEUED';
 
@@ -194,11 +205,13 @@ export class SubmissionService {
         }
       }
 
+      this.logger.log(`Queueing emissions with ${item?.emissionsReportingPeriods?.length} reporting period(s).`,);
       for (const periodAbr of item.emissionsReportingPeriods) {
         const rp = await this.returnManager().findOneBy(ReportingPeriod, {
           periodAbbreviation: periodAbr,
         });
 
+        this.logger.log(`Queueing EM with ID ${rp?.rptPeriodIdentifier} and monPlanId ${item?.monPlanId} ...`,);
         const ee: EmissionEvaluation = await this.returnManager().findOneBy(
           EmissionEvaluation,
           {
@@ -208,7 +221,7 @@ export class SubmissionService {
         );
 
         const emissionRecord = new SubmissionQueue();
-        emissionRecord.submissionSetIdentifier = set_id;
+        emissionRecord.submissionSetIdentifier = setId;
         emissionRecord.processCode = 'EM';
 
         emissionRecord.statusCode = 'QUEUED';
@@ -233,13 +246,15 @@ export class SubmissionService {
         }
       }
 
+      this.logger.log(`Queueing ${item?.matsBulkFiles?.length} MATS records.`,);
       for (const matsId of item.matsBulkFiles) {
         const mf = await this.returnManager().findOneBy(MatsBulkFile, {
           id: matsId,
         });
 
+        this.logger.log(`Queueing MATS with ID ${matsId} ...`,);
         const matsRecord = new SubmissionQueue();
-        matsRecord.submissionSetIdentifier = set_id;
+        matsRecord.submissionSetIdentifier = setId;
         matsRecord.processCode = 'MATS';
 
         matsRecord.statusCode = 'QUEUED';
@@ -256,15 +271,19 @@ export class SubmissionService {
           await this.returnManager().save(mf);
         }
       }
+
+      this.logger.log(`Successfully queued record. SetId: ${setId}, MonPlanId: ${item?.monPlanId || 'N/A'}`,);
+
     } catch (e) {
-      console.log(e);
-      this.logger.log('Failed record queueing', {
-        monPlanId: item.monPlanId,
-      });
+      this.logger.error(`Failed to queue record. MonPlanId: ${item?.monPlanId || 'N/A'}, Error: ${e.message}`,e.stack,);
     }
   }
 
   async queueSubmissionRecords(params: SubmissionQueueDTO): Promise<void> {
+    this.logger.log(
+      `Starting to queue submission records. UserId: ${params?.userId || 'N/A'}, activityId: ${params?.activityId || 'N/A'},  Items count: ${params?.items?.length || 0}`,
+    );
+
     let promises = [];
 
     for (const item of params.items) {
@@ -280,6 +299,7 @@ export class SubmissionService {
     }
 
     await Promise.all(promises);
+    this.logger.log(`Finished queueing submission records for UserId: ${params?.userId || 'N/A'}`,);
   }
 
   async getLastUpdated(

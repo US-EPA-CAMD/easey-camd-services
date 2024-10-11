@@ -121,10 +121,17 @@ export class DataSetService {
         if (param.name === 'testId') return params.testId[0];
         if (param.name === 'qceId') return params.qceId[0];
         if (param.name === 'teeId') return params.teeId[0];
+      } else if (
+        ['QAT_FEEDBACK', 'QCE_FEEDBACK', 'TEE_FEEDBACK'].some(code => params.reportCode.includes(code))
+      ) {
+        if (param.name === 'testId') return params.testId; // Return all testIds
+        if (param.name === 'qceId') return params.qceId;   // Return all qceIds
+        if (param.name === 'teeId') return params.teeId;   // Return all teeIds
       } else if (param.name === 'testId') {
         if (params.testId.length === 1) return params.testId[0];
         else return testId;
       }
+
       return params[param.name] ?? param.defaultValue;
     });
 

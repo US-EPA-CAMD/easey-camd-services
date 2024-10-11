@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <title>Submission Processing Error</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+    .header {
+      color: #005ea2;
+      font-size: 1.5em;
+      font-weight: bold;
+    }
+    .content {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+<div class="header">ECMPS Submission Error Notification</div>
+<div class="content">
+  <p>Dear User,</p>
+  <p>
+    We regret to inform you that an error occurred while processing your submission for <strong>{{configuration}}</strong> (Submission ID: <strong>{{submissionId}}</strong>).
+  </p>
+  <p>
+    Please contact ECMPS support at <a href="mailto:{{supportEmail}}">{{supportEmail}}</a> for assistance. Provide the Error Reference ID below when contacting support.
+  </p>
+  <p>
+    <strong>Error Reference ID:</strong> {{errorId}}
+  </p>
+  <p>Thank you for your patience.</p>
+  <p>Sincerely,</p>
+  <p>ECMPS Support Team</p>
+</div>
+</body>
+</html>
