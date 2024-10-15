@@ -454,7 +454,7 @@ export class SubmissionEmailService {
     return nonEmptyResults.length > 0 ? nonEmptyResults.join('<br><br>') : '';
   }
 
-  private async findRecordWithHighestSeverityLevel(
+  public async findRecordWithHighestSeverityLevel(
     submissionQueueRecords: SubmissionQueue[],
     severityCodes: SeverityCode[],
   ): Promise<HighestSeverityRecord> {

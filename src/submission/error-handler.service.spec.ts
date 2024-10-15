@@ -8,6 +8,7 @@ import { SubmissionEmailService } from './submission-email.service';
 import { MailEvalService } from '../mail/mail-eval.service';
 import { ConfigService } from '@nestjs/config';
 import { SubmissionFeedbackRecordService } from './submission-feedback-record.service';
+import { EntityManager } from 'typeorm';
 
 jest.mock('uuid', () => ({
   v4: jest.fn().mockReturnValue('mock-error-id'),
@@ -30,6 +31,14 @@ describe('ErrorHandlerService', () => {
           useValue: {
             updateSubmissionSetStatus: jest.fn(),
             setRecordStatusCode: jest.fn(),
+          },
+        },
+        {
+          provide: EntityManager,
+          useValue: {
+            find: jest.fn(),
+            findOne: jest.fn(),
+            query: jest.fn(),
           },
         },
         {
@@ -97,7 +106,7 @@ describe('ErrorHandlerService', () => {
         set,
         queueRecords,
         'ERROR',
-        'Process failure, see set details',
+        'Process failure, see submissionSet details',
         'REQUIRE',
       );
       expect(mailEvalService.sendEmailWithRetry).toHaveBeenCalledTimes(2);
