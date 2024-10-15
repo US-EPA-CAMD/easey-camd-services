@@ -10,6 +10,7 @@ import { MatsBulkFile } from '../entities/mats-bulk-file.entity';
 import { currentDateTime } from '@us-epa-camd/easey-common/utilities/functions';
 import { Logger } from '@us-epa-camd/easey-common/logger';
 import { QaSuppData } from '../entities/qa-supp.entity';
+import { Plant } from '../entities/plant.entity';
 
 @Injectable()
 export class SubmissionSetHelperService {
@@ -113,5 +114,17 @@ export class SubmissionSetHelperService {
       }
       await this.entityManager.save(record);
     }
+  }
+
+  public async getFacilityByFacIdentifier(facIdentifier: number): Promise<Plant> {
+    const facility: Plant = await this.entityManager.findOneBy(Plant, {
+      facIdentifier: facIdentifier,
+    });
+
+    if (!facility) {
+      throw new Error(`Facility not found for facIdentifier: ${facIdentifier}`);
+    }
+
+    return facility;
   }
 }

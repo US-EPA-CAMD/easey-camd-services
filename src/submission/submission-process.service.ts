@@ -96,7 +96,7 @@ export class SubmissionProcessService {
 
     } catch (e) {
       this.logger.error('Error while processing submission set: ' + set?.submissionSetIdentifier, e.stack, 'SubmissionProcessService');
-      await this.errorHandlerService.handleError(set, submissionQueueRecords, e);
+      await this.errorHandlerService.handleSubmissionProcessingError(set, submissionQueueRecords, e);
     } finally {
       await this.cleanup(folderPath);
     }

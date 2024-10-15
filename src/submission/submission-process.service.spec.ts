@@ -60,6 +60,9 @@ describe('SubmissionProcessService', () => {
           provide: ErrorHandlerService,
           useValue: {
             handleError: jest.fn(),
+            handleQueueingError: jest.fn(),
+            handleSubmissionProcessingError: jest.fn(),
+            sendEmail: jest.fn(),
           },
         },
         {
@@ -154,11 +157,11 @@ describe('SubmissionProcessService', () => {
       jest.mock('uuidv4', () => ({ v4: () => 'mock-uuid' }));
       jest.spyOn(fsPromises, 'rm').mockResolvedValue();
       jest.spyOn(service['transactionService'], 'buildTransactions').mockRejectedValue(error);
-      jest.spyOn(service['errorHandlerService'], 'handleError').mockResolvedValue();
+      jest.spyOn(service['errorHandlerService'], 'handleSubmissionProcessingError').mockResolvedValue();
 
       await service.processSubmissionSet(setId);
 
-      expect(service['errorHandlerService'].handleError).toHaveBeenCalledWith(
+      expect(service['errorHandlerService'].handleSubmissionProcessingError).toHaveBeenCalledWith(
         submissionSet,
         submissionSetRecords,
         error,

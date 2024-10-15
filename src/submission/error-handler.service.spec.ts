@@ -7,6 +7,7 @@ import { SubmissionSetHelperService } from './submission-set-helper.service';
 import { SubmissionEmailService } from './submission-email.service';
 import { MailEvalService } from '../mail/mail-eval.service';
 import { ConfigService } from '@nestjs/config';
+import { SubmissionFeedbackRecordService } from './submission-feedback-record.service';
 
 jest.mock('uuid', () => ({
   v4: jest.fn().mockReturnValue('mock-error-id'),
@@ -51,6 +52,12 @@ describe('ErrorHandlerService', () => {
             get: jest.fn().mockReturnValue('from@example.com'),
           },
         },
+        {
+          provide: SubmissionFeedbackRecordService,
+          useValue: {
+            getDisplayDate: jest.fn().mockReturnValue('7/7/2024'),
+          },
+        },
       ],
     }).compile();
 
@@ -75,7 +82,7 @@ describe('ErrorHandlerService', () => {
       const queueRecords = [new SubmissionQueue()];
       const error = new Error('Test Error');
 
-      await service.handleError(set, queueRecords, error);
+      await service.handleSubmissionProcessingError(set, queueRecords, error);
 
       expect(submissionSetHelper.updateSubmissionSetStatus).toHaveBeenCalledWith(
         set,

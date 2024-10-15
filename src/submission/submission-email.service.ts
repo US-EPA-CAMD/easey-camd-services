@@ -82,7 +82,7 @@ export class SubmissionEmailService {
             return await this.getSubmissionFeedbackEmailData(submissionEmailParamsDto);
         } catch (error) {
           this.logger.error('Error while collecting data for ${processCode}', error.stack, 'SubmissionEmailService');
-          await this.errorHandlerService.handleError(set, records, error);
+          await this.errorHandlerService.handleSubmissionProcessingError(set, records, error);
           return null; // Ensure the promise resolves to a value
         }
       } else {
@@ -291,7 +291,7 @@ export class SubmissionEmailService {
     submissionEmailParamsDto.templateContext['monitorPlan'] = {
       keys: mpKeys,
       item: {
-        submissionType: await this.getSubmissionType(submissionEmailParamsDto),
+        submissionType: await this.getSubmissionType(submissionEmailParamsDto.processCode),
         facilityName: submissionEmailParamsDto.facilityName || 'NA',
         configuration: submissionSet.configuration,
         orisCode: submissionEmailParamsDto.orisCode || 'NA',
@@ -320,14 +320,14 @@ export class SubmissionEmailService {
     });
   }
 
-  private async getSubmissionType( submissionEmailParamsDto: SubmissionEmailParamsDto, ): Promise<string> {
+  public async getSubmissionType(processCode: string ): Promise<string> {
     const submissionTypeNames = {
       MP: 'Monitoring Plan',
       QA: 'QA Test',
       EM: 'Emissions',
     };
 
-    return submissionTypeNames[submissionEmailParamsDto.processCode];
+    return submissionTypeNames[processCode];
   }
 
   private async getProcessCodeName(

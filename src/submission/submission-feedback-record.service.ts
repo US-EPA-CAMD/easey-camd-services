@@ -161,7 +161,7 @@ export class SubmissionFeedbackRecordService {
     return qaTableContent;
   }
 
-  async getDisplayDate(date: Date): Promise<string> {
+  public async getDisplayDate(date: Date): Promise<string> {
     return date.toLocaleDateString('en-US', {
       timeZone: 'America/New_York',
       year: 'numeric',
