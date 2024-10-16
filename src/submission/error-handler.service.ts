@@ -7,7 +7,6 @@ import { SubmissionSetHelperService } from './submission-set-helper.service';
 import { SubmissionEmailService } from './submission-email.service';
 import { MailEvalService } from '../mail/mail-eval.service';
 import { ConfigService } from '@nestjs/config';
-import { ClientConfig } from '../entities/client-config.entity';
 import { SubmissionFeedbackRecordService } from './submission-feedback-record.service';
 import { Plant } from '../entities/plant.entity';
 import { SeverityCode } from '../entities/severity-code.entity';
@@ -258,7 +257,7 @@ export class ErrorHandlerService {
     const yearQtr = rptPeriod?.periodAbbreviation;
 
     // Prepare email context
-    const emailTemplateContext = {
+    const emailTemplateContextForUser = {
       submissionType: submissionType,
       facilityName: submissionSet?.facName || 'N/A',
       stateCode: facility?.state || 'N/A',
@@ -276,7 +275,7 @@ export class ErrorHandlerService {
       errorDetails: rootError?.message || 'No error details available',
     };
 
-    return emailTemplateContext;
+    return emailTemplateContextForUser;
   }
 
   private async buildEmailTemplateContextForSupport(
