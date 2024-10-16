@@ -1,11 +1,4 @@
-import {
-  BaseEntity,
-  Column,
-  Entity,
-  JoinColumn,
-  OneToMany,
-  PrimaryColumn,
-} from 'typeorm';
+import { BaseEntity, Column, Entity, OneToMany, PrimaryColumn } from 'typeorm';
 
 import { NumericColumnTransformer } from '@us-epa-camd/easey-common/transforms';
 import { Unit } from './unit.entity';
@@ -116,17 +109,11 @@ export class Plant extends BaseEntity {
   updateDate: string;
 
   @OneToMany(() => Unit, (unit) => unit.plant)
-  @JoinColumn({ name: 'unit_id' })
   units: Unit[];
 
   @OneToMany(() => StackPipe, (stackPipe) => stackPipe.plant)
-  @JoinColumn({ name: 'stack_pipe_id' })
   stackPipes: StackPipe[];
 
-  @OneToMany(
-    () => MonitorPlan,
-    plan => plan.plant,
-  )
+  @OneToMany(() => MonitorPlan, (plan) => plan.plant)
   monitorPlans: MonitorPlan[];
-
 }

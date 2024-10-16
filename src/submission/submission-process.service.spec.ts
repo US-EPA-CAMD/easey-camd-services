@@ -17,6 +17,9 @@ import { SubmissionSet } from '../entities/submission-set.entity';
 import { MailEvalService } from '../mail/mail-eval.service';
 import { SubmissionProcessService } from './submission-process.service';
 import { SubmissionFeedbackRecordService } from './submission-feedback-record.service';
+import { SeverityCode } from '../entities/severity-code.entity';
+import { RecipientListService } from './recipient-list.service';
+import { SubmissionFeedbackEmailData } from '../dto/submission-email-params.dto';
 
 jest.mock('@aws-sdk/client-s3');
 
@@ -35,6 +38,7 @@ describe('-- Submission Process Service --', () => {
           provide: MailEvalService,
           useFactory: () => ({
             sendMassEvalEmail: jest.fn(),
+            sendEmailWithRetry: jest.fn(),
           }),
         },
         {
@@ -71,6 +75,14 @@ describe('-- Submission Process Service --', () => {
             addDefaultTable: jest.fn().mockReturnValue('content'),
             addTableHeader: jest.fn().mockReturnValue('content'),
             getSubmissionReceiptTableContent: jest.fn().mockReturnValue('content'),
+            generateQATable: jest.fn().mockReturnValue('content'),
+          }),
+        },
+        {
+          provide: RecipientListService,
+          useFactory: () => ({
+            getClientToken: jest.fn().mockReturnValue('mockToken'),
+            getEmailRecipients: jest.fn().mockReturnValue('email1@gmail.com;email2@gmail.com'),
           }),
         },
       ],
@@ -252,15 +264,79 @@ describe('-- Submission Process Service --', () => {
 
     jest.spyOn(service, 'setRecordStatusCode').mockResolvedValue();
     jest.spyOn(service.returnManager(), 'save').mockResolvedValue({});
-    jest.spyOn(service, 'sendFeedbackReportEmail').mockResolvedValue();
+    jest.spyOn(service, 'collectFeedbackReportDataForEmail').mockResolvedValue([{} as SubmissionFeedbackEmailData]);
     jest.spyOn(service['logger'], 'error').mockImplementation(jest.fn());
 
     // Ensure the method call and catch the thrown error
-    await expect(service.handleError(set, queue, error, false)).rejects.toThrow('mock error');
+    await expect(service.handleError(set, queue, error)).rejects.toThrow('mock error');
 
     expect(set.statusCode).toEqual('ERROR');
     expect(set.details).toEqual(JSON.stringify(error));
     expect(service['logger'].error).toHaveBeenCalled();
+  });
+
+  it('should generate emissions summary report correctly', async () => {
+    const submissionEmailParamsDto = {
+      submissionSet: new SubmissionSet(),
+      submissionRecords: [new SubmissionQueue()],
+      monLocationIds: '1,2',
+    };
+
+    jest.spyOn(service['dataSetService'], 'getDataSet').mockResolvedValue(new ReportDTO());
+    jest.spyOn(service['submissionFeedbackRecordService'], 'generateSummaryTableForUnitStack')
+      .mockImplementation(() => 'Summary Content');
+
+    const result = await service.getEmissionsSummaryReport(submissionEmailParamsDto as any);
+
+    expect(result).toContain('Summary Content');
+  });
+
+  it('should generate QA feedback report correctly', async () => {
+    const submissionEmailParamsDto = {
+      submissionSet: new SubmissionSet(),
+      submissionRecords: [new SubmissionQueue()],
+    };
+
+    jest.spyOn(service['dataSetService'], 'getDataSet').mockResolvedValue(new ReportDTO());
+    jest.spyOn(service['submissionFeedbackRecordService'], 'generateQATable')
+      .mockImplementation(() => 'QA Content');
+
+    const result = await service.getQAFeedbackReport(submissionEmailParamsDto as any);
+
+    expect(result).toContain('QA Content');
+  });
+
+  /*it('should send feedback report email for different submission types', async () => {
+    const setId = 'mockSetId';
+    const set = new SubmissionSet();
+    const records = [new SubmissionQueue()];
+
+    // Explicit type assertion to EntityManager
+    const returnManager = service['returnManager'] as jest.Mocked<EntityManager>;
+
+    jest.spyOn(returnManager, 'findOneBy').mockResolvedValueOnce(set);
+    jest.spyOn(returnManager, 'find').mockResolvedValueOnce(records);
+    jest.spyOn(service, 'findRecordWithHighestSeverityLevel').mockResolvedValue({ submissionQueue: records[0], severityCode: new SeverityCode() });
+    jest.spyOn(service, 'sendFeedbackEmail').mockResolvedValue();
+
+    await service.sendFeedbackReportEmail('recipient@example.com', 'sender@example.com', setId, false);
+
+    expect(service['sendFeedbackEmail']).toHaveBeenCalled();
+  });
+*/
+
+  it('should find the record with the highest severity level', async () => {
+    const severityCodes = [new SeverityCode()];
+    severityCodes[0].severityLevel = 5;
+    severityCodes[0].severityCode = 'CRIT1';
+
+    const records = [new SubmissionQueue()];
+    records[0].severityCode = 'CRIT1';
+
+    const result = await service.findRecordWithHighestSeverityLevel(records, severityCodes);
+
+    expect(result.severityCode.severityLevel).toEqual(5);
+    expect(result.submissionQueue.severityCode).toEqual('CRIT1');
   });
 
 });

@@ -49,6 +49,8 @@ export default registerAs('app', () => ({
   env: getConfigValue('EASEY_CAMD_SERVICES_ENV', 'local-dev'),
   apiKey: getConfigValue('EASEY_CAMD_SERVICES_API_KEY'),
   enableApiKey: getConfigValueBoolean('EASEY_CAMD_SERVICES_ENABLE_API_KEY'),
+  clientId: getConfigValue("EASEY_CAMD_SERVICES_CLIENT_ID"),
+  clientSecret: getConfigValue("EASEY_CAMD_SERVICES_CLIENT_SECRET"),
   enableClientToken: getConfigValueBoolean(
     'EASEY_CAMD_SERVICES_ENABLE_CLIENT_TOKEN',
   ),
@@ -94,6 +96,7 @@ export default registerAs('app', () => ({
   ),
   // ENABLES DEBUG CONSOLE LOGS
   enableDebug: getConfigValueBoolean('EASEY_CAMD_SERVICES_ENABLE_DEBUG'),
+  sqlLogging: getConfigValueBoolean('EASEY_DB_SQL_LOGGING',false),
   /**
    * Needs to be set in .env file for local development if `EASEY_EMISSIONS_API_ENABLE_AUTH_TOKEN` is false.
    * Format:
@@ -129,4 +132,6 @@ export default registerAs('app', () => ({
     'EASEY_CAMD_SERVICES_SUBMISSION_CRIT_MESSAGE',
     '',
   ),
+  recipientsListApi: getConfigValue('EASEY_CAMD_SERVICES_RECIPIENT_LIST_API', 'https://cbsstagei.epa.gov/CBSD'),
+  recipientsListApiEnabled: getConfigValueBoolean('EASEY_CAMD_SERVICES_RECIPIENT_LIST_API_ENABLED',true),
 }));

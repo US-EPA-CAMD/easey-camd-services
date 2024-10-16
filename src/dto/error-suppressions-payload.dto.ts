@@ -1,3 +1,6 @@
+import { CheckCatalogService } from '@us-epa-camd/easey-common/check-catalog';
+import { ErrorMessages } from '@us-epa-camd/easey-common/constants';
+import { IsValidCode, IsValidDate } from '@us-epa-camd/easey-common/pipes';
 import {
   IsBoolean,
   IsDateString,
@@ -7,21 +10,14 @@ import {
   IsString,
   ValidationArguments,
 } from 'class-validator';
-import { CheckCatalogService } from '@us-epa-camd/easey-common/check-catalog';
-import { ErrorMessages } from '@us-epa-camd/easey-common/constants';
-import {
-  IsValidCode,
-  IsValidCodes,
-  IsValidDate,
-} from '@us-epa-camd/easey-common/pipes';
-import { Plant } from '../entities/plant.entity';
-import { EsReasonCode } from '../entities/es-reason-code.entity';
+
 import { CheckCatalogResult } from '../entities/check-catalog-result.entity';
-import { SeverityCode } from '../entities/severity-code.entity';
 import { EsMatchDataTypeCode } from '../entities/es-match-data-type-code.entity';
 import { EsMatchTimeTypeCode } from '../entities/es-match-time-type-code.entity';
-import { MonitorLocation } from '../entities/monitor-location.entity';
-import { FindManyOptions, In } from 'typeorm';
+import { EsReasonCode } from '../entities/es-reason-code.entity';
+import { Plant } from '../entities/plant.entity';
+import { SeverityCode } from '../entities/severity-code.entity';
+import { IsValidLocations } from '../pipes/is-valid-locations.pipe';
 
 const msgA = `You reported an invalid [property] of [value]`;
 
@@ -69,42 +65,11 @@ export class ErrorSuppressionsPayloadDTO {
 
   @IsString()
   @IsOptional()
-  @IsValidCodes(
-    MonitorLocation,
-    (args: ValidationArguments): FindManyOptions<MonitorLocation> => {
-      if (typeof args.value !== 'string') {
-        return null;
-      }
-      const locations = args.value.split(',').map((item) => item.trim());
-      return {
-        where: [
-          {
-            unit: {
-              plant: {
-                facIdentifier: args.object['facilityId'],
-              },
-              name: In(locations),
-            },
-          },
-          {
-            stackPipe: {
-              plant: {
-                facIdentifier: args.object['facilityId'],
-              },
-              name: In(locations),
-            },
-          },
-        ],
-        relations: ['unit', 'stackPipe'],
-        loadEagerRelations: true,
-      };
+  @IsValidLocations({
+    message: (args: ValidationArguments) => {
+      return `You have reported invalid locations of [${args.value}] for the facilityId [${args.object['facilityId']}].`;
     },
-    {
-      message: (args: ValidationArguments) => {
-        return `You have reported invalid locations of [${args.value}] for the facilityId [${args.object['facilityId']}].`;
-      },
-    },
-  )
+  })
   locations?: string;
 
   @IsString()

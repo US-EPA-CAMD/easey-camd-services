@@ -35,7 +35,7 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
       entities: [__dirname + '/../**/*.entity.{js,ts}'],
       synchronize: false,
       ssl: this.tlsOptions,
-      logging: true,
+      logging: this.configService.get<boolean>('app.sqlLogging'),
     };
   }
 }

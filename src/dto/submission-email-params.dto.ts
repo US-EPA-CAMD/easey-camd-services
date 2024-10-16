@@ -14,7 +14,8 @@ export class SubmissionEmailParamsDto {
   rptPeriod             : ReportingPeriod; //For EM records only
   monLocationIds        : string;   //Comma separated list
   facilityName          : string;
-  orisCode              : string;
+  facId                 : number;
+  orisCode              : number;
   stateCode             : string;
   unitStackPipe         : string;
   monPlanStatus         : string;
@@ -47,7 +48,27 @@ export function isResubmissionRequired(record: HighestSeverityRecord): boolean {
   return record?.submissionQueue?.severityCode?.toUpperCase() === 'CRIT1' || record?.submissionQueue?.severityCode?.toUpperCase() === 'CRIT2';
 }
 
+export function isNoError(record: HighestSeverityRecord): boolean {
+  return record?.submissionQueue?.severityCode?.toUpperCase() === 'NONE';
+}
+
+export function hasNonNoneSeverity(record: HighestSeverityRecord): boolean {
+  return !isNoError(record);
+}
+
 export type KeyValuePairs = {
   [key: string]: string | { label: string; url: string };
 };
+
+export class SubmissionFeedbackEmailData {
+  constructor(
+    public toEmail: string,
+    public ccEmail: string,
+    public fromEmail: string,
+    public subject: string,
+    public emailTemplate: string,
+    public templateContext: any,
+    public feedbackAttachmentDocuments: any[],
+  ) {}
+}
 

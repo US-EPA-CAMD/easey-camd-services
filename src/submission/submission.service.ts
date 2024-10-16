@@ -57,7 +57,7 @@ export class SubmissionService {
       submissionSet.statusCode = 'QUEUED';
 
       const locations = await this.returnManager().query(
-        `SELECT camdecmpsaux.get_mp_location_list($1);`,
+        `SELECT camdecmpswks.get_mp_location_list($1);`,
         [item.monPlanId],
       );
 
@@ -88,16 +88,15 @@ export class SubmissionService {
         mpRecord.statusCode = 'QUEUED';
         mpRecord.submittedOn = currentTime;
 
-        const cs: CheckSession = await this.returnManager().findOneBy(
-          CheckSession,
-          {
-            monPlanId: item.monPlanId,
-            tesSumId: null,
-            qaCertEventId: null,
-            testExtensionExemptionId: null,
-            rptPeriodId: null,
-          },
-        );
+        const cs: CheckSession = await this.returnManager()
+          .createQueryBuilder(CheckSession, 'cs')
+          .where('cs.monPlanId = :monPlanId', { monPlanId: item.monPlanId })
+          .andWhere('cs.processCode = :processCode', { processCode: 'MP' })
+          .andWhere('cs.tesSumId IS NULL')
+          .andWhere('cs.qaCertEventId IS NULL')
+          .andWhere('cs.testExtensionExemptionId IS NULL')
+          .andWhere('cs.rptPeriodId IS NULL')
+          .getOne();
 
         mpRecord.severityCode = cs?.severityCode || 'NONE';
 

@@ -54,20 +54,49 @@
   </p>
   <h3>Submission Status</h3>
   <p>
-    The EPA has received your {{processCodeName}} for the facility and monitoring location(s) listed in Table 1 below. The table also provides
-    confirmation of EPA's receipt (date, time, etc.) of your submission.
 
-    {{#if (eq processCode "QA")}}
-      Table 2 provides a list of the tests, certification events, and QA extensions and exemptions that were submitted.
+    {{#if hasNonNoneSeverity}}
+
+      The EPA has received your {{processCodeName}} for the facility and monitoring location(s) listed in Table 1 below. The table also provides
+      confirmation of EPA's receipt (date, time, etc.) of your submission.
+
+      {{#if (eq processCode "QA")}}
+        Table 2 provides a list of the tests, certification events, and QA extensions and exemptions that were submitted.
+      {{/if}}
+
+      Prior to submission, ECMPS evaluated your data and assigned an overall ""Feedback Status Level"" to it based on the results (see Table 1).
+
+      {{#if (eq processCode "EM")}}
+        This Feedback Report also contains Table 2, which displays EPA-Accepted Cumulative Values for emissions and other parameters.
+      {{/if}}
+
+      Finally, a summary of ECMPS's Evaluation Results is included.
+
     {{/if}}
 
-    Prior to submission, ECMPS evaluated your data and assigned an overall ""Feedback Status Level"" to it based on the results (see Table 1).
 
-    {{#if (eq processCode "EM")}}
-      This Feedback Report also contains Table 2, which displays EPA-Accepted Cumulative Values for emissions and other parameters.
-    {{/if}}
+    {{#unless hasNonNoneSeverity}}
 
-    Finally, a summary of ECMPS's Evaluation Results is included.
+      The EPA has received your {{processCodeName}} for the facility and monitoring location(s) listed in Table 1 below. The table also provides
+      confirmation of EPA's receipt (date, time, etc.) of your submission.
+
+      {{#if (eq processCode "MP")}}
+        Prior to submission, ECMPS evaluated your monitoring plan and assigned an overall "Feedback Status Level" to it based on the results (see Table 1).
+      {{/if}}
+
+      {{#if (eq processCode "QA")}}
+        Table 2 provides a list of the tests, certification events, and QA extensions and
+        exemptions that were submitted. Prior to submission, ECMPS evaluated your data and assigned an overall "Feedback Status Level" to it based on
+        the results (see Table 1).
+      {{/if}}
+
+      {{#if (eq processCode "EM")}}
+        Prior to submission, ECMPS evaluated your emissions data and assigned
+        an overall "Feedback Status Level" to it based on the results (see Table 1). This Feedback Report also contains Table 2, which displays EPA-Accepted
+        Cumulative Values for emissions and other parameters.
+      {{/if}}
+
+    {{/unless}}
   </p>
   <h3>Table 1: Submission Receipt and Feedback Status Level Information</h3>
   <div class="col-table-container">
@@ -208,7 +237,11 @@
 
   {{{emissionSummaryContent}}}
 
-  {{{evaluationReportsContent}}}
+  {{{qaFeedbackContent}}}
+
+  {{#if hasNonNoneSeverity}}
+    {{{evaluationReportsContent}}}
+  {{/if}}
 
 </div>
 
