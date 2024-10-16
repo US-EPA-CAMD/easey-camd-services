@@ -12,6 +12,7 @@ import { SubmissionFeedbackRecordService } from './submission-feedback-record.se
 import { Plant } from '../entities/plant.entity';
 import { SeverityCode } from '../entities/severity-code.entity';
 import { EntityManager } from 'typeorm';
+import { ReportingPeriod } from '../entities/reporting-period.entity';
 
 @Injectable()
 export class ErrorHandlerService {
@@ -41,82 +42,46 @@ export class ErrorHandlerService {
       // Log the error
       this.logger.error(`Queueing Error for UserId: ${userId || 'Unknown'}`, rootError?.stack || '', 'Submission Queue', { statusCode: HttpStatus.INTERNAL_SERVER_ERROR, errorId });
 
-      // Get support email
-      let supportEmail: string;
-      let ecmpsClientConfig: ClientConfig;
-      try {
-        ecmpsClientConfig = await this.submissionEmailService.getECMPSClientConfig();
-        supportEmail = ecmpsClientConfig?.supportEmail?.trim?.() || 'ecmps-support@camdsupport.com';
-      } catch (configError) {
-        supportEmail = 'ecmps-support@camdsupport.com';
-        this.logger.error('Failed to get support email. Using: ' + supportEmail, configError.stack);
-      }
-
-      // Get CDX Url this.configService.get<string>('app.cdxUrl')
-      let cdxUrl: string;
-      try {
-        cdxUrl = this.configService.get<string>('app.cdxUrl') || 'https://cdx.epa.gov/';
-      } catch (configError) {
-        cdxUrl = 'https://cdx.epa.gov/';
-        this.logger.error('Failed to get CDX URL. Using ' + cdxUrl, configError?.stack);
-      }
-
-      // Retrieve the facility information to get the State (it is not on the Submission Set)
-      let facility: Plant;
-      try {
-        facility = submissionSet && submissionSet.facIdentifier
-          ? await this.submissionSetHelper.getFacilityByFacIdentifier(submissionSet.facIdentifier)
-          : null;
-      } catch (facilityError) {
-        this.logger.error('Failed to get facility information.', facilityError.stack);
-        facility = null;
-      }
-
-      // Get submission type
-      let submissionType: string = 'N/A';
-      try {
-        submissionType = await this.submissionEmailService.getSubmissionType(currentSubmissionQueue?.processCode) || 'N/A';
-      } catch (submissionTypeError) {
-        this.logger.error('Failed to get submission type.', submissionTypeError.stack);
-      }
-
-      // Get submission date display
-      let submissionDateDisplay: string = new Date().toLocaleString();
-      try {
-        submissionDateDisplay = await this.submissionFeedbackRecordService.getDisplayDate(submissionSet?.submittedOn || new Date());
-      } catch (dateDisplayError) {
-        this.logger.error('Failed to get submission date display.', dateDisplayError.stack);
-      }
-
       // Prepare email context
-      const emailTemplateContext = {
-        submissionType: submissionType,
-        facilityName: submissionSet?.facName || 'N/A',
-        stateCode: facility?.state || 'N/A',
-        orisCode: submissionSet?.orisCode || 'N/A',
-        configuration: submissionSet?.configuration || 'N/A',
-        submissionDateDisplay: submissionDateDisplay,
-        submitter: userEmail,
-        errorId: errorId,
-        errorDetails: rootError.message,
-        supportEmail: supportEmail,
-        toEmail: userEmail,
-        ccEmail: supportEmail,
-        cdxUrl: cdxUrl,
-      };
+      const emailTemplateContext = await this.buildEmailTemplateContextForUser(
+        submissionSet,
+        currentSubmissionQueue,
+        userEmail,
+        errorId,
+        rootError,
+      );
 
       // Email subject
       const processCode = currentSubmissionQueue?.processCode || 'N/A';
       const emailSubject = `${processCode} Feedback for ORIS code ${emailTemplateContext.orisCode} Unit ${emailTemplateContext.configuration}`;
 
-      // Send failure emails
+      // Send failure email to user
       await this.sendEmail(
         emailTemplateContext,
         userEmail,
-        supportEmail,
+        '',
         emailSubject,
         'queueingFailureUserTemplate',
       );
+
+      // Prepare email context for support
+      const emailTemplateContextForSupport = await this.buildEmailTemplateContextForSupport(
+        submissionSet,
+        [currentSubmissionQueue],
+        emailTemplateContext,
+        errorId,
+        rootError,
+      );
+
+      // Send email to support
+      await this.sendEmail(
+        emailTemplateContextForSupport,
+        emailTemplateContextForSupport.supportEmail,
+        '',
+        emailSubject,
+        'queueingFailureSupportTemplate'
+      );
+
     } catch (emailError) {
       this.logger.error('Failed to send queueing failure email.', emailError.stack);
     }
@@ -129,7 +94,6 @@ export class ErrorHandlerService {
   ) {
 
     try {
-
       // JSON.stringify the error details
       try {
         // Safely capture error details
@@ -143,149 +107,212 @@ export class ErrorHandlerService {
         submissionSet.details = `Error serializing original error: ${serializationError.message}`;
       }
 
-      // Update the submission submissionSet status to 'ERROR'
+      // Update the submission set status to 'ERROR'
       try {
         await this.submissionSetHelper.updateSubmissionSetStatus(submissionSet, 'ERROR', submissionSet.details);
       } catch (updateError) {
-        this.logger.error('Error during handleSubmissionProcessingError for submission submissionSet, while updating submission submissionSet: ' + submissionSet?.submissionSetIdentifier, updateError.stack,);
+        this.logger.error('Error during handleSubmissionProcessingError for submission set, while updating submission set: ' + submissionSet?.submissionSetIdentifier, updateError.stack,);
       }
 
       try {
         // Attempt to update submission queue records
         await this.submissionSetHelper.setRecordStatusCode(submissionSet, queueRecords, 'ERROR', 'Process failure, see submissionSet details', 'REQUIRE',);
       } catch (updateQueueError) {
-        this.logger.error('Error during handleSubmissionProcessingError for submission submissionSet, while updating submission queue:' + submissionSet?.submissionSetIdentifier, updateQueueError.stack,);
+        this.logger.error('Error during handleSubmissionProcessingError for submission set, while updating submission queue:' + submissionSet?.submissionSetIdentifier, updateQueueError.stack,);
       }
 
-      //Get the userEmail
-      const userEmail = submissionSet?.userEmail || '';
-
-      //Get the support Email
-      let supportEmail: string;
-      let ecmpsClientConfig: ClientConfig;
-      try {
-        ecmpsClientConfig = await this.submissionEmailService.getECMPSClientConfig();
-        supportEmail = ecmpsClientConfig?.supportEmail?.trim?.() || 'ecmps-support@camdsupport.com';
-      } catch (configError) {
-        supportEmail = 'ecmps-support@camdsupport.com';
-        this.logger.error('Failed to get support email. Using: ' + supportEmail, configError?.stack || '');
-      }
-
+      // Generate an error ID
       const errorId = uuidv4();
       this.logger.error(rootError?.message, rootError?.stack, 'submission', {
         statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         errorId: errorId,
       });
 
-      // Get CDX Url this.configService.get<string>('app.cdxUrl')
-      let cdxUrl: string;
-      try {
-        cdxUrl = this.configService.get<string>('app.cdxUrl') || 'https://cdx.epa.gov/';
-      } catch (configError) {
-        cdxUrl = 'https://cdx.epa.gov/';
-        this.logger.error('Failed to get CDX URL. Using ' + cdxUrl, configError?.stack || '');
-      }
-
-      // Retrieve the facility information to get the State (it is not on the Submission Set)
-      let facility: Plant;
-      try {
-        facility = submissionSet && submissionSet.facIdentifier
-          ? await this.submissionSetHelper.getFacilityByFacIdentifier(submissionSet.facIdentifier)
-          : null;
-      } catch (facilityError) {
-        this.logger.error('Failed to get facility information.', facilityError.stack);
-        facility = null;
-      }
-
-      //Get a submission queue to get the process code. We will use the one with the highest severity code
-      let selectedSubmissionQueue: SubmissionQueue = null;
-      try {
-        const severityCodes: SeverityCode[] = await this.entityManager.find(SeverityCode);
-        const highestSeverityRecord =
-          await this.submissionEmailService.findRecordWithHighestSeverityLevel(
-            queueRecords,
-            severityCodes,
-          );
-        selectedSubmissionQueue = highestSeverityRecord?.submissionQueue;
-      } catch (dateDisplayError) {
-        selectedSubmissionQueue = queueRecords?.find(record => record != null) || null;
-        this.logger.error('Failed to get submission queue.', dateDisplayError?.stack || '');
-      }
-
-      // Get submission type
-      let submissionType: string = 'N/A';
-      try {
-        submissionType = (await this.submissionEmailService.getSubmissionType(selectedSubmissionQueue?.processCode)) || 'N/A';
-      } catch (submissionTypeError) {
-        this.logger.error('Failed to get submission type.', submissionTypeError?.stack || '');
-      }
-
-      // Get submission date display
-      let submissionDateDisplay: string = new Date().toLocaleString();
-      try {
-        submissionDateDisplay = await this.submissionFeedbackRecordService.getDisplayDate(submissionSet?.submittedOn || new Date());
-      } catch (dateDisplayError) {
-        this.logger.error('Failed to get submission date display.', dateDisplayError?.stack || '');
-      }
-
-      // Prepare email context
-      const emailTemplateContextForUser = {
-        submissionType: submissionType,
-        facilityName: submissionSet?.facName || 'N/A',
-        stateCode: facility?.state || 'N/A',
-        orisCode: submissionSet?.orisCode || 'N/A',
-        configuration: submissionSet?.configuration || 'N/A',
-        submissionDateDisplay: submissionDateDisplay,
-        submitter: userEmail,
-        supportEmail: supportEmail,
-        toEmail: userEmail,
-        ccEmail: supportEmail,
-        cdxUrl: cdxUrl,
-      };
+      // Prepare email context for user
+      const emailTemplateContextForUser = await this.buildEmailTemplateContextForUser(
+        submissionSet,
+        queueRecords,
+        submissionSet?.userEmail || '',
+        errorId,
+        rootError,
+      );
 
       // Email subject
-      const processCode = selectedSubmissionQueue?.processCode || 'N/A';
+      const processCode = emailTemplateContextForUser.processCode || 'N/A';
       const emailSubject = `${processCode} Feedback for ORIS code ${emailTemplateContextForUser.orisCode} Unit ${emailTemplateContextForUser.configuration}`;
 
-      //Send one email to the user
-      await this.sendEmail(emailTemplateContextForUser, userEmail, '', emailSubject, 'submissionFailureUserTemplate');
+      // Send email to user
+      await this.sendEmail(
+        emailTemplateContextForUser,
+        emailTemplateContextForUser.toEmail,
+        '',
+        emailSubject,
+        'submissionFailureUserTemplate'
+      );
 
-      //Prepare the email to support
-      const submissionSetIdentifier = submissionSet.submissionSetIdentifier;
+      // Prepare email context for support
+      const emailTemplateContextForSupport = await this.buildEmailTemplateContextForSupport(
+        submissionSet,
+        queueRecords,
+        emailTemplateContextForUser,
+        errorId,
+        rootError,
+      );
 
-      // Extract submissionIdentifier values from queueRecords
-      const submissionQueueIdentifiers = queueRecords
-        .map(record => record.submissionIdentifier)
-        .join(', ');
+      // Send email to support
+      await this.sendEmail(
+        emailTemplateContextForSupport,
+        emailTemplateContextForSupport.supportEmail,
+        '',
+        emailSubject,
+        'submissionFailureSupportTemplate'
+      );
 
-      // Get the units
-      const units = emailTemplateContextForUser.configuration;
-
-      // Construct the argument values
-      const argumentValues = `Submission set: ${submissionSetIdentifier}, Submission Queues: ${submissionQueueIdentifiers}, Units: ${units}`;
-
-
-      const emailTemplateContextForSupport = {
-        ...emailTemplateContextForUser,
-        submissionId: submissionSet?.submissionSetIdentifier || 'N/A',
-        submitter: submissionSet?.userIdentifier || userEmail || 'N/A',
-        errorId: errorId || 'N/A',
-        errorMessage: rootError?.message,
-        errorDetails: rootError?.stack || 'No error details available',
-        argumentValues: argumentValues,
-        errorDate: new Date().toLocaleString() || 'N/A',
-      };
-
-      //Send another email to Support with error details.
-      await this.sendEmail(emailTemplateContextForSupport, supportEmail, '', emailSubject, 'submissionFailureSupportTemplate');
-
-    }catch (error) {
+    } catch (error) {
       this.logger.error('Failed to handle submission processing error.', error?.stack || '');
     }
   }
 
+  private async buildEmailTemplateContextForUser(
+    submissionSet: SubmissionSet,
+    submissionQueueOrRecords: SubmissionQueue | SubmissionQueue[],
+    userEmail: string,
+    errorId: string,
+    rootError: Error,
+  ): Promise<any> {
+    // Get support email
+    let supportEmail: string;
+    try {
+      const ecmpsClientConfig = await this.submissionEmailService.getECMPSClientConfig();
+      supportEmail = ecmpsClientConfig?.supportEmail?.trim?.() || 'ecmps-support@camdsupport.com';
+    } catch (configError) {
+      supportEmail = 'ecmps-support@camdsupport.com';
+      this.logger.error('Failed to get support email. Using: ' + supportEmail, configError.stack);
+    }
+
+    // Get CDX Url
+    let cdxUrl: string;
+    try {
+      cdxUrl = this.configService.get<string>('app.cdxUrl') || 'https://cdx.epa.gov/';
+    } catch (configError) {
+      cdxUrl = 'https://cdx.epa.gov/';
+      this.logger.error('Failed to get CDX URL. Using ' + cdxUrl, configError?.stack);
+    }
+
+    // Retrieve the facility information to get the State
+    let facility: Plant;
+    try {
+      facility = submissionSet && submissionSet.facIdentifier
+        ? await this.submissionSetHelper.getFacilityByFacIdentifier(submissionSet.facIdentifier)
+        : null;
+    } catch (facilityError) {
+      this.logger.error('Failed to get facility information.', facilityError.stack);
+      facility = null;
+    }
+
+    // Get submission queue or selected submission queue
+    //let processCode: string = 'N/A';
+    let selectedSubmissionQueue: SubmissionQueue = null;
+    if (Array.isArray(submissionQueueOrRecords)) {
+      try {
+        const severityCodes: SeverityCode[] = await this.entityManager.find(SeverityCode);
+        const highestSeverityRecord =
+          await this.submissionEmailService.findRecordWithHighestSeverityLevel(
+            submissionQueueOrRecords,
+            severityCodes,
+          );
+        selectedSubmissionQueue = highestSeverityRecord?.submissionQueue;
+      } catch (dateDisplayError) {
+        selectedSubmissionQueue = submissionQueueOrRecords?.find(record => record != null) || null;
+        this.logger.error('Failed to get submission queue.', dateDisplayError?.stack || '');
+      }
+    } else if (submissionQueueOrRecords) {
+      selectedSubmissionQueue = submissionQueueOrRecords;
+    }
+
+    const processCode = selectedSubmissionQueue?.processCode || 'N/A';
+
+    // Get submission type
+    let submissionType: string = 'N/A';
+    try {
+      submissionType = await this.submissionEmailService.getSubmissionType(processCode) || 'N/A';
+    } catch (submissionTypeError) {
+      this.logger.error('Failed to get submission type.', submissionTypeError.stack);
+    }
+
+    // Get submission date display
+    let submissionDateDisplay: string = new Date().toLocaleString();
+    try {
+      submissionDateDisplay = await this.submissionFeedbackRecordService.getDisplayDate(submissionSet?.submittedOn || new Date());
+    } catch (dateDisplayError) {
+      this.logger.error('Failed to get submission date display.', dateDisplayError.stack);
+    }
+
+    //Get yearQtr information for EM submissions
+    const rptPeriod =
+      processCode === 'EM'
+        ? await this.entityManager.findOne(ReportingPeriod, {
+          where: { rptPeriodIdentifier: selectedSubmissionQueue?.rptPeriodIdentifier },
+        })
+        : null;
+    const yearQtr = rptPeriod?.periodAbbreviation;
+
+    // Prepare email context
+    const emailTemplateContext = {
+      submissionType: submissionType,
+      facilityName: submissionSet?.facName || 'N/A',
+      stateCode: facility?.state || 'N/A',
+      orisCode: submissionSet?.orisCode || 'N/A',
+      configuration: submissionSet?.configuration || 'N/A',
+      submissionDateDisplay: submissionDateDisplay,
+      yearQtr: yearQtr || 'N/A',
+      submitter: userEmail || 'N/A',
+      supportEmail: supportEmail,
+      toEmail: userEmail || 'N/A',
+      ccEmail: supportEmail,
+      cdxUrl: cdxUrl,
+      processCode: processCode,
+      errorId: errorId || 'N/A',
+      errorDetails: rootError?.message || 'No error details available',
+    };
+
+    return emailTemplateContext;
+  }
+
+  private async buildEmailTemplateContextForSupport(
+    submissionSet: SubmissionSet,
+    queueRecords: SubmissionQueue[],
+    emailTemplateContextForUser: any,
+    errorId: string,
+    rootError: Error,
+  ): Promise<any> {
+    // Extract submissionIdentifier values from queueRecords
+    const submissionQueueIdentifiers = queueRecords
+      .map(record => record?.submissionIdentifier || 'N/A')
+      .join(', ');
+
+    // Get the units
+    const units = emailTemplateContextForUser.configuration;
+
+    // Construct the argument values
+    const argumentValues = `Submission set: ${submissionSet?.submissionSetIdentifier || 'N/A'}, Submission Queues: ${submissionQueueIdentifiers}, Units: ${units}`;
+
+    const emailTemplateContextForSupport = {
+      ...emailTemplateContextForUser,
+      submissionId: submissionSet?.submissionSetIdentifier || 'N/A',
+      submitter: submissionSet?.userIdentifier || emailTemplateContextForUser.submitter || 'N/A',
+      errorId: errorId || 'N/A',
+      errorMessage: rootError?.message || 'No error message',
+      errorDetails: rootError?.stack || 'No error details available',
+      argumentValues: argumentValues,
+      errorDate: new Date().toLocaleString() || 'N/A',
+    };
+
+    return emailTemplateContextForSupport;
+  }
+
   private async sendEmail(
-    emailTemplateContext: any, // Add this parameter
+    emailTemplateContext: any,
     toEmail: string,
     ccEmail: string,
     subject: string,
@@ -301,7 +328,7 @@ export class ErrorHandlerService {
       this.logger.error('Failed to get default fromEmail. Using ' + fromEmail, configError.stack);
     }
 
-    // Send email to user
+    // Send email
     if (toEmail) {
       try {
         await this.mailEvalService.sendEmailWithRetry(
@@ -317,7 +344,7 @@ export class ErrorHandlerService {
         this.logger.error('Failed to send failure email to ' + toEmail, userEmailError?.stack);
       }
     } else {
-      this.logger.warn('Destination email is not provided; skipping processing failure email to user.');
+      this.logger.warn('Destination email is not provided; skipping processing failure email.');
     }
   }
 }
