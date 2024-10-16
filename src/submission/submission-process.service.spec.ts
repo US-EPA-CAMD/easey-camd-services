@@ -19,6 +19,7 @@ import { SubmissionProcessService } from './submission-process.service';
 import { SubmissionFeedbackRecordService } from './submission-feedback-record.service';
 import { SeverityCode } from '../entities/severity-code.entity';
 import { RecipientListService } from './recipient-list.service';
+import { SubmissionFeedbackEmailData } from '../dto/submission-email-params.dto';
 
 jest.mock('@aws-sdk/client-s3');
 
@@ -263,11 +264,11 @@ describe('-- Submission Process Service --', () => {
 
     jest.spyOn(service, 'setRecordStatusCode').mockResolvedValue();
     jest.spyOn(service.returnManager(), 'save').mockResolvedValue({});
-    jest.spyOn(service, 'sendFeedbackReportEmail').mockResolvedValue();
+    jest.spyOn(service, 'collectFeedbackReportDataForEmail').mockResolvedValue([{} as SubmissionFeedbackEmailData]);
     jest.spyOn(service['logger'], 'error').mockImplementation(jest.fn());
 
     // Ensure the method call and catch the thrown error
-    await expect(service.handleError(set, queue, error, false)).rejects.toThrow('mock error');
+    await expect(service.handleError(set, queue, error)).rejects.toThrow('mock error');
 
     expect(set.statusCode).toEqual('ERROR');
     expect(set.details).toEqual(JSON.stringify(error));
