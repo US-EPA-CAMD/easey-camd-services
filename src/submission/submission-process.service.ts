@@ -40,7 +40,7 @@ import {
   hasNonNoneSeverity,
   HighestSeverityRecord,
   isCritical1Severity, isResubmissionRequired, KeyValuePairs,
-  SubmissionEmailParamsDto,
+  SubmissionEmailParamsDto, SubmissionFeedbackEmailData,
 } from '../dto/submission-email-params.dto';
 import { SubmissionFeedbackRecordService } from './submission-feedback-record.service';
 import { SeverityCode } from '../entities/severity-code.entity';
@@ -387,7 +387,7 @@ export class SubmissionProcessService {
     }
   }
 
-  async handleError(set: SubmissionSet, queue: SubmissionQueue[], e: Error, submissionSucceeded: boolean) {
+  async handleError(set: SubmissionSet, queue: SubmissionQueue[], e: Error) {
     set.details = JSON.stringify(e);
     set.statusCode = 'ERROR';
     set.endStageTime = currentDateTime();
@@ -414,18 +414,6 @@ export class SubmissionProcessService {
 
     this.logger.error(e.message, e.stack, 'submission', logMetadata);
 
-    //If the submission did not succeed, do not send feedback email...
-    if (submissionSucceeded) {
-      this.logger.debug("Sending feedback Email...");
-      await this.sendFeedbackReportEmail(
-        set.userEmail,
-        this.configService.get<string>('app.defaultFromEmail'),
-        set.submissionSetIdentifier,
-        true,
-        errorId
-      );
-    }
-
     throw new EaseyException(e, HttpStatus.INTERNAL_SERVER_ERROR);
   }
 
@@ -443,6 +431,16 @@ export class SubmissionProcessService {
         force: true,
       });
 
+      // Get feedback email data
+      const submissionFeedbackEmailDataList = await this.collectFeedbackReportDataForEmail(
+        set.userEmail,
+        this.configService.get<string>('app.defaultFromEmail'),
+        set.submissionSetIdentifier,
+        false,
+        '',
+      );
+
+      //Once we are done sending feedback reports, copy data from workspace to global and delete workspace data
       if (!set.hasCritErrors) {
         await this.returnManager().transaction(
           //Copy records from workspace to global
@@ -455,10 +453,32 @@ export class SubmissionProcessService {
                 );
               }
             } catch (error) {
-              this.logger.error("successCleanup: error while cleaning up ", error)
-              await this.handleError(set, submissionSetRecords, error, true);
+              this.logger.error("successCleanup: error while copying data from workspace to global ", error)
+              await this.handleError(set, submissionSetRecords, error);
             }
           },
+        );
+      }
+
+      // Send all feedback status emails once the copy/delete transaction is over
+      this.logger.debug('Sending emails with feedback attachment ...');
+      for (const submissionFeedbackEmailData of submissionFeedbackEmailDataList) {
+
+        this.logger.debug('Sending email feedback...', {
+          toEmail: submissionFeedbackEmailData.toEmail,
+          ccEmail: submissionFeedbackEmailData.ccEmail,
+          subject: submissionFeedbackEmailData.subject,
+        });
+
+        await this.mailEvalService.sendEmailWithRetry(
+          submissionFeedbackEmailData.toEmail,
+          submissionFeedbackEmailData.ccEmail,
+          submissionFeedbackEmailData.fromEmail,
+          submissionFeedbackEmailData.subject,
+          submissionFeedbackEmailData.emailTemplate,
+          submissionFeedbackEmailData.templateContext,
+          1,
+          submissionFeedbackEmailData.feedbackAttachmentDocuments,
         );
       }
 
@@ -475,16 +495,8 @@ export class SubmissionProcessService {
       await this.returnManager().save(set);
     } catch (e) {
       this.logger.error("successCleanup: error while cleaning up ... ", e)
-      await this.handleError(set, submissionSetRecords, e, true);
+      await this.handleError(set, submissionSetRecords, e);
     }
-
-    this.sendFeedbackReportEmail(
-      set.userEmail,
-      this.configService.get<string>('app.defaultFromEmail'),
-      set.submissionSetIdentifier,
-      false,
-      ''
-    );
 
     this.logger.log('Finished processing copy of record');
   }
@@ -661,7 +673,7 @@ export class SubmissionProcessService {
       signObs.subscribe({
         //Handle transmission cleanup / error handling
         error: (e) => {
-          this.handleError(set, submissionSetRecords, e, true);
+          this.handleError(set, submissionSetRecords, e);
           rmSync(folderPath, {
             recursive: true,
             maxRetries: 5,
@@ -681,17 +693,17 @@ export class SubmissionProcessService {
       });
     } catch (e) {
       this.logger.error("processSubmissionSet: error while processing submission set. ", e)
-      await this.handleError(set, submissionSetRecords, e, false);
+      await this.handleError(set, submissionSetRecords, e);
     }
   }
 
-  async sendFeedbackReportEmail(
+  async collectFeedbackReportDataForEmail(
     to: string,
     from: string,
     setId: string,
     isSubmissionFailure: boolean,
     errorId: string = '',
-  ) {
+  ) : Promise<SubmissionFeedbackEmailData[]> {
 
     this.logger.debug('Starting sending feedback reports email ', { setId});
 
@@ -777,15 +789,19 @@ export class SubmissionProcessService {
 
         //Send the feedback email
         this.logger.debug('Sending feedback email with params ', {submissionEmailParamsDto});
-        promises.push(this.sendFeedbackEmail(submissionEmailParamsDto));
+        promises.push(this.getSubmissionFeedbackEmailData(submissionEmailParamsDto));
+
       }
     }
 
     // Wait for all promises to resolve
-    await Promise.all(promises);
+    const submissionFeedbackEmailDataList = await Promise.all(promises);await Promise.all(promises);
+
+    // Return the array of SubmissionFeedbackEmailData
+    return submissionFeedbackEmailDataList;
   }
 
-  async sendFeedbackEmail(submissionEmailParamsDto : SubmissionEmailParamsDto) {
+  async getSubmissionFeedbackEmailData(submissionEmailParamsDto: SubmissionEmailParamsDto): Promise<SubmissionFeedbackEmailData> {
     const submissionSet = submissionEmailParamsDto.submissionSet;
     const submissionRecords = submissionEmailParamsDto.submissionRecords;
     this.logger.debug(`Sending ${submissionEmailParamsDto.processCode} submission feedback email.`);
@@ -870,16 +886,14 @@ export class SubmissionProcessService {
       content: attachmentContent,
     });
 
-    //7. Finally, send the email
-    this.logger.debug('Sending email with attachment ...');
-    this.mailEvalService.sendEmailWithRetry(
+    //7. Finally, return the collected email data
+    return new SubmissionFeedbackEmailData(
       submissionEmailParamsDto.toEmail,
       submissionEmailParamsDto.ccEmail,
       submissionEmailParamsDto.fromEmail,
       subject,
       emailTemplate,
       submissionEmailParamsDto.templateContext,
-      1,
       feedbackAttachmentDocuments,
     );
   }
@@ -1061,7 +1075,7 @@ export class SubmissionProcessService {
     for (const monLocationId of monLocationIds) {
       reportParams.locationId = monLocationId;
       const promise = this.dataSetService.getDataSet(reportParams, true).then(report => {
-        return this.submissionFeedbackRecordService.generateSummaryTableForUnitStack(report, reportParams.locationId);
+        return this.submissionFeedbackRecordService.generateSummaryTableForUnitStack(report, submissionEmailParamsDto.unitStackPipe);
       });
 
       promises.push(promise);

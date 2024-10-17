@@ -15,13 +15,13 @@ export class SubmissionFeedbackRecordService {
     private readonly entityManager: EntityManager,
   ) {}
 
-  generateSummaryTableForUnitStack(data: ReportDTO, locationId: string): string {
+  generateSummaryTableForUnitStack(data: ReportDTO, unitStackPipe: string): string {
     let summaryTableContent = '';
 
     // Process each detail from the report
     for (const detail of data.details) {
       const columns = data.columns.find((x) => x.code === detail.templateCode);
-      let header = `<b> Unit/Stack/Pipe ID: ${locationId} </b>`;
+      let header = `<b> Unit/Stack/Pipe ID: ${unitStackPipe} </b>`;
       summaryTableContent += this.addTable(columns, detail, header);
     }
 

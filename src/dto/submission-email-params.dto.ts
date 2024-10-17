@@ -60,3 +60,15 @@ export type KeyValuePairs = {
   [key: string]: string | { label: string; url: string };
 };
 
+export class SubmissionFeedbackEmailData {
+  constructor(
+    public toEmail: string,
+    public ccEmail: string,
+    public fromEmail: string,
+    public subject: string,
+    public emailTemplate: string,
+    public templateContext: any,
+    public feedbackAttachmentDocuments: any[],
+  ) {}
+}
+
