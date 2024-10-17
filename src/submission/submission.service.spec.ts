@@ -17,6 +17,7 @@ import { CombinedSubmissionsMap } from '../maps/combined-submissions.map';
 import { EmissionsLastUpdatedMap } from '../maps/emissions-last-updated.map';
 import { CheckSession } from '../entities/check-session.entity';
 import { ErrorHandlerService } from './error-handler.service';
+import { SubmissionSetHelperService } from './submission-set-helper.service';
 
 const dtoItem = new EvaluationItem();
 dtoItem.monPlanId = 'mock';
@@ -121,6 +122,14 @@ describe('-- Submission Service --', () => {
         {
           provide: ErrorHandlerService,
           useValue: errorHandlerServiceMock,
+        },
+        {
+          provide: SubmissionSetHelperService,
+          useValue: {
+            updateSubmissionSetStatus: jest.fn(),
+            setRecordStatusCode: jest.fn(),
+            getFormattedDateTime: jest.fn(),
+          },
         },
         CombinedSubmissionsMap,
         EmissionsLastUpdatedMap,

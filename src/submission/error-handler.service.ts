@@ -30,6 +30,7 @@ export class ErrorHandlerService {
   async handleQueueingError(
     submissionSet: SubmissionSet,
     currentSubmissionQueue: SubmissionQueue,
+    stages: { action: string; dateTime: string }[],
     userEmail: string,
     userId: string,
     rootError: Error,
@@ -67,6 +68,7 @@ export class ErrorHandlerService {
       const emailTemplateContextForSupport = await this.buildEmailTemplateContextForSupport(
         submissionSet,
         [currentSubmissionQueue],
+        stages,
         emailTemplateContext,
         errorId,
         rootError,
@@ -89,6 +91,7 @@ export class ErrorHandlerService {
   async handleSubmissionProcessingError(
     submissionSet: SubmissionSet,
     queueRecords: SubmissionQueue[],
+    stages: { action: string; dateTime: string }[],
     rootError: Error,
   ) {
 
@@ -153,6 +156,7 @@ export class ErrorHandlerService {
       const emailTemplateContextForSupport = await this.buildEmailTemplateContextForSupport(
         submissionSet,
         queueRecords,
+        stages,
         emailTemplateContextForUser,
         errorId,
         rootError,
@@ -281,6 +285,7 @@ export class ErrorHandlerService {
   private async buildEmailTemplateContextForSupport(
     submissionSet: SubmissionSet,
     queueRecords: SubmissionQueue[],
+    stages: { action: string; dateTime: string }[],
     emailTemplateContextForUser: any,
     errorId: string,
     rootError: Error,
@@ -305,6 +310,7 @@ export class ErrorHandlerService {
       errorDetails: rootError?.stack || 'No error details available',
       argumentValues: argumentValues,
       errorDate: new Date().toLocaleString() || 'N/A',
+      stages: stages,
     };
 
     return emailTemplateContextForSupport;

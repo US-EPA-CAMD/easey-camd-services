@@ -96,6 +96,9 @@ describe('SubmissionEmailService', () => {
       const submissionSetRecords = [new SubmissionQueue()];
       const severityCodes = [new SeverityCode()];
       const feedbackEmailData = {};
+      const stages: { action: string; dateTime: string }[] = [];
+      stages.push({ action: 'SUBMISSION_LOADED', dateTime: 'N/A' });
+      stages.push({ action: 'SET_STATUS_WIP', dateTime: 'N/A' });
 
       (entityManager.find as jest.Mock).mockResolvedValueOnce(severityCodes);
 
@@ -109,7 +112,7 @@ describe('SubmissionEmailService', () => {
         .spyOn(service as any, 'getSubmissionFeedbackEmailData')
         .mockResolvedValue(feedbackEmailData);
 
-      const result = await service.collectFeedbackReportDataForEmail(set, submissionSetRecords);
+      const result = await service.collectFeedbackReportDataForEmail(set, submissionSetRecords, stages);
 
       expect(result).toContain(feedbackEmailData);
     });

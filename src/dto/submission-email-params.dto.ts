@@ -26,8 +26,6 @@ export class SubmissionEmailParamsDto {
   ccEmail : string;
   fromEmail: string;
   epaAnalystLink: string;
-  isSubmissionFailure: boolean;
-  submissionError: string;
 
   constructor(init?: Partial<SubmissionEmailParamsDto>) {
     Object.assign(this, init);

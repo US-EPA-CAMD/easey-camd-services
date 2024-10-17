@@ -22,6 +22,7 @@ import { SubmissionSet } from '../entities/submission-set.entity';
 import { CombinedSubmissionsMap } from '../maps/combined-submissions.map';
 import { EmissionsLastUpdatedMap } from '../maps/emissions-last-updated.map';
 import { ErrorHandlerService } from './error-handler.service';
+import { SubmissionSetHelperService } from './submission-set-helper.service';
 
 @Injectable()
 export class SubmissionService {
@@ -31,6 +32,7 @@ export class SubmissionService {
     private readonly combinedSubmissionMap: CombinedSubmissionsMap,
     private readonly emissionsLastUpdatedMap: EmissionsLastUpdatedMap,
     private readonly errorHandlerService: ErrorHandlerService,
+    private readonly submissionSetHelper: SubmissionSetHelperService,
   ) {}
 
   returnManager() {
@@ -44,6 +46,7 @@ export class SubmissionService {
     hasCritErrors: boolean,
     evaluationItem: EvaluationItem,
     entityManager: EntityManager,
+    queueingStages: { action: string; dateTime: string }[],
   ): Promise<void> {
 
     const submissionSet = new SubmissionSet();
@@ -63,6 +66,9 @@ export class SubmissionService {
       submissionSet.userEmail = userEmail;
       submissionSet.submittedOn = currentTime;
       submissionSet.statusCode = 'QUEUED';
+
+      //Push queueing stage here
+      queueingStages.push({ action: 'SET_ID_ASSIGNED', dateTime: await this.submissionSetHelper.getFormattedDateTime()  || 'N/A' });
 
       const locations = await entityManager.query(
         `SELECT camdecmpswks.get_mp_location_list($1);`,
@@ -94,6 +100,9 @@ export class SubmissionService {
 
       await entityManager.save(SubmissionSet, submissionSet);
 
+      //Push queueing stage here
+      queueingStages.push({ action: 'SET_SAVED', dateTime: await this.submissionSetHelper.getFormattedDateTime()  || 'N/A' });
+
       if (evaluationItem.submitMonPlan === true) {
         this.logger.log(`Creating a monitoring plan record. setId: ${setId}, MonPlanId: ${evaluationItem?.monPlanId || 'N/A'}`,);
         //Create monitor plan queue record
@@ -121,6 +130,9 @@ export class SubmissionService {
 
         await entityManager.save(mpRecord);
         await entityManager.save(mp);
+
+        //Push queueing stage here
+        queueingStages.push({ action: 'MP_QUEUED', dateTime: await this.submissionSetHelper.getFormattedDateTime()  || 'N/A' });
       }
 
       this.logger.log(`Queueing ${evaluationItem?.testSumIds?.length} test summary records.`,);
@@ -155,6 +167,9 @@ export class SubmissionService {
           ts.submissionAvailabilityCode = 'PENDING'; //TODO FIND SUPP RECORD CORRESPONDING
           await entityManager.save(ts);
         }
+
+        //Push queueing stage here
+        queueingStages.push({ action: 'TEST_QUEUED', dateTime: await this.submissionSetHelper.getFormattedDateTime()  || 'N/A' });
       }
 
       this.logger.log(`Queueing ${evaluationItem?.qceIds?.length} QCE records.`,);
@@ -189,6 +204,8 @@ export class SubmissionService {
           qce.submissionAvailabilityCode = 'PENDING';
           await entityManager.save(qce);
         }
+        //Push queueing stage here
+        queueingStages.push({ action: 'QCE_QUEUED', dateTime: await this.submissionSetHelper.getFormattedDateTime()  || 'N/A' });
       }
 
       this.logger.log(`Queueing ${evaluationItem?.teeIds?.length} TEE records.`,);
@@ -220,6 +237,9 @@ export class SubmissionService {
           tee.submissionAvailabilityCode = 'PENDING';
           await entityManager.save(tee);
         }
+
+        //Push queueing stage here
+        queueingStages.push({ action: 'TEE_QUEUED', dateTime: await this.submissionSetHelper.getFormattedDateTime()  || 'N/A' });
       }
 
       this.logger.log(`Queueing emissions with ${evaluationItem?.emissionsReportingPeriods?.length} reporting period(s).`,);
@@ -262,6 +282,9 @@ export class SubmissionService {
           ee.submissionAvailabilityCode = 'PENDING';
           await entityManager.save(ee);
         }
+
+        //Push queueing stage here
+        queueingStages.push({ action: 'EM_QUEUED', dateTime: await this.submissionSetHelper.getFormattedDateTime()  || 'N/A' });
       }
 
       this.logger.log(`Queueing ${evaluationItem?.matsBulkFiles?.length} MATS records.`,);
@@ -289,6 +312,9 @@ export class SubmissionService {
           mf.submissionAvailabilityCode = 'PENDING';
           await entityManager.save(mf);
         }
+
+        //Push queueing stage here
+        queueingStages.push({ action: 'MATS_QUEUED', dateTime: await this.submissionSetHelper.getFormattedDateTime()  || 'N/A' });
       }
 
       this.logger.log(`Successfully queued record. SetId: ${setId}, MonPlanId: ${evaluationItem?.monPlanId || 'N/A'}`,);
@@ -310,6 +336,11 @@ export class SubmissionService {
       `Starting to queue submission records. UserId: ${submissionQueueParam?.userId || 'N/A'}, activityId: ${submissionQueueParam?.activityId || 'N/A'},  Items count: ${submissionQueueParam?.items?.length || 0}`,
     );
 
+    // Build submissionStages array
+    const queueingStages: { action: string; dateTime: string }[] = [];
+    //Push queueing stage here
+    queueingStages.push({ action: 'QUEUEING_STARTED', dateTime: await this.submissionSetHelper.getFormattedDateTime()  || 'N/A' });
+
     const userId = submissionQueueParam.userId;
     const userEmail = submissionQueueParam.userEmail;
     const activityId = submissionQueueParam.activityId;
@@ -328,9 +359,13 @@ export class SubmissionService {
             hasCritErrors,
             evaluationItem,
             transactionalEntityManager, // Pass the transactional EntityManager
+            queueingStages,
           );
         }
       });
+
+      //Push queueing stage here
+      queueingStages.push({ action: 'QUEUEING_COMPLETED', dateTime: await this.submissionSetHelper.getFormattedDateTime()  || 'N/A' });
 
       this.logger.log(`Finished queueing submission records for UserId: ${submissionQueueParam?.userId || 'N/A'}`,);
     } catch (error) {
@@ -344,6 +379,7 @@ export class SubmissionService {
       await this.errorHandlerService.handleQueueingError(
         submissionSet,
         currentSubmissionQueue,
+        queueingStages,
         userEmail,
         userId,
         error,

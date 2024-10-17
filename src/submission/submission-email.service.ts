@@ -38,8 +38,7 @@ export class SubmissionEmailService {
   async collectFeedbackReportDataForEmail(
     set: SubmissionSet,
     submissionSetRecords: SubmissionQueue[],
-    isSubmissionFailure: boolean = false,
-    errorId: string = '',
+    submissionStages: { action: string; dateTime: string }[],
   ) : Promise<SubmissionFeedbackEmailData[]>  {
 
     const severityCodes: SeverityCode[] = await this.entityManager.find(SeverityCode,);
@@ -75,14 +74,12 @@ export class SubmissionEmailService {
               rptPeriod: rptPeriod,
               toEmail: set.userEmail,
               fromEmail: this.configService.get<string>('app.defaultFromEmail'),
-              isSubmissionFailure: isSubmissionFailure,
-              submissionError: errorId,
             });
 
             return await this.getSubmissionFeedbackEmailData(submissionEmailParamsDto);
         } catch (error) {
           this.logger.error('Error while collecting data for ${processCode}', error.stack, 'SubmissionEmailService');
-          await this.errorHandlerService.handleSubmissionProcessingError(set, records, error);
+          await this.errorHandlerService.handleSubmissionProcessingError(set, records, submissionStages, error);
           return null; // Ensure the promise resolves to a value
         }
       } else {

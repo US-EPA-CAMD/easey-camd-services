@@ -39,6 +39,14 @@
     <strong>Submitter:</strong> {{submitter}}<br>
   </p>
   <p>
+    <strong>SUBMISSION_STAGE_LOG Data:</strong>
+  </p>
+  <p>
+    {{#each stages}}
+      <strong>{{action}}:</strong> {{dateTime}}<br>
+    {{/each}}
+  </p>
+  <p>
     <strong>ECMPS_ERROR_LOG Data:</strong>
   </p>
   <p>

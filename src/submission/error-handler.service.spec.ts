@@ -113,6 +113,10 @@ describe('ErrorHandlerService', () => {
       const severityCodes = [new SeverityCode()];
       (entityManager.find as jest.Mock).mockResolvedValue(severityCodes);
 
+      const stages: { action: string; dateTime: string }[] = [];
+      stages.push({ action: 'SUBMISSION_LOADED', dateTime: 'N/A' });
+      stages.push({ action: 'SET_STATUS_WIP', dateTime: 'N/A' });
+
       // Mock submissionEmailService.findRecordWithHighestSeverityLevel
       const highestSeverityRecord = {
         submissionQueue: {
@@ -124,7 +128,7 @@ describe('ErrorHandlerService', () => {
       // Mock submissionEmailService.getSubmissionType
       (submissionEmailService.getSubmissionType as jest.Mock).mockResolvedValue('Emissions');
 
-      await service.handleSubmissionProcessingError(set, queueRecords, error);
+      await service.handleSubmissionProcessingError(set, queueRecords, stages, error);
 
       expect(submissionSetHelper.updateSubmissionSetStatus).toHaveBeenCalledWith(
         set,

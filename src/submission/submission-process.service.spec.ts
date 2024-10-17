@@ -70,6 +70,7 @@ describe('SubmissionProcessService', () => {
           useValue: {
             updateSubmissionSetStatus: jest.fn(),
             setRecordStatusCode: jest.fn(),
+            getFormattedDateTime: jest.fn(),
           },
         },
         {
@@ -149,8 +150,11 @@ describe('SubmissionProcessService', () => {
       submissionSet.submissionSetIdentifier = setId;
       const submissionSetRecords = [new SubmissionQueue()];
       const error = new Error('Test Error');
+      const stages: { action: string; dateTime: string }[] = [];
+      stages.push({ action: 'SUBMISSION_LOADED', dateTime: 'N/A' });
+      stages.push({ action: 'SET_STATUS_WIP', dateTime: 'N/A' });
 
-      jest.spyOn(entityManager, 'findOne').mockResolvedValueOnce(submissionSet);
+        jest.spyOn(entityManager, 'findOne').mockResolvedValueOnce(submissionSet);
       jest.spyOn(entityManager, 'find').mockResolvedValueOnce(submissionSetRecords);
       jest.spyOn(service['submissionSetHelper'], 'updateSubmissionSetStatus').mockResolvedValue();
       jest.spyOn(service['submissionSetHelper'], 'setRecordStatusCode').mockResolvedValue();
@@ -164,6 +168,7 @@ describe('SubmissionProcessService', () => {
       expect(service['errorHandlerService'].handleSubmissionProcessingError).toHaveBeenCalledWith(
         submissionSet,
         submissionSetRecords,
+        stages,
         error,
       );
     });
