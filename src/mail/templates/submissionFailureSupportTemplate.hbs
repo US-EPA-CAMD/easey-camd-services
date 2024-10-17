@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <title>Submission Processing Error - Support Notification</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+    .header {
+      color: #005ea2;
+      font-size: 1.5em;
+      font-weight: bold;
+    }
+    .content {
+      margin-top: 20px;
+    }
+    .error-details {
+      background-color: #f9f9f9;
+      padding: 10px;
+      border: 1px solid #ddd;
+      font-family: monospace;
+    }
+  </style>
+</head>
+<body>
+<div class="header">ECMPS Submission Error Notification - Support</div>
+<div class="content">
+  <p>Dear ECMPS Support Team,</p>
+  <p>
+    An error occurred while processing a submission.
+  </p>
+  <p>
+    <strong>Submission ID:</strong> {{submissionId}}<br>
+    <strong>Configuration:</strong> {{configuration}}<br>
+    <strong>User Email:</strong> {{userEmail}}<br>
+    <strong>Error Reference ID:</strong> {{errorId}}
+  </p>
+  <p>
+    <strong>Error Details:</strong>
+  </p>
+  <pre class="error-details">{{errorDetails}}</pre>
+  <p>Please investigate this issue.</p>
+  <p>Sincerely,</p>
+  <p>Automated Notification System</p>
+</div>
+</body>
+</html>
