@@ -1,5 +1,13 @@
 import { Controller } from '@nestjs/common';
-import { Get, Query, Post, Put, Body, Param } from '@nestjs/common/decorators';
+import {
+  Get,
+  Query,
+  Post,
+  Put,
+  Body,
+  Param,
+  UseInterceptors,
+} from '@nestjs/common/decorators';
 import {
   ApiCreatedResponse,
   ApiOkResponse,
@@ -22,6 +30,7 @@ import { EmSubmissionAccessParamsDTO } from '../dto/em-submission-access.params.
 import { RoleGuard, User } from '@us-epa-camd/easey-common/decorators';
 import { CurrentUser } from '@us-epa-camd/easey-common/interfaces';
 import { LookupType } from '@us-epa-camd/easey-common/enums';
+import { LoggingInterceptor } from '@us-epa-camd/easey-common/interceptors';
 
 @Controller()
 @ApiSecurity('APIKey')
@@ -58,6 +67,7 @@ export class EmSubmissionAccessController {
   @ApiOperation({
     description: 'Creates an Emission Submission Access Record.',
   })
+  @UseInterceptors(LoggingInterceptor)
   async createEmSubmissionAccess(
     @Body() payload: EmSubmissionAccessCreateDTO,
     @User() user: CurrentUser,
@@ -75,6 +85,7 @@ export class EmSubmissionAccessController {
   @ApiOperation({
     description: 'Updates an Emission Submission Access Record.',
   })
+  @UseInterceptors(LoggingInterceptor)
   async updateEmSubmissionAccess(
     @Param('id') id: number,
     @Body() payload: EmSubmissionAccessUpdateDTO,

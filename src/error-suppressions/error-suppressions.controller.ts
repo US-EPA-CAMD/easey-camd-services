@@ -1,9 +1,15 @@
 import { Controller } from '@nestjs/common';
-import { Body, Get, Param, Put, Post, Query } from '@nestjs/common/decorators';
 import {
-  ApiBearerAuth,
+  Body,
+  Get,
+  Param,
+  Put,
+  Post,
+  Query,
+  UseInterceptors,
+} from '@nestjs/common/decorators';
+import {
   ApiCreatedResponse,
-  ApiExtraModels,
   ApiOkResponse,
   ApiOperation,
   ApiQuery,
@@ -12,6 +18,7 @@ import {
 } from '@nestjs/swagger';
 import { CurrentUser } from '@us-epa-camd/easey-common/interfaces';
 import { RoleGuard, User } from '@us-epa-camd/easey-common/decorators';
+import { LoggingInterceptor } from '@us-epa-camd/easey-common/interceptors';
 import { ErrorSuppressionsService } from './error-suppressions.service';
 import { ErrorSuppressionsDTO } from '../dto/error-suppressions.dto';
 import { ErrorSuppressionsParamsDTO } from '../dto/error-suppressions.params.dto';
@@ -58,6 +65,7 @@ export class ErrorSuppressionsController {
   @ApiOkResponse({
     description: 'Deactivates the Error Suppression Record',
   })
+  @UseInterceptors(LoggingInterceptor)
   deactivateErrorSuppression(
     @Param('id') id: number,
     @User() user: CurrentUser,
@@ -68,6 +76,7 @@ export class ErrorSuppressionsController {
   @Post()
   @RoleGuard({ requiredRoles: ['ECMPS Admin'] }, LookupType.MonitorPlan)
   @ApiCreatedResponse({ description: 'Creates an Error Suppression Record' })
+  @UseInterceptors(LoggingInterceptor)
   async createErrorSuppression(
     @Body() payload: ErrorSuppressionsPayloadDTO,
     @User() user: CurrentUser,

@@ -6,14 +6,15 @@ import {
   Query,
   Param,
   Body,
+  UseInterceptors,
 } from '@nestjs/common/decorators';
 import {
-  ApiBearerAuth,
   ApiOkResponse,
   ApiOperation,
   ApiSecurity,
   ApiTags,
 } from '@nestjs/swagger';
+import { LoggingInterceptor } from '@us-epa-camd/easey-common/interceptors';
 import {
   BadRequestResponse,
   NotFoundResponse,
@@ -65,6 +66,7 @@ export class QaCertEventController {
     description:
       'Changes submission status to resubmit and update re-submission explanation for QA Test maintenance record.',
   })
+  @UseInterceptors(LoggingInterceptor)
   updateSubmissionStatus(
     @Param('id') id: string,
     @User() user: CurrentUser,
@@ -83,6 +85,7 @@ export class QaCertEventController {
   @ApiOperation({
     description: 'Deletes a QA Cert Event record from global.',
   })
+  @UseInterceptors(LoggingInterceptor)
   async deleteQACertEventData(@Param('id') id: string): Promise<any> {
     return this.service.deleteQACertEventData(id);
   }
