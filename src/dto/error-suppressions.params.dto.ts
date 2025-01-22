@@ -30,6 +30,7 @@ const msgA =
 const msgB = `Ensure [property] are in the following formats Date Range - YYYY-mm-dd /Hour Range- YYYY-mm-dd hh/Quarter Range – YYYY Q1/Q2/Q3/Q4`;
 
 export class ErrorSuppressionsParamsDTO {
+  @IsOptional()
   @IsNotEmpty({
     message: () => {
       return ErrorMessages.RequiredProperty();
@@ -53,6 +54,7 @@ export class ErrorSuppressionsParamsDTO {
   )
   checkTypeCode: string;
 
+  @IsOptional()
   @IsNotEmpty({
     message: () => {
       return ErrorMessages.RequiredProperty();
@@ -81,6 +83,7 @@ export class ErrorSuppressionsParamsDTO {
   )
   checkNumber: number;
 
+  @IsOptional()
   @IsNotEmpty({
     message: () => {
       return ErrorMessages.RequiredProperty();
