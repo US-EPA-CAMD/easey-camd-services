@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import {
   IsOptional,
   ValidationArguments,
-  IsEnum, IsNotEmpty,
+  IsEnum,
 } from 'class-validator';
 
 import { Status } from '../enums/status.enum';
@@ -15,7 +15,7 @@ import {FindOneOptions} from "typeorm/find-options/FindOneOptions";
 
 export class EmSubmissionAccessParamsDTO {
   @ApiProperty()
-  @IsNotEmpty({message: () => 'Facility is required'})
+  @IsOptional()
   @IsValidCode(Plant, {
     message: (args: ValidationArguments) => {
       return `The ${args.property} is not valid. Refer to the list of available facilityRecordIds for valid values '/facilities-mgmt/facilities'`;
@@ -31,7 +31,7 @@ export class EmSubmissionAccessParamsDTO {
   orisCode?: number;
 
   @ApiProperty()
-  @IsNotEmpty({message: () => 'Configuration is required'})
+  @IsOptional()
   @IsValidCode(MonitorPlan, {
     message: (args: ValidationArguments) => {
       return `The reported ${args.property} is invalid.`;
@@ -63,7 +63,7 @@ export class EmSubmissionAccessParamsDTO {
   @ApiProperty({ enum: Status })
   @IsEnum(Status, {
     message: () => {
-      return `The status must have a value of OPEN,PENDING or CLOSED,`;
+      return `The status must have a value of OPEN, PENDING, CLOSED, CANCELLED, NO WINDOW, or NOT YET OPEN`;
     },
   })
   status?: string;

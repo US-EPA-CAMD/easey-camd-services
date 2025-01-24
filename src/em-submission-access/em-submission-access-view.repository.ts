@@ -69,19 +69,38 @@ export class EmSubmissionAccessViewRepository extends Repository<EmSubmissionAcc
 
     if (status === 'OPEN') {
       query.andWhere(
-        `(em.emissionStatusCode = 'APPRVD') AND (em.submissionAvailabilityCode IN ('REQUIRE', 'GRANTED') OR em.submissionAvailabilityCode IS NULL)`,
+        `(em.submissionAvailabilityCode IN ('REQUIRE', 'GRANTED'))`,
         { status: status },
       );
     }
     if (status === 'PENDING') {
       query.andWhere(
-        `(em.emissionStatusCode = 'PENDING') AND (em.submissionAvailabilityCode IN ('REQUIRE', 'GRANTED') OR em.submissionAvailabilityCode IS NULL)`,
+        `(em.emissionStatusCode = 'PENDING')`,
         { status: status },
       );
     }
     if (status === 'CLOSED') {
       query.andWhere(
-        `(em.emissionStatusCode = 'RECVD' OR em.submissionAvailabilityCode IN ('DELETE','CRITERR', 'NOTSUB'))`,
+        `((em.emissionStatusCode IS NULL AND em.closeDate < CURRENT_TIMESTAMP) OR (em.emissionStatusCode <> 'PENDING' AND em.submissionAvailabilityCode NOT IN ('GRANTED','REQUIRE', 'DELETE')))`,
+        { status: status },
+      );
+    }
+    if (status === 'CANCELLED') {
+      query.andWhere(
+        `(em.submissionAvailabilityCode = 'DELETE')`,
+        { status: status },
+      );
+    }
+    if (status === 'NOT_YET_OPEN') {
+      query.andWhere(
+        `(em.submissionAvailabilityCode IS NULL AND em.closeDate >= CURRENT_TIMESTAMP)`,
+        { status: status },
+      );
+    }
+    // NO Window related logic need to be updated
+    if (status === 'NO_WINDOW') {
+      query.andWhere(
+        `()`,
         { status: status },
       );
     }
