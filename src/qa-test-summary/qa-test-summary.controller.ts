@@ -22,6 +22,7 @@ import { SuccessMessageDTO } from '../dto/success-message.dto';
 import { QaTestSummaryMaintViewDTO } from '../dto/qa-test-summary-maint-vw.dto';
 import { LookupType } from '@us-epa-camd/easey-common/enums';
 import { BadRequestResponse, NotFoundResponse } from '@us-epa-camd/easey-common/utilities/common-swagger';
+import { ArrayResponse } from '@us-epa-camd/easey-common/interfaces/common.interface';
 import { ApiExcludeControllerByEnv } from '../decorators/swagger-decorator';
 @Controller()
 @ApiSecurity('APIKey')
@@ -41,13 +42,17 @@ export class QaTestSummaryController {
     type: QaTestSummaryMaintViewDTO,
     description: 'Data retrieved successfully',
   })
-  getQaTestSummaryViewData(
+  async getQaTestSummaryViewData(
     @Query() params: QaCertMaintParamsDto,
-  ): Promise<QaTestSummaryMaintViewDTO[]> {
-    return this.service.getQaTestSummaryViewData(
+  ): Promise<ArrayResponse<QaTestSummaryMaintViewDTO>> {
+
+    const summaryViewData = await this.service.getQaTestSummaryViewData(
       params.orisCode,
       params.unitStack,
     );
+    return {
+      items: summaryViewData
+    };
   }
 
   @Put(':id')

@@ -322,9 +322,9 @@ export class EvaluationErrorHandlerService {
     try {
       fromEmail =
         this.configService.get<string>('app.defaultFromEmail') ||
-        'noreply@epa.gov';
+        'ecmps@epa.gov';
     } catch (configError) {
-      fromEmail = 'noreply@epa.gov';
+      fromEmail = 'ecmps@epa.gov';
       this.logger.error( 'Failed to get default fromEmail. Using ' + fromEmail, configError.stack, );
     }
 

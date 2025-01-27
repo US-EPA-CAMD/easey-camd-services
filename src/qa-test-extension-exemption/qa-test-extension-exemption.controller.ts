@@ -22,6 +22,7 @@ import { SuccessMessageDTO } from '../dto/success-message.dto';
 import { QaTeeMaintViewDTO } from '../dto/qa-tee-maint-vw.dto';
 import { LookupType } from '@us-epa-camd/easey-common/enums';
 import { BadRequestResponse, NotFoundResponse } from '@us-epa-camd/easey-common/utilities/common-swagger';
+import { ArrayResponse } from '@us-epa-camd/easey-common/interfaces/common.interface';
 import { ApiExcludeControllerByEnv } from '../decorators/swagger-decorator';
 @Controller()
 @ApiSecurity('APIKey')
@@ -42,10 +43,14 @@ export class QaTestExtensionExemptionController {
     type: QaTeeMaintViewDTO,
     description: 'Data retrieved successfully',
   })
-  getQaTeeViewData(
+  async getQaTeeViewData(
     @Query() params: QaCertMaintParamsDto,
-  ): Promise<QaTeeMaintViewDTO[]> {
-    return this.service.getQaTeeViewData(params.orisCode, params.unitStack);
+  ): Promise<ArrayResponse<QaTeeMaintViewDTO>> {
+    const teeViewData = await this.service.getQaTeeViewData(params.orisCode, params.unitStack);
+
+    return {
+      items: teeViewData
+    };
   }
 
   @Put(':id')
