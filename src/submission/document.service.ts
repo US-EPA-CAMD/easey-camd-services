@@ -211,7 +211,7 @@ export class DocumentService {
       ),
     );
 
-    const statements = response.data;
+    const statements = response.data.items;
 
     documents.push({
       documentTitle: `Certification Statements`,
