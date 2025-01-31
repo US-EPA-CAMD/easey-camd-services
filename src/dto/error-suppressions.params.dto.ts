@@ -23,13 +23,13 @@ import { CheckCatalogResult } from '../entities/check-catalog-result.entity';
 import { Plant } from '../entities/plant.entity';
 import { EsReasonCode } from '../entities/es-reason-code.entity';
 import { ErrorMessages } from '@us-epa-camd/easey-common/constants';
-import { IsPropertyExists } from '../pipes/is-property-exists.pipe';
 
 const msgA =
   'The [property] is not valid refer to the list of available [property]s for valid values';
 const msgB = `Ensure [property] are in the following formats Date Range - YYYY-mm-dd /Hour Range- YYYY-mm-dd hh/Quarter Range – YYYY Q1/Q2/Q3/Q4`;
 
 export class ErrorSuppressionsParamsDTO {
+  @IsOptional()
   @IsNotEmpty({
     message: () => {
       return ErrorMessages.RequiredProperty();
@@ -53,6 +53,7 @@ export class ErrorSuppressionsParamsDTO {
   )
   checkTypeCode: string;
 
+  @IsOptional()
   @IsNotEmpty({
     message: () => {
       return ErrorMessages.RequiredProperty();
@@ -81,6 +82,7 @@ export class ErrorSuppressionsParamsDTO {
   )
   checkNumber: number;
 
+  @IsOptional()
   @IsNotEmpty({
     message: () => {
       return ErrorMessages.RequiredProperty();
@@ -176,7 +178,7 @@ export class ErrorSuppressionsParamsDTO {
       });
     },
   })
-  beginDateHrQtr?: string;
+  addDateAfter?: string;
 
   @IsOptional()
   @ApiProperty()
@@ -188,12 +190,7 @@ export class ErrorSuppressionsParamsDTO {
       });
     },
   })
-  @IsPropertyExists('beginDateHrQtr', {
-    message: (args: ValidationArguments) => {
-      return `beginDateHrQtr cannot be null, undefined, or empty if ${args.property} is filled`;
-    },
-  })
-  endDateHrQtr?: string;
+  addDateBefore?: string;
 
   @IsOptional()
   @ApiProperty()

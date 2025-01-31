@@ -605,7 +605,10 @@ export class MailEvalService {
     let templateContext: any = {};
     const documents = [];
 
-    subject = `ECMPS Evaluation Report | ${this.displayCurrentDate()}`;
+    const env = this.configService.get<string>('app.env')?.trim()?.toLowerCase();
+    const subjectSuffix = env && !['prod', 'production', ''].includes(env) ? ` (sent from ECMPS 2.0 ${env})` : '';
+    subject = `ECMPS Evaluation Report | ${this.displayCurrentDate()} ${subjectSuffix}`;
+
     template = 'massEvaluationTemplate';
     records = await this.returnManager().find(Evaluation, {
       where: { evaluationSetIdentifier: setId },
