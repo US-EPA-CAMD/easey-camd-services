@@ -12,6 +12,7 @@ import { EmSubmissionAccess } from '../entities/em-submission-access.entity';
 import { EmSubmissionAccessMap } from '../maps/em-submission-access.map';
 import { EmSubmissionAccessViewRepository } from './em-submission-access-view.repository';
 import { EmSubmissionAccessRepository } from './em-submission-access.repository';
+import { EntityManager } from 'typeorm';
 
 @Injectable()
 export class EmSubmissionAccessService {
@@ -19,6 +20,7 @@ export class EmSubmissionAccessService {
     private readonly viewRepository: EmSubmissionAccessViewRepository,
     private readonly repository: EmSubmissionAccessRepository,
     private readonly map: EmSubmissionAccessMap,
+    private readonly entityManager: EntityManager,
   ) {}
 
   async getEmSubmissionAccess(
@@ -26,11 +28,45 @@ export class EmSubmissionAccessService {
   ): Promise<EmSubmissionAccessDTO[]> {
     let query;
     try {
-      query = await this.viewRepository.getEmSubmissionAccess(params);
+      let rowsFromEmSubmissionAccessView = []
+      let rowsForNoWindowStatus = []
+
+      if (params.status === 'NO WINDOW' || params.status === undefined) {
+        const sql = `SELECT * FROM camdecmpsaux.get_em_submission_access_no_window_view($1, $2, $3)`;
+        const rows = await this.entityManager.query(sql, [params.orisCode, params.year, params.quarter]);
+        //manually mapping each row to an EmSubmissionAccessDTO object
+        rowsForNoWindowStatus = rows.map(row => {
+          const dto = new EmSubmissionAccessDTO();
+          dto.id = Number(row.em_sub_accessId);
+          dto.facilityId = Number(row.fac_id);
+          dto.facilityName = row.facility_name;
+          dto.orisCode = Number(row.oris_code);
+          dto.state = row.state;
+          dto.locations = row.locations;
+          dto.monitorPlanId = row.mon_plan_id;
+          dto.reportingFrequencyCode = row.report_freq_cd;
+          dto.reportingPeriodAbbreviation = row.period_abbreviation;
+          dto.submissionTypeDescription = row.em_sub_type_cd_description;
+          dto.submissionTypeCode = row.em_sub_type_cd;
+          dto.status = 'NO WINDOW';
+          dto.lastSubmissionId = row.submission_id;
+          dto.severityLevel = row.severity_cd;
+          dto.userid = row.userid;
+          dto.addDate = null;
+          dto.updateDate = null;
+          return dto;
+        });
+      }
+
+      if (params.status !== 'NO WINDOW') {
+        query = await this.viewRepository.getEmSubmissionAccess(params);
+        rowsFromEmSubmissionAccessView = await this.map.many(query);
+      }
+
+      return [...rowsFromEmSubmissionAccessView, ...rowsForNoWindowStatus]
     } catch (e) {
       throw new EaseyException(e, HttpStatus.INTERNAL_SERVER_ERROR);
     }
-    return this.map.many(query);
   }
 
   async createEmSubmissionAccess(

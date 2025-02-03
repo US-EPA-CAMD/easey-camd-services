@@ -1,6 +1,7 @@
 import { EmSubmissionAccessMap } from './em-submission-access.map';
 import { genEmSubmissionAccess } from '../../test/object-generators/em-submission-access';
 import { EmSubmissionAccessView } from '../entities/em-submission-access-vw.entity';
+import { currentDateTime } from '@us-epa-camd/easey-common/utilities/functions';
 
 describe('EmSubmissionAccessMap', () => {
   let map: EmSubmissionAccessMap;
@@ -15,26 +16,27 @@ describe('EmSubmissionAccessMap', () => {
     const expectOne = async (mock: EmSubmissionAccessView) => {
       let status;
       if (
-        mock?.emissionStatusCode === 'APPRVD' &&
-        (mock?.submissionAvailabilityCode === 'GRANTED' ||
-          mock?.submissionAvailabilityCode === 'REQUIRE' ||
-          mock?.submissionAvailabilityCode === null)
+        mock?.submissionAvailabilityCode === 'GRANTED' ||
+          mock?.submissionAvailabilityCode === 'REQUIRE'
       ) {
         status = 'OPEN';
       } else if (
-        mock?.emissionStatusCode === 'PENDING' &&
-        (mock?.submissionAvailabilityCode === 'GRANTED' ||
-          mock?.submissionAvailabilityCode === 'REQUIRE' ||
-          mock?.submissionAvailabilityCode === null)
+        mock?.emissionStatusCode === 'PENDING'
       ) {
         status = 'PENDING';
       } else if (
-        mock?.emissionStatusCode === 'RECVD' ||
-        mock?.submissionAvailabilityCode === 'DELETE' ||
-        mock?.submissionAvailabilityCode === 'CRITERR' ||
-        mock?.submissionAvailabilityCode === 'NOTSUB'
+        (mock?.emissionStatusCode === null && mock?.closeDate < currentDateTime()) ||
+        (mock?.emissionStatusCode !== 'PENDING' && !['GRANTED','REQUIRE', 'DELETE'].includes(mock?.submissionAvailabilityCode))
       ) {
         status = 'CLOSED';
+      } else if (
+        mock?.submissionAvailabilityCode === 'DELETE'
+      ) {
+        status = 'CANCELLED';
+      }else if (
+        mock?.submissionAvailabilityCode === null && mock?.closeDate >= currentDateTime()
+      ) {
+        status = 'NOT YET OPEN';
       }
       await expect(map.one(mock)).resolves.toEqual({
         id: mock.id,

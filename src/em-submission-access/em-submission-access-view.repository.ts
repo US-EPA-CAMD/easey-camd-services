@@ -13,7 +13,7 @@ export class EmSubmissionAccessViewRepository extends Repository<EmSubmissionAcc
   async getEmSubmissionAccess(
     params: EmSubmissionAccessParamsDTO,
   ): Promise<EmSubmissionAccessView[]> {
-    const { orisCode, monitorPlanId, year, quarter, status } = params;
+    const { orisCode, year, quarter, status } = params;
     let query = this.createQueryBuilder('em').select([
       'em.id',
       'em.facilityId',
@@ -46,12 +46,6 @@ export class EmSubmissionAccessViewRepository extends Repository<EmSubmissionAcc
     if (orisCode) {
       query.andWhere('em.orisCode = :orisCode', {
         orisCode: orisCode,
-      });
-    }
-
-    if (monitorPlanId) {
-      query.andWhere('em.monitorPlanId = :monitorPlanId', {
-        monitorPlanId: monitorPlanId,
       });
     }
 
@@ -91,19 +85,14 @@ export class EmSubmissionAccessViewRepository extends Repository<EmSubmissionAcc
         { status: status },
       );
     }
-    if (status === 'NOT_YET_OPEN') {
+    if (status === 'NOT YET OPEN') {
       query.andWhere(
         `(em.submissionAvailabilityCode IS NULL AND em.closeDate >= CURRENT_TIMESTAMP)`,
         { status: status },
       );
     }
-    // NO Window related logic need to be updated
-    if (status === 'NO_WINDOW') {
-      query.andWhere(
-        `()`,
-        { status: status },
-      );
-    }
+    
+    // status 'NO WINDOW' will be handled seperately
 
     query.andWhere(
       `(em.submissionAvailabilityCode != 'DELETE')`

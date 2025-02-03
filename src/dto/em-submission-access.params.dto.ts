@@ -9,7 +9,6 @@ import { Status } from '../enums/status.enum';
 import { Type } from 'class-transformer';
 import { Plant } from '../entities/plant.entity';
 import { IsValidCode, IsInRange } from '@us-epa-camd/easey-common/pipes';
-import { MonitorPlan } from '../entities/monitor-plan.entity';
 import { currentDateTime } from '@us-epa-camd/easey-common/utilities/functions';
 import {FindOneOptions} from "typeorm/find-options/FindOneOptions";
 
@@ -29,15 +28,6 @@ export class EmSubmissionAccessParamsDTO {
   })
   @Type(() => Number)
   orisCode?: number;
-
-  @ApiProperty()
-  @IsOptional()
-  @IsValidCode(MonitorPlan, {
-    message: (args: ValidationArguments) => {
-      return `The reported ${args.property} is invalid.`;
-    },
-  })
-  monitorPlanId?: string;
 
   @IsOptional()
   @ApiProperty()
