@@ -9,6 +9,7 @@ import {
 } from '@nestjs/swagger';
 import { ApiExcludeControllerByEnv } from '../decorators/swagger-decorator';
 import { BadRequestResponse, NotFoundResponse } from '@us-epa-camd/easey-common/utilities/common-swagger';
+import { ArrayResponse } from '@us-epa-camd/easey-common/interfaces/common.interface';
 import { EmSubmissionAccessService } from './em-submission-access.service';
 import {
   EmSubmissionAccessCreateDTO,
@@ -43,10 +44,14 @@ export class EmSubmissionAccessController {
     description:
       'Retrieves Emission Submission Access Data per filter criteria.',
   })
-  getEmSubmissionAccess(
+  async getEmSubmissionAccess(
     @Query() emSubmissionAccessParamsDTO: EmSubmissionAccessParamsDTO,
-  ): Promise<EmSubmissionAccessDTO[]> {
-    return this.service.getEmSubmissionAccess(emSubmissionAccessParamsDTO);
+  ): Promise<ArrayResponse<EmSubmissionAccessDTO>> {
+    const emSubmissionAccess = await this.service.getEmSubmissionAccess(emSubmissionAccessParamsDTO);
+
+    return  {
+      items: emSubmissionAccess
+    };
   }
 
   @Post()

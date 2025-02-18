@@ -63,9 +63,9 @@ describe('EmSubmissionAccessController', () => {
       .spyOn(service, 'getEmSubmissionAccess')
       .mockResolvedValue([mockedValues]);
 
-    expect(await controller.getEmSubmissionAccess(paramsDto)).toEqual([
-      mockedValues,
-    ]);
+    expect(await controller.getEmSubmissionAccess(paramsDto)).toEqual({
+      items: [mockedValues],
+    });
   });
 
   it('calls EmSubmissionAccessService.createEmSubmissionAccess() and creates an Emission Submission Access record', async () => {
