@@ -24,6 +24,7 @@ import { ErrorSuppressionsPayloadDTO } from '../dto/error-suppressions-payload.d
 import { LookupType } from '@us-epa-camd/easey-common/enums';
 import { ApiExcludeControllerByEnv } from '../decorators/swagger-decorator';
 import { BadRequestResponse, NotFoundResponse } from '@us-epa-camd/easey-common/utilities/common-swagger';
+import { ArrayResponse } from '@us-epa-camd/easey-common/interfaces/common.interface';
 
 @Controller()
 @ApiSecurity('APIKey')
@@ -49,10 +50,14 @@ export class ErrorSuppressionsController {
   @ApiOperation({
     description: 'Retrieves Error Suppressions per filter criteria.',
   })
-  getErrorSuppressions(
+  async getErrorSuppressions(
     @Query() errorSuppressionsParamsDTO: ErrorSuppressionsParamsDTO,
-  ): Promise<ErrorSuppressionsDTO[]> {
-    return this.service.getErrorSuppressions(errorSuppressionsParamsDTO);
+  ): Promise<ArrayResponse<ErrorSuppressionsDTO>> {
+    const errorSuppressions = await this.service.getErrorSuppressions(errorSuppressionsParamsDTO);
+
+    return  {
+      items: errorSuppressions
+    };
   }
 
   @Put(':id')
