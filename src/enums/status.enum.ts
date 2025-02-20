@@ -1,8 +1,8 @@
 export enum Status {
-  OPEN,
-  PENDING,
-  CLOSED,
-  CANCELLED,
-  NO_WINDOW,
-  NOT_YET_OPEN,
+  'OPEN',
+  'PENDING',
+  'CLOSED',
+  'CANCELLED',
+  'NO WINDOW',
+  'NOT YET OPEN',
 }

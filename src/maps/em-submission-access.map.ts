@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { BaseMap } from '@us-epa-camd/easey-common/maps';
 import { EmSubmissionAccessDTO } from '../dto/em-submission-access.dto';
 import { EmSubmissionAccessView } from '../entities/em-submission-access-vw.entity';
+import { currentDateTime } from '@us-epa-camd/easey-common/utilities/functions';
 
 @Injectable()
 export class EmSubmissionAccessMap extends BaseMap<
@@ -14,27 +15,29 @@ export class EmSubmissionAccessMap extends BaseMap<
     let status: string;
 
     if (
-      entity?.emissionStatusCode === 'APPRVD' &&
-      (entity?.submissionAvailabilityCode === 'GRANTED' ||
-        entity?.submissionAvailabilityCode === 'REQUIRE' ||
-        entity?.submissionAvailabilityCode === null)
+      entity?.submissionAvailabilityCode === 'GRANTED' || 
+      entity?.submissionAvailabilityCode === 'REQUIRE'
     ) {
       status = 'OPEN';
     } else if (
-      entity?.emissionStatusCode === 'PENDING' &&
-      (entity?.submissionAvailabilityCode === 'GRANTED' ||
-        entity?.submissionAvailabilityCode === 'REQUIRE' ||
-        entity?.submissionAvailabilityCode === null)
+      entity?.emissionStatusCode === 'PENDING'
     ) {
       status = 'PENDING';
     } else if (
-      entity?.emissionStatusCode === 'RECVD' ||
-      entity?.submissionAvailabilityCode === 'DELETE' ||
-      entity?.submissionAvailabilityCode === 'CRITERR' ||
-      entity?.submissionAvailabilityCode === 'NOTSUB'
+      (entity?.emissionStatusCode === null && entity?.closeDate < currentDateTime()) ||
+      (entity?.emissionStatusCode !== 'PENDING' && !['GRANTED','REQUIRE', 'DELETE'].includes(entity?.submissionAvailabilityCode))
     ) {
       status = 'CLOSED';
-    }
+    } else if (
+      entity?.submissionAvailabilityCode === 'DELETE'
+    ) {
+      status = 'CANCELLED';
+    } else if (
+      entity?.submissionAvailabilityCode === null &&
+      entity?.closeDate >= currentDateTime()
+    ) {
+      status = 'NOT YET OPEN';
+    } //status 'NO WINDOW' will be handled seperately
     return {
       id: entity.id,
       facilityId: entity?.facilityId,
