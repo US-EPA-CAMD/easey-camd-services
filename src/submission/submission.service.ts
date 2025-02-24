@@ -93,7 +93,15 @@ export class SubmissionService {
 
       this.logger.log(`Queueing record. setId: ${setId}, MonPlanId: ${evaluationItem?.monPlanId || 'N/A'}, UserId: ${userId || 'N/A'}`,);
 
-      submissionSet.hasCritErrors = hasCritErrors;
+      // Check for CRIT1 errors only
+      const checkSession = await entityManager
+        .createQueryBuilder(CheckSession, 'cs')
+        .where('cs.monPlanId = :monPlanId', { monPlanId: evaluationItem.monPlanId })
+        .andWhere('cs.severityCode = :severityCode', { severityCode: 'CRIT1' })
+        .getOne();
+
+      // Only set hasCritErrors to true if CRIT1 errors exist
+      submissionSet.hasCritErrors = checkSession !== null;
       submissionSet.activityId = activityId;
       submissionSet.submissionSetIdentifier = setId;
       submissionSet.monPlanIdentifier = evaluationItem.monPlanId;
@@ -387,11 +395,9 @@ export class SubmissionService {
     const userId = submissionQueueParam.userId;
     const userEmail = submissionQueueParam.userEmail;
     const activityId = submissionQueueParam.activityId;
-    const hasCritErrors = submissionQueueParam.hasCritErrors;
     const evaluationItems = submissionQueueParam.items;
 
     try {
-
       //wrap everything in a transaction to ensure that all records are queued or none are queued
       await this.entityManager.transaction(async (transactionalEntityManager) => {
         for (const evaluationItem of evaluationItems) {
@@ -399,7 +405,7 @@ export class SubmissionService {
             userId,
             userEmail,
             activityId,
-            hasCritErrors,
+            false, // Don't pass hasCritErrors from param, let queueRecord determine it
             evaluationItem,
             transactionalEntityManager, // Pass the transactional EntityManager
             queueingStages,

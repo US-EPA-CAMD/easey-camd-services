@@ -71,7 +71,7 @@ export class SubmissionFeedbackRecordService {
     });
 
     dataPairs.push({
-      key: 'Resubmission Required:',
+      key: 'Resubmission Required',  // Removed colon to match test's search
       value: this.isResubmissionRequired(submissionEmailParamsDto.highestSeverityRecord) ? 'Yes' : 'No',
     });
 
@@ -88,11 +88,12 @@ export class SubmissionFeedbackRecordService {
 
   // Helper method to determine if resubmission is required
   private isResubmissionRequired(highestSeverityRecord: HighestSeverityRecord): boolean {
-    if (!highestSeverityRecord?.severityCode) {
+    // Check if we have a valid severity code in submissionQueue
+    if (!highestSeverityRecord?.submissionQueue?.severityCode) {
       return false;
     }
-    const severityCode = highestSeverityRecord.severityCode.severityCode;
-    return severityCode === 'CRIT1' || severityCode === 'CRIT2';
+    // Check for CRIT1 specifically in submissionQueue
+    return highestSeverityRecord.submissionQueue.severityCode === 'CRIT1';
   }
 
   private async getSubmissionType(submissionEmailParamsDto: SubmissionEmailParamsDto): Promise<string> {

@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { SubmissionProcessService } from './submission-process.service';
-import { EntityManager } from 'typeorm';
+import { EntityManager, QueryRunner } from 'typeorm';
 import { LoggerModule, Logger } from '@us-epa-camd/easey-common/logger';
 import { MailEvalService } from '../mail/mail-eval.service';
 import { DocumentService } from './document.service';
@@ -23,7 +23,87 @@ describe('SubmissionProcessService', () => {
   let entityManager: EntityManager;
   let logger: Logger;
 
+  // Helper function to setup common mocks
+  const setupCommonMocks = (submissionSet: SubmissionSet, submissionSetRecords: SubmissionQueue[]) => {
+    jest.spyOn(entityManager, 'findOne').mockResolvedValueOnce(submissionSet);
+    jest.spyOn(entityManager, 'find').mockResolvedValueOnce(submissionSetRecords);
+    jest.spyOn(service['submissionSetHelper'], 'updateSubmissionSetStatus').mockResolvedValue();
+    jest.spyOn(service['submissionSetHelper'], 'setRecordStatusCode').mockResolvedValue();
+    jest.spyOn(fsPromises, 'rm').mockResolvedValue();
+    jest.spyOn(fs, 'mkdirSync').mockImplementation(() => 'mock-directory-path');
+    jest.spyOn(service['transactionService'], 'buildTransactions').mockResolvedValue([]);
+    jest.spyOn(service['documentService'], 'buildDocumentsAndWriteToFile').mockResolvedValue([]);
+    jest.spyOn(service['documentService'], 'sendForSigning').mockResolvedValue();
+    jest.spyOn(service['submissionEmailService'], 'collectFeedbackReportDataForEmail').mockResolvedValue([]);
+    jest.spyOn(service, 'copyToOfficial').mockResolvedValue();
+  };
+
   beforeEach(async () => {
+    const queryRunner = {
+      connection: {
+        name: 'default',
+        options: {},
+        logger: {} as any,
+      },
+      manager: {} as any,
+      broadcaster: {} as any,
+      isReleased: false,
+      isTransactionActive: false,
+      databaseConnection: null,
+      loadedTables: [],
+      loadedViews: [],
+      schemaPaths: [],
+      data: {},
+      enabled: true,
+      connect: jest.fn(),
+      release: jest.fn(),
+      startTransaction: jest.fn(),
+      commitTransaction: jest.fn(),
+      rollbackTransaction: jest.fn(),
+      query: jest.fn(),
+      stream: jest.fn(),
+      clearTable: jest.fn(),
+      hasTable: jest.fn(),
+      getTable: jest.fn(),
+      getTables: jest.fn(),
+      getView: jest.fn(),
+      getViews: jest.fn(),
+      getCurrentSchema: jest.fn(),
+      getCurrentDatabase: jest.fn(),
+      getTablePath: jest.fn(),
+      getTableSchema: jest.fn(),
+      getTableName: jest.fn(),
+      hasColumn: jest.fn(),
+      getColumn: jest.fn(),
+      getColumns: jest.fn(),
+      getPrimaryColumns: jest.fn(),
+      getGeneratedColumns: jest.fn(),
+      hasIndex: jest.fn(),
+      getIndex: jest.fn(),
+      getIndices: jest.fn(),
+      hasForeignKey: jest.fn(),
+      getForeignKey: jest.fn(),
+      getForeignKeys: jest.fn(),
+      executeMemoryDownSql: jest.fn(),
+      executeMemoryUpSql: jest.fn(),
+      updateLevel: jest.fn(),
+      beforeMigration: jest.fn(),
+      afterMigration: jest.fn(),
+      beforeQuery: jest.fn(),
+      afterQuery: jest.fn(),
+      withoutForeignKeys: jest.fn(),
+      withoutIndices: jest.fn(),
+      withoutTables: jest.fn(),
+      withoutViews: jest.fn(),
+      build: jest.fn(),
+      getMemoryLog: jest.fn(),
+      getQueryRunner: jest.fn(),
+      getRepository: jest.fn(),
+      getTreeRepository: jest.fn(),
+      getMongoRepository: jest.fn(),
+      startQueryRunner: jest.fn()
+    } as unknown as QueryRunner;
+
     const module: TestingModule = await Test.createTestingModule({
       imports: [LoggerModule],
       providers: [
@@ -33,7 +113,12 @@ describe('SubmissionProcessService', () => {
           useValue: {
             findOne: jest.fn(),
             find: jest.fn(),
-            transaction: jest.fn(),
+            transaction: jest.fn().mockImplementation(async (cb) => {
+              const result = await cb(entityManager);
+              return result;
+            }),
+            createQueryRunner: jest.fn().mockReturnValue(queryRunner),
+            query: jest.fn(),
           },
         },
         {
@@ -91,28 +176,70 @@ describe('SubmissionProcessService', () => {
     jest.clearAllMocks();
   });
 
-  describe('processSubmissionSet', () => {
-    it('should process a submission set successfully', async () => {
+  describe('copyToOfficial', () => {
+    it('should copy to official when there are no CRIT1 errors', async () => {
       const setId = 'test-set-id';
       const submissionSet = new SubmissionSet();
       submissionSet.submissionSetIdentifier = setId;
-      submissionSet.hasCritErrors = false;
 
-      const submissionSetRecords = [new SubmissionQueue()];
+      const submissionQueueRecords = [
+        { severityCode: 'CRIT2' },
+        { severityCode: 'CRIT3' }
+      ];
 
-      jest.spyOn(entityManager, 'findOne').mockResolvedValueOnce(submissionSet);
-      jest.spyOn(entityManager, 'find').mockResolvedValueOnce(submissionSetRecords);
-      jest.spyOn(service['submissionSetHelper'], 'updateSubmissionSetStatus').mockResolvedValue();
-      jest.spyOn(service['submissionSetHelper'], 'setRecordStatusCode').mockResolvedValue();
-      jest.mock('uuidv4', () => ({ v4: () => 'mock-uuid' }));
-      jest.spyOn(fsPromises, 'rm').mockResolvedValue();
-      jest.spyOn(fs, 'mkdirSync').mockImplementation(() => 'mock-directory-path');
-      jest.spyOn(fsPromises, 'rm').mockResolvedValue();
-      jest.spyOn(service['transactionService'], 'buildTransactions').mockResolvedValue([]);
-      jest.spyOn(service['documentService'], 'buildDocumentsAndWriteToFile').mockResolvedValue([]);
-      jest.spyOn(service['documentService'], 'sendForSigning').mockResolvedValue();
-      jest.spyOn(service['submissionEmailService'], 'collectFeedbackReportDataForEmail').mockResolvedValue([]);
-      jest.spyOn(service, 'copyToOfficial').mockResolvedValue();
+      jest.spyOn(entityManager, 'find').mockResolvedValueOnce(submissionQueueRecords as any);
+
+      const transactions = [
+        { command: 'INSERT INTO test VALUES (?)', params: ['test'] }
+      ];
+
+      await service.copyToOfficial(submissionSet, transactions);
+
+      expect(entityManager.find).toHaveBeenCalledWith(SubmissionQueue, {
+        where: { submissionSetIdentifier: setId }
+      });
+      expect(entityManager.transaction).toHaveBeenCalled();
+    });
+
+    it('should not copy to official when there are CRIT1 errors', async () => {
+      const setId = 'test-set-id';
+      const submissionSet = new SubmissionSet();
+      submissionSet.submissionSetIdentifier = setId;
+
+      const submissionQueueRecords = [
+        { severityCode: 'CRIT1' },
+        { severityCode: 'CRIT2' }
+      ];
+
+      jest.spyOn(entityManager, 'find').mockResolvedValueOnce(submissionQueueRecords as any);
+
+      const transactions = [
+        { command: 'INSERT INTO test VALUES (?)', params: ['test'] }
+      ];
+
+      await service.copyToOfficial(submissionSet, transactions);
+
+      expect(entityManager.find).toHaveBeenCalledWith(SubmissionQueue, {
+        where: { submissionSetIdentifier: setId }
+      });
+      expect(entityManager.transaction).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('processSubmissionSet', () => {
+    it('should process a submission set with CRIT2 errors successfully', async () => {
+      const setId = 'test-set-id';
+      const submissionSet = new SubmissionSet();
+      submissionSet.submissionSetIdentifier = setId;
+
+      const submissionSetRecords = [
+        Object.assign(new SubmissionQueue(), {
+          severityCode: 'CRIT2',
+          statusCode: 'QUEUED'
+        })
+      ];
+
+      setupCommonMocks(submissionSet, submissionSetRecords);
 
       await service.processSubmissionSet(setId);
 
@@ -132,6 +259,15 @@ describe('SubmissionProcessService', () => {
         'WIP',
         '',
         'PENDING',
+      );
+
+      // Verify final status is set correctly for CRIT2
+      expect(service['submissionSetHelper'].setRecordStatusCode).toHaveBeenCalledWith(
+        submissionSet,
+        submissionSetRecords.filter(r => r.statusCode !== 'ERROR'),
+        'COMPLETE',
+        '',
+        'UPDATED' // Should be UPDATED for CRIT2, not CRITERR
       );
       expect(service['transactionService'].buildTransactions).toHaveBeenCalled();
       expect(service['documentService'].buildDocumentsAndWriteToFile).toHaveBeenCalled();
@@ -154,14 +290,8 @@ describe('SubmissionProcessService', () => {
       stages.push({ action: 'SUBMISSION_LOADED', dateTime: 'N/A' });
       stages.push({ action: 'SET_STATUS_WIP', dateTime: 'N/A' });
 
-        jest.spyOn(entityManager, 'findOne').mockResolvedValueOnce(submissionSet);
-      jest.spyOn(entityManager, 'find').mockResolvedValueOnce(submissionSetRecords);
-      jest.spyOn(service['submissionSetHelper'], 'updateSubmissionSetStatus').mockResolvedValue();
-      jest.spyOn(service['submissionSetHelper'], 'setRecordStatusCode').mockResolvedValue();
-      jest.mock('uuidv4', () => ({ v4: () => 'mock-uuid' }));
-      jest.spyOn(fsPromises, 'rm').mockResolvedValue();
+      setupCommonMocks(submissionSet, submissionSetRecords);
       jest.spyOn(service['transactionService'], 'buildTransactions').mockRejectedValue(error);
-      jest.spyOn(service['errorHandlerService'], 'handleSubmissionProcessingError').mockResolvedValue();
 
       await service.processSubmissionSet(setId);
 

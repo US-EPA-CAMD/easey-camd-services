@@ -3,6 +3,7 @@ import { EntityManager } from 'typeorm';
 import { LoggerModule } from '@us-epa-camd/easey-common/logger';
 
 import { MonitorPlan } from '../entities/monitor-plan.entity';
+import { MonitorLocation } from '../entities/monitor-location.entity';
 import { EvaluationItem } from '../dto/evaluation.dto';
 import { Plant } from '../entities/plant.entity';
 import { QaCertEvent } from '../entities/qa-cert-event.entity';
@@ -56,12 +57,25 @@ describe('-- Submission Service --', () => {
       },
     ]);
 
+    const mockMonitorPlan = new MonitorPlan();
+    mockMonitorPlan.facIdentifier = 1;
+    mockMonitorPlan.locations = [{
+      monLocIdentifier: 'test-loc',
+      stackPipeIdentifier: 'test-stack',
+      unitIdentifier: 1,
+      userid: 'test-user',
+      addDate: new Date().toISOString(),
+      updateDate: new Date().toISOString(),
+      stackPipe: null,
+      unit: null,
+      plans: []
+    } as MonitorLocation];
+
+    const findOneMock = jest.fn().mockResolvedValue(mockMonitorPlan);
     const findOneByMock = jest.fn().mockImplementation((entity, criteria) => {
       switch (entity) {
         case MonitorPlan:
-          const mp = new MonitorPlan();
-          mp.facIdentifier = 1;
-          return mp;
+          return mockMonitorPlan;
         case Plant:
           const p = new Plant();
           p.facilityName = 'testFacility';
@@ -91,11 +105,12 @@ describe('-- Submission Service --', () => {
     });
 
     const saveMock = jest.fn();
+    const countByMock = jest.fn().mockResolvedValue(0);
 
     const createQueryBuilderMock = {
       where: jest.fn().mockReturnThis(),
       andWhere: jest.fn().mockReturnThis(),
-      getOne: jest.fn().mockResolvedValue(new CheckSession()),
+      getOne: jest.fn().mockResolvedValue(null),
     };
 
     const transactionMock = jest.fn(async (fn) => {
@@ -104,7 +119,9 @@ describe('-- Submission Service --', () => {
 
     entityManagerMock = {
       query: queryMock,
+      findOne: findOneMock,
       findOneBy: findOneByMock,
+      countBy: countByMock,
       save: saveMock,
       transaction: transactionMock,
       createQueryBuilder: jest.fn().mockReturnValue(createQueryBuilderMock),
@@ -137,9 +154,75 @@ describe('-- Submission Service --', () => {
     }).compile();
 
     service = module.get(SubmissionService);
+
+    // Mock returnManager after service is created
+    jest.spyOn(service, 'returnManager').mockReturnValue(entityManagerMock);
   });
 
   it('should be defined', async () => {
     expect(service).toBeDefined();
+  });
+
+  describe('queueSubmissionRecords', () => {
+    it('should set hasCritErrors to true when CRIT1 errors exist', async () => {
+      const checkSessionWithCrit1 = new CheckSession();
+      checkSessionWithCrit1.severityCode = 'CRIT1';
+
+      const createQueryBuilderMock = {
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        getOne: jest.fn().mockResolvedValue(checkSessionWithCrit1),
+      };
+
+      entityManagerMock.createQueryBuilder = jest.fn().mockReturnValue(createQueryBuilderMock);
+
+      await service.queueSubmissionRecords(payloadDto);
+
+      // Verify hasCritErrors was set to true in the saved SubmissionSet
+      const saveCall = entityManagerMock.save.mock.calls.find(
+        call => call[1] && call[1].hasCritErrors !== undefined
+      );
+      expect(saveCall[1].hasCritErrors).toBe(true);
+    });
+
+    it('should set hasCritErrors to false when only CRIT2 errors exist', async () => {
+      // When checking for CRIT1 errors, should return null since there are only CRIT2 errors
+      const createQueryBuilderMock = {
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        getOne: jest.fn().mockResolvedValue(null),
+      };
+
+      entityManagerMock.createQueryBuilder = jest.fn().mockReturnValue(createQueryBuilderMock);
+
+      await service.queueSubmissionRecords(payloadDto);
+
+      // Verify hasCritErrors was set to false in the saved SubmissionSet
+      const saveCall = entityManagerMock.save.mock.calls.find(
+        call => call[1] && call[1].hasCritErrors !== undefined
+      );
+      expect(saveCall[1].hasCritErrors).toBe(false);
+    });
+
+    it('should set hasCritErrors to false when no critical errors exist', async () => {
+      const checkSessionNoErrors = new CheckSession();
+      checkSessionNoErrors.severityCode = 'NONE';
+
+      const createQueryBuilderMock = {
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        getOne: jest.fn().mockResolvedValue(null),
+      };
+
+      entityManagerMock.createQueryBuilder = jest.fn().mockReturnValue(createQueryBuilderMock);
+
+      await service.queueSubmissionRecords(payloadDto);
+
+      // Verify hasCritErrors was set to false in the saved SubmissionSet
+      const saveCall = entityManagerMock.save.mock.calls.find(
+        call => call[1] && call[1].hasCritErrors !== undefined
+      );
+      expect(saveCall[1].hasCritErrors).toBe(false);
+    });
   });
 });

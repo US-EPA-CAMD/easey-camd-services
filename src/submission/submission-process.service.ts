@@ -119,11 +119,19 @@ export class SubmissionProcessService {
 
       submissionStages.push({ action: 'FEEDBACK_EMAILS_SENT', dateTime: await this.submissionSetHelper.getFormattedDateTime()  || 'N/A' });
 
-      // Update the submission set and submission queue statuses to 'COMPLETE' and submission status to 'UPDATED'
-      // ONLY if there are no submission queue records that have Errors
+      // Update the submission set and submission queue statuses
       const nonErrorRecords = submissionQueueRecords.filter(record => record.statusCode !== 'ERROR');
       const errorRecords = submissionQueueRecords.filter(record => record.statusCode === 'ERROR');
-      await this.submissionSetHelper.setRecordStatusCode(set, nonErrorRecords, 'COMPLETE', '', set.hasCritErrors ? 'CRITERR' : 'UPDATED');
+
+      // Set status to UPDATED regardless of CRIT2 errors, only block for CRIT1
+      await this.submissionSetHelper.setRecordStatusCode(
+        set,
+        nonErrorRecords,
+        'COMPLETE',
+        '',
+        'UPDATED' // Always set to UPDATED since CRIT1 errors are handled in copyToOfficial
+      );
+
       if (errorRecords.length <= 0) {
         await this.submissionSetHelper.updateSubmissionSetStatus(set, 'COMPLETE');
       }
@@ -144,8 +152,15 @@ export class SubmissionProcessService {
     transactions: any[],
   ) {
     try {
+      // Get all submission queue records for this set
+      const submissionQueueRecords = await this.entityManager.find(SubmissionQueue, {
+        where: { submissionSetIdentifier: set.submissionSetIdentifier }
+      });
 
-      if (!set.hasCritErrors) {
+      // Only block copy to official if there are CRIT1 errors
+      const hasCrit1Errors = submissionQueueRecords.some(record => record.severityCode === 'CRIT1');
+
+      if (!hasCrit1Errors) {
         await this.entityManager.transaction(async (manager) => {
           for (const trans of transactions) {
             await manager.query(trans.command, trans.params);

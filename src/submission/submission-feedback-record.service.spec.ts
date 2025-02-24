@@ -6,6 +6,9 @@ import { ReportDTO } from '../dto/report.dto';
 import { ReportColumnDTO } from '../dto/report-column.dto';
 import { ReportDetailDTO } from '../dto/report-detail.dto';
 import { SubmissionFeedbackRecordService } from './submission-feedback-record.service';
+import { SubmissionEmailParamsDto, HighestSeverityRecord } from '../dto/submission-email-params.dto';
+import { SubmissionQueue } from '../entities/submission-queue.entity';
+import { SeverityCode } from '../entities/severity-code.entity';
 
 describe('-- Submission Feedback Record Service --', () => {
   let service: SubmissionFeedbackRecordService;
@@ -34,6 +37,164 @@ describe('-- Submission Feedback Record Service --', () => {
 
   it('should be defined', () => {
     expect(service).toBeDefined();
+  });
+
+  describe('isResubmissionRequired', () => {
+    it('should require resubmission for CRIT1 errors', async () => {
+      const submissionEmailParamsDto = {
+        orisCode: 123,
+        facilityName: 'Test Facility',
+        stateCode: 'TX',
+        submissionSet: {
+          monPlanIdentifier: 'TEST-123',
+          userEmail: 'test@example.com',
+          facIdentifier: 1,
+          orisCode: 123,
+          facName: 'Test Facility',
+          configuration: 'Test Config',
+          queuedTime: new Date(),
+          userIdentifier: 'testUser',
+          submissionSetIdentifier: 'test-id',
+          statusCode: 'QUEUED',
+          note: null,
+          noteTime: null
+        },
+        submissionQueueRecords: [],
+        monLocationIds: 'LOC1,LOC2',
+        facId: 1,
+        unitStackPipe: 'UNIT1',
+        monPlanStatus: 'Active',
+        toEmail: 'test@example.com',
+        ccEmail: null,
+        fromEmail: 'system@example.com',
+        processCode: 'TEST',
+        rptPeriod: null,
+        epaAnalystLink: null,
+        highestSeverityRecord: {
+          submissionQueue: {
+            severityCode: 'CRIT1',
+            submissionSetIdentifier: 'test-id',
+            processCode: 'TEST',
+            statusCode: 'QUEUED',
+            queuedTime: new Date()
+          } as SubmissionQueue,
+          severityCode: {
+            severityCode: 'CRIT1',
+            severityCodeDescription: 'Critical Error Level 1',
+            severityLevel: 1,
+            esTypeInd: 0,
+            evalStatusCode: null
+          } as SeverityCode
+        }
+      };
+      const result = await service.getSubmissionReceiptData(submissionEmailParamsDto as any);
+      const resubmissionRequired = result.find(pair => pair.key === 'Resubmission Required');
+      expect(resubmissionRequired.value).toBe('Yes');
+    });
+
+    it('should not require resubmission for CRIT2 errors', async () => {
+      const submissionEmailParamsDto = {
+        orisCode: 123,
+        facilityName: 'Test Facility',
+        stateCode: 'TX',
+        submissionSet: {
+          monPlanIdentifier: 'TEST-123',
+          userEmail: 'test@example.com',
+          facIdentifier: 1,
+          orisCode: 123,
+          facName: 'Test Facility',
+          configuration: 'Test Config',
+          queuedTime: new Date(),
+          userIdentifier: 'testUser',
+          submissionSetIdentifier: 'test-id',
+          statusCode: 'QUEUED',
+          note: null,
+          noteTime: null
+        },
+        submissionQueueRecords: [],
+        monLocationIds: 'LOC1,LOC2',
+        facId: 1,
+        unitStackPipe: 'UNIT1',
+        monPlanStatus: 'Active',
+        toEmail: 'test@example.com',
+        ccEmail: null,
+        fromEmail: 'system@example.com',
+        processCode: 'TEST',
+        rptPeriod: null,
+        epaAnalystLink: null,
+        highestSeverityRecord: {
+          submissionQueue: {
+            severityCode: 'CRIT2',
+            submissionSetIdentifier: 'test-id',
+            processCode: 'TEST',
+            statusCode: 'QUEUED',
+            queuedTime: new Date()
+          } as SubmissionQueue,
+          severityCode: {
+            severityCode: 'CRIT2',
+            severityCodeDescription: 'Critical Error Level 2',
+            severityLevel: 2,
+            esTypeInd: 0,
+            evalStatusCode: null
+          } as SeverityCode
+        }
+      };
+      const result = await service.getSubmissionReceiptData(submissionEmailParamsDto as any);
+      const resubmissionRequired = result.find(pair => pair.key === 'Resubmission Required');
+      expect(resubmissionRequired.value).toBe('No');
+    });
+
+    it('should not require resubmission when no severity code exists', async () => {
+      const submissionEmailParamsDto = {
+        orisCode: 123,
+        facilityName: 'Test Facility',
+        stateCode: 'TX',
+        submissionSet: {
+          monPlanIdentifier: 'TEST-123',
+          userEmail: 'test@example.com',
+          facIdentifier: 1,
+          orisCode: 123,
+          facName: 'Test Facility',
+          configuration: 'Test Config',
+          queuedTime: new Date(),
+          userIdentifier: 'testUser',
+          submissionSetIdentifier: 'test-id',
+          statusCode: 'QUEUED',
+          note: null,
+          noteTime: null
+        },
+        submissionQueueRecords: [],
+        monLocationIds: 'LOC1,LOC2',
+        facId: 1,
+        unitStackPipe: 'UNIT1',
+        monPlanStatus: 'Active',
+        toEmail: 'test@example.com',
+        ccEmail: null,
+        fromEmail: 'system@example.com',
+        processCode: 'TEST',
+        rptPeriod: null,
+        epaAnalystLink: null,
+        highestSeverityRecord: {
+          submissionQueue: {
+            severityCode: 'NONE',
+            submissionSetIdentifier: 'test-id',
+            processCode: 'TEST',
+            statusCode: 'QUEUED',
+            queuedTime: new Date()
+          } as SubmissionQueue,
+          severityCode: {
+            severityCode: 'NONE',
+            severityCodeDescription: 'No Error',
+            severityLevel: 0,
+            esTypeInd: 0,
+            evalStatusCode: null
+          } as SeverityCode
+        }
+      } as SubmissionEmailParamsDto;
+      const result = await service.getSubmissionReceiptData(submissionEmailParamsDto as any);
+      const resubmissionRequired = result.find(pair => pair.key === 'Resubmission Required');
+      expect(resubmissionRequired.value).toBe('No');
+    });
   });
 
   it('should generate summary table for unit stack', () => {
