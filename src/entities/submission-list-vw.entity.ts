@@ -1,5 +1,5 @@
 import { NumericColumnTransformer } from '@us-epa-camd/easey-common/transforms';
-import { BaseEntity, Column, ViewEntity, PrimaryGeneratedColumn} from 'typeorm';
+import { BaseEntity, Column, ViewEntity } from 'typeorm';
 
 @ViewEntity({ name: 'camdecmpsaux.vw_submission_list' })
 export class SubmissionListView extends BaseEntity {

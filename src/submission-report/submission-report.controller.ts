@@ -14,8 +14,8 @@ import { ApiExcludeControllerByEnv } from '../decorators/swagger-decorator';
 import { BadRequestResponse, NotFoundResponse } from '@us-epa-camd/easey-common/utilities/common-swagger';
 import { ArrayResponse } from '@us-epa-camd/easey-common/interfaces/common.interface';
 import { SubmissionReportService } from './submission-report.service';
-import { SubmissionReportParamsDTO } from 'src/dto/submission-report-params.dto';
-import { SubmissionReportDTO } from 'src/dto/submission-report.dto';
+import { SubmissionReportParamsDTO } from '../dto/submission-report-params.dto';
+import { SubmissionReportDTO } from '../dto/submission-report.dto';
 import { Logger } from '@us-epa-camd/easey-common/logger';
 
 @Controller()
@@ -41,12 +41,12 @@ export class SubmissionReportController {
   @ApiOperation({
     description: 'Retrieves Submission Report (CAT) per filter criteria.',
   })
-  async getSubmissionReprot(
+  async getSubmissionReport(
     @Query() submissionReportParamsDTO: SubmissionReportParamsDTO,
   ): Promise<ArrayResponse<SubmissionReportDTO>> {
 
     this.logger.info(submissionReportParamsDTO)
-    const submissionReports = await this.service.getSubmissinReport(submissionReportParamsDTO);
+    const submissionReports = await this.service.getSubmissionReport(submissionReportParamsDTO);
 
     return  {
       items: submissionReports

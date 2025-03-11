@@ -1,8 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { BaseMap } from '@us-epa-camd/easey-common/maps';
-import { EmSubmissionAccessDTO } from '../dto/em-submission-access.dto';
-import { EmSubmissionAccessView } from '../entities/em-submission-access-vw.entity';
-import { currentDateTime } from '@us-epa-camd/easey-common/utilities/functions';
 import { SubmissionReportDTO } from '../dto/submission-report.dto';
 import { SubmissionListView } from 'src/entities/submission-list-vw.entity';
 

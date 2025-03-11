@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { EntityManager, Repository } from 'typeorm';
 
-import { SubmissionListView } from 'src/entities/submission-list-vw.entity';
+import { SubmissionListView } from '../entities/submission-list-vw.entity';
 import { SubmissionReportParamsDTO } from '../dto/submission-report-params.dto';
 
 @Injectable()
