@@ -23,7 +23,7 @@ const msgB = `Ensure [property] are in the following formats Date Range - YYYY-m
 
 export class SubmissionReportParamsDTO {
  @ApiProperty()
- @IsNotEmpty({message: () => 'Facility is required'})
+ @IsOptional()
  @IsValidCode(Plant, {
     message: (args: ValidationArguments) => {
     return `The ${args.property} is not valid. Refer to the list of available facilityRecordIds for valid values '/facilities-mgmt/facilities'`;
@@ -38,7 +38,7 @@ export class SubmissionReportParamsDTO {
 @Type(() => Number)
 orisCode?: number;
 
-@IsNotEmpty({message: () => 'Year is required'})
+@IsOptional()
 @ApiProperty()
 @IsInRange(1930, currentDateTime().getFullYear(), {
     message: () => {
@@ -48,7 +48,7 @@ orisCode?: number;
 @Type(() => Number)
 year?: number;
   
-@IsNotEmpty({message: () => 'Quarter is required'})
+@IsOptional()
 @ApiProperty()
 @IsInRange(1, 4, {
      message: () => {
