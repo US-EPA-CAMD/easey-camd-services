@@ -96,25 +96,25 @@ export class SubmissionProcessService {
       this.logger.debug('Sending emails with feedback attachment ...');
       for (const submissionFeedbackEmailData of submissionFeedbackEmailDataList) {
 
-          this.logger.debug('Sending email feedback...');
+        this.logger.debug('Sending email feedback...');
 
-          // Attempt to send an email. If sending an email for this particular file type fails,
-          // log the error and continue attempting to send emails for the others
-          try {
-            await this.mailEvalService.sendEmailWithRetry(
-              submissionFeedbackEmailData.toEmail,
-              submissionFeedbackEmailData.ccEmail,
-              submissionFeedbackEmailData.fromEmail,
-              submissionFeedbackEmailData.subject,
-              submissionFeedbackEmailData.emailTemplate,
-              submissionFeedbackEmailData.templateContext,
-              1,
-              submissionFeedbackEmailData.feedbackAttachmentDocuments,
-            );
-          } catch (e) {
-            this.logger.error('Error attempting to send feedback email : ' +  {processCode : submissionFeedbackEmailData.processCode}, e.stack, 'SubmissionProcessService');
-            await this.errorHandlerService.handleSubmissionProcessingError(submissionFeedbackEmailData.submissionSet, submissionFeedbackEmailData.submissionQueueRecords, submissionStages, e);
-          }
+        // Attempt to send an email. If sending an email for this particular file type fails,
+        // log the error and continue attempting to send emails for the others
+        try {
+          await this.mailEvalService.sendEmailWithRetry(
+            submissionFeedbackEmailData.toEmail,
+            submissionFeedbackEmailData.ccEmail,
+            submissionFeedbackEmailData.fromEmail,
+            submissionFeedbackEmailData.subject,
+            submissionFeedbackEmailData.emailTemplate,
+            submissionFeedbackEmailData.templateContext,
+            1,
+            submissionFeedbackEmailData.feedbackAttachmentDocuments,
+          );
+        } catch (e) {
+          this.logger.error('Error attempting to send feedback email : ' +  {processCode : submissionFeedbackEmailData.processCode}, e.stack, 'SubmissionProcessService');
+          await this.errorHandlerService.handleSubmissionProcessingError(submissionFeedbackEmailData.submissionSet, submissionFeedbackEmailData.submissionQueueRecords, submissionStages, e);
+        }
       }
 
       submissionStages.push({ action: 'FEEDBACK_EMAILS_SENT', dateTime: await this.submissionSetHelper.getFormattedDateTime()  || 'N/A' });
@@ -123,7 +123,21 @@ export class SubmissionProcessService {
       // ONLY if there are no submission queue records that have Errors
       const nonErrorRecords = submissionQueueRecords.filter(record => record.statusCode !== 'ERROR');
       const errorRecords = submissionQueueRecords.filter(record => record.statusCode === 'ERROR');
-      await this.submissionSetHelper.setRecordStatusCode(set, nonErrorRecords, 'COMPLETE', '', set.hasCritErrors ? 'CRITERR' : 'UPDATED');
+
+      // Check if any records have Critical 1 Errors
+      const hasCrit1Errors = submissionQueueRecords.some(record =>
+        record.severityCode === 'CRIT1'
+      );
+
+      // Set status to 'CRITERR' only if there are Critical 1 Errors
+      await this.submissionSetHelper.setRecordStatusCode(
+        set,
+        nonErrorRecords,
+        'COMPLETE',
+        '',
+        hasCrit1Errors ? 'CRITERR' : 'UPDATED'
+      );
+
       if (errorRecords.length <= 0) {
         await this.submissionSetHelper.updateSubmissionSetStatus(set, 'COMPLETE');
       }
@@ -144,13 +158,25 @@ export class SubmissionProcessService {
     transactions: any[],
   ) {
     try {
+      // Get all submission queue records for this submission set
+      const submissionQueueRecords = await this.entityManager.find(SubmissionQueue, {
+        where: { submissionSetIdentifier: set.submissionSetIdentifier }
+      });
 
-      if (!set.hasCritErrors) {
+      // Check if any records have Critical 1 Errors
+      const hasCrit1Errors = submissionQueueRecords.some(record =>
+        record.severityCode === 'CRIT1'
+      );
+
+      // Only prevent copying if there are Critical 1 Errors
+      if (!hasCrit1Errors) {
         await this.entityManager.transaction(async (manager) => {
           for (const trans of transactions) {
             await manager.query(trans.command, trans.params);
           }
         });
+      } else {
+        this.logger.log(`Skipping copyToOfficial due to Critical 1 Errors in submission set: ${set.submissionSetIdentifier}`);
       }
     } catch (e) {
       this.logger.error('Error during copyToOfficial processing.', e.stack, 'SubmissionProcessService');
