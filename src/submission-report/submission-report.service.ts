@@ -21,7 +21,6 @@ export class SubmissionReportService  {
     try{
     let rowsSubmissionReport = []
 
-    this.logger.info("service: " + params.orisCode)
     query = await this.viewRepository.getSubmissionReportList(params)
     rowsSubmissionReport = await this.map.many(query);
 
