@@ -44,7 +44,7 @@ export class SubmissionListView extends BaseEntity {
     name: 'submission_id',
     transformer: new NumericColumnTransformer(),
   })
-  submissionId: string;
+  submissionId: number;
 
   @Column({
     name: 'queued_time',

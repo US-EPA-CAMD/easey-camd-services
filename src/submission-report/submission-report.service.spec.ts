@@ -8,7 +8,7 @@ import { EntityManager } from 'typeorm';
 import { genSubmissionList } from '../../test/object-generators/submisison-report-list';
 
 const mockViewRepository = () => ({
-  getEmSubmissionAccess: jest.fn(),
+  getSubmissionReportList: jest.fn(),
   findOneBy: jest.fn(),
 });
 
@@ -62,9 +62,13 @@ describe('SubmissionReportService', () => {
     entityManager.query.mockResolvedValue([]);
 
     let filters = new SubmissionReportParamsDTO();
-    filters.orisCode = 12345;
-    filters.year = 2024;
-    filters.quarter = 1;
+    filters.orisCode = null;
+    filters.year = null;
+    filters.quarter = null;
+    filters.severityCode = null;
+    filters.severityCode = null;
+    filters.submissionFrom = null;
+    filters.submissionTo = null;
 
     let result = await service.getSubmissionReport(filters);
 

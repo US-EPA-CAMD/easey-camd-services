@@ -35,8 +35,8 @@ export class SubmissionReportDTO {
   submissionTypeCode: string;
 
   @ApiProperty()
-  @IsString()
-  submissionId: string;
+  @IsNumber()
+  submissionId: number;
 
   @ApiProperty()
   @IsDate()
