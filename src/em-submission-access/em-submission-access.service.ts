@@ -61,7 +61,6 @@ export class EmSubmissionAccessService {
       if (params.status !== 'NO WINDOW') {
         query = await this.viewRepository.getEmSubmissionAccess(params);
         rowsFromEmSubmissionAccessView = await this.map.many(query);
-        console.log("rowsFromEmSubmissionAccessView", rowsFromEmSubmissionAccessView)
       }
 
       return [...rowsFromEmSubmissionAccessView, ...rowsForNoWindowStatus]
