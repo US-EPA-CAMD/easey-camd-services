@@ -1,5 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { EntityManager } from 'typeorm';
+import { EaseyException } from '@us-epa-camd/easey-common';
 import { CreateMailDto } from '../dto/create-mail.dto';
 import { Logger } from '@us-epa-camd/easey-common/logger';
 import { ClientConfig } from '../entities/client-config.entity';
@@ -11,7 +12,7 @@ export class MailService {
     private readonly entityManager: EntityManager,
     private readonly logger: Logger,
     private readonly mailerService: MailerService,
-  ) {}
+  ) { }
 
   returnManager() {
     return this.entityManager;
@@ -23,18 +24,21 @@ export class MailService {
       { id: clientId },
     );
 
-    this.mailerService
-      .sendMail({
-        from: payload.fromEmail,
-        to: dbRecord.supportEmail, // List of receivers email address
-        subject: payload.subject, // Subject line
-        text: payload.message,
-      })
-      .then((_success) => {
-        this.logger.debug(`Successfully sent an email`);
-      })
-      .catch((_err) => {
-        this.logger.error(`Failed to sent an email`);
-      });
+    try {
+      await this.mailerService
+        .sendMail({
+          from: payload.fromEmail,
+          to: dbRecord.supportEmail, // List of receivers email address
+          subject: payload.subject, // Subject line
+          text: payload.message,
+        })
+      this.logger.debug(`Successfully sent an email`);
+    } catch (e) {
+      this.logger.error(`Failed to sent an email`);
+      throw new EaseyException(
+        new Error('Failed to sent an email'),
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 }

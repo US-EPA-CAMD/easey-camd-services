@@ -18,7 +18,7 @@ export class MailTemplateService {
     private readonly configService: ConfigService,
     private readonly httpService: HttpService,
     private readonly logger: Logger,
-  ) {}
+  ) { }
 
   returnManager() {
     return this.entityManager;
@@ -110,9 +110,14 @@ export class MailTemplateService {
 
         record.statusCode = 'COMPLETE';
         await this.entityManager.save(record);
+      } else {
+        throw new EaseyException(
+          new Error('No record found for the provided emailToProcessId.'),
+          HttpStatus.NOT_FOUND,
+        );
       }
     } catch (e) {
-      throw new EaseyException(e, HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new EaseyException(e, e.status || HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 }
