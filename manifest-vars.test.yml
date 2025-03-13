@@ -9,3 +9,12 @@ ecmpsHost: https://ecmps-tst.app.cloud.gov
 cdxUrl: https://test.epacdx.net/
 epaAnalystLink: https://www.epa.gov/power-sector/business-center-and-emissions-monitoring-contacts#MonitoringContacts
 recipientsListApi: https://cbsstagei.epa.gov/CBS/api/auth-mgmt/emailRecipients
+maxConnectionPool: 5
+idleTimeout: 5000
+connectionTimeout: 5000
+acquireConnectionFromPoolTimeout: 3000
+statementTimeout: 200000
+idleInTransactionSessionTimeout: 60000
+maxUsesBeforeRecreatingConnection: 500
+sqlLogging: ['error']
+maxQueryExecutionTime: 5000
