@@ -7,3 +7,12 @@ ecmpsHost: https://ecmps.epa.gov
 cdxUrl: https://cdx.epa.gov/
 epaAnalystLink: https://www.epa.gov/power-sector/business-center-and-emissions-monitoring-contacts#MonitoringContacts
 recipientsListApi: https://camd.epa.gov/CBS/api/auth-mgmt/emailRecipients
+maxConnectionPool: 15
+idleTimeout: 30000
+connectionTimeout: 10000
+acquireConnectionFromPoolTimeout: 15000
+statementTimeout: 300000
+idleInTransactionSessionTimeout: 300000
+maxUsesBeforeRecreatingConnection: 500
+sqlLogging: ['error']
+maxQueryExecutionTime: 30000
