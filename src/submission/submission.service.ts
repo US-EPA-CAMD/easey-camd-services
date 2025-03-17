@@ -441,7 +441,7 @@ export class SubmissionService {
   }
 
   async getLastUpdated(
-    queryTime: string,
+    queryTime: Date,
   ): Promise<SubmissionsLastUpdatedResponseDTO> {
     const dto = new SubmissionsLastUpdatedResponseDTO();
 
