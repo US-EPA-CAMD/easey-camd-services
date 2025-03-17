@@ -47,7 +47,6 @@ applications:
       EASEY_DB_IDLE_TRANS_SESSION_TIMEOUT: ((idleInTransactionSessionTimeout))
       EASEY_DB_SQL_LOGGING: ((sqlLogging))
       EASEY_DB_MAX_QUERY_EXECUTION_TIMEOUT: ((maxQueryExecutionTime))
-
     routes:
       - route: ((host))/((path))
     services:
