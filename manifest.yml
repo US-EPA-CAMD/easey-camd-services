@@ -40,6 +40,13 @@ applications:
       EASEY_CAMD_SERVICES_SUBMISSION_CRIT_MESSAGE: Files submitted in this batch were submitted with Critical Errors. The copy of record has been processed for every record, but the data has not been submitted. View / download the copy of records
       TZ: America/New_York
       EASEY_CAMD_SERVICES_RECIPIENT_LIST_API: ((recipientsListApi))
+      EASEY_DB_MAX_CONNECTION_POOL: ((maxConnectionPool))
+      EASEY_DB_CONNECTION_TIMEOUT: ((connectionTimeout))
+      EASEY_DB_IDLE_CONNECTION_TIMEOUT: ((acquireConnectionFromPoolTimeout))
+      EASEY_DB_STATEMENT_TIMEOUT: ((statementTimeout))
+      EASEY_DB_IDLE_TRANS_SESSION_TIMEOUT: ((idleInTransactionSessionTimeout))
+      EASEY_DB_SQL_LOGGING: ((sqlLogging))
+      EASEY_DB_MAX_QUERY_EXECUTION_TIMEOUT: ((maxQueryExecutionTime))
     routes:
       - route: ((host))/((path))
     services:
