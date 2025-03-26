@@ -58,7 +58,7 @@ describe('-- Submission Controller --', () => {
 
   it('last-updated', async () => {
     expect(async () => {
-      await controller.lastUpdated('');
+      await controller.lastUpdated({ date: new Date('2025-02-25') });
     }).not.toThrowError();
   });
 });
