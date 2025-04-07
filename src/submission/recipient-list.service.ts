@@ -61,7 +61,7 @@ export class RecipientListService {
   async getEmailRecipients(
     userId: string,
     submissionType: string,
-    isMats: string = '',
+    isMats: boolean,
     emailType: string = 'SUBMISSIONCONFIRMATION',
     plantId: string = '0',
   ): Promise<string> {
