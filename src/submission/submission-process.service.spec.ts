@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { SubmissionProcessService } from './submission-process.service';
-import { EntityManager } from 'typeorm';
+import { EntityManager, In } from 'typeorm';
 import { LoggerModule, Logger } from '@us-epa-camd/easey-common/logger';
 import { MailEvalService } from '../mail/mail-eval.service';
 import { DocumentService } from './document.service';
@@ -34,6 +34,7 @@ describe('SubmissionProcessService', () => {
             findOne: jest.fn(),
             find: jest.fn(),
             transaction: jest.fn(),
+            query: jest.fn(),
           },
         },
         {
@@ -89,6 +90,87 @@ describe('SubmissionProcessService', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+  });
+
+  describe('copyToOfficial', () => {
+    it('should not copy to official when CRIT1 severity codes are present', async () => {
+      const submissionSet = new SubmissionSet();
+      submissionSet.submissionSetIdentifier = 'test-set-id';
+
+      const transactions = [{ command: 'TEST COMMAND', params: [] }];
+
+      // Mock finding records with CRIT1 severity code
+      jest.spyOn(entityManager, 'find').mockResolvedValueOnce([new SubmissionQueue()]);
+
+      // Mock transaction function
+      const transactionMock = jest.fn();
+      jest.spyOn(entityManager, 'transaction').mockImplementation(transactionMock);
+
+      await service.copyToOfficial(submissionSet, transactions);
+
+      // To verify that find was called with the correct parameters
+      expect(entityManager.find).toHaveBeenCalledWith(SubmissionQueue, {
+        where: {
+          submissionSetIdentifier: submissionSet.submissionSetIdentifier,
+          severityCode: In(['CRIT1', 'FATAL'])
+        }
+      });
+
+      // To verify that transaction was not called since critical errors were found
+      expect(transactionMock).not.toHaveBeenCalled();
+    });
+
+    it('should copy to official when no CRIT1 or FATAL severity codes are present', async () => {
+      const submissionSet = new SubmissionSet();
+      submissionSet.submissionSetIdentifier = 'test-set-id';
+
+      const transactions = [{ command: 'TEST COMMAND', params: [] }];
+
+      // Mock finding no records with CRIT1 or FATAL severity code
+      jest.spyOn(entityManager, 'find').mockResolvedValueOnce([]);
+
+      // Mock transaction function
+      const transactionMock = jest.fn().mockImplementation(callback => callback(entityManager));
+      jest.spyOn(entityManager, 'transaction').mockImplementation(transactionMock);
+
+      // Mock query execution
+      const queryMock = jest.fn();
+      jest.spyOn(entityManager, 'query').mockImplementation(queryMock);
+
+      await service.copyToOfficial(submissionSet, transactions);
+
+      // Verify that find was called with the correct parameters
+      expect(entityManager.find).toHaveBeenCalledWith(SubmissionQueue, {
+        where: {
+          submissionSetIdentifier: submissionSet.submissionSetIdentifier,
+          severityCode: In(['CRIT1', 'FATAL'])
+        }
+      });
+
+      // To verify that transaction was called since no critical errors were found
+      expect(transactionMock).toHaveBeenCalled();
+
+      // To verify that query was called for each transaction
+      expect(queryMock).toHaveBeenCalledWith(transactions[0].command, transactions[0].params);
+    });
+
+    it('should handle errors during copyToOfficial', async () => {
+      const submissionSet = new SubmissionSet();
+      submissionSet.submissionSetIdentifier = 'test-set-id';
+
+      const transactions = [{ command: 'TEST COMMAND', params: [] }];
+      const error = new Error('Test Error');
+
+      // Mock finding no records with CRIT1 or FATAL severity code
+      jest.spyOn(entityManager, 'find').mockResolvedValueOnce([]);
+
+      // Mock transaction function that throws an error
+      jest.spyOn(entityManager, 'transaction').mockRejectedValueOnce(error);
+
+      // Expect the function to throw the error
+      await expect(service.copyToOfficial(submissionSet, transactions)).rejects.toThrow(error);
+
+     });
   });
 
   describe('processSubmissionSet', () => {

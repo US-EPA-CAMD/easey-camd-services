@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { EntityManager } from 'typeorm';
+import { EntityManager, In } from 'typeorm';
 import { Logger } from '@us-epa-camd/easey-common/logger';
 import { SubmissionSet } from '../entities/submission-set.entity';
 import { SubmissionQueue } from '../entities/submission-queue.entity';
@@ -144,8 +144,15 @@ export class SubmissionProcessService {
     transactions: any[],
   ) {
     try {
+      //Check if any submission queue records have CRIT1 or FATAL severity codes
+      const hasCriticalErrors = await this.entityManager.find(SubmissionQueue, {
+        where: {
+          submissionSetIdentifier: set.submissionSetIdentifier,
+            severityCode: In(['CRIT1', 'FATAL'])
+          }
+      }).then(records =>records.length > 0);
 
-      if (!set.hasCritErrors) {
+      if (!hasCriticalErrors) {
         await this.entityManager.transaction(async (manager) => {
           for (const trans of transactions) {
             await manager.query(trans.command, trans.params);

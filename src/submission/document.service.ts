@@ -50,8 +50,9 @@ export class DocumentService {
 
   public async addEvalReports(set: SubmissionSet, records: SubmissionQueue[], documents: any[]) {
     for (const rec of records) {
-      if (['CRIT1', 'CRIT2', 'CRIT3', 'FATAL'].includes(rec.severityCode)) {
-        const params = new ReportParamsDTO();
+      // Only generate evaluation reports for critical severity codes (CRIT1 and FATAL)
+      if (['CRIT1', 'FATAL'].includes(rec.severityCode)) {
+       const params = new ReportParamsDTO();
         params.facilityId = set.orisCode;
 
         let titleContext = '';

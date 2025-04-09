@@ -92,7 +92,7 @@ export class SubmissionFeedbackRecordService {
       return false;
     }
     const severityCode = highestSeverityRecord.severityCode.severityCode;
-    return severityCode === 'CRIT1' || severityCode === 'CRIT2';
+    return severityCode === 'CRIT1' || severityCode === 'FATAL';
   }
 
   private async getSubmissionType(submissionEmailParamsDto: SubmissionEmailParamsDto): Promise<string> {

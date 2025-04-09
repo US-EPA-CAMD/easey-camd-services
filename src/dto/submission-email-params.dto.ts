@@ -42,7 +42,7 @@ export function isCritical1Severity(record: HighestSeverityRecord): boolean {
 }
 
 export function isResubmissionRequired(record: HighestSeverityRecord): boolean {
-  return record?.submissionQueue?.severityCode?.toUpperCase() === 'CRIT1' || record?.submissionQueue?.severityCode?.toUpperCase() === 'CRIT2';
+  return record?.submissionQueue?.severityCode?.toUpperCase() === 'CRIT1' || record?.submissionQueue?.severityCode?.toUpperCase() === 'FATAL';
 }
 
 export function isNoError(record: HighestSeverityRecord): boolean {
