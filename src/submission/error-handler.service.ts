@@ -270,7 +270,7 @@ export class ErrorHandlerService {
     // Get submission type
     let submissionType: string = 'N/A';
     try {
-      submissionType = await this.submissionEmailService.getSubmissionType(processCode) || 'N/A';
+      submissionType = (await this.submissionEmailService.getSubmissionType(processCode)) || 'N/A';
     } catch (submissionTypeError) {
       this.logger.error('Failed to get submission type.', submissionTypeError.stack);
     }

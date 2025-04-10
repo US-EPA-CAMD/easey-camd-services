@@ -10,7 +10,6 @@ recipientsListApi: https://camd.epa.gov/CBS/api/auth-mgmt/emailRecipients
 maxConnectionPool: 15
 idleTimeout: 30000
 connectionTimeout: 10000
-acquireConnectionFromPoolTimeout: 15000
 statementTimeout: 300000
 idleInTransactionSessionTimeout: 300000
 maxUsesBeforeRecreatingConnection: 500
