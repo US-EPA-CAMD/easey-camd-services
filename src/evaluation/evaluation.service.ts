@@ -20,6 +20,9 @@ import { ReportingPeriod } from '../entities/reporting-period.entity';
 import { EmissionEvaluation } from '../entities/emission-evaluation.entity';
 import { EvaluationSetHelperService } from './evaluation-set-helper.service';
 import { EvaluationErrorHandlerService } from './evaluation-error-handler.service';
+import { SubmissionSet } from '../entities/submission-set.entity';
+import { SubmissionQueue } from '../entities/submission-queue.entity';
+import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
 
 @Injectable()
 export class EvaluationService {
@@ -30,7 +33,7 @@ export class EvaluationService {
     @Inject(forwardRef(() => EvaluationErrorHandlerService))
     private readonly errorHandlerService: EvaluationErrorHandlerService,
     private readonly evaluationSetHelper: EvaluationSetHelperService,
-  ) {}
+  ) { }
 
   async queueRecord(
     userId: string,
@@ -42,11 +45,165 @@ export class EvaluationService {
     const evaluationSet = new EvaluationSet();
     let currentEvaluationQueue: Evaluation | null = null;
     this.logger.log(
-      `Queueing evaluation record. evaluationSet: ${evaluationSet}, MonPlanId: ${
-        item?.monPlanId || 'N/A'
+      `Queueing evaluation record. evaluationSet: ${evaluationSet}, MonPlanId: ${item?.monPlanId || 'N/A'
       }, UserId: ${userId || 'N/A'}`,
     );
     try {
+      // Validation checks before creating Evaluation Set
+
+      // Check for incomplete Evaluation Set for monPlanId
+      const incompleteEvalSet = await entityManager
+        .createQueryBuilder(EvaluationSet, 'es')
+        .innerJoin(Evaluation, 'eq', 'eq.evaluation_set_id = es.evaluation_set_id')
+        .where('es.mon_plan_id = :monPlanId', { monPlanId: item.monPlanId })
+        .andWhere('eq.completed_time IS NULL')
+        .andWhere('eq.note_time IS NULL')
+        .getOne();
+
+      if (incompleteEvalSet) {
+        throw new EaseyException(new Error(`Monitoring Plan ID ${item.monPlanId} has evaluations in progress`), HttpStatus.CONFLICT);
+      }
+
+      // Check for incomplete Submission Set for monPlanId
+      const incompleteSubmissionSet = await entityManager
+        .createQueryBuilder(SubmissionSet, 'ss')
+        .where('ss.mon_plan_id = :monPlanId', { monPlanId: item.monPlanId })
+        .andWhere('ss.completed_time IS NULL')
+        .andWhere('ss.note_time IS NULL')
+        .getOne();
+
+      if (incompleteSubmissionSet) {
+        throw new EaseyException(new Error(`Monitoring Plan ID ${item.monPlanId} has submissions in progress`), HttpStatus.CONFLICT);
+      }
+
+      // Test Summary validations
+      for (const testSumId of item.testSumIds) {
+        // Check if QATestSummary exists
+        const testSummary = await entityManager.findOneBy(TestSummary, {
+          testSumIdentifier: testSumId,
+        });
+
+        if (!testSummary) {
+          throw new EaseyException(new Error(`Test Summary record not found for ID: ${testSumId}`), HttpStatus.NOT_FOUND);
+        }
+
+        // Check for incomplete EvaluationQueue
+        const incompleteEval = await entityManager
+          .createQueryBuilder(Evaluation, 'eq')
+          .where('eq.test_sum_id = :testSumId', { testSumId })
+          .andWhere('eq.completed_time IS NULL')
+          .andWhere('eq.note_time IS NULL')
+          .getOne();
+
+        if (incompleteEval) {
+          throw new EaseyException(new Error(`Test Summary ID ${testSumId} is already queued for evaluation`), HttpStatus.CONFLICT);
+        }
+
+        // Check for incomplete SubmissionQueue
+        const incompleteSubmission = await entityManager
+          .createQueryBuilder(SubmissionQueue, 'sq')
+          .where('sq.test_sum_id = :testSumId', { testSumId })
+          .andWhere('sq.completed_time IS NULL')
+          .andWhere('sq.note_time IS NULL')
+          .getOne();
+
+        if (incompleteSubmission) {
+          throw new EaseyException(new Error(`Test Summary ID ${testSumId} is already queued for submission`), HttpStatus.CONFLICT);
+        }
+      }
+
+      // QA Cert Event validations
+      for (const qceId of item.qceIds) {
+        // Check if QaCertEvent exists
+        const qaCertEvent = await entityManager.findOneBy(QaCertEvent, {
+          qaCertEventIdentifier: qceId,
+        });
+
+        if (!qaCertEvent) {
+          throw new EaseyException(new Error(`QA Cert Event record not found for ID: ${qceId}`), HttpStatus.NOT_FOUND);
+        }
+
+        // Check for incomplete EvaluationQueue for qceId
+        const incompleteEval = await entityManager
+          .createQueryBuilder(Evaluation, 'eq')
+          .where('eq.qa_cert_event_id = :qceId', { qceId })
+          .andWhere('eq.completed_time IS NULL')
+          .andWhere('eq.note_time IS NULL')
+          .getOne();
+
+        if (incompleteEval) {
+          throw new EaseyException(new Error(`QA Cert Event ID ${qceId} is already queued for evaluation`), HttpStatus.CONFLICT);
+        }
+
+        // c) Check for incomplete SubmissionQueue for qceId
+        const incompleteSubmission = await entityManager
+          .createQueryBuilder(SubmissionQueue, 'sq')
+          .where('sq.qa_cert_event_id = :qceId', { qceId })
+          .andWhere('sq.completed_time IS NULL')
+          .andWhere('sq.note_time IS NULL')
+          .getOne();
+
+        if (incompleteSubmission) {
+          throw new EaseyException(new Error(`QA Cert Event ID ${qceId} is already queued for submission`), HttpStatus.CONFLICT);
+        }
+      }
+
+      // Test Extension/Exemption validations
+      for (const teeId of item.teeIds) {
+        // Check if QaTee exists
+        const qaTee = await entityManager.findOneBy(QaTee, {
+          testExtensionExemptionIdentifier: teeId,
+        });
+        if (!qaTee) {
+          throw new EaseyException(new Error(`Test Extension/Exemption record not found for ID: ${teeId}`), HttpStatus.NOT_FOUND);
+        }
+
+        // Check for incomplete EvaluationQueue for teeId
+        const incompleteEval = await entityManager
+          .createQueryBuilder(Evaluation, 'eq')
+          .where('eq.test_extension_exemption_id = :teeId', { teeId })
+          .andWhere('eq.completed_time IS NULL')
+          .andWhere('eq.note_time IS NULL')
+          .getOne();
+
+        if (incompleteEval) {
+          throw new EaseyException(new Error(`Test Extension/Exemption ID ${teeId} is already queued for evaluation`), HttpStatus.CONFLICT);
+        }
+
+        // Check for incomplete SubmissionQueue for teeId
+        const incompleteSubmission = await entityManager
+          .createQueryBuilder(SubmissionQueue, 'sq')
+          .where('sq.test_extension_exemption_id = :teeId', { teeId })
+          .andWhere('sq.completed_time IS NULL')
+          .andWhere('sq.note_time IS NULL')
+          .getOne();
+
+        if (incompleteSubmission) {
+          throw new EaseyException(new Error(`Test Extension/Exemption ID ${teeId} is already queued for submission`), HttpStatus.CONFLICT);
+        }
+      }
+
+      // Emissions validations
+      for (const periodAbr of item.emissionsReportingPeriods) {
+        // Check if ReportingPeriod exists
+        const reportingPeriod = await entityManager.findOneBy(ReportingPeriod, {
+          periodAbbreviation: periodAbr,
+        });
+        if (!reportingPeriod) {
+          throw new EaseyException(new Error(`Reporting Period record not found for ID: ${periodAbr}`), HttpStatus.NOT_FOUND);
+        }
+
+        // Check if EmissionEvaluation exists for monPlanId + rptPeriodIdentifier
+        const emissionEval = await entityManager.findOneBy(EmissionEvaluation, {
+          monPlanIdentifier: item.monPlanId,
+          rptPeriodIdentifier: reportingPeriod.rptPeriodIdentifier,
+        });
+        if (!emissionEval) {
+          throw new EaseyException(new Error(`Emission Evaluation record not found for Monitoring Plan ID ${item.monPlanId} and Reporting Period ${periodAbr}`), HttpStatus.NOT_FOUND);
+        }
+      }
+
+      // Proceed with creating the evaluation set if all validations pass
       const currentTime = new Date();
       const evalSetId = uuidv4();
 
@@ -103,8 +260,7 @@ export class EvaluationService {
 
       if (item.submitMonPlan === true) {
         this.logger.log(
-          `Creating a monitoring plan evaluation record. evaluationSet: ${evaluationSet}, MonPlanId: ${
-            item?.monPlanId || 'N/A'
+          `Creating a monitoring plan evaluation record. evaluationSet: ${evaluationSet}, MonPlanId: ${item?.monPlanId || 'N/A'
           }`,
         );
 
@@ -267,14 +423,12 @@ export class EvaluationService {
       }
 
       this.logger.log(
-        `Successfully queued evaluation record. evalSetId: ${evalSetId}, MonPlanId: ${
-          item?.monPlanId || 'N/A'
+        `Successfully queued evaluation record. evalSetId: ${evalSetId}, MonPlanId: ${item?.monPlanId || 'N/A'
         }`,
       );
     } catch (e) {
       this.logger.error(
-        `Failed to queue evaluation record. MonPlanId: ${
-          item?.monPlanId || 'N/A'
+        `Failed to queue evaluation record. MonPlanId: ${item?.monPlanId || 'N/A'
         }, Error: ${e.message}`,
         e.stack,
       );
@@ -290,8 +444,7 @@ export class EvaluationService {
 
   async queueEvaluationRecords(evaluationDTO: EvaluationDTO): Promise<void> {
     this.logger.log(
-      `Starting to queue evaluation records. UserId: ${
-        evaluationDTO?.userId || 'N/A'
+      `Starting to queue evaluation records. UserId: ${evaluationDTO?.userId || 'N/A'
       }, Items count: ${evaluationDTO?.items?.length || 0}`,
     );
 
@@ -332,14 +485,12 @@ export class EvaluationService {
       });
 
       this.logger.log(
-        `Finished queueing evaluation records for UserId: ${
-          evaluationDTO?.userId || 'N/A'
+        `Finished queueing evaluation records for UserId: ${evaluationDTO?.userId || 'N/A'
         }`,
       );
     } catch (error) {
       this.logger.error(
-        `Failed to queue evaluation records. UserId: ${
-          evaluationDTO?.userId || 'N/A'
+        `Failed to queue evaluation records. UserId: ${evaluationDTO?.userId || 'N/A'
         }, Error: ${error.message}`,
         error.stack,
       );
@@ -358,14 +509,15 @@ export class EvaluationService {
         error,
       );
 
+      const status = error.status || HttpStatus.INTERNAL_SERVER_ERROR;
       // Throw error to API caller
       throw new HttpException(
         {
-          status: HttpStatus.INTERNAL_SERVER_ERROR,
+          status: status,
           error: 'Failed to queue evaluation records',
           message: error.message,
         },
-        HttpStatus.INTERNAL_SERVER_ERROR,
+        status,
       );
     }
   }
