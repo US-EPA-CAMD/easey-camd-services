@@ -94,7 +94,6 @@ export class SubmissionService {
 
       this.logger.log(`Queueing record. setId: ${setId}, MonPlanId: ${evaluationItem?.monPlanId || 'N/A'}, UserId: ${userId || 'N/A'}`,);
 
-      //submissionSet.hasCritErrors = hasCritErrors;
       submissionSet.activityId = activityId;
       submissionSet.submissionSetIdentifier = setId;
       submissionSet.monPlanIdentifier = evaluationItem.monPlanId;
@@ -356,8 +355,6 @@ export class SubmissionService {
         }
       }
 
-      //this.logger.log(`Successfully queued record. SetId: ${setId}, MonPlanId: ${evaluationItem?.monPlanId || 'N/A'}`,);
-
       // Determine if there are any critical errors (CRIT1) in the submission
       // Get all submission queue records for this set
       const submissionQueueRecords = await entityManager.find(SubmissionQueue, {
@@ -406,7 +403,6 @@ export class SubmissionService {
     const userId = submissionQueueParam.userId;
     const userEmail = submissionQueueParam.userEmail;
     const activityId = submissionQueueParam.activityId;
-    //const hasCritErrors = submissionQueueParam.hasCritErrors;
     const evaluationItems = submissionQueueParam.items;
 
     try {
