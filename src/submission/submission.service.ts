@@ -78,7 +78,7 @@ export class SubmissionService {
     userId: string,
     userEmail: string,
     activityId: string,
-    hasCritErrors: boolean,
+    //hasCritErrors: boolean,
     evaluationItem: EvaluationItem,
     entityManager: EntityManager,
     queueingStages: { action: string; dateTime: string }[],
@@ -86,6 +86,7 @@ export class SubmissionService {
 
     const submissionSet = new SubmissionSet();
     let currentSubmissionQueue: SubmissionQueue | null = null;
+    let hasCritErrors = false;
 
     try {
       const currentTime = new Date();
@@ -93,7 +94,7 @@ export class SubmissionService {
 
       this.logger.log(`Queueing record. setId: ${setId}, MonPlanId: ${evaluationItem?.monPlanId || 'N/A'}, UserId: ${userId || 'N/A'}`,);
 
-      submissionSet.hasCritErrors = hasCritErrors;
+      //submissionSet.hasCritErrors = hasCritErrors;
       submissionSet.activityId = activityId;
       submissionSet.submissionSetIdentifier = setId;
       submissionSet.monPlanIdentifier = evaluationItem.monPlanId;
@@ -355,9 +356,24 @@ export class SubmissionService {
         }
       }
 
-      this.logger.log(`Successfully queued record. SetId: ${setId}, MonPlanId: ${evaluationItem?.monPlanId || 'N/A'}`,);
+      //this.logger.log(`Successfully queued record. SetId: ${setId}, MonPlanId: ${evaluationItem?.monPlanId || 'N/A'}`,);
 
-    } catch (e) {
+      // Determine if there are any critical errors (CRIT1) in the submission
+      // Get all submission queue records for this set
+      const submissionQueueRecords = await entityManager.find(SubmissionQueue, {
+        where: { submissionSetIdentifier: setId },
+      });
+
+      // Check if any record has a severity code of CRIT1
+      const hasCrit1Error = submissionQueueRecords.some(record => record.severityCode === 'CRIT1');
+
+      // Set the hasCritErrors flag based on CRIT1 errors only
+      submissionSet.hasCritErrors = hasCrit1Error;
+      await entityManager.save(SubmissionSet, submissionSet);
+
+      this.logger.log(`Successfully queued record. SetId: ${setId}, MonPlanId: ${evaluationItem?.monPlanId || 'N/A'}, hasCritErrors: ${hasCrit1Error}`,);
+
+      } catch (e) {
       this.logger.error(`Failed to queue record. MonPlanId: ${evaluationItem?.monPlanId || 'N/A'}, Error: ${e.message}`, e.stack,);
       this.logger.error(`Aborting transaction`);
 
@@ -390,7 +406,7 @@ export class SubmissionService {
     const userId = submissionQueueParam.userId;
     const userEmail = submissionQueueParam.userEmail;
     const activityId = submissionQueueParam.activityId;
-    const hasCritErrors = submissionQueueParam.hasCritErrors;
+    //const hasCritErrors = submissionQueueParam.hasCritErrors;
     const evaluationItems = submissionQueueParam.items;
 
     try {
@@ -402,7 +418,7 @@ export class SubmissionService {
             userId,
             userEmail,
             activityId,
-            hasCritErrors,
+            //hasCritErrors,
             evaluationItem,
             transactionalEntityManager, // Pass the transactional EntityManager
             queueingStages,

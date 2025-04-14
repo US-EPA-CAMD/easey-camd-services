@@ -33,7 +33,7 @@ payloadDto.items = [dtoItem, dtoItem];
 payloadDto.userId = 'testUser';
 payloadDto.userEmail = 'test@example.com';
 payloadDto.activityId = 'activity123';
-payloadDto.hasCritErrors = false;
+//payloadDto.hasCritErrors = false;
 
 describe('-- Submission Service --', () => {
   let service: SubmissionService;
