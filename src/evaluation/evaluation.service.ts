@@ -205,8 +205,6 @@ export class EvaluationService {
       }, UserId: ${userId || 'N/A'}`,
     );
     try {
-
-      // Proceed with creating the evaluation set if all validations pass
       const currentTime = new Date();
       const evalSetId = uuidv4();
 
