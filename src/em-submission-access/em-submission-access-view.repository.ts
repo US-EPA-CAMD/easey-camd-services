@@ -93,10 +93,7 @@ export class EmSubmissionAccessViewRepository extends Repository<EmSubmissionAcc
     }
     
     // status 'NO WINDOW' will be handled seperately
-
-    query.andWhere(
-      `(em.submissionAvailabilityCode != 'DELETE')`
-    );
+    
     return query.getMany();
   }
 }
