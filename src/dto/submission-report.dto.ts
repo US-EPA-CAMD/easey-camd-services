@@ -48,11 +48,11 @@ export class SubmissionReportDTO {
 
   @ApiProperty()
   @IsString()
-  mostRecet: string;
+  mostRecent: string;
 
   @ApiProperty()
   @IsString()
-  submissionCode: string;
+  submissionStatus: string;
 
   @ApiProperty()
   @IsString()

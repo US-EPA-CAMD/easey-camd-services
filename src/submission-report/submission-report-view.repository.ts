@@ -33,7 +33,7 @@ export class SubmissionListViewRepository extends Repository<SubmissionListView>
         'ss.submissionId',
         'ss.submissionDateTime',
         'ss.severityLevel',
-        'ss.mostRecet',
+        'ss.mostRecent',
         'ss.submissionStatus',
         'ss.severityCode',
         'ss.criticalErrLevelOne',

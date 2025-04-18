@@ -1,7 +1,7 @@
 import { NumericColumnTransformer } from '@us-epa-camd/easey-common/transforms';
 import { BaseEntity, Column, ViewEntity } from 'typeorm';
 
-@ViewEntity({ name: 'camdecmps.vw_submission_list' })
+@ViewEntity({ name: 'camdecmpsaux.vw_submission_list' })
 export class SubmissionListView extends BaseEntity {
 
   @Column({
@@ -60,7 +60,7 @@ export class SubmissionListView extends BaseEntity {
   @Column({
     name: 'most_recent',
   })
-  mostRecet: string;
+  mostRecent: string;
 
   @Column({
     name: 'submission_status',
