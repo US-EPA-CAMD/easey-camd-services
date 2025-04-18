@@ -18,6 +18,7 @@ import { QaCertEvent } from '../entities/qa-cert-event.entity';
 import { QaSuppData } from '../entities/qa-supp.entity';
 import { QaTee } from '../entities/qa-tee.entity';
 import { ReportingPeriod } from '../entities/reporting-period.entity';
+import { SeverityCode } from '../entities/severity-code.entity';
 import { SubmissionQueue } from '../entities/submission-queue.entity';
 import { SubmissionSet } from '../entities/submission-set.entity';
 import { CombinedSubmissionsMap } from '../maps/combined-submissions.map';
@@ -78,7 +79,6 @@ export class SubmissionService {
     userId: string,
     userEmail: string,
     activityId: string,
-    hasCritErrors: boolean,
     evaluationItem: EvaluationItem,
     entityManager: EntityManager,
     queueingStages: { action: string; dateTime: string }[],
@@ -86,6 +86,7 @@ export class SubmissionService {
 
     const submissionSet = new SubmissionSet();
     let currentSubmissionQueue: SubmissionQueue | null = null;
+    let hasCriticalErrors = false;
 
     try {
       const currentTime = new Date();
@@ -93,7 +94,6 @@ export class SubmissionService {
 
       this.logger.log(`Queueing record. setId: ${setId}, MonPlanId: ${evaluationItem?.monPlanId || 'N/A'}, UserId: ${userId || 'N/A'}`,);
 
-      submissionSet.hasCritErrors = hasCritErrors;
       submissionSet.activityId = activityId;
       submissionSet.submissionSetIdentifier = setId;
       submissionSet.monPlanIdentifier = evaluationItem.monPlanId;
@@ -355,9 +355,35 @@ export class SubmissionService {
         }
       }
 
-      this.logger.log(`Successfully queued record. SetId: ${setId}, MonPlanId: ${evaluationItem?.monPlanId || 'N/A'}`,);
+      // Determine if there are any critical errors based on evalStatusCode in the submission
+      // Get all submission queue records for this set
+      const submissionQueueRecords = await entityManager.find(SubmissionQueue, {
+        where: { submissionSetIdentifier: setId },
+      });
 
-    } catch (e) {
+      // Check if any record has a severity code with evalStatusCode of ERR
+      submissionSet.hasCritErrors = false;
+
+      // Iterate through each record to check its severity code's evalStatusCode
+      for (const record of submissionQueueRecords) {
+        const severity = await entityManager.findOneBy(SeverityCode, {
+          severityCode: record.severityCode,
+        });
+
+        if (severity?.evalStatusCode === 'ERR') {
+          submissionSet.hasCritErrors = true;
+          break;
+        }
+      }
+
+      // Only save if there are critical errors
+      if (submissionSet.hasCritErrors) {
+        await entityManager.save(SubmissionSet, submissionSet);
+      }
+
+      this.logger.log(`Successfully queued record. SetId: ${setId}, MonPlanId: ${evaluationItem?.monPlanId || 'N/A'}, hasCritErrors: ${submissionSet.hasCritErrors}`,);
+
+      } catch (e) {
       this.logger.error(`Failed to queue record. MonPlanId: ${evaluationItem?.monPlanId || 'N/A'}, Error: ${e.message}`, e.stack,);
       this.logger.error(`Aborting transaction`);
 
@@ -390,11 +416,9 @@ export class SubmissionService {
     const userId = submissionQueueParam.userId;
     const userEmail = submissionQueueParam.userEmail;
     const activityId = submissionQueueParam.activityId;
-    const hasCritErrors = submissionQueueParam.hasCritErrors;
     const evaluationItems = submissionQueueParam.items;
 
     try {
-
       //wrap everything in a transaction to ensure that all records are queued or none are queued
       await this.entityManager.transaction(async (transactionalEntityManager) => {
         for (const evaluationItem of evaluationItems) {
@@ -402,7 +426,6 @@ export class SubmissionService {
             userId,
             userEmail,
             activityId,
-            hasCritErrors,
             evaluationItem,
             transactionalEntityManager, // Pass the transactional EntityManager
             queueingStages,
