@@ -71,13 +71,11 @@ export class EmSubmissionAccessService {
 
   async createEmSubmissionAccess(
     payload: EmSubmissionAccessCreateDTO,
-    userid?: string,
   ): Promise<EmSubmissionAccessDTO> {
     const currentTime = currentDateTime();
     try {
       const entity = this.repository.create({
         ...payload,
-        userid: userid,
         dataLoadedFlag: null,
         addDate: currentTime,
         updateDate: null,
