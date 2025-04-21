@@ -115,6 +115,7 @@ export class EmSubmissionAccessService {
       recordToUpdate.submissionAvailabilityCode =
         payload?.submissionAvailabilityCode;
       recordToUpdate.resubExplanation = payload?.resubExplanation;
+      recordToUpdate.userid = payload?.userid;
       recordToUpdate.closeDate = payload?.closeDate;
       recordToUpdate.updateDate = currentTime;
 
