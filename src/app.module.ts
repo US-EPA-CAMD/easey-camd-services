@@ -38,6 +38,7 @@ import { EmSubmissionAccessModule } from './em-submission-access/em-submission-a
 import { SubmissionModule } from './submission/submission.module';
 import { MatsFileUploadModule } from './mats-file-upload/mats-file-upload.module';
 import { CopyOfRecordModule } from './copy-of-record/copy-of-record.module';
+import { SubmissionReportModule } from './submission-report/submission-report.module';
 
 @Module({
   imports: [
@@ -58,6 +59,7 @@ import { CopyOfRecordModule } from './copy-of-record/copy-of-record.module';
     ReportWorkspaceModule,
     MailModule,
     ErrorSuppressionsModule,
+    SubmissionReportModule,
     EvaluationModule,
     AdminModule,
     QaTestExtensionExemptionModule,
