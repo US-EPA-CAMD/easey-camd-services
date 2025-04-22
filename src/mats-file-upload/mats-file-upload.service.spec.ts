@@ -6,6 +6,8 @@ import { MonitorPlan } from '../entities/monitor-plan.entity';
 import { TestTypeCode } from '../entities/test-type-code.entity';
 import { MatsBulkFile } from '../entities/mats-bulk-file.entity';
 import { Plant } from '../entities/plant.entity';
+import { DocumentService } from '../submission/document.service';
+import { RecipientListService } from '../submission/recipient-list.service';
 
 jest.mock('@aws-sdk/client-s3');
 
@@ -15,7 +17,23 @@ describe('MatsFileUploadService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [ConfigService, MatsFileUploadService, EntityManager],
+      providers: [ConfigService,
+        MatsFileUploadService,
+        EntityManager,
+        {
+          provide: RecipientListService,
+          useValue: {
+            getEmailRecipients: jest.fn(),
+          },
+        },
+        {
+          provide: DocumentService,
+          useValue: {
+            addCertificationStatements: jest.fn(),
+            sendForSigning: jest.fn(),
+          },
+        },
+      ],
     }).compile();
 
     service = module.get(MatsFileUploadService);
