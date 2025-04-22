@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { EntityManager } from 'typeorm';
+import { HttpService } from '@nestjs/axios';
 import { MatsFileUploadService } from './mats-file-upload.service';
 import { ConfigService } from '@nestjs/config';
 import { MonitorPlan } from '../entities/monitor-plan.entity';
@@ -8,6 +9,9 @@ import { MatsBulkFile } from '../entities/mats-bulk-file.entity';
 import { Plant } from '../entities/plant.entity';
 import { DocumentService } from '../submission/document.service';
 import { RecipientListService } from '../submission/recipient-list.service';
+import { MailEvalService } from '../mail/mail-eval.service';
+import { LoggerModule } from '@us-epa-camd/easey-common';
+
 
 jest.mock('@aws-sdk/client-s3');
 
@@ -17,6 +21,7 @@ describe('MatsFileUploadService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
+      imports: [LoggerModule],
       providers: [ConfigService,
         MatsFileUploadService,
         EntityManager,
@@ -27,10 +32,23 @@ describe('MatsFileUploadService', () => {
           },
         },
         {
+          provide: MailEvalService,
+          useValue: {
+            sendEmailWithRetry: jest.fn(),
+          },
+        },
+        {
           provide: DocumentService,
           useValue: {
             addCertificationStatements: jest.fn(),
             sendForSigning: jest.fn(),
+          },
+        },
+        {
+          provide: HttpService,
+          useValue: {
+            get: jest.fn(),
+            post: jest.fn(),
           },
         },
       ],
