@@ -41,8 +41,8 @@ applications:
       TZ: America/New_York
       EASEY_CAMD_SERVICES_RECIPIENT_LIST_API: ((recipientsListApi))
       EASEY_DB_MAX_CONNECTION_POOL: ((maxConnectionPool))
+      EASEY_DB_IDLE_TIMEOUT: ((idleTimeout))
       EASEY_DB_CONNECTION_TIMEOUT: ((connectionTimeout))
-      EASEY_DB_IDLE_CONNECTION_TIMEOUT: ((acquireConnectionFromPoolTimeout))
       EASEY_DB_STATEMENT_TIMEOUT: ((statementTimeout))
       EASEY_DB_IDLE_TRANS_SESSION_TIMEOUT: ((idleInTransactionSessionTimeout))
       EASEY_DB_SQL_LOGGING: ((sqlLogging))
