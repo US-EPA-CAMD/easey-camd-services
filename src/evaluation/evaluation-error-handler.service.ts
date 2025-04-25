@@ -84,12 +84,6 @@ export class EvaluationErrorHandlerService {
             errorNote,
           );
         }
-        await this.evaluationSetHelper.setRecordStatusCode(
-          evaluationSet,
-          [currentEvaluationQueue],
-          'ERROR',
-          errorNote,
-        );
       } catch (updateQueueError) {
         this.logger.error(
           'Error during handleQueueingError for evaluation set, while updating evaluation queue:' +
@@ -232,7 +226,7 @@ export class EvaluationErrorHandlerService {
     try {
       evaluationQueueDateDisplay =
         await this.evaluationSetHelper.getFormattedDateTime(
-          evaluationSet?.submittedOn || new Date(),
+          evaluationSet?.queuedTime || new Date(),
         );
     } catch (dateDisplayError) {
       this.logger.error('Failed to get submission date display.', dateDisplayError.stack, );
@@ -322,9 +316,9 @@ export class EvaluationErrorHandlerService {
     try {
       fromEmail =
         this.configService.get<string>('app.defaultFromEmail') ||
-        'noreply@epa.gov';
+        'ecmps@epa.gov';
     } catch (configError) {
-      fromEmail = 'noreply@epa.gov';
+      fromEmail = 'ecmps@epa.gov';
       this.logger.error( 'Failed to get default fromEmail. Using ' + fromEmail, configError.stack, );
     }
 

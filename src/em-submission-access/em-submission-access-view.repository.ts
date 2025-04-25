@@ -13,7 +13,7 @@ export class EmSubmissionAccessViewRepository extends Repository<EmSubmissionAcc
   async getEmSubmissionAccess(
     params: EmSubmissionAccessParamsDTO,
   ): Promise<EmSubmissionAccessView[]> {
-    const { orisCode, monitorPlanId, year, quarter, status } = params;
+    const { orisCode, year, quarter, status } = params;
     let query = this.createQueryBuilder('em').select([
       'em.id',
       'em.facilityId',
@@ -49,12 +49,6 @@ export class EmSubmissionAccessViewRepository extends Repository<EmSubmissionAcc
       });
     }
 
-    if (monitorPlanId) {
-      query.andWhere('em.monitorPlanId = :monitorPlanId', {
-        monitorPlanId: monitorPlanId,
-      });
-    }
-
     if (year) {
       query.andWhere('em.year = :year', {
         year: year,
@@ -69,23 +63,37 @@ export class EmSubmissionAccessViewRepository extends Repository<EmSubmissionAcc
 
     if (status === 'OPEN') {
       query.andWhere(
-        `(em.emissionStatusCode = 'APPRVD') AND (em.submissionAvailabilityCode IN ('REQUIRE', 'GRANTED') OR em.submissionAvailabilityCode IS NULL)`,
+        `(em.submissionAvailabilityCode IN ('REQUIRE', 'GRANTED'))`,
         { status: status },
       );
     }
     if (status === 'PENDING') {
       query.andWhere(
-        `(em.emissionStatusCode = 'PENDING') AND (em.submissionAvailabilityCode IN ('REQUIRE', 'GRANTED') OR em.submissionAvailabilityCode IS NULL)`,
+        `(em.emissionStatusCode = 'PENDING')`,
         { status: status },
       );
     }
     if (status === 'CLOSED') {
       query.andWhere(
-        `(em.emissionStatusCode = 'RECVD' OR em.submissionAvailabilityCode IN ('DELETE','CRITERR', 'NOTSUB'))`,
+        `((em.emissionStatusCode IS NULL AND em.closeDate < CURRENT_TIMESTAMP) OR (em.emissionStatusCode <> 'PENDING' AND em.submissionAvailabilityCode NOT IN ('GRANTED','REQUIRE', 'DELETE')))`,
         { status: status },
       );
     }
-
+    if (status === 'CANCELLED') {
+      query.andWhere(
+        `(em.submissionAvailabilityCode = 'DELETE')`,
+        { status: status },
+      );
+    }
+    if (status === 'NOT YET OPEN') {
+      query.andWhere(
+        `(em.submissionAvailabilityCode IS NULL AND em.closeDate >= CURRENT_TIMESTAMP)`,
+        { status: status },
+      );
+    }
+    
+    // status 'NO WINDOW' will be handled seperately
+    
     return query.getMany();
   }
 }

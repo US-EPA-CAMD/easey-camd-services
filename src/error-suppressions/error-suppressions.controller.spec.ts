@@ -53,8 +53,8 @@ describe('-- Error Suppressions Controller --', () => {
       jest
         .spyOn(service, 'getErrorSuppressions')
         .mockResolvedValue(mockedValues);
-      expect(await controller.getErrorSuppressions(paramsDto)).toBe(
-        mockedValues,
+      expect(await controller.getErrorSuppressions(paramsDto)).toStrictEqual(
+        { items: mockedValues },
       );
     });
   });

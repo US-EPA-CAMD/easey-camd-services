@@ -47,7 +47,7 @@ describe('QaCertEventController', () => {
 
     expect(
       await controller.getQaCertEventViewData(new QaCertMaintParamsDto()),
-    ).toEqual([]);
+    ).toEqual({ items: []} );
   });
 
   it('should return data for updateSubmissionStatus controller method', async () => {

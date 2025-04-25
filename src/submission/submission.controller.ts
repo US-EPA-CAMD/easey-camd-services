@@ -12,11 +12,13 @@ import { SubmissionQueueDTO } from '../dto/submission-queue.dto';
 import { ClientTokenGuard } from '@us-epa-camd/easey-common/guards';
 import { SubmissionProcessService } from './submission-process.service';
 import { ProcessParamsDTO } from '../dto/process-params.dto';
-import { SubmissionsLastUpdatedResponseDTO } from '../dto/submission-last-updated.dto';
+import { SubmissionsLastUpdatedQueryDTO, SubmissionsLastUpdatedResponseDTO } from '../dto/submission-last-updated.dto';
+import { ApiExcludeControllerByEnv } from '../decorators/swagger-decorator';
 
 @Controller()
 @ApiTags('Submission')
 @ApiSecurity('APIKey')
+@ApiExcludeControllerByEnv()
 export class SubmissionController {
   constructor(
     private service: SubmissionService,
@@ -30,9 +32,9 @@ export class SubmissionController {
       'Returns all submission records that have been updated / submitted since the input date.',
   })
   async lastUpdated(
-    @Query('date') queryTime: string,
+    @Query() params: SubmissionsLastUpdatedQueryDTO,
   ): Promise<SubmissionsLastUpdatedResponseDTO> {
-    return this.service.getLastUpdated(queryTime);
+    return this.service.getLastUpdated(params.date);
   }
 
   @Post('queue')

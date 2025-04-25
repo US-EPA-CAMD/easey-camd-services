@@ -9,7 +9,6 @@ import { Status } from '../enums/status.enum';
 import { Type } from 'class-transformer';
 import { Plant } from '../entities/plant.entity';
 import { IsValidCode, IsInRange } from '@us-epa-camd/easey-common/pipes';
-import { MonitorPlan } from '../entities/monitor-plan.entity';
 import { currentDateTime } from '@us-epa-camd/easey-common/utilities/functions';
 import {FindOneOptions} from "typeorm/find-options/FindOneOptions";
 
@@ -30,16 +29,7 @@ export class EmSubmissionAccessParamsDTO {
   @Type(() => Number)
   orisCode?: number;
 
-  @ApiProperty()
-  @IsNotEmpty({message: () => 'Configuration is required'})
-  @IsValidCode(MonitorPlan, {
-    message: (args: ValidationArguments) => {
-      return `The reported ${args.property} is invalid.`;
-    },
-  })
-  monitorPlanId?: string;
-
-  @IsOptional()
+  @IsNotEmpty({message: () => 'Year is required'})
   @ApiProperty()
   @IsInRange(1930, currentDateTime().getFullYear(), {
     message: () => {
@@ -49,7 +39,7 @@ export class EmSubmissionAccessParamsDTO {
   @Type(() => Number)
   year?: number;
 
-  @IsOptional()
+  @IsNotEmpty({message: () => 'Quarter is required'})
   @ApiProperty()
   @IsInRange(1, 4, {
     message: () => {
@@ -63,7 +53,7 @@ export class EmSubmissionAccessParamsDTO {
   @ApiProperty({ enum: Status })
   @IsEnum(Status, {
     message: () => {
-      return `The status must have a value of OPEN,PENDING or CLOSED,`;
+      return `The status must have a value of OPEN, PENDING, CLOSED, CANCELLED, NO WINDOW, or NOT YET OPEN`;
     },
   })
   status?: string;

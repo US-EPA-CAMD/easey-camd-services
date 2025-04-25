@@ -53,7 +53,7 @@ describe('QaTestExtensionExemptionController', () => {
 
     expect(
       await controller.getQaTeeViewData(new QaCertMaintParamsDto()),
-    ).toEqual([]);
+    ).toEqual({ items: [] });
   });
 
   it('should return data for updateSubmissionStatus controller method', async () => {
