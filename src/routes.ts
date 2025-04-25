@@ -5,6 +5,7 @@ import { ReportModule } from './report/report.module';
 import { ReportWorkspaceModule } from './report-workspace/report.module';
 import { MailModule } from './mail/mail.module';
 import { ErrorSuppressionsModule } from './error-suppressions/error-suppressions.module';
+import { SubmissionReportModule } from './submission-report/submission-report.module';
 import { AdminModule } from './admin/admin.module';
 import { QaMaintenanceModule } from './qa-maintenance/qa-maintenance.module';
 import { QaTestSummaryModule } from './qa-test-summary/qa-test-summary.module';
@@ -76,6 +77,10 @@ const routes = [
       {
         path: '/error-suppressions',
         module: ErrorSuppressionsModule,
+      },
+      {
+        path: '/submission-report',
+        module: SubmissionReportModule,
       },
     ],
   },
