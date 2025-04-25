@@ -139,14 +139,14 @@ describe('RecipientListService', () => {
         .mockReturnValue(of(mockResponse) as any);
       jest.spyOn(service, 'getClientToken').mockResolvedValue('mockToken');
 
-      const result = await service.getEmailRecipients('', '', '', '', '');
+      const result = await service.getEmailRecipients('', '', false, '', '');
       expect(result).toEqual('email1@example.com;email2@example.com');
     });
 
     it('should return an empty string if client token is not obtained', async () => {
       jest.spyOn(service, 'getClientToken').mockResolvedValue('');
 
-      const result = await service.getEmailRecipients('', '', '', '', '');
+      const result = await service.getEmailRecipients('', '', false, '', '');
       expect(result).toEqual('');
       expect(logger.error).toHaveBeenCalledWith(
         'Unable to obtain client token from auth-api. Cannot proceed with emailRecipients API call',
@@ -167,7 +167,7 @@ describe('RecipientListService', () => {
         .mockReturnValue(of(mockResponse) as any);
       jest.spyOn(service, 'getClientToken').mockResolvedValue('mockToken');
 
-      const result = await service.getEmailRecipients('', '', '', '', '');
+      const result = await service.getEmailRecipients('', '', false, '', '');
       expect(result).toEqual('');
       expect(logger.error).toHaveBeenCalledWith(
         'Invalid response format from emailRecipients API',
@@ -181,7 +181,7 @@ describe('RecipientListService', () => {
         throw new Error('API Error With Logging');
       });
 
-      const result = await service.getEmailRecipients('', '', '', '', '');
+      const result = await service.getEmailRecipients('', '', false, '', '');
       expect(result).toEqual('');
       expect(logger.error).toHaveBeenCalledWith(
         'Error occurred during the API call to emailRecipients',

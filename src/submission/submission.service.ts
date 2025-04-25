@@ -18,6 +18,7 @@ import { QaCertEvent } from '../entities/qa-cert-event.entity';
 import { QaSuppData } from '../entities/qa-supp.entity';
 import { QaTee } from '../entities/qa-tee.entity';
 import { ReportingPeriod } from '../entities/reporting-period.entity';
+import { SeverityCode } from '../entities/severity-code.entity';
 import { SubmissionQueue } from '../entities/submission-queue.entity';
 import { SubmissionSet } from '../entities/submission-set.entity';
 import { CombinedSubmissionsMap } from '../maps/combined-submissions.map';
@@ -78,7 +79,6 @@ export class SubmissionService {
     userId: string,
     userEmail: string,
     activityId: string,
-    hasCritErrors: boolean,
     evaluationItem: EvaluationItem,
     entityManager: EntityManager,
     queueingStages: { action: string; dateTime: string }[],
@@ -93,7 +93,6 @@ export class SubmissionService {
 
       this.logger.log(`Queueing record. setId: ${setId}, MonPlanId: ${evaluationItem?.monPlanId || 'N/A'}, UserId: ${userId || 'N/A'}`,);
 
-      submissionSet.hasCritErrors = hasCritErrors;
       submissionSet.activityId = activityId;
       submissionSet.submissionSetIdentifier = setId;
       submissionSet.monPlanIdentifier = evaluationItem.monPlanId;
@@ -103,7 +102,7 @@ export class SubmissionService {
       submissionSet.statusCode = 'QUEUED';
 
       //Push queueing stage here
-      queueingStages.push({ action: 'SET_ID_ASSIGNED', dateTime: await this.submissionSetHelper.getFormattedDateTime() || 'N/A' });
+      queueingStages.push({ action: 'SET_ID_ASSIGNED', dateTime: (await this.submissionSetHelper.getFormattedDateTime()) || 'N/A' });
 
       const locations = await entityManager.query(
         `SELECT camdecmpswks.get_mp_location_list($1);`,
@@ -136,7 +135,7 @@ export class SubmissionService {
       await entityManager.save(SubmissionSet, submissionSet);
 
       //Push queueing stage here
-      queueingStages.push({ action: 'SET_SAVED', dateTime: await this.submissionSetHelper.getFormattedDateTime() || 'N/A' });
+      queueingStages.push({ action: 'SET_SAVED', dateTime: (await this.submissionSetHelper.getFormattedDateTime()) || 'N/A' });
 
       if (evaluationItem.submitMonPlan === true) {
         this.logger.log(`Creating a monitoring plan record. setId: ${setId}, MonPlanId: ${evaluationItem?.monPlanId || 'N/A'}`,);
@@ -167,7 +166,7 @@ export class SubmissionService {
         await entityManager.save(mp);
 
         //Push queueing stage here
-        queueingStages.push({ action: 'MP_QUEUED', dateTime: await this.submissionSetHelper.getFormattedDateTime() || 'N/A' });
+        queueingStages.push({ action: 'MP_QUEUED', dateTime: (await this.submissionSetHelper.getFormattedDateTime()) || 'N/A' });
       }
 
       this.logger.log(`Queueing ${evaluationItem?.testSumIds?.length} test summary records.`,);
@@ -204,7 +203,7 @@ export class SubmissionService {
         }
 
         //Push queueing stage here
-        queueingStages.push({ action: 'TEST_QUEUED', dateTime: await this.submissionSetHelper.getFormattedDateTime() || 'N/A' });
+        queueingStages.push({ action: 'TEST_QUEUED', dateTime: (await this.submissionSetHelper.getFormattedDateTime()) || 'N/A' });
       }
 
       this.logger.log(`Queueing ${evaluationItem?.qceIds?.length} QCE records.`,);
@@ -240,7 +239,7 @@ export class SubmissionService {
           await entityManager.save(qce);
         }
         //Push queueing stage here
-        queueingStages.push({ action: 'QCE_QUEUED', dateTime: await this.submissionSetHelper.getFormattedDateTime() || 'N/A' });
+        queueingStages.push({ action: 'QCE_QUEUED', dateTime: (await this.submissionSetHelper.getFormattedDateTime()) || 'N/A' });
       }
 
       this.logger.log(`Queueing ${evaluationItem?.teeIds?.length} TEE records.`,);
@@ -274,7 +273,7 @@ export class SubmissionService {
         }
 
         //Push queueing stage here
-        queueingStages.push({ action: 'TEE_QUEUED', dateTime: await this.submissionSetHelper.getFormattedDateTime() || 'N/A' });
+        queueingStages.push({ action: 'TEE_QUEUED', dateTime: (await this.submissionSetHelper.getFormattedDateTime()) || 'N/A' });
       }
 
       this.logger.log(`Queueing emissions with ${evaluationItem?.emissionsReportingPeriods?.length} reporting period(s).`,);
@@ -319,7 +318,7 @@ export class SubmissionService {
         }
 
         //Push queueing stage here
-        queueingStages.push({ action: 'EM_QUEUED', dateTime: await this.submissionSetHelper.getFormattedDateTime() || 'N/A' });
+        queueingStages.push({ action: 'EM_QUEUED', dateTime: (await this.submissionSetHelper.getFormattedDateTime()) || 'N/A' });
       }
 
       this.logger.log(`Queueing ${evaluationItem?.matsBulkFiles?.length} MATS records.`,);
@@ -351,13 +350,39 @@ export class SubmissionService {
           }
 
           //Push queueing stage here
-          queueingStages.push({ action: 'MATS_QUEUED', dateTime: await this.submissionSetHelper.getFormattedDateTime() || 'N/A' });
+          queueingStages.push({ action: 'MATS_QUEUED', dateTime: (await this.submissionSetHelper.getFormattedDateTime()) || 'N/A' });
         }
       }
 
-      this.logger.log(`Successfully queued record. SetId: ${setId}, MonPlanId: ${evaluationItem?.monPlanId || 'N/A'}`,);
+      // Determine if there are any critical errors based on evalStatusCode in the submission
+      // Get all submission queue records for this set
+      const submissionQueueRecords = await entityManager.find(SubmissionQueue, {
+        where: { submissionSetIdentifier: setId },
+      });
 
-    } catch (e) {
+      // Check if any record has a severity code with evalStatusCode of ERR
+      submissionSet.hasCritErrors = false;
+
+      // Iterate through each record to check its severity code's evalStatusCode
+      for (const record of submissionQueueRecords) {
+        const severity = await entityManager.findOneBy(SeverityCode, {
+          severityCode: record.severityCode,
+        });
+
+        if (severity?.evalStatusCode === 'ERR') {
+          submissionSet.hasCritErrors = true;
+          break;
+        }
+      }
+
+      // Only save if there are critical errors
+      if (submissionSet.hasCritErrors) {
+        await entityManager.save(SubmissionSet, submissionSet);
+      }
+
+      this.logger.log(`Successfully queued record. SetId: ${setId}, MonPlanId: ${evaluationItem?.monPlanId || 'N/A'}, hasCritErrors: ${submissionSet.hasCritErrors}`,);
+
+      } catch (e) {
       this.logger.error(`Failed to queue record. MonPlanId: ${evaluationItem?.monPlanId || 'N/A'}, Error: ${e.message}`, e.stack,);
       this.logger.error(`Aborting transaction`);
 
@@ -385,16 +410,14 @@ export class SubmissionService {
     // Build submissionStages array
     const queueingStages: { action: string; dateTime: string }[] = [];
     //Push queueing stage here
-    queueingStages.push({ action: 'QUEUEING_STARTED', dateTime: await this.submissionSetHelper.getFormattedDateTime() || 'N/A' });
+    queueingStages.push({ action: 'QUEUEING_STARTED', dateTime: (await this.submissionSetHelper.getFormattedDateTime()) || 'N/A' });
 
     const userId = submissionQueueParam.userId;
     const userEmail = submissionQueueParam.userEmail;
     const activityId = submissionQueueParam.activityId;
-    const hasCritErrors = submissionQueueParam.hasCritErrors;
     const evaluationItems = submissionQueueParam.items;
 
     try {
-
       //wrap everything in a transaction to ensure that all records are queued or none are queued
       await this.entityManager.transaction(async (transactionalEntityManager) => {
         for (const evaluationItem of evaluationItems) {
@@ -402,7 +425,6 @@ export class SubmissionService {
             userId,
             userEmail,
             activityId,
-            hasCritErrors,
             evaluationItem,
             transactionalEntityManager, // Pass the transactional EntityManager
             queueingStages,
@@ -411,7 +433,7 @@ export class SubmissionService {
       });
 
       //Push queueing stage here
-      queueingStages.push({ action: 'QUEUEING_COMPLETED', dateTime: await this.submissionSetHelper.getFormattedDateTime() || 'N/A' });
+      queueingStages.push({ action: 'QUEUEING_COMPLETED', dateTime: (await this.submissionSetHelper.getFormattedDateTime()) || 'N/A' });
 
       this.logger.log(`Finished queueing submission records for UserId: ${submissionQueueParam?.userId || 'N/A'}`,);
     } catch (error) {
