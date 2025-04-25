@@ -1,5 +1,5 @@
 export enum ReasonCodes {
-  APPROVE,
-  BUG,
-  CONFIG,
+  APPROVE = 'APPROVE',
+  BUG = 'BUG',
+  CONFIG = 'CONFIG',
 }
