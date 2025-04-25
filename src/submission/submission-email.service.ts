@@ -150,10 +150,28 @@ export class SubmissionEmailService {
     //Get the recipients list from the recipient's list API
     const recipientsListApiEnabled = this.configService.get<boolean>('app.recipientsListApiEnabled');
 
+    // get the value for isMats parameter
+    let isMats = false;
+
+    const monPlanId = submissionEmailParamsDto?.submissionSet?.monPlanIdentifier;
+    if (monPlanId) {
+      const sql = `
+        SELECT *
+          FROM camd.unit_program up
+            JOIN camdecmpswks.monitor_location ml USING(unit_id)
+            JOIN camdecmpswks.monitor_plan_location mpl USING(mon_loc_id)
+            JOIN camdecmpswks.monitor_plan mp USING(mon_plan_id)
+          WHERE mp.mon_plan_id = $1
+            AND up.prg_cd = 'MATS';
+      `;
+      const result = await this.entityManager.query(sql, [monPlanId]);
+      isMats = result && result.length > 0;
+    }
+
     submissionEmailParamsDto.ccEmail = recipientsListApiEnabled ? await this.recipientListService.getEmailRecipients(
-        submissionSet.userIdentifier,
-        submissionEmailParamsDto.processCode,
-      '',
+      submissionSet.userIdentifier,
+      submissionEmailParamsDto.processCode,
+      isMats,
       'SUBMISSIONCONFIRMATION',
       submissionEmailParamsDto.facId?.toString(),
     ) : '';
