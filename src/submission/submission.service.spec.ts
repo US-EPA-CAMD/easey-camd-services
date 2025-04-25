@@ -19,7 +19,6 @@ import { CheckSession } from '../entities/check-session.entity';
 import { ErrorHandlerService } from './error-handler.service';
 import { SubmissionSetHelperService } from './submission-set-helper.service';
 import { SeverityCode } from '../entities/severity-code.entity';
-import { SubmissionQueue } from '../entities/submission-queue.entity';
 import { SubmissionSet } from '../entities/submission-set.entity';
 
 const dtoItem = new EvaluationItem();
