@@ -142,7 +142,6 @@ export class MatsFileUploadService {
   }
 
   async matsSubmissionProcess(matsProcessParams: MatsProcessParamsDTO, req: Request) {
-
     let submission: MatsDataSubmission;
     let payloadFiles: MatsDataSubmissionPayloadFile[];
     const matsDataSubId = matsProcessParams.matsDataSubmissionId;
@@ -156,8 +155,8 @@ export class MatsFileUploadService {
       if (!submission) {
         throw new EaseyException(new Error(`MATS Data Submission with id ${matsDataSubId} not found.`), HttpStatus.NOT_FOUND);
       }
-      // submission.startedTime = new Date();
-      // await this.entityManager.save(submission);
+      submission.startedTime = new Date();
+      await this.entityManager.save(submission);
 
 
       // Gather documents for CDX submission
@@ -196,13 +195,11 @@ export class MatsFileUploadService {
       // Perform CDX submission
       const createActivityRes = await this.createActivity(req, matsProcessParams);
       const activityId = createActivityRes.activityId;
-      this.logger.debug(`activityId: ${activityId}`);
-
-      // submission.activityId = activityId;
+      submission.activityId = activityId;
 
       // Send documents for signing
       await this.documentService.sendForSigning(activityId, folderPath);
-      // await this.entityManager.save(submission);
+      await this.entityManager.save(submission);
 
       // Copy files to main bucket
       for (const file of payloadFiles) {
@@ -216,17 +213,17 @@ export class MatsFileUploadService {
 
         file.mainS3BucketFilePath = file.tempS3BucketFilePath;
         file.mainS3BucketFileTime = new Date();
-        // await this.entityManager.save(file);
+        await this.entityManager.save(file);
       }
 
       // Send confirmation email
       await this.sendMatsSubmissionConfirmation(submission);
 
       // Update completion status if no errors
-      // submission.completedTime = new Date();
-      // submission.note = null;
-      // submission.noteTime = null;
-      // await this.entityManager.save(submission);
+      submission.completedTime = new Date();
+      submission.note = null;
+      submission.noteTime = null;
+      await this.entityManager.save(submission);
 
 
     } catch (error) {
@@ -234,11 +231,12 @@ export class MatsFileUploadService {
 
       // Update error status if error occurred
       if (submission) {
-        //   submission.completedTime = null;
-        //   submission.note = error.message;
-        //   submission.noteTime = new Date();
-        //   await this.entityManager.save(submission);
+        submission.completedTime = null;
+        submission.note = error.message;
+        submission.noteTime = new Date();
+        await this.entityManager.save(submission);
       }
+
       throw new EaseyException(error, error.status);
 
     }
@@ -259,7 +257,6 @@ export class MatsFileUploadService {
     const url = `${this.configService.get<string>('app.authApi.uri')}/sign/create-activity`;
     const body = { ...createActivityUSerData };
 
-    this.logger.debug(`tokentokentokentoken: ${token}`)
     const headers = {
       "x-api-key": this.configService.get<string>('app.apiKey'),
       authorization: `${token}`,
@@ -303,7 +300,7 @@ export class MatsFileUploadService {
     submissionEmailParamsDto.toEmail = recipientsListApiEnabled ? await this.recipientListService.getEmailRecipients(
       submission.userId,
       'PDF',
-      'True',
+      true,
       'SUBMISSIONCONFIRMATION',
       submission.facId?.toString(),
     ) : '';
@@ -312,7 +309,7 @@ export class MatsFileUploadService {
     submissionEmailParamsDto.templateContext['PLANT_STATE'] = facility.state;
     submissionEmailParamsDto.templateContext['ORIS_CODE'] = facility.orisCode;
     submissionEmailParamsDto.templateContext['LOCATION_LIST'] = stackName || unit.name;
-    submissionEmailParamsDto.templateContext['SUBMISSION_DATE'] = "04/22/2025" //submission.completedTime;
+    submissionEmailParamsDto.templateContext['SUBMISSION_DATE'] = submission.completedTime;
 
     await this.mailEvalService.sendEmailWithRetry(
       submissionEmailParamsDto.toEmail,

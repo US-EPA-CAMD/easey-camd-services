@@ -39,9 +39,6 @@ export class MatsDataSubmission extends BaseEntity {
   @Column({ name: 'mon_plan_id' })
   monPlanId: string;
 
-  @Column({ name: 'mats_status_cd' })
-  matsStatusCd: string;
-
   @Column({ name: 'user_id' })
   userId: string;
 
@@ -51,18 +48,21 @@ export class MatsDataSubmission extends BaseEntity {
   @Column({ name: 'update_time', type: 'timestamp', nullable: true })
   updateTime: Date;
 
-  // @Column({ name: 'started_time', type: 'timestamp', nullable: true })
-  // startedTime: Date;
+  @Column({ name: 'queued_time', type: 'timestamp', nullable: true })
+  queued_Time: Date;
 
-  // @Column({ name: 'completed_time', type: 'timestamp', nullable: true })
-  // completedTime: Date;
+  @Column({ name: 'started_time', type: 'timestamp', nullable: true })
+  startedTime: Date;
 
-  // @Column({ name: 'note', type: 'text', nullable: true })
-  // note: string;
+  @Column({ name: 'completed_time', type: 'timestamp', nullable: true })
+  completedTime: Date;
 
-  // @Column({ name: 'note_time', type: 'timestamp', nullable: true })
-  // noteTime: Date;
+  @Column({ name: 'note', type: 'text', nullable: true })
+  note: string;
 
-  // @Column({ name: 'activity_id', nullable: true })
-  // activityId: string;
+  @Column({ name: 'note_time', type: 'timestamp', nullable: true })
+  noteTime: Date;
+
+  @Column({ name: 'activity_id', nullable: true })
+  activityId: string;
 }
