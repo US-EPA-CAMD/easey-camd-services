@@ -86,7 +86,6 @@ export class SubmissionService {
 
     const submissionSet = new SubmissionSet();
     let currentSubmissionQueue: SubmissionQueue | null = null;
-    let hasCriticalErrors = false;
 
     try {
       const currentTime = new Date();
@@ -103,7 +102,7 @@ export class SubmissionService {
       submissionSet.statusCode = 'QUEUED';
 
       //Push queueing stage here
-      queueingStages.push({ action: 'SET_ID_ASSIGNED', dateTime: await this.submissionSetHelper.getFormattedDateTime() || 'N/A' });
+      queueingStages.push({ action: 'SET_ID_ASSIGNED', dateTime: (await this.submissionSetHelper.getFormattedDateTime()) || 'N/A' });
 
       const locations = await entityManager.query(
         `SELECT camdecmpswks.get_mp_location_list($1);`,
@@ -136,7 +135,7 @@ export class SubmissionService {
       await entityManager.save(SubmissionSet, submissionSet);
 
       //Push queueing stage here
-      queueingStages.push({ action: 'SET_SAVED', dateTime: await this.submissionSetHelper.getFormattedDateTime() || 'N/A' });
+      queueingStages.push({ action: 'SET_SAVED', dateTime: (await this.submissionSetHelper.getFormattedDateTime()) || 'N/A' });
 
       if (evaluationItem.submitMonPlan === true) {
         this.logger.log(`Creating a monitoring plan record. setId: ${setId}, MonPlanId: ${evaluationItem?.monPlanId || 'N/A'}`,);
@@ -167,7 +166,7 @@ export class SubmissionService {
         await entityManager.save(mp);
 
         //Push queueing stage here
-        queueingStages.push({ action: 'MP_QUEUED', dateTime: await this.submissionSetHelper.getFormattedDateTime() || 'N/A' });
+        queueingStages.push({ action: 'MP_QUEUED', dateTime: (await this.submissionSetHelper.getFormattedDateTime()) || 'N/A' });
       }
 
       this.logger.log(`Queueing ${evaluationItem?.testSumIds?.length} test summary records.`,);
@@ -204,7 +203,7 @@ export class SubmissionService {
         }
 
         //Push queueing stage here
-        queueingStages.push({ action: 'TEST_QUEUED', dateTime: await this.submissionSetHelper.getFormattedDateTime() || 'N/A' });
+        queueingStages.push({ action: 'TEST_QUEUED', dateTime: (await this.submissionSetHelper.getFormattedDateTime()) || 'N/A' });
       }
 
       this.logger.log(`Queueing ${evaluationItem?.qceIds?.length} QCE records.`,);
@@ -240,7 +239,7 @@ export class SubmissionService {
           await entityManager.save(qce);
         }
         //Push queueing stage here
-        queueingStages.push({ action: 'QCE_QUEUED', dateTime: await this.submissionSetHelper.getFormattedDateTime() || 'N/A' });
+        queueingStages.push({ action: 'QCE_QUEUED', dateTime: (await this.submissionSetHelper.getFormattedDateTime()) || 'N/A' });
       }
 
       this.logger.log(`Queueing ${evaluationItem?.teeIds?.length} TEE records.`,);
@@ -274,7 +273,7 @@ export class SubmissionService {
         }
 
         //Push queueing stage here
-        queueingStages.push({ action: 'TEE_QUEUED', dateTime: await this.submissionSetHelper.getFormattedDateTime() || 'N/A' });
+        queueingStages.push({ action: 'TEE_QUEUED', dateTime: (await this.submissionSetHelper.getFormattedDateTime()) || 'N/A' });
       }
 
       this.logger.log(`Queueing emissions with ${evaluationItem?.emissionsReportingPeriods?.length} reporting period(s).`,);
@@ -319,7 +318,7 @@ export class SubmissionService {
         }
 
         //Push queueing stage here
-        queueingStages.push({ action: 'EM_QUEUED', dateTime: await this.submissionSetHelper.getFormattedDateTime() || 'N/A' });
+        queueingStages.push({ action: 'EM_QUEUED', dateTime: (await this.submissionSetHelper.getFormattedDateTime()) || 'N/A' });
       }
 
       this.logger.log(`Queueing ${evaluationItem?.matsBulkFiles?.length} MATS records.`,);
@@ -351,7 +350,7 @@ export class SubmissionService {
           }
 
           //Push queueing stage here
-          queueingStages.push({ action: 'MATS_QUEUED', dateTime: await this.submissionSetHelper.getFormattedDateTime() || 'N/A' });
+          queueingStages.push({ action: 'MATS_QUEUED', dateTime: (await this.submissionSetHelper.getFormattedDateTime()) || 'N/A' });
         }
       }
 
@@ -411,7 +410,7 @@ export class SubmissionService {
     // Build submissionStages array
     const queueingStages: { action: string; dateTime: string }[] = [];
     //Push queueing stage here
-    queueingStages.push({ action: 'QUEUEING_STARTED', dateTime: await this.submissionSetHelper.getFormattedDateTime() || 'N/A' });
+    queueingStages.push({ action: 'QUEUEING_STARTED', dateTime: (await this.submissionSetHelper.getFormattedDateTime()) || 'N/A' });
 
     const userId = submissionQueueParam.userId;
     const userEmail = submissionQueueParam.userEmail;
@@ -434,7 +433,7 @@ export class SubmissionService {
       });
 
       //Push queueing stage here
-      queueingStages.push({ action: 'QUEUEING_COMPLETED', dateTime: await this.submissionSetHelper.getFormattedDateTime() || 'N/A' });
+      queueingStages.push({ action: 'QUEUEING_COMPLETED', dateTime: (await this.submissionSetHelper.getFormattedDateTime()) || 'N/A' });
 
       this.logger.log(`Finished queueing submission records for UserId: ${submissionQueueParam?.userId || 'N/A'}`,);
     } catch (error) {

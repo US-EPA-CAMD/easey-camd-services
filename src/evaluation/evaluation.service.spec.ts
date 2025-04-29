@@ -44,11 +44,19 @@ describe('-- Evaluation Service --', () => {
     mockGetRepository = jest.fn();
     mockSave = jest.fn();
 
+    const mockCreateQueryBuilder = jest.fn().mockReturnValue({
+      innerJoin: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      getOne: jest.fn().mockResolvedValue(null),
+    });
+
     const transactionalEntityManager = {
       query: mockQuery,
       findOneBy: mockFindOneBy,
       getRepository: mockGetRepository,
       save: mockSave,
+      createQueryBuilder: mockCreateQueryBuilder,
     };
 
     mockedEntityManager = {

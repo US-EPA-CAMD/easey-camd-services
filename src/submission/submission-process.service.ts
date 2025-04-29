@@ -44,7 +44,7 @@ export class SubmissionProcessService {
       }
 
       //Push the submission stage here
-      submissionStages.push({ action: 'SUBMISSION_LOADED', dateTime: await this.submissionSetHelper.getFormattedDateTime()  || 'N/A' });
+      submissionStages.push({ action: 'SUBMISSION_LOADED', dateTime: (await this.submissionSetHelper.getFormattedDateTime())  || 'N/A' });
 
       // Update the submission set and submission queue statuses to 'WIP'
       await this.submissionSetHelper.updateSubmissionSetStatus(set, 'WIP');
@@ -53,7 +53,7 @@ export class SubmissionProcessService {
       this.logger.log(`Updating submission records to IP status.`);
 
       //Push the submission stage here
-      submissionStages.push({ action: 'SET_STATUS_WIP', dateTime: await this.submissionSetHelper.getFormattedDateTime()  || 'N/A' });
+      submissionStages.push({ action: 'SET_STATUS_WIP', dateTime: (await this.submissionSetHelper.getFormattedDateTime())  || 'N/A' });
 
       folderPath = path.join(__dirname, uuidv4());
       mkdirSync(folderPath);
@@ -67,30 +67,30 @@ export class SubmissionProcessService {
       this.logger.log(`Completed building documents, successfully written to local file system...`);
 
       //Push the submission stage here
-      submissionStages.push({ action: 'DOCUMENTS_BUILT', dateTime: await this.submissionSetHelper.getFormattedDateTime()  || 'N/A' });
+      submissionStages.push({ action: 'DOCUMENTS_BUILT', dateTime: (await this.submissionSetHelper.getFormattedDateTime())  || 'N/A' });
 
       // Send documents for signing
       this.logger.log(`Sending for signing ... `);
       await this.documentService.sendForSigning(set.activityId, folderPath);
 
       //Push the submission stage here
-      submissionStages.push({ action: 'DOCUMENTS_SIGNED', dateTime: await this.submissionSetHelper.getFormattedDateTime()  || 'N/A' });
-      submissionStages.push({ action: 'PREPARING_FEEDBACK_EMAIL_DATA', dateTime: await this.submissionSetHelper.getFormattedDateTime()  || 'N/A' });
+      submissionStages.push({ action: 'DOCUMENTS_SIGNED', dateTime: (await this.submissionSetHelper.getFormattedDateTime())  || 'N/A' });
+      submissionStages.push({ action: 'PREPARING_FEEDBACK_EMAIL_DATA', dateTime: (await this.submissionSetHelper.getFormattedDateTime())  || 'N/A' });
 
       // Get feedback email data before the call to copyToOfficial, which deletes data from workspace
       this.logger.log(`Collecting data for sending feedback reports...`);
       const submissionFeedbackEmailDataList = await this.submissionEmailService.collectFeedbackReportDataForEmail(set, submissionQueueRecords, submissionStages);
 
       //Push the submission stage here
-      submissionStages.push({ action: 'FEEDBACK_EMAIL_DATA_READY', dateTime: await this.submissionSetHelper.getFormattedDateTime()  || 'N/A' });
-      submissionStages.push({ action: 'COPYING_DATA_TO_OFFICIAL', dateTime: await this.submissionSetHelper.getFormattedDateTime()  || 'N/A' });
+      submissionStages.push({ action: 'FEEDBACK_EMAIL_DATA_READY', dateTime: (await this.submissionSetHelper.getFormattedDateTime())  || 'N/A' });
+      submissionStages.push({ action: 'COPYING_DATA_TO_OFFICIAL', dateTime: (await this.submissionSetHelper.getFormattedDateTime())  || 'N/A' });
 
       // Copy records from workspace to official
       await this.copyToOfficial(set, transactions);
 
       //Push the submission stage here
-      submissionStages.push({ action: 'DATA_COPIED_TO_OFFICIAL', dateTime: await this.submissionSetHelper.getFormattedDateTime()  || 'N/A' });
-      submissionStages.push({ action: 'SENDING_FEEDBACK_EMAILS', dateTime: await this.submissionSetHelper.getFormattedDateTime()  || 'N/A' });
+      submissionStages.push({ action: 'DATA_COPIED_TO_OFFICIAL', dateTime: (await this.submissionSetHelper.getFormattedDateTime())  || 'N/A' });
+      submissionStages.push({ action: 'SENDING_FEEDBACK_EMAILS', dateTime: (await this.submissionSetHelper.getFormattedDateTime())  || 'N/A' });
 
       // Send all feedback status emails once the copy/delete transaction is over
       this.logger.debug('Sending emails with feedback attachment ...');
@@ -117,7 +117,7 @@ export class SubmissionProcessService {
           }
       }
 
-      submissionStages.push({ action: 'FEEDBACK_EMAILS_SENT', dateTime: await this.submissionSetHelper.getFormattedDateTime()  || 'N/A' });
+      submissionStages.push({ action: 'FEEDBACK_EMAILS_SENT', dateTime: (await this.submissionSetHelper.getFormattedDateTime())  || 'N/A' });
 
       // Update the submission set and submission queue statuses to 'COMPLETE' and submission status to 'UPDATED'
       // ONLY if there are no submission queue records that have Errors
@@ -129,7 +129,7 @@ export class SubmissionProcessService {
       }
 
       //Push the submission stage here
-      submissionStages.push({ action: 'SET_STATUS_COMPLETE', dateTime: await this.submissionSetHelper.getFormattedDateTime()  || 'N/A' });
+      submissionStages.push({ action: 'SET_STATUS_COMPLETE', dateTime: (await this.submissionSetHelper.getFormattedDateTime())  || 'N/A' });
 
     } catch (e) {
       this.logger.error('Error while processing submission set: ' + set?.submissionSetIdentifier, e.stack, 'SubmissionProcessService');
