@@ -14,8 +14,13 @@ import { QaTestExtensionExemptionModule } from './qa-test-extension-exemption/qa
 import { EmSubmissionAccessModule } from './em-submission-access/em-submission-access.module';
 import { SubmissionModule } from './submission/submission.module';
 import { MatsFileUploadModule } from './mats-file-upload/mats-file-upload.module';
+import { HealthModule } from '@us-epa-camd/easey-common/health/health.module';
 
 const routes = [
+  {
+    path: '/health',
+    module: HealthModule,
+  },
   {
     path: '/bookmarks',
     module: BookmarkModule,
