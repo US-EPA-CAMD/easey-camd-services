@@ -20,6 +20,7 @@ import { ErrorHandlerService } from './error-handler.service';
 import { SubmissionSetHelperService } from './submission-set-helper.service';
 import { SeverityCode } from '../entities/severity-code.entity';
 import { SubmissionSet } from '../entities/submission-set.entity';
+import { EvaluationSet } from '../entities/evaluation-set.entity';
 
 const dtoItem = new EvaluationItem();
 dtoItem.monPlanId = 'mock';
@@ -163,6 +164,45 @@ describe('-- Submission Service --', () => {
 
     // Test for checking critical errors based on evalStatusCode
   it('should check for critical errors based on evalStatusCode', async () => {
+    // Mock for incomplete SubmissionSet check
+  const submissionSetQueryBuilderMock = {
+    where: jest.fn().mockReturnThis(),
+    andWhere: jest.fn().mockReturnThis(),
+    getOne: jest.fn().mockResolvedValue(null), // No incomplete submissions
+  };
+
+  // Mock for incomplete EvaluationSet check
+  const evaluationSetQueryBuilderMock = {
+    innerJoin: jest.fn().mockReturnThis(),
+    where: jest.fn().mockReturnThis(),
+    andWhere: jest.fn().mockReturnThis(),
+    getOne: jest.fn().mockResolvedValue(null), // No incomplete evaluations
+  };
+
+  // Mock for CheckSession query (MP check)
+  const checkSessionQueryBuilderMock = {
+    where: jest.fn().mockReturnThis(),
+    andWhere: jest.fn().mockReturnThis(),
+    getOne: jest.fn().mockResolvedValue(new CheckSession()), // Return a CheckSession
+  };
+
+  // Mock the createQueryBuilder to return different mocks based on the entity
+  entityManagerMock.createQueryBuilder.mockImplementation((entity) => {
+    if (entity === SubmissionSet) {
+      return submissionSetQueryBuilderMock;
+    } else if (entity === EvaluationSet) {
+      return evaluationSetQueryBuilderMock;
+    } else if (entity === CheckSession) {
+      return checkSessionQueryBuilderMock;
+    }
+    // Default mock for other cases
+    return {
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      getOne: jest.fn().mockResolvedValue(null),
+    };
+  });
+
     // Mock the find method to return submission queue records
     const mockSubmissionQueueRecords = [
       { submissionSetIdentifier: 'test-set-id', severityCode: 'CRIT1' },
