@@ -26,8 +26,11 @@ describe('-- Logging Controller --', () => {
 
   describe('logServerError', () => {
     it('should log a server error', async () => {
-      const request = createMock<Request>();
-      request.headers['x-client-id'] = '';
+      const request = {
+        headers: {
+          'x-client-id': '',
+        },
+      } as unknown as Request;
 
       const mockedManager = {
         findOneBy: jest.fn().mockResolvedValue({ apiRecord: '' }),
