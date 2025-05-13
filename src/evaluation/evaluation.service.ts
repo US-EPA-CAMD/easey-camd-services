@@ -7,6 +7,8 @@ import {
   forwardRef,
 } from '@nestjs/common';
 import { Logger } from '@us-epa-camd/easey-common/logger';
+import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
+
 import { EvaluationDTO, EvaluationItem } from '../dto/evaluation.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { EvaluationSet } from '../entities/evaluation-set.entity';
@@ -22,7 +24,7 @@ import { EvaluationSetHelperService } from './evaluation-set-helper.service';
 import { EvaluationErrorHandlerService } from './evaluation-error-handler.service';
 import { SubmissionSet } from '../entities/submission-set.entity';
 import { SubmissionQueue } from '../entities/submission-queue.entity';
-import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
+import { EvalSubmissionQueueOrderParamsDTO, EvaluationQueuePlaceDTO } from '../dto/eval-submission-queue.dto';
 
 @Injectable()
 export class EvaluationService {
@@ -523,5 +525,47 @@ export class EvaluationService {
         status,
       );
     }
+  }
+
+  async getEvaluationQueueOrder(params: EvalSubmissionQueueOrderParamsDTO): Promise<EvaluationQueuePlaceDTO[]> {
+    try {
+      const query = `
+      SELECT
+        evs.evaluation_set_id as "evaluationSetIdentifier",
+        evq.evaluation_id as "evaluationIdentifier",
+        evs.mon_plan_id as "monPlanIdentifier",
+        evq.test_sum_id as "testSumIdentifier",
+        evq.qa_cert_event_id as "qaCertEventIdentifier",
+        evq.test_extension_exemption_id as "testExtensionExemptionIdentifier",
+        prd.period_abbreviation as "periodAbbreviation",
+        evq.process_cd as "processCode",
+        ROW_NUMBER() OVER (ORDER BY evs.queued_time, evq.evaluation_id) as "queuePosition"
+      FROM
+        camdecmpsaux.evaluation_set evs
+      JOIN camdecmpsaux.evaluation_queue evq
+        ON evq.evaluation_set_id = evs.evaluation_set_id
+        AND evq.status_cd = 'QUEUED'
+      LEFT JOIN camdecmpswks.monitor_plan pln
+        ON pln.mon_plan_id = evs.mon_plan_id
+      LEFT JOIN camdecmpswks.test_summary tst
+        ON tst.test_sum_id = evq.test_sum_id
+      LEFT JOIN camdecmpswks.qa_cert_event qce
+        ON qce.qa_cert_event_id = evq.qa_cert_event_id
+      LEFT JOIN camdecmpswks.test_extension_exemption tee
+        ON tee.test_extension_exemption_id = evq.test_extension_exemption_id
+      LEFT JOIN camdecmpswks.emission_evaluation ems
+        ON ems.mon_plan_id = evs.mon_plan_id
+        AND ems.rpt_period_id = evq.rpt_period_id
+      LEFT JOIN camdecmpsmd.reporting_period prd ON prd.rpt_period_id = ems.rpt_period_id
+      WHERE evs.oris_code = ANY($1)
+    `;
+
+      return this.entityManager.query(query, [params.orisCodes]);
+    } catch (error) {
+      const status = error.status || HttpStatus.INTERNAL_SERVER_ERROR;
+      throw new HttpException(new Error(`Failed to retrieve evaluation queue data`), status);
+    }
+
+
   }
 }

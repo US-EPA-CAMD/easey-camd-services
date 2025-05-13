@@ -3,9 +3,11 @@ import {
   ApiSecurity,
   ApiOkResponse,
   ApiBearerAuth,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { Body, Controller, Post, UseGuards, Get, Query } from '@nestjs/common';
 import { SubmissionService } from './submission.service';
+import { ArrayResponse } from '@us-epa-camd/easey-common/interfaces/common.interface';
 import { AuditLog, RoleGuard } from '@us-epa-camd/easey-common/decorators';
 import { LookupType } from '@us-epa-camd/easey-common/enums';
 import { SubmissionQueueDTO } from '../dto/submission-queue.dto';
@@ -14,6 +16,8 @@ import { SubmissionProcessService } from './submission-process.service';
 import { ProcessParamsDTO } from '../dto/process-params.dto';
 import { SubmissionsLastUpdatedQueryDTO, SubmissionsLastUpdatedResponseDTO } from '../dto/submission-last-updated.dto';
 import { ApiExcludeControllerByEnv } from '../decorators/swagger-decorator';
+import { EvalSubmissionQueueOrderParamsDTO, SubmissionQueuePlaceDTO} from '../dto/eval-submission-queue.dto';
+
 
 @Controller()
 @ApiTags('Submission')
@@ -23,7 +27,7 @@ export class SubmissionController {
   constructor(
     private service: SubmissionService,
     private processService: SubmissionProcessService,
-  ) {}
+  ) { }
 
   @Get('last-updated')
   @ApiOkResponse({
@@ -48,8 +52,8 @@ export class SubmissionController {
   )
   @AuditLog({
     label: 'Creates Submission Queue',
-    requestBodyOutFields:'*',
-    omitFields:['userEmail']
+    requestBodyOutFields: '*',
+    omitFields: ['userEmail']
   })
   async queue(@Body() params: SubmissionQueueDTO): Promise<void> {
     await this.service.queueSubmissionRecords(params);
@@ -65,5 +69,36 @@ export class SubmissionController {
   @UseGuards(ClientTokenGuard)
   async process(@Body() params: ProcessParamsDTO): Promise<void> {
     this.processService.processSubmissionSet(params.submissionSetId);
+  }
+
+  @Get('/queueOrder')
+  @ApiOkResponse({
+    type: SubmissionQueuePlaceDTO,
+    description: 'Get submission queue list for users facilities',
+  })
+  @ApiQuery({
+    style: 'pipeDelimited',
+    name: 'orisCodes',
+    required: true,
+    explode: false,
+  })
+  @RoleGuard(
+    {
+      enforceCheckout: false,
+      queryParam: 'orisCodes',
+      isPipeDelimitted: true,
+      enforceEvalSubmitCheck: false,
+    },
+    LookupType.Facility,
+  )
+  @AuditLog({
+    label: 'Retrieved submission queue lists',
+    requestQueryOutFields: ['orisCodes']
+  })
+  async getSubmissionnQueueOrder(@Query() params: EvalSubmissionQueueOrderParamsDTO): Promise<ArrayResponse<SubmissionQueuePlaceDTO>> {
+    const evaluationQueueOrder = await this.service.getSubmissionnQueueOrder(params);
+    return {
+      items: evaluationQueueOrder
+    }
   }
 }

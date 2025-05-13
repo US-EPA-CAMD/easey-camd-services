@@ -27,6 +27,7 @@ import { ErrorHandlerService } from './error-handler.service';
 import { SubmissionSetHelperService } from './submission-set-helper.service';
 import { EvaluationSet } from '../entities/evaluation-set.entity';
 import { Evaluation } from '../entities/evaluation.entity';
+import { EvalSubmissionQueueOrderParamsDTO, SubmissionQueuePlaceDTO } from '../dto/eval-submission-queue.dto';
 
 @Injectable()
 export class SubmissionService {
@@ -309,9 +310,9 @@ export class SubmissionService {
       submissionSet.facIdentifier = facility.facIdentifier;
       submissionSet.orisCode = facility.orisCode;
       submissionSet.facName = facility.facilityName;
-      
+
       await this.validateSubmissionInput(evaluationItem, entityManager);
-      
+
       await entityManager.save(SubmissionSet, submissionSet);
 
       //Push queueing stage here
@@ -562,7 +563,7 @@ export class SubmissionService {
 
       this.logger.log(`Successfully queued record. SetId: ${setId}, MonPlanId: ${evaluationItem?.monPlanId || 'N/A'}, hasCritErrors: ${submissionSet.hasCritErrors}`,);
 
-      } catch (e) {
+    } catch (e) {
       this.logger.error(`Failed to queue record. MonPlanId: ${evaluationItem?.monPlanId || 'N/A'}, Error: ${e.message}`, e.stack,);
       this.logger.error(`Aborting transaction`);
 
@@ -670,5 +671,47 @@ export class SubmissionService {
     dto.mostRecentUpdateDate = clock;
 
     return dto;
+  }
+
+  async getSubmissionnQueueOrder(params: EvalSubmissionQueueOrderParamsDTO): Promise<SubmissionQueuePlaceDTO[]> {
+    try {
+      const query = `
+      SELECT
+        ss.submission_set_id as "submissionSetIdentifier",
+        sq.submission_id as "submissionIdentifier",
+        ss.mon_plan_id as "monPlanIdentifier",
+        sq.test_sum_id as "testSumIdentifier",
+        sq.qa_cert_event_id as "qaCertEventIdentifier",
+        sq.test_extension_exemption_id as "testExtensionExemptionIdentifier",
+        prd.period_abbreviation as "periodAbbreviation",
+        sq.process_cd as "processCode",
+        ROW_NUMBER() OVER (
+          ORDER BY ss.queued_time, sq.submission_id
+        ) as "queuePosition"
+      FROM
+        camdecmpsaux.submission_set ss
+      JOIN camdecmpsaux.submission_queue sq
+        ON sq.submission_set_id = ss.submission_set_id
+        AND sq.status_cd = 'QUEUED'
+      LEFT JOIN camdecmpswks.monitor_plan pln
+        ON pln.mon_plan_id = ss.mon_plan_id
+      LEFT JOIN camdecmpswks.test_summary tst
+        ON tst.test_sum_id = sq.test_sum_id
+      LEFT JOIN camdecmpswks.qa_cert_event qce
+        ON qce.qa_cert_event_id = sq.qa_cert_event_id
+      LEFT JOIN camdecmpswks.test_extension_exemption tee
+        ON tee.test_extension_exemption_id = sq.test_extension_exemption_id
+      LEFT JOIN camdecmpswks.emission_evaluation ems
+        ON ems.mon_plan_id = ss.mon_plan_id
+        AND ems.rpt_period_id = sq.rpt_period_id
+      LEFT JOIN camdecmpsmd.reporting_period prd ON prd.rpt_period_id = ems.rpt_period_id
+      WHERE ss.oris_code = ANY($1)
+    `;
+
+      return this.entityManager.query(query, [params.orisCodes]);
+    } catch (error) {
+      const status = error.status || HttpStatus.INTERNAL_SERVER_ERROR;
+      throw new HttpException(new Error(`Failed to retrieve submission queue data`), status);
+    }
   }
 }
