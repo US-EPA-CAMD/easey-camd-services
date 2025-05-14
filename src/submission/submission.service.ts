@@ -674,7 +674,6 @@ export class SubmissionService {
   }
 
   async getSubmissionnQueueOrder(params: EvalSubmissionQueueOrderParamsDTO): Promise<SubmissionQueuePlaceDTO[]> {
-    try {
       const query = `
       SELECT
         ss.submission_set_id as "submissionSetIdentifier",
@@ -709,9 +708,5 @@ export class SubmissionService {
     `;
 
       return this.entityManager.query(query, [params.orisCodes]);
-    } catch (error) {
-      const status = error.status || HttpStatus.INTERNAL_SERVER_ERROR;
-      throw new HttpException(new Error(`Failed to retrieve submission queue data`), status);
-    }
   }
 }

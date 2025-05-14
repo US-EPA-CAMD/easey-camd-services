@@ -528,7 +528,6 @@ export class EvaluationService {
   }
 
   async getEvaluationQueueOrder(params: EvalSubmissionQueueOrderParamsDTO): Promise<EvaluationQueuePlaceDTO[]> {
-    try {
       const query = `
       SELECT
         evs.evaluation_set_id as "evaluationSetIdentifier",
@@ -561,11 +560,5 @@ export class EvaluationService {
     `;
 
       return this.entityManager.query(query, [params.orisCodes]);
-    } catch (error) {
-      const status = error.status || HttpStatus.INTERNAL_SERVER_ERROR;
-      throw new HttpException(new Error(`Failed to retrieve evaluation queue data`), status);
-    }
-
-
   }
 }
