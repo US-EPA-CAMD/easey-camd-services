@@ -95,8 +95,8 @@ export class SubmissionController {
     label: 'Retrieved submission queue lists',
     requestQueryOutFields: ['orisCodes']
   })
-  async getSubmissionnQueueOrder(@Query() params: EvalSubmissionQueueOrderParamsDTO): Promise<ArrayResponse<SubmissionQueuePlaceDTO>> {
-    const evaluationQueueOrder = await this.service.getSubmissionnQueueOrder(params);
+  async getSubmissionQueueOrder(@Query() params: EvalSubmissionQueueOrderParamsDTO): Promise<ArrayResponse<SubmissionQueuePlaceDTO>> {
+    const evaluationQueueOrder = await this.service.getSubmissionQueueOrder(params);
     return {
       items: evaluationQueueOrder
     }
