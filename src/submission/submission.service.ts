@@ -123,7 +123,9 @@ export class SubmissionService {
     // Test Summary checks
     for (const testSumId of evaluationItem.testSumIds) {
       const testSumData = await entityManager.findOneBy(TestSummary, { testSumIdentifier: testSumId });
-      if (!testSumData) {
+      const qaSuppData = await entityManager.findOneBy(QaSuppData, { testSumId });
+
+      if (!testSumData || !qaSuppData) {
         throw new EaseyException(new Error(`QA Supplemental Data record not found for ID: ${testSumId}`), HttpStatus.NOT_FOUND);
       }
 
