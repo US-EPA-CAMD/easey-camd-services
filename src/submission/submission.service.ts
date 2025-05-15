@@ -27,6 +27,7 @@ import { ErrorHandlerService } from './error-handler.service';
 import { SubmissionSetHelperService } from './submission-set-helper.service';
 import { EvaluationSet } from '../entities/evaluation-set.entity';
 import { Evaluation } from '../entities/evaluation.entity';
+import { TestSummary } from '../entities/test-summary.entity';
 
 @Injectable()
 export class SubmissionService {
@@ -104,11 +105,13 @@ export class SubmissionService {
     }
 
     // Monitoring Plan checks
-    const mpCheckSession = await entityManager
-      .createQueryBuilder(CheckSession, 'cs')
-      .where('cs.mon_plan_id = :monPlanId', { monPlanId: evaluationItem.monPlanId })
-      .andWhere('cs.process_cd = :processCode', { processCode: 'MP' })
-      .getOne();
+    const monPlanData = await entityManager.findOneBy(MonitorPlan, { monPlanIdentifier: evaluationItem.monPlanId });
+    const mpCheckSession = monPlanData.chkSessionIdentifier
+      ? await entityManager.findOneBy(CheckSession, {
+        id: monPlanData.chkSessionIdentifier,
+        processCode: 'MP'
+      })
+      : null;
 
     if (!mpCheckSession) {
       throw new EaseyException(new Error(`Check Session record not found for Monitoring Plan ID: ${evaluationItem.monPlanId}`), HttpStatus.NOT_FOUND);
@@ -119,12 +122,19 @@ export class SubmissionService {
 
     // Test Summary checks
     for (const testSumId of evaluationItem.testSumIds) {
+      const testSumData = await entityManager.findOneBy(TestSummary, { testSumIdentifier: testSumId });
       const qaSuppData = await entityManager.findOneBy(QaSuppData, { testSumId });
-      if (!qaSuppData) {
+
+      if (!testSumData || !qaSuppData) {
         throw new EaseyException(new Error(`QA Supplemental Data record not found for ID: ${testSumId}`), HttpStatus.NOT_FOUND);
       }
 
-      const tsCheckSession = await entityManager.findOneBy(CheckSession, { tesSumId: testSumId });
+      const tsCheckSession = testSumData.chkSessionIdentifier
+        ? await entityManager.findOneBy(CheckSession, {
+          id: testSumData.chkSessionIdentifier,
+        })
+        : null;
+
       if (!tsCheckSession) {
         throw new EaseyException(new Error(`Check Session record not found for Test Summary ID: ${testSumId}`), HttpStatus.NOT_FOUND);
       }
@@ -160,7 +170,11 @@ export class SubmissionService {
         throw new EaseyException(new Error(`QA Cert Event record not found for ID: ${qceId}`), HttpStatus.NOT_FOUND);
       }
 
-      const qceCheckSession = await entityManager.findOneBy(CheckSession, { qaCertEventId: qceId });
+      const qceCheckSession = qaCertEvent.chkSessionIdentifier
+        ? await entityManager.findOneBy(CheckSession, {
+          id: qaCertEvent.chkSessionIdentifier,
+        })
+        : null;
       if (!qceCheckSession) {
         throw new EaseyException(new Error(`Check Session record not found for QA Cert Event ID: ${qceId}`), HttpStatus.NOT_FOUND);
       }
@@ -196,7 +210,12 @@ export class SubmissionService {
         throw new EaseyException(new Error(`Test Extension/Exemption record not found for ID: ${teeId}`), HttpStatus.NOT_FOUND);
       }
 
-      const teeCheckSession = await entityManager.findOneBy(CheckSession, { testExtensionExemptionId: teeId });
+      const teeCheckSession = qaTee.chkSessionIdentifier
+        ? await entityManager.findOneBy(CheckSession, {
+          id: qaTee.chkSessionIdentifier,
+        })
+        : null;
+
       if (!teeCheckSession) {
         throw new EaseyException(new Error(`Check Session record not found for Test Extension/Exemption ID: ${teeId}`), HttpStatus.NOT_FOUND);
       }
@@ -240,10 +259,12 @@ export class SubmissionService {
         throw new EaseyException(new Error(`Emission Evaluation record not found for Monitoring Plan ID ${evaluationItem.monPlanId} and Reporting Period ${periodAbr}`), HttpStatus.NOT_FOUND);
       }
 
-      const emCheckSession = await entityManager.findOneBy(CheckSession, {
-        monPlanId: evaluationItem.monPlanId,
-        rptPeriodId: reportingPeriod.rptPeriodIdentifier,
-      });
+      const emCheckSession = emissionEvaluation.chkSessionIdentifier
+        ? await entityManager.findOneBy(CheckSession, {
+          id: emissionEvaluation.chkSessionIdentifier,
+        })
+        : null;
+
       if (!emCheckSession) {
         throw new EaseyException(new Error(`Check Session record not found for Monitoring Plan ID ${evaluationItem.monPlanId} and Reporting Period ${periodAbr}`), HttpStatus.NOT_FOUND);
       }
@@ -309,9 +330,9 @@ export class SubmissionService {
       submissionSet.facIdentifier = facility.facIdentifier;
       submissionSet.orisCode = facility.orisCode;
       submissionSet.facName = facility.facilityName;
-      
+
       await this.validateSubmissionInput(evaluationItem, entityManager);
-      
+
       await entityManager.save(SubmissionSet, submissionSet);
 
       //Push queueing stage here
@@ -562,7 +583,7 @@ export class SubmissionService {
 
       this.logger.log(`Successfully queued record. SetId: ${setId}, MonPlanId: ${evaluationItem?.monPlanId || 'N/A'}, hasCritErrors: ${submissionSet.hasCritErrors}`,);
 
-      } catch (e) {
+    } catch (e) {
       this.logger.error(`Failed to queue record. MonPlanId: ${evaluationItem?.monPlanId || 'N/A'}, Error: ${e.message}`, e.stack,);
       this.logger.error(`Aborting transaction`);
 
