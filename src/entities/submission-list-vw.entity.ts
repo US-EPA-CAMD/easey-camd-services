@@ -48,7 +48,7 @@ export class SubmissionListView extends BaseEntity {
 
   @Column({
     name: 'queued_time',
-    type: 'date',
+    type: 'timestamp',
   })
   submissionDateTime: Date;
 

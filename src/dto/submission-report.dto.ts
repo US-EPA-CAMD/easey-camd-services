@@ -1,6 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
-  IsDate,
   IsNumber,
   IsString,
 } from 'class-validator';
@@ -39,8 +38,8 @@ export class SubmissionReportDTO {
   submissionId: number;
 
   @ApiProperty()
-  @IsDate()
-  submissionDateTime: Date;
+  @IsString()
+  submissionDateTime: string;
 
   @ApiProperty()
   @IsString()
