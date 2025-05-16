@@ -13,8 +13,7 @@ import {
   ApiOperation,
   ApiQuery,
   ApiSecurity,
-  ApiTags,
-} from '@nestjs/swagger';
+  ApiTags, ApiExtraModels, getSchemaPath } from '@nestjs/swagger';
 import { CurrentUser } from '@us-epa-camd/easey-common/interfaces';
 import { AuditLog, RoleGuard, User } from '@us-epa-camd/easey-common/decorators';
 import { ErrorSuppressionsService } from './error-suppressions.service';
@@ -30,14 +29,26 @@ import { ArrayResponse } from '@us-epa-camd/easey-common/interfaces/common.inter
 @ApiSecurity('APIKey')
 @ApiTags('Error Suppressions')
 @ApiExcludeControllerByEnv()
+@ApiExtraModels(ErrorSuppressionsDTO)
 export class ErrorSuppressionsController {
   constructor(private service: ErrorSuppressionsService) {}
 
   @Get()
   @ApiOkResponse({
-    isArray: true,
-    type: ErrorSuppressionsDTO,
     description: 'Data retrieved successfully',
+    content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            properties: {
+              items: {
+                type: 'array',
+                items: { $ref: getSchemaPath(ErrorSuppressionsDTO) },
+              },
+            },
+          },
+        },
+      }
   })
   @NotFoundResponse()
   @BadRequestResponse()
