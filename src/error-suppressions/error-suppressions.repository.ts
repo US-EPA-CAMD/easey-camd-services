@@ -7,7 +7,7 @@ import { QueryBuilderHelper } from '../utilities/query-builder.helper';
 
 @Injectable()
 export class ErrorSuppressionsRepository extends Repository<EsSpec> {
-  constructor(entityManager: EntityManager) {
+  constructor(entityManager: EntityManager  ) {
     super(EsSpec, entityManager);
   }
 
@@ -82,7 +82,7 @@ export class ErrorSuppressionsRepository extends Repository<EsSpec> {
     }
     if (locations) {
       query.andWhere(
-        `string_to_array(es.locations, ',') && :locations`,
+        `string_to_array(replace(ss.locations, ' ', ''), ',') && :locations::text[]`,
         { locations },
       );
     }

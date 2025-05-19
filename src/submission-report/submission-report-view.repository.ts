@@ -20,12 +20,17 @@ export class SubmissionListViewRepository extends Repository<SubmissionListView>
       severityCode,
       submissionType,
       submissionFrom,
-      submissionTo
+      submissionTo,
+      qaDataType,
+      testType,
+      locations
     } = params;
     let query = this.createQueryBuilder('ss').select([
         'ss.orisCode',
         'ss.facilityName',
         'ss.state',
+        'ss.qaDataTypeCode',
+        'ss.testTypeCode',
         'ss.locations',
         'ss.reportingPeriod',
         'ss.reportingFrequencyCode',
@@ -85,6 +90,27 @@ export class SubmissionListViewRepository extends Repository<SubmissionListView>
           { submissionTo },
         );
       }
+
+          if (qaDataType) {
+        query.andWhere(
+          `(ss.qaDataTypeCode = :qaDataType)`,
+          { qaDataType},
+        );
+      } 
+
+    if (testType) {
+        query.andWhere(
+          `(ss.testTypeCode = :testType)`,
+          { testType},
+        );
+      } 
+
+    if (locations) {
+      query.andWhere(
+        `string_to_array(replace(ss.locations, ' ', ''), ',') && :locations::text[]`,
+        { locations },
+      );
+    }
 
       return query.getMany();
     }

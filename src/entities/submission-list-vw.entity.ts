@@ -21,6 +21,16 @@ export class SubmissionListView extends BaseEntity {
   state: string;
 
   @Column({
+    name: 'qa_data_type_cd',
+  })
+  qaDataTypeCode: string;
+
+  @Column({
+    name: 'test_type_cd',
+  })
+  testTypeCode: string;
+
+  @Column({
     name: 'locations',
   })
   locations: string;
