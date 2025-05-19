@@ -20,6 +20,8 @@ import { ErrorHandlerService } from './error-handler.service';
 import { SubmissionSetHelperService } from './submission-set-helper.service';
 import { SeverityCode } from '../entities/severity-code.entity';
 import { SubmissionSet } from '../entities/submission-set.entity';
+import { EvaluationSet } from '../entities/evaluation-set.entity';
+import { TestSummary } from '../entities/test-summary.entity';
 
 const dtoItem = new EvaluationItem();
 dtoItem.monPlanId = 'mock';
@@ -161,38 +163,123 @@ describe('-- Submission Service --', () => {
     expect(service).toBeDefined();
   });
 
-    // Test for checking critical errors based on evalStatusCode
+  // Test for checking critical errors based on evalStatusCode
   it('should check for critical errors based on evalStatusCode', async () => {
+    // Mock MonitorPlan with required fields
+    const mockMonitorPlan = new MonitorPlan();
+    mockMonitorPlan.monPlanIdentifier = 'mock';
+    mockMonitorPlan.facIdentifier = 1;
+    mockMonitorPlan.chkSessionIdentifier = 'mock-session-id';
+    mockMonitorPlan.locations = [];
+    mockMonitorPlan.endRPTPeriodIdentifier = null; // Active plan
+
+    // Mock Plant
+    const mockPlant = new Plant();
+    mockPlant.facIdentifier = 1;
+    mockPlant.facilityName = 'Test Facility';
+    mockPlant.orisCode = 123;
+
+    // Mock CheckSession for MP
+    const mpCheckSession = new CheckSession();
+    mpCheckSession.id = 'mock-session-id';
+    mpCheckSession.severityCode = 'NONE';
+    mpCheckSession.processCode = 'MP';
+
+    // Mock TestSummary and related entities
+    const mockTestSummary = new TestSummary();
+    mockTestSummary.testSumIdentifier = 'mock';
+    mockTestSummary.chkSessionIdentifier = 'test-sum-session-id';
+
+    const tsCheckSession = new CheckSession();
+    tsCheckSession.id = 'test-sum-session-id';
+    tsCheckSession.severityCode = 'NONE';
+
+    // Mock QaSuppData
+    const mockQaSuppData = new QaSuppData();
+    mockQaSuppData.testSumId = 'mock';
+
+    // Mock QaCertEvent
+    const mockQaCertEvent = new QaCertEvent();
+    mockQaCertEvent.qaCertEventIdentifier = 'mock';
+    mockQaCertEvent.chkSessionIdentifier = 'qce-session-id';
+
+    const qceCheckSession = new CheckSession();
+    qceCheckSession.id = 'qce-session-id';
+    qceCheckSession.severityCode = 'NONE';
+
+    // Mock QaTee
+    const mockQaTee = new QaTee();
+    mockQaTee.testExtensionExemptionIdentifier = 'mock';
+    mockQaTee.chkSessionIdentifier = 'tee-session-id';
+
+    const teeCheckSession = new CheckSession();
+    teeCheckSession.id = 'tee-session-id';
+    teeCheckSession.severityCode = 'NONE';
+
+    // Mock ReportingPeriod and EmissionEvaluation
+    const mockReportingPeriod = new ReportingPeriod();
+    mockReportingPeriod.periodAbbreviation = '2020 Q1';
+    mockReportingPeriod.rptPeriodIdentifier = 1;
+
+    const mockEmissionEvaluation = new EmissionEvaluation();
+    mockEmissionEvaluation.chkSessionIdentifier = 'em-session-id';
+
+    const emCheckSession = new CheckSession();
+    emCheckSession.id = 'em-session-id';
+    emCheckSession.severityCode = 'NONE';
+
+
     // Mock the find method to return submission queue records
     const mockSubmissionQueueRecords = [
       { submissionSetIdentifier: 'test-set-id', severityCode: 'CRIT1' },
       { submissionSetIdentifier: 'test-set-id', severityCode: 'CRIT2' }
     ];
-    entityManagerMock.find = jest.fn().mockResolvedValue(mockSubmissionQueueRecords);
+
+    // Mock SeverityCodes
+    const crit1Severity = new SeverityCode();
+    crit1Severity.severityCode = 'CRIT1';
+    crit1Severity.evalStatusCode = 'ERR';
+
+    const crit2Severity = new SeverityCode();
+    crit2Severity.severityCode = 'CRIT2';
+    crit2Severity.evalStatusCode = 'INFO';
 
     // Mock the findOneBy method for SeverityCode to return different evalStatusCode values
-    const originalFindOneBy = entityManagerMock.findOneBy;
     entityManagerMock.findOneBy = jest.fn().mockImplementation((entity, criteria) => {
-      if (entity === SeverityCode) {
-        if (criteria.severityCode === 'CRIT1') {
-          const severityCode = new SeverityCode();
-          severityCode.severityCode = 'CRIT1';
-          severityCode.evalStatusCode = 'ERR';
-          return severityCode;
-        } else if (criteria.severityCode === 'CRIT2') {
-          const severityCode = new SeverityCode();
-          severityCode.severityCode = 'CRIT2';
-          severityCode.evalStatusCode = 'INFO';
-          return severityCode;
-        }
-        return null;
+      if (entity === MonitorPlan) return mockMonitorPlan;
+      if (entity === Plant) return mockPlant;
+      if (entity === TestSummary && criteria.testSumIdentifier === 'mock') return mockTestSummary;
+      if (entity === QaSuppData && criteria.testSumId === 'mock') return mockQaSuppData;
+      if (entity === QaCertEvent && criteria.qaCertEventIdentifier === 'mock') return mockQaCertEvent;
+      if (entity === QaTee && criteria.testExtensionExemptionIdentifier === 'mock') return mockQaTee;
+      if (entity === ReportingPeriod && criteria.periodAbbreviation === '2020 Q1') return mockReportingPeriod;
+      if (entity === EmissionEvaluation) return mockEmissionEvaluation;
+      if (entity === CheckSession) {
+        if (criteria.id === 'mock-session-id') return mpCheckSession;
+        if (criteria.id === 'test-sum-session-id') return tsCheckSession;
+        if (criteria.id === 'qce-session-id') return qceCheckSession;
+        if (criteria.id === 'tee-session-id') return teeCheckSession;
+        if (criteria.id === 'em-session-id') return emCheckSession;
       }
-      return originalFindOneBy(entity, criteria);
+      if (entity === SeverityCode) {
+        if (criteria.severityCode === 'CRIT1') return crit1Severity;
+        if (criteria.severityCode === 'CRIT2') return crit2Severity;
+      }
+      return null;
     });
 
-    // Create a test submission set
-    const submissionSet = new SubmissionSet();
-    submissionSet.submissionSetIdentifier = 'test-set-id';
+    entityManagerMock.find.mockResolvedValue(mockSubmissionQueueRecords);
+    entityManagerMock.countBy.mockResolvedValue(0);
+
+    // Mock query builders
+    const mockQueryBuilder = {
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      innerJoin: jest.fn().mockReturnThis(),
+      getOne: jest.fn().mockResolvedValue(null), // Default for incomplete checks
+    };
+
+    entityManagerMock.createQueryBuilder.mockReturnValue(mockQueryBuilder);
 
     // Call the private queueRecord method through a transaction
     await service.queueSubmissionRecords(payloadDto);
