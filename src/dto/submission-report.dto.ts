@@ -23,7 +23,7 @@ export class SubmissionReportDTO {
 
   @ApiProperty()
   @IsString()
-  reportingPeriodAbbreviation: string;
+  identifyingInformation: string;
 
   @ApiProperty()
   @IsString()

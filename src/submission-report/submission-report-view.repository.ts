@@ -32,7 +32,7 @@ export class SubmissionListViewRepository extends Repository<SubmissionListView>
         'ss.qaDataTypeCode',
         'ss.testTypeCode',
         'ss.locations',
-        'ss.reportingPeriod',
+        'ss.identifyingInformation',
         'ss.reportingFrequencyCode',
         'ss.submissionTypeCode',
         'ss.submissionId',
@@ -54,12 +54,6 @@ export class SubmissionListViewRepository extends Repository<SubmissionListView>
       if (orisCode) {
         query.andWhere('ss.orisCode = :orisCode', {
           orisCode
-        });
-      }
-  
-      if (quarter && year) {
-        query.andWhere('ss.reportingPeriod = :reportingPeriod', {
-            reportingPeriod: `${year} Q${quarter}`,
         });
       }
   

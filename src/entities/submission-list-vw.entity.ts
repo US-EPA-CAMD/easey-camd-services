@@ -36,9 +36,9 @@ export class SubmissionListView extends BaseEntity {
   locations: string;
 
   @Column({
-    name: 'reporting_period',
+    name: 'identifying_information',
   })
-  reportingPeriod: string;
+  identifyingInformation: string;
 
   @Column({
     name: 'reporting_frequency',

@@ -18,7 +18,7 @@ SubmissionReportDTO
         facilityName :  entity?.facilityName,
         state :  entity?.state,
         locations :  entity?.locations,
-        reportingPeriodAbbreviation :  entity?.reportingPeriod,
+        identifyingInformation :  entity?.identifyingInformation,
         reportingFrequencyCode :  entity?.reportingFrequencyCode,
         submissionTypeCode :  entity?.submissionTypeCode,
         submissionId :  entity?.submissionId,
