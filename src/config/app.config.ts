@@ -142,5 +142,6 @@ export default registerAs('app', () => ({
   maxUsesBeforeRecreatingConnection: getConfigValueNumber('EASEY_DB_MAX_USES_BEFORE_CONN_RECREATE',500),
   sqlLogging: getConfigValue('EASEY_DB_SQL_LOGGING', "error"),
   maxQueryExecutionTime: getConfigValueNumber('EASEY_DB_MAX_QUERY_EXECUTION_TIMEOUT',30000),
+  enableAuditLog: getConfigValueBoolean('EASEY_CAMD_SERVICES_ENABLE_AUDIT_LOG', true)
 
 }));

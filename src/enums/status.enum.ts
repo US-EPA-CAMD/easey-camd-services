@@ -1,8 +1,8 @@
 export enum Status {
-  'OPEN',
-  'PENDING',
-  'CLOSED',
-  'CANCELLED',
-  'NO WINDOW',
-  'NOT YET OPEN',
+  OPEN = 'OPEN',
+  PENDING = 'PENDING',
+  CLOSED = 'CLOSED',
+  CANCELLED = 'CANCELLED',
+  'NO WINDOW' = 'NO WINDOW',
+  'NOTE YET OPEN' = 'NOT YET OPEN',
 }
