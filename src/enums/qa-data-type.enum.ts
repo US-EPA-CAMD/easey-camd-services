@@ -1,5 +1,5 @@
 export enum QADataType {
-  Test,
-  Event,
+  QAT,
+  QCE,
   TEE
 }

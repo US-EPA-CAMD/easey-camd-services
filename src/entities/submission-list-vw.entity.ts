@@ -35,6 +35,11 @@ export class SubmissionListView extends BaseEntity {
   })
   locations: string;
 
+    @Column({
+    name: 'reporting_period',
+  })
+  reportingPeriod: string;
+  
   @Column({
     name: 'identifying_information',
   })

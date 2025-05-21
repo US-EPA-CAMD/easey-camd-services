@@ -32,6 +32,7 @@ export class SubmissionListViewRepository extends Repository<SubmissionListView>
         'ss.qaDataTypeCode',
         'ss.testTypeCode',
         'ss.locations',
+        'ss.reportingPeriod',
         'ss.identifyingInformation',
         'ss.reportingFrequencyCode',
         'ss.submissionTypeCode',
@@ -57,6 +58,12 @@ export class SubmissionListViewRepository extends Repository<SubmissionListView>
         });
       }
   
+       if (quarter && year) {
+        query.andWhere('ss.reportingPeriod = :reportingPeriod', {
+            reportingPeriod: `${year} Q${quarter}`,
+        });
+      }
+      
       if (severityCode) {
         query.andWhere(
           `(ss.severityCode = :severityCode)`,
