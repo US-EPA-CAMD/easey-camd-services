@@ -180,7 +180,7 @@ export class MatsFileUploadService {
           }),
         );
 
-        const fileName = `${submission.matsDataSubId}/${file.fileName}`;
+        const fileName = `${submission.matsDataSubId}_${file.fileName}`;
         const filePath = join(folderPath, fileName);
         const bodyContents = await getObjectResponse.Body.transformToByteArray();
         writeFileSync(filePath, Buffer.from(bodyContents));
