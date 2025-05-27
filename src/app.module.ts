@@ -39,6 +39,7 @@ import { SubmissionModule } from './submission/submission.module';
 import { MatsFileUploadModule } from './mats-file-upload/mats-file-upload.module';
 import { CopyOfRecordModule } from './copy-of-record/copy-of-record.module';
 import { SubmissionReportModule } from './submission-report/submission-report.module';
+import { TestTypeCode } from './test-type-code/test-type-code.module';
 
 @Module({
   imports: [
@@ -60,6 +61,7 @@ import { SubmissionReportModule } from './submission-report/submission-report.mo
     MailModule,
     ErrorSuppressionsModule,
     SubmissionReportModule,
+    TestTypeCode,
     EvaluationModule,
     AdminModule,
     QaTestExtensionExemptionModule,

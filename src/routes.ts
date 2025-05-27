@@ -14,7 +14,7 @@ import { QaTestExtensionExemptionModule } from './qa-test-extension-exemption/qa
 import { EmSubmissionAccessModule } from './em-submission-access/em-submission-access.module';
 import { SubmissionModule } from './submission/submission.module';
 import { MatsFileUploadModule } from './mats-file-upload/mats-file-upload.module';
-
+import { TestTypeCode } from './test-type-code/test-type-code.module';
 const routes = [
   {
     path: '/bookmarks',
@@ -47,6 +47,10 @@ const routes = [
   {
     path: '/mats-file-upload',
     module: MatsFileUploadModule,
+  },
+  {
+    path: '/',
+    module: TestTypeCode,
   },
   {
     path: '/admin',
