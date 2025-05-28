@@ -167,9 +167,12 @@ export class MatsFileUploadService {
       const folderPath = join(__dirname, uuidv4());
       mkdirSync(folderPath);
 
-      const documents = [];
+      const documents:any = [];
       // Add MATS Certification Statement
-      await this.documentService.addCertificationStatements(submission.monPlanId, documents)
+      await this.documentService.addCertificationStatements(submission.monPlanId, documents);
+
+      // Writing Certification Statements...
+      writeFileSync(`${folderPath}/${documents[0]?.documentTitle}.html`, documents[0]?.context);
 
       // Download files from import bucket - similar to existing processMatsRecord
       for (const file of payloadFiles) {
@@ -179,17 +182,10 @@ export class MatsFileUploadService {
             Key: file.tempS3BucketFilePath,
           }),
         );
-
-        const fileName = `${submission.matsDataSubId}_${file.fileName}`;
-        const filePath = join(folderPath, fileName);
+  
+        const filePath = join(folderPath, file.fileName);
         const bodyContents = await getObjectResponse.Body.transformToByteArray();
         writeFileSync(filePath, Buffer.from(bodyContents));
-
-        documents.push({
-          path: filePath,
-          name: fileName,
-          type: file.matsDataFileTypeCd,
-        });
       }
 
       // Perform CDX submission
