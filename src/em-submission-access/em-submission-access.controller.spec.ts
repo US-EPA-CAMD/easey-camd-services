@@ -12,7 +12,6 @@ import {
 import { EmSubmissionAccessParamsDTO } from '../dto/em-submission-access.params.dto';
 import { EmSubmissionAccessMap } from '../maps/em-submission-access.map';
 import { EmSubmissionAccessViewRepository } from './em-submission-access-view.repository';
-import { CurrentUser } from '@us-epa-camd/easey-common/interfaces';
 import { EmSubmissionAccessRepository } from './em-submission-access.repository';
 import { genEmSubmissionAccess } from '../../test/object-generators/em-submission-access';
 import { EmSubmissionAccessController } from './em-submission-access.controller';
@@ -20,14 +19,6 @@ import { EmSubmissionAccessController } from './em-submission-access.controller'
 describe('EmSubmissionAccessController', () => {
   let controller: EmSubmissionAccessController;
   let service: EmSubmissionAccessService;
-  const currentUser: CurrentUser = {
-    userId: '',
-    sessionId: '',
-    expiration: '',
-    clientIp: '',
-    facilities: [],
-    roles: [],
-  };
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [LoggerModule, HttpModule],
@@ -75,7 +66,7 @@ describe('EmSubmissionAccessController', () => {
       .spyOn(service, 'createEmSubmissionAccess')
       .mockResolvedValue(mockedValue);
     expect(
-      await controller.createEmSubmissionAccess(payload, currentUser),
+      await controller.createEmSubmissionAccess(payload),
     ).toBe(mockedValue);
   });
 

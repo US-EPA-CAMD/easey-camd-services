@@ -71,6 +71,14 @@ export class EmSubmissionAccessUpdateDTO {
   resubExplanation: string;
 
   @ApiProperty({
+    description: propertyMetadata.emissions.userId.description,
+    example: propertyMetadata.emissions.userId.example,
+    name: propertyMetadata.emissions.userId.fieldLabels.value,
+  })
+  @IsString()
+  userid: string;
+
+  @ApiProperty({
     description: propertyMetadata.closeDate.description,
     example: propertyMetadata.closeDate.example,
     name: propertyMetadata.closeDate.fieldLabels.value,
