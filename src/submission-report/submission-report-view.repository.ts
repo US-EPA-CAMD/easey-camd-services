@@ -42,11 +42,6 @@ export class SubmissionListViewRepository extends Repository<SubmissionListView>
         'ss.mostRecent',
         'ss.submissionStatus',
         'ss.severityCode',
-        'ss.criticalErrLevelOne',
-        'ss.criticalErrLevelTwo',
-        'ss.nonCritical',
-        'ss.infoMessage',
-        'ss.adminOverride',
         'ss.submitter',
         'ss.monitorPlanId',
         'ss.reportingPeriodId'

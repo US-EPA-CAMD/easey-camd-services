@@ -29,11 +29,6 @@ SubmissionReportDTO
         mostRecent :  entity?.mostRecent,
         submissionStatus :  entity?.submissionStatus,
         severityCode :  entity?.severityCode,
-        criticalErrLevelOne :  entity?.criticalErrLevelOne,
-        criticalErrLevelTwo :  entity?.criticalErrLevelTwo,
-        nonCritical :  entity?.nonCritical,
-        infoMessage :  entity?.infoMessage,
-        adminOverride :  entity?.adminOverride,
         submitter :  entity?.submitter
     };
   }

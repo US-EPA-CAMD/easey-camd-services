@@ -59,25 +59,5 @@ export class SubmissionReportDTO {
 
   @ApiProperty()
   @IsString()
-  criticalErrLevelOne: string;
-
-  @ApiProperty()
-  @IsString()
-  criticalErrLevelTwo: string;
-
-  @ApiProperty()
-  @IsString()
-  nonCritical: string;
-
-  @ApiProperty()
-  @IsString()
-  infoMessage: string;
-
-  @ApiProperty()
-  @IsString()
-  adminOverride: string;
-
-  @ApiProperty()
-  @IsString()
   submitter: string;
 }

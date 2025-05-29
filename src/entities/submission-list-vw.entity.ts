@@ -88,31 +88,6 @@ export class SubmissionListView extends BaseEntity {
   severityCode: string;
 
   @Column({
-    name: 'severity_critical_1',
-  })
-  criticalErrLevelOne: string;
-
-  @Column({
-    name: 'severity_critical_2',
-  })
-  criticalErrLevelTwo: string;
-
-  @Column({
-    name: 'severity_non_critical',
-  })
-  nonCritical: string;
-
-  @Column({
-    name: 'severity_informational',
-  })
-  infoMessage: string;
-
-  @Column({
-    name: 'severity_administrative_override',
-  })
-  adminOverride: string;
-
-  @Column({
     name: 'submitter',
   })
   submitter: string;
