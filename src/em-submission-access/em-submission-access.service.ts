@@ -71,13 +71,11 @@ export class EmSubmissionAccessService {
 
   async createEmSubmissionAccess(
     payload: EmSubmissionAccessCreateDTO,
-    userid?: string,
   ): Promise<EmSubmissionAccessDTO> {
     const currentTime = currentDateTime();
     try {
       const entity = this.repository.create({
         ...payload,
-        userid: userid,
         dataLoadedFlag: null,
         addDate: currentTime,
         updateDate: null,
@@ -115,6 +113,7 @@ export class EmSubmissionAccessService {
       recordToUpdate.submissionAvailabilityCode =
         payload?.submissionAvailabilityCode;
       recordToUpdate.resubExplanation = payload?.resubExplanation;
+      recordToUpdate.userid = payload?.userid;
       recordToUpdate.closeDate = payload?.closeDate;
       recordToUpdate.updateDate = currentTime;
 
