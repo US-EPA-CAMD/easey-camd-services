@@ -1,20 +1,26 @@
+import { Request } from 'express';
 import {
+  Body,
   Controller,
   HttpStatus,
   Param,
   Post,
+  Req,
   UploadedFile,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBody, ApiConsumes, ApiExcludeController, ApiSecurity, ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiConsumes, ApiExcludeController, ApiOkResponse, ApiSecurity, ApiTags } from '@nestjs/swagger';
+import { AuthGuard } from '@us-epa-camd/easey-common/guards';
 import { MatsFileUploadService } from './mats-file-upload.service';
 import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
-import { RoleGuard, User } from '@us-epa-camd/easey-common/decorators';
+import { AuditLog, RoleGuard, User } from '@us-epa-camd/easey-common/decorators';
 import { CurrentUser } from '@us-epa-camd/easey-common/interfaces';
 import { LookupType } from '@us-epa-camd/easey-common/enums';
 import { ConfigService } from '@nestjs/config';
 import { ApiExcludeControllerByEnv } from '../decorators/swagger-decorator';
+import { MatsProcessParamsDTO } from '../dto/mats-process-params.dto';
 
 const MAX_UPLOAD_SIZE_MB: number = 30;
 
@@ -26,7 +32,7 @@ export class MatsFileUploadController {
   constructor(
     private configService: ConfigService,
     private service: MatsFileUploadService,
-  ) {}
+  ) { }
 
   @Post(':monPlanId/:locId/:testGroupCode/:testNumber/import')
   @ApiConsumes('multipart/form-data')
@@ -94,5 +100,19 @@ export class MatsFileUploadController {
       testNumber,
       user.userId,
     );
+  }
+
+  @Post('process')
+  @ApiOkResponse({
+    description:
+      'Creates copy of record and calls into mats submission service',
+  })
+  @AuditLog({
+      label: 'Create MATS Submission Process',
+      requestBodyOutFields: '*',
+    })
+  @UseGuards(AuthGuard)
+  async process(@Body() params: MatsProcessParamsDTO, @Req() req: Request): Promise<void> {
+    return this.service.matsSubmissionProcess(params, req);
   }
 }
