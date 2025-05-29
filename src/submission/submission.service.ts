@@ -25,6 +25,9 @@ import { CombinedSubmissionsMap } from '../maps/combined-submissions.map';
 import { EmissionsLastUpdatedMap } from '../maps/emissions-last-updated.map';
 import { ErrorHandlerService } from './error-handler.service';
 import { SubmissionSetHelperService } from './submission-set-helper.service';
+import { EvaluationSet } from '../entities/evaluation-set.entity';
+import { Evaluation } from '../entities/evaluation.entity';
+import { TestSummary } from '../entities/test-summary.entity';
 
 @Injectable()
 export class SubmissionService {
@@ -74,6 +77,202 @@ export class SubmissionService {
   returnManager() {
     return this.entityManager;
   }
+  private async validateSubmissionInput(evaluationItem: EvaluationItem, entityManager: EntityManager) {
+    // General check prior to creating a Submission Set
+    // Check for incomplete Submission Set records
+    const incompleteSubmissionSet = await entityManager
+      .createQueryBuilder(SubmissionSet, 'ss')
+      .where('ss.mon_plan_id = :monPlanId', { monPlanId: evaluationItem.monPlanId })
+      .andWhere('ss.completed_time IS NULL')
+      .andWhere('ss.note_time IS NULL')
+      .getOne();
+
+    if (incompleteSubmissionSet) {
+      throw new EaseyException(new Error(`Monitoring Plan ID ${evaluationItem.monPlanId} has submissions in progress`), HttpStatus.CONFLICT);
+    }
+
+    // Check for incomplete Evaluation Set
+    const incompleteEvalSet = await entityManager
+      .createQueryBuilder(EvaluationSet, 'es')
+      .innerJoin(Evaluation, 'eq', 'eq.evaluation_set_id = es.evaluation_set_id')
+      .where('es.mon_plan_id = :monPlanId', { monPlanId: evaluationItem.monPlanId })
+      .andWhere('eq.completed_time IS NULL')
+      .andWhere('eq.note_time IS NULL')
+      .getOne();
+
+    if (incompleteEvalSet) {
+      throw new EaseyException(new Error(`Monitoring Plan ID ${evaluationItem.monPlanId} has evaluations in progress`), HttpStatus.CONFLICT);
+    }
+
+    // Monitoring Plan checks
+    const monPlanData = await entityManager.findOneBy(MonitorPlan, { monPlanIdentifier: evaluationItem.monPlanId });
+    const mpCheckSession = monPlanData.chkSessionIdentifier
+      ? await entityManager.findOneBy(CheckSession, {
+        id: monPlanData.chkSessionIdentifier,
+        processCode: 'MP'
+      })
+      : null;
+
+    if (!mpCheckSession) {
+      throw new EaseyException(new Error(`Check Session record not found for Monitoring Plan ID: ${evaluationItem.monPlanId}`), HttpStatus.NOT_FOUND);
+    }
+    if (mpCheckSession.severityCode === 'FATAL') {
+      throw new EaseyException(new Error(`Monitoring Plan ID ${evaluationItem.monPlanId} encountered a FATAL error during evaluation and cannot be submitted`), HttpStatus.UNPROCESSABLE_ENTITY);
+    }
+
+    // Test Summary checks
+    for (const testSumId of evaluationItem.testSumIds) {
+      const testSumData = await entityManager.findOneBy(TestSummary, { testSumIdentifier: testSumId });
+      const qaSuppData = await entityManager.findOneBy(QaSuppData, { testSumId });
+
+      if (!testSumData || !qaSuppData) {
+        throw new EaseyException(new Error(`QA Supplemental Data record not found for ID: ${testSumId}`), HttpStatus.NOT_FOUND);
+      }
+
+      const tsCheckSession = testSumData.chkSessionIdentifier
+        ? await entityManager.findOneBy(CheckSession, {
+          id: testSumData.chkSessionIdentifier,
+        })
+        : null;
+
+      if (!tsCheckSession) {
+        throw new EaseyException(new Error(`Check Session record not found for Test Summary ID: ${testSumId}`), HttpStatus.NOT_FOUND);
+      }
+      if (tsCheckSession.severityCode === 'FATAL') {
+        throw new EaseyException(new Error(`Test Summary ID ${testSumId} encountered a FATAL error during evaluation and cannot be submitted`), HttpStatus.UNPROCESSABLE_ENTITY);
+      }
+
+      const incompleteSubmissionQueue = await entityManager
+        .createQueryBuilder(SubmissionQueue, 'sq')
+        .where('sq.test_sum_id = :testSumId', { testSumId })
+        .andWhere('sq.completed_time IS NULL')
+        .andWhere('sq.note_time IS NULL')
+        .getOne();
+      if (incompleteSubmissionQueue) {
+        throw new EaseyException(new Error(`Test Summary ID ${testSumId} is already queued for submission`), HttpStatus.CONFLICT);
+      }
+
+      const incompleteEvaluationQueue = await entityManager
+        .createQueryBuilder(Evaluation, 'eq')
+        .where('eq.test_sum_id = :testSumId', { testSumId })
+        .andWhere('eq.completed_time IS NULL')
+        .andWhere('eq.note_time IS NULL')
+        .getOne();
+      if (incompleteEvaluationQueue) {
+        throw new EaseyException(new Error(`Test Summary ID ${testSumId} is already queued for evaluation`), HttpStatus.CONFLICT);
+      }
+    }
+
+    // QA Cert Event checks
+    for (const qceId of evaluationItem.qceIds) {
+      const qaCertEvent = await entityManager.findOneBy(QaCertEvent, { qaCertEventIdentifier: qceId });
+      if (!qaCertEvent) {
+        throw new EaseyException(new Error(`QA Cert Event record not found for ID: ${qceId}`), HttpStatus.NOT_FOUND);
+      }
+
+      const qceCheckSession = qaCertEvent.chkSessionIdentifier
+        ? await entityManager.findOneBy(CheckSession, {
+          id: qaCertEvent.chkSessionIdentifier,
+        })
+        : null;
+      if (!qceCheckSession) {
+        throw new EaseyException(new Error(`Check Session record not found for QA Cert Event ID: ${qceId}`), HttpStatus.NOT_FOUND);
+      }
+      if (qceCheckSession.severityCode === 'FATAL') {
+        throw new EaseyException(new Error(`QA Cert Event ID ${qceId} encountered a FATAL error during evaluation and cannot be submitted`), HttpStatus.UNPROCESSABLE_ENTITY);
+      }
+
+      const incompleteSubmissionQueue = await entityManager
+        .createQueryBuilder(SubmissionQueue, 'sq')
+        .where('sq.qa_cert_event_id = :qceId', { qceId })
+        .andWhere('sq.completed_time IS NULL')
+        .andWhere('sq.note_time IS NULL')
+        .getOne();
+      if (incompleteSubmissionQueue) {
+        throw new EaseyException(new Error(`QA Cert Event ID ${qceId} is already queued for submission`), HttpStatus.CONFLICT);
+      }
+
+      const incompleteEvaluationQueue = await entityManager
+        .createQueryBuilder(Evaluation, 'eq')
+        .where('eq.qa_cert_event_id = :qceId', { qceId })
+        .andWhere('eq.completed_time IS NULL')
+        .andWhere('eq.note_time IS NULL')
+        .getOne();
+      if (incompleteEvaluationQueue) {
+        throw new EaseyException(new Error(`QA Cert Event ID ${qceId} is already queued for evaluation`), HttpStatus.CONFLICT);
+      }
+    }
+
+    // Test Extension/Exemption checks
+    for (const teeId of evaluationItem.teeIds) {
+      const qaTee = await entityManager.findOneBy(QaTee, { testExtensionExemptionIdentifier: teeId });
+      if (!qaTee) {
+        throw new EaseyException(new Error(`Test Extension/Exemption record not found for ID: ${teeId}`), HttpStatus.NOT_FOUND);
+      }
+
+      const teeCheckSession = qaTee.chkSessionIdentifier
+        ? await entityManager.findOneBy(CheckSession, {
+          id: qaTee.chkSessionIdentifier,
+        })
+        : null;
+
+      if (!teeCheckSession) {
+        throw new EaseyException(new Error(`Check Session record not found for Test Extension/Exemption ID: ${teeId}`), HttpStatus.NOT_FOUND);
+      }
+      if (teeCheckSession.severityCode === 'FATAL') {
+        throw new EaseyException(new Error(`Test Extension/Exemption ID ${teeId} encountered a FATAL error during evaluation and cannot be submitted`), HttpStatus.UNPROCESSABLE_ENTITY);
+      }
+
+      const incompleteSubmissionQueue = await entityManager
+        .createQueryBuilder(SubmissionQueue, 'sq')
+        .where('sq.test_extension_exemption_id = :teeId', { teeId })
+        .andWhere('sq.completed_time IS NULL')
+        .andWhere('sq.note_time IS NULL')
+        .getOne();
+      if (incompleteSubmissionQueue) {
+        throw new EaseyException(new Error(`Test Extension/Exemption ID ${teeId} is already queued for submission`), HttpStatus.CONFLICT);
+      }
+
+      const incompleteEvaluationQueue = await entityManager
+        .createQueryBuilder(Evaluation, 'eq')
+        .where('eq.test_extension_exemption_id = :teeId', { teeId })
+        .andWhere('eq.completed_time IS NULL')
+        .andWhere('eq.note_time IS NULL')
+        .getOne();
+      if (incompleteEvaluationQueue) {
+        throw new EaseyException(new Error(`Test Extension/Exemption ID ${teeId} is already queued for evaluation`), HttpStatus.CONFLICT);
+      }
+    }
+
+    // Emissions checks
+    for (const periodAbr of evaluationItem.emissionsReportingPeriods) {
+      const reportingPeriod = await entityManager.findOneBy(ReportingPeriod, { periodAbbreviation: periodAbr });
+      if (!reportingPeriod) {
+        throw new EaseyException(new Error(`Reporting Period record not found for ID: ${periodAbr}`), HttpStatus.NOT_FOUND);
+      }
+
+      const emissionEvaluation = await entityManager.findOneBy(EmissionEvaluation, {
+        monPlanIdentifier: evaluationItem.monPlanId,
+        rptPeriodIdentifier: reportingPeriod.rptPeriodIdentifier,
+      });
+      if (!emissionEvaluation) {
+        throw new EaseyException(new Error(`Emission Evaluation record not found for Monitoring Plan ID ${evaluationItem.monPlanId} and Reporting Period ${periodAbr}`), HttpStatus.NOT_FOUND);
+      }
+
+      const emCheckSession = emissionEvaluation.chkSessionIdentifier
+        ? await entityManager.findOneBy(CheckSession, {
+          id: emissionEvaluation.chkSessionIdentifier,
+        })
+        : null;
+
+      if (!emCheckSession) {
+        throw new EaseyException(new Error(`Check Session record not found for Monitoring Plan ID ${evaluationItem.monPlanId} and Reporting Period ${periodAbr}`), HttpStatus.NOT_FOUND);
+      }
+      if (emCheckSession.severityCode === 'FATAL') {
+        throw new EaseyException(new Error(`Emissions for Monitoring Plan ID ${evaluationItem.monPlanId} and Reporting Period ${periodAbr} encountered a FATAL error during evaluation and cannot be submitted`), HttpStatus.UNPROCESSABLE_ENTITY);
+      }
+    }
+  }
 
   private async queueRecord(
     userId: string,
@@ -86,7 +285,6 @@ export class SubmissionService {
 
     const submissionSet = new SubmissionSet();
     let currentSubmissionQueue: SubmissionQueue | null = null;
-    let hasCriticalErrors = false;
 
     try {
       const currentTime = new Date();
@@ -103,7 +301,7 @@ export class SubmissionService {
       submissionSet.statusCode = 'QUEUED';
 
       //Push queueing stage here
-      queueingStages.push({ action: 'SET_ID_ASSIGNED', dateTime: await this.submissionSetHelper.getFormattedDateTime() || 'N/A' });
+      queueingStages.push({ action: 'SET_ID_ASSIGNED', dateTime: (await this.submissionSetHelper.getFormattedDateTime()) || 'N/A' });
 
       const locations = await entityManager.query(
         `SELECT camdecmpswks.get_mp_location_list($1);`,
@@ -133,10 +331,12 @@ export class SubmissionService {
       submissionSet.orisCode = facility.orisCode;
       submissionSet.facName = facility.facilityName;
 
+      await this.validateSubmissionInput(evaluationItem, entityManager);
+
       await entityManager.save(SubmissionSet, submissionSet);
 
       //Push queueing stage here
-      queueingStages.push({ action: 'SET_SAVED', dateTime: await this.submissionSetHelper.getFormattedDateTime() || 'N/A' });
+      queueingStages.push({ action: 'SET_SAVED', dateTime: (await this.submissionSetHelper.getFormattedDateTime()) || 'N/A' });
 
       if (evaluationItem.submitMonPlan === true) {
         this.logger.log(`Creating a monitoring plan record. setId: ${setId}, MonPlanId: ${evaluationItem?.monPlanId || 'N/A'}`,);
@@ -167,7 +367,7 @@ export class SubmissionService {
         await entityManager.save(mp);
 
         //Push queueing stage here
-        queueingStages.push({ action: 'MP_QUEUED', dateTime: await this.submissionSetHelper.getFormattedDateTime() || 'N/A' });
+        queueingStages.push({ action: 'MP_QUEUED', dateTime: (await this.submissionSetHelper.getFormattedDateTime()) || 'N/A' });
       }
 
       this.logger.log(`Queueing ${evaluationItem?.testSumIds?.length} test summary records.`,);
@@ -204,7 +404,7 @@ export class SubmissionService {
         }
 
         //Push queueing stage here
-        queueingStages.push({ action: 'TEST_QUEUED', dateTime: await this.submissionSetHelper.getFormattedDateTime() || 'N/A' });
+        queueingStages.push({ action: 'TEST_QUEUED', dateTime: (await this.submissionSetHelper.getFormattedDateTime()) || 'N/A' });
       }
 
       this.logger.log(`Queueing ${evaluationItem?.qceIds?.length} QCE records.`,);
@@ -240,7 +440,7 @@ export class SubmissionService {
           await entityManager.save(qce);
         }
         //Push queueing stage here
-        queueingStages.push({ action: 'QCE_QUEUED', dateTime: await this.submissionSetHelper.getFormattedDateTime() || 'N/A' });
+        queueingStages.push({ action: 'QCE_QUEUED', dateTime: (await this.submissionSetHelper.getFormattedDateTime()) || 'N/A' });
       }
 
       this.logger.log(`Queueing ${evaluationItem?.teeIds?.length} TEE records.`,);
@@ -274,7 +474,7 @@ export class SubmissionService {
         }
 
         //Push queueing stage here
-        queueingStages.push({ action: 'TEE_QUEUED', dateTime: await this.submissionSetHelper.getFormattedDateTime() || 'N/A' });
+        queueingStages.push({ action: 'TEE_QUEUED', dateTime: (await this.submissionSetHelper.getFormattedDateTime()) || 'N/A' });
       }
 
       this.logger.log(`Queueing emissions with ${evaluationItem?.emissionsReportingPeriods?.length} reporting period(s).`,);
@@ -319,7 +519,7 @@ export class SubmissionService {
         }
 
         //Push queueing stage here
-        queueingStages.push({ action: 'EM_QUEUED', dateTime: await this.submissionSetHelper.getFormattedDateTime() || 'N/A' });
+        queueingStages.push({ action: 'EM_QUEUED', dateTime: (await this.submissionSetHelper.getFormattedDateTime()) || 'N/A' });
       }
 
       this.logger.log(`Queueing ${evaluationItem?.matsBulkFiles?.length} MATS records.`,);
@@ -351,7 +551,7 @@ export class SubmissionService {
           }
 
           //Push queueing stage here
-          queueingStages.push({ action: 'MATS_QUEUED', dateTime: await this.submissionSetHelper.getFormattedDateTime() || 'N/A' });
+          queueingStages.push({ action: 'MATS_QUEUED', dateTime: (await this.submissionSetHelper.getFormattedDateTime()) || 'N/A' });
         }
       }
 
@@ -383,7 +583,7 @@ export class SubmissionService {
 
       this.logger.log(`Successfully queued record. SetId: ${setId}, MonPlanId: ${evaluationItem?.monPlanId || 'N/A'}, hasCritErrors: ${submissionSet.hasCritErrors}`,);
 
-      } catch (e) {
+    } catch (e) {
       this.logger.error(`Failed to queue record. MonPlanId: ${evaluationItem?.monPlanId || 'N/A'}, Error: ${e.message}`, e.stack,);
       this.logger.error(`Aborting transaction`);
 
@@ -411,7 +611,7 @@ export class SubmissionService {
     // Build submissionStages array
     const queueingStages: { action: string; dateTime: string }[] = [];
     //Push queueing stage here
-    queueingStages.push({ action: 'QUEUEING_STARTED', dateTime: await this.submissionSetHelper.getFormattedDateTime() || 'N/A' });
+    queueingStages.push({ action: 'QUEUEING_STARTED', dateTime: (await this.submissionSetHelper.getFormattedDateTime()) || 'N/A' });
 
     const userId = submissionQueueParam.userId;
     const userEmail = submissionQueueParam.userEmail;
@@ -434,7 +634,7 @@ export class SubmissionService {
       });
 
       //Push queueing stage here
-      queueingStages.push({ action: 'QUEUEING_COMPLETED', dateTime: await this.submissionSetHelper.getFormattedDateTime() || 'N/A' });
+      queueingStages.push({ action: 'QUEUEING_COMPLETED', dateTime: (await this.submissionSetHelper.getFormattedDateTime()) || 'N/A' });
 
       this.logger.log(`Finished queueing submission records for UserId: ${submissionQueueParam?.userId || 'N/A'}`,);
     } catch (error) {
@@ -453,15 +653,15 @@ export class SubmissionService {
         userId,
         error,
       );
-
+      const status = error.status || HttpStatus.INTERNAL_SERVER_ERROR;
       // Throw error to API caller
       throw new HttpException(
         {
-          status: HttpStatus.INTERNAL_SERVER_ERROR,
+          status: status,
           error: 'Failed to queue submission records',
           message: error.message,
         },
-        HttpStatus.INTERNAL_SERVER_ERROR,
+        status,
       );
     }
   }
