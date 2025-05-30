@@ -146,6 +146,7 @@ export class MatsFileUploadService {
     let payloadFiles: MatsDataSubmissionPayloadFile[];
     const matsDataSubId = matsProcessParams.matsDataSubmissionId;
 
+    this.logger.log(`MATS Submission Process Started for: ${matsDataSubId}`);
     try {
       // Update STARTED_TIME column
       submission = await this.entityManager.findOne(MatsDataSubmission, {
@@ -167,7 +168,7 @@ export class MatsFileUploadService {
       const folderPath = join(__dirname, uuidv4());
       mkdirSync(folderPath);
 
-      const documents:any = [];
+      const documents: any = [];
       // Add MATS Certification Statement
       await this.documentService.addCertificationStatements(submission.monPlanId, documents);
 
@@ -192,6 +193,7 @@ export class MatsFileUploadService {
       const createActivityRes = await this.createActivity(req, matsProcessParams);
       const activityId = createActivityRes.activityId;
       submission.activityId = activityId;
+      this.logger.log(`activityId : ${activityId}`);
 
       // Send documents for signing
       await this.documentService.sendForSigning(activityId, folderPath);
@@ -239,9 +241,15 @@ export class MatsFileUploadService {
   }
 
   private async createActivity(req: Request, matsProcessParams: MatsProcessParamsDTO) {
+    this.logger.log(`Starting create Activity`);
     // For calling create-activity endpoint
     const token = req.headers.authorization;
-    const ip = req.ip;
+
+    const forwardedForHeader = req.headers["x-forwarded-for"];
+    let ip = req.ip;
+    if (forwardedForHeader !== null && forwardedForHeader !== undefined) {
+      ip = (forwardedForHeader as string)?.split(",")[0];
+    }
 
     const createActivityUSerData = {
       userId: matsProcessParams.userId,
@@ -256,12 +264,12 @@ export class MatsFileUploadService {
     const headers = {
       "x-api-key": this.configService.get<string>('app.apiKey'),
       authorization: `${token}`,
-      'x-forwarded-for': ip
+      "x-forwarded-for": ip,
     };
     const response: AxiosResponse<any> = await firstValueFrom(
       this.httpService.post(url, body, { headers }),
     );
-
+    this.logger.log(`End create Activity`);
     return response.data
 
   }
