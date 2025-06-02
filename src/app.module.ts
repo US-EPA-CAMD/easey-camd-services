@@ -39,6 +39,7 @@ import { SubmissionModule } from './submission/submission.module';
 import { MatsFileUploadModule } from './mats-file-upload/mats-file-upload.module';
 import { CopyOfRecordModule } from './copy-of-record/copy-of-record.module';
 import { SubmissionReportModule } from './submission-report/submission-report.module';
+import { HealthModule } from '@us-epa-camd/easey-common/health/health.module';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { SubmissionReportModule } from './submission-report/submission-report.mo
     TypeOrmModule.forRootAsync({
       useClass: TypeOrmConfigService,
     }),
+    HealthModule,
     LoggerModule,
     CorsOptionsModule,
     BulkFileModule,
@@ -77,6 +79,12 @@ export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(MaintenanceMiddleware)
+      .exclude(
+        {
+          path: '/health',
+          method: RequestMethod.GET,
+        },
+      )
       .forRoutes({ path: '*', method: RequestMethod.ALL });
   }
 }
