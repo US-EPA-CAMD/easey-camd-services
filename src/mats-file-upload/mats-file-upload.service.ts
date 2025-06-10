@@ -25,6 +25,7 @@ import { MatsProcessParamsDTO } from '../dto/mats-process-params.dto';
 import { RecipientListService } from '../submission/recipient-list.service';
 import { MailEvalService } from '../mail/mail-eval.service';
 import { DocumentService } from '../submission/document.service';
+import { EvaluationSetHelperService } from '../evaluation/evaluation-set-helper.service';
 
 
 
@@ -42,6 +43,7 @@ export class MatsFileUploadService {
     private readonly recipientListService: RecipientListService,
     private readonly mailEvalService: MailEvalService,
     private readonly documentService: DocumentService,
+     private readonly evaluationSetHelper: EvaluationSetHelperService,
     private readonly httpService: HttpService,
     private readonly logger: Logger,
   ) {
@@ -156,6 +158,7 @@ export class MatsFileUploadService {
       if (!submission) {
         throw new EaseyException(new Error(`MATS Data Submission with id ${matsDataSubId} not found.`), HttpStatus.NOT_FOUND);
       }
+      submission.queuedTime = new Date();
       submission.startedTime = new Date();
       await this.entityManager.save(submission);
 
@@ -301,7 +304,8 @@ export class MatsFileUploadService {
     //Get the recipients list from the recipient's list API
     const recipientsListApiEnabled = this.configService.get<boolean>('app.recipientsListApiEnabled');
 
-    submissionEmailParamsDto.toEmail = recipientsListApiEnabled ? await this.recipientListService.getEmailRecipients(
+    submissionEmailParamsDto.toEmail = submission.userEmail;
+    submissionEmailParamsDto.ccEmail = recipientsListApiEnabled ? await this.recipientListService.getEmailRecipients(
       submission.userId,
       'PDF',
       true,
@@ -309,15 +313,25 @@ export class MatsFileUploadService {
       submission.facId?.toString(),
     ) : '';
 
+    let supportEmail: string;
+    try {
+      const ecmpsClientConfig = await this.evaluationSetHelper.getECMPSClientConfig();
+      supportEmail = ecmpsClientConfig?.supportEmail?.trim?.() || 'ecmps-support@camdsupport.com';
+    } catch (configError) {
+      supportEmail = 'ecmps-support@camdsupport.com';
+      this.logger.error( 'Failed to get support email. Using: ' + supportEmail, configError.stack, );
+    }
+
     submissionEmailParamsDto.templateContext['PLANT_NAME'] = facility.facilityName;
     submissionEmailParamsDto.templateContext['PLANT_STATE'] = facility.state;
     submissionEmailParamsDto.templateContext['ORIS_CODE'] = facility.orisCode;
     submissionEmailParamsDto.templateContext['LOCATION_LIST'] = stackName || unit.name;
     submissionEmailParamsDto.templateContext['SUBMISSION_DATE'] = submission.completedTime;
+    submissionEmailParamsDto.templateContext['supportEmail'] = supportEmail;
 
     await this.mailEvalService.sendEmailWithRetry(
       submissionEmailParamsDto.toEmail,
-      '',
+      submissionEmailParamsDto.ccEmail,
       this.configService.get<string>('app.defaultFromEmail'),
       subject,
       'matsSubmissionTemplate',

@@ -11,6 +11,7 @@ import { DocumentService } from '../submission/document.service';
 import { RecipientListService } from '../submission/recipient-list.service';
 import { MailEvalService } from '../mail/mail-eval.service';
 import { LoggerModule } from '@us-epa-camd/easey-common';
+import { EvaluationSetHelperService } from '../evaluation/evaluation-set-helper.service';
 
 
 jest.mock('@aws-sdk/client-s3');
@@ -43,6 +44,12 @@ describe('MatsFileUploadService', () => {
             addCertificationStatements: jest.fn(),
             sendForSigning: jest.fn(),
           },
+        },
+        {
+          provide: EvaluationSetHelperService,
+          useValue: {
+            getECMPSClientConfig: jest.fn(),
+          }
         },
         {
           provide: HttpService,
