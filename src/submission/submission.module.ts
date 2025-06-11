@@ -9,7 +9,6 @@ import { MailModule } from '../mail/mail.module';
 import { CombinedSubmissionsMap } from '../maps/combined-submissions.map';
 import { EmissionsLastUpdatedMap } from '../maps/emissions-last-updated.map';
 import { SubmissionFeedbackRecordService } from './submission-feedback-record.service';
-import { RecipientListService } from './recipient-list.service';
 import { DocumentService } from './document.service';
 import { ErrorHandlerService } from './error-handler.service';
 import { SubmissionSetHelperService } from './submission-set-helper.service';
@@ -26,7 +25,6 @@ import { SubmissionEmailService } from './submission-email.service';
     SubmissionFeedbackRecordService,
     CombinedSubmissionsMap,
     EmissionsLastUpdatedMap,
-    RecipientListService,
     DocumentService,
     ErrorHandlerService,
     SubmissionSetHelperService,

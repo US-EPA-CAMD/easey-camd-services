@@ -4,5 +4,5 @@ import { IsNumber } from 'class-validator';
 export class ProcessMailDTO {
   @ApiProperty()
   @IsNumber()
-  emailToProcessId: number;
+  emailToSendId: number;
 }
