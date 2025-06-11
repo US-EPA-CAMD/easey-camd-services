@@ -6,10 +6,11 @@ import { CopyOfRecordModule } from '../copy-of-record/copy-of-record.module';
 import { MailModule } from '../mail/mail.module';
 import { DocumentService } from '../submission/document.service';
 import { DataSetModule } from '../dataset/dataset.module';
+import { EvaluationSetHelperService } from '../evaluation/evaluation-set-helper.service';
 
 @Module({
   imports: [HttpModule, CopyOfRecordModule, MailModule, DataSetModule],
   controllers: [MatsFileUploadController],
-  providers: [MatsFileUploadService, DocumentService]
+  providers: [MatsFileUploadService, DocumentService, EvaluationSetHelperService]
 })
 export class MatsFileUploadModule { }
