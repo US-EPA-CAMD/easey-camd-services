@@ -81,6 +81,12 @@ export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(MaintenanceMiddleware)
+      .exclude(
+        {
+          path: '/health',
+          method: RequestMethod.GET,
+        },
+      )
       .forRoutes({ path: '*', method: RequestMethod.ALL });
   }
 }

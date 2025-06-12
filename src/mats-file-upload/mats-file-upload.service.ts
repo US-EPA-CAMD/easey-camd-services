@@ -25,6 +25,7 @@ import { MatsProcessParamsDTO } from '../dto/mats-process-params.dto';
 import { RecipientListService } from '../submission/recipient-list.service';
 import { MailEvalService } from '../mail/mail-eval.service';
 import { DocumentService } from '../submission/document.service';
+import { EvaluationSetHelperService } from '../evaluation/evaluation-set-helper.service';
 
 
 
@@ -42,6 +43,7 @@ export class MatsFileUploadService {
     private readonly recipientListService: RecipientListService,
     private readonly mailEvalService: MailEvalService,
     private readonly documentService: DocumentService,
+     private readonly evaluationSetHelper: EvaluationSetHelperService,
     private readonly httpService: HttpService,
     private readonly logger: Logger,
   ) {
@@ -146,6 +148,7 @@ export class MatsFileUploadService {
     let payloadFiles: MatsDataSubmissionPayloadFile[];
     const matsDataSubId = matsProcessParams.matsDataSubmissionId;
 
+    this.logger.log(`MATS Submission Process Started for: ${matsDataSubId}`);
     try {
       // Update STARTED_TIME column
       submission = await this.entityManager.findOne(MatsDataSubmission, {
@@ -155,6 +158,7 @@ export class MatsFileUploadService {
       if (!submission) {
         throw new EaseyException(new Error(`MATS Data Submission with id ${matsDataSubId} not found.`), HttpStatus.NOT_FOUND);
       }
+      submission.queuedTime = new Date();
       submission.startedTime = new Date();
       await this.entityManager.save(submission);
 
@@ -167,7 +171,7 @@ export class MatsFileUploadService {
       const folderPath = join(__dirname, uuidv4());
       mkdirSync(folderPath);
 
-      const documents:any = [];
+      const documents: any = [];
       // Add MATS Certification Statement
       await this.documentService.addCertificationStatements(submission.monPlanId, documents);
 
@@ -192,6 +196,7 @@ export class MatsFileUploadService {
       const createActivityRes = await this.createActivity(req, matsProcessParams);
       const activityId = createActivityRes.activityId;
       submission.activityId = activityId;
+      this.logger.log(`activityId : ${activityId}`);
 
       // Send documents for signing
       await this.documentService.sendForSigning(activityId, folderPath);
@@ -239,9 +244,15 @@ export class MatsFileUploadService {
   }
 
   private async createActivity(req: Request, matsProcessParams: MatsProcessParamsDTO) {
+    this.logger.log(`Starting create Activity`);
     // For calling create-activity endpoint
     const token = req.headers.authorization;
-    const ip = req.ip;
+
+    const forwardedForHeader = req.headers["x-forwarded-for"];
+    let ip = req.ip;
+    if (forwardedForHeader !== null && forwardedForHeader !== undefined) {
+      ip = (forwardedForHeader as string)?.split(",")[0];
+    }
 
     const createActivityUSerData = {
       userId: matsProcessParams.userId,
@@ -256,12 +267,12 @@ export class MatsFileUploadService {
     const headers = {
       "x-api-key": this.configService.get<string>('app.apiKey'),
       authorization: `${token}`,
-      'x-forwarded-for': ip
+      "x-forwarded-for": ip,
     };
     const response: AxiosResponse<any> = await firstValueFrom(
       this.httpService.post(url, body, { headers }),
     );
-
+    this.logger.log(`End create Activity`);
     return response.data
 
   }
@@ -293,7 +304,8 @@ export class MatsFileUploadService {
     //Get the recipients list from the recipient's list API
     const recipientsListApiEnabled = this.configService.get<boolean>('app.recipientsListApiEnabled');
 
-    submissionEmailParamsDto.toEmail = recipientsListApiEnabled ? await this.recipientListService.getEmailRecipients(
+    submissionEmailParamsDto.toEmail = submission.userEmail;
+    submissionEmailParamsDto.ccEmail = recipientsListApiEnabled ? await this.recipientListService.getEmailRecipients(
       submission.userId,
       'PDF',
       true,
@@ -301,15 +313,25 @@ export class MatsFileUploadService {
       submission.facId?.toString(),
     ) : '';
 
+    let supportEmail: string;
+    try {
+      const ecmpsClientConfig = await this.evaluationSetHelper.getECMPSClientConfig();
+      supportEmail = ecmpsClientConfig?.supportEmail?.trim?.() || 'ecmps-support@camdsupport.com';
+    } catch (configError) {
+      supportEmail = 'ecmps-support@camdsupport.com';
+      this.logger.error( 'Failed to get support email. Using: ' + supportEmail, configError.stack, );
+    }
+
     submissionEmailParamsDto.templateContext['PLANT_NAME'] = facility.facilityName;
     submissionEmailParamsDto.templateContext['PLANT_STATE'] = facility.state;
     submissionEmailParamsDto.templateContext['ORIS_CODE'] = facility.orisCode;
     submissionEmailParamsDto.templateContext['LOCATION_LIST'] = stackName || unit.name;
     submissionEmailParamsDto.templateContext['SUBMISSION_DATE'] = submission.completedTime;
+    submissionEmailParamsDto.templateContext['supportEmail'] = supportEmail;
 
     await this.mailEvalService.sendEmailWithRetry(
       submissionEmailParamsDto.toEmail,
-      '',
+      submissionEmailParamsDto.ccEmail,
       this.configService.get<string>('app.defaultFromEmail'),
       subject,
       'matsSubmissionTemplate',
