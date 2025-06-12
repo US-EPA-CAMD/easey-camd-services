@@ -26,6 +26,7 @@ import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
 import { ReportParamsDTO } from '../dto/report-params.dto';
 import { DataSetService } from '../dataset/dataset.service';
 import { CopyOfRecordService } from '../copy-of-record/copy-of-record.service';
+import { Logger } from '@us-epa-camd/easey-common';
 
 //Formats and sends emissions evaluations emails
 @Injectable()
@@ -36,6 +37,7 @@ export class MailEvalService {
     private readonly configService: ConfigService,
     private dataSetService: DataSetService,
     private copyOfRecordService: CopyOfRecordService,
+    private readonly logger: Logger
   ) {}
 
   returnManager() {
@@ -109,15 +111,36 @@ export class MailEvalService {
           newItem['Test Type'] = testSumRecord.testTypeCode;
           newItem['Test Reason'] = testSumRecord.testReasonCode;
           newItem['Test Result'] = testSumRecord.testResultCode;
-          if (testSumRecord instanceof TestSummary) {
-            newItem['evalStatusCode'] = mappedStatusCodes.get(
-              testSumRecord.evalStatusCode,
-            );
-            const colors = this.getReportColors(testSumRecord.evalStatusCode);
-            newItem['reportColor'] = colors[0];
-            newItem['reportLineColor'] = colors[1];
+
+          const setColors = (evalStatusCode :string) => {
+          const colors = this.getReportColors(evalStatusCode);
+          newItem['reportColor'] = colors[0];
+          newItem['reportLineColor'] = colors[1];
           }
 
+          if (testSumRecord instanceof TestSummary) {
+               switch(testSumRecord.evalStatusCode)
+                      {
+                      case "INFO":
+                            const severity = await this.entityManager.query(
+                            `select sc.severity_cd_description from camdecmpswks.test_summary t
+                            JOIN camdecmpswks.check_session cs on cs.chk_session_id = t.chk_session_id
+                            JOIN camdecmpsmd.severity_code sc on sc.severity_cd = cs.severity_cd
+                            where t.test_sum_id = $1;`,
+                            [testSumRecord.testSumIdentifier],
+                            );
+                            newItem['evalStatusCode']  = severity[0]?.severity_cd_description;
+                            if(severity[0]?.severity_cd_description?.includes("Level"))
+                                setColors("ERR");
+                            else
+                                setColors(testSumRecord.evalStatusCode);
+                            break;
+                      default:
+                            newItem['evalStatusCode'] = mappedStatusCodes.get(testSumRecord.evalStatusCode);                
+                            setColors(testSumRecord.evalStatusCode);
+                            break;
+                      } 
+                     }
           newItem['reportUrl'] = `${this.configService.get<string>(
             'app.ecmpsHost',
           )}/workspace/reports?reportCode=TEST_EVAL&facilityId=${orisCode}&testId=${
@@ -166,13 +189,34 @@ export class MailEvalService {
             );
           newItem['Cert Event Code'] = certEventRecord.qaCertEventCode;
           newItem['Required Test Code'] = certEventRecord.requiredTestCode;
+
+          const setColors = (evalStatusCode :string) => {
+          const colors = this.getReportColors(evalStatusCode);
+          newItem['reportColor'] = colors[0];
+          newItem['reportLineColor'] = colors[1];
+          }
           if (certEventRecord instanceof QaCertEvent) {
-            newItem['evalStatusCode'] = mappedStatusCodes.get(
-              certEventRecord.evalStatusCode,
-            );
-            const colors = this.getReportColors(certEventRecord.evalStatusCode);
-            newItem['reportColor'] = colors[0];
-            newItem['reportLineColor'] = colors[1];
+               switch(certEventRecord.evalStatusCode)
+                      {
+                      case "INFO":
+                            const severity = await this.entityManager.query(
+                             `select sc.severity_cd_description from camdecmpswks.qa_cert_event qce
+                              JOIN camdecmpswks.check_session cs on cs.chk_session_id = qce.chk_session_id
+                              JOIN camdecmpsmd.severity_code sc on sc.severity_cd = cs.severity_cd
+                              where qce.qa_cert_event_id = $1;`,
+                              [certEventRecord.qaCertEventIdentifier],
+                            );
+                            newItem['evalStatusCode']  = severity[0]?.severity_cd_description;
+                            if(severity[0]?.severity_cd_description?.includes("Level"))
+                                setColors("ERR");
+                            else
+                                setColors(certEventRecord.evalStatusCode);
+                            break;
+                      default:
+                            newItem['evalStatusCode'] = mappedStatusCodes.get(certEventRecord.evalStatusCode);                
+                            setColors(certEventRecord.evalStatusCode);
+                            break;
+                      }             
           }
 
           newItem['reportUrl'] = `${this.configService.get<string>(
@@ -238,14 +282,36 @@ export class MailEvalService {
           newItem['Extension Exemption Code'] = teeRecord.extensExemptCode;
           newItem['Hours Used'] = teeRecord.hoursUsed;
           newItem['Span Scale Code'] = teeRecord.spanScaleCode;
-          if (teeRecord instanceof QaTee) {
-            newItem['evalStatusCode'] = mappedStatusCodes.get(
-              teeRecord.evalStatusCode,
-            );
-            const colors = this.getReportColors(teeRecord.evalStatusCode);
-            newItem['reportColor'] = colors[0];
-            newItem['reportLineColor'] = colors[1];
+
+          const setColors = (evalStatusCode :string) => {
+                const colors = this.getReportColors(evalStatusCode);
+                newItem['reportColor'] = colors[0];
+                newItem['reportLineColor'] = colors[1];
           }
+          if (teeRecord instanceof QaTee) {
+              switch(teeRecord.evalStatusCode)
+                    {
+                      case "INFO":
+                            const severity = await this.entityManager.query(
+                            `select sc.severity_cd_description from camdecmpswks.test_extension_exemption t
+                            JOIN camdecmpswks.check_session cs on cs.chk_session_id = t.chk_session_id
+                            JOIN camdecmpsmd.severity_code sc on sc.severity_cd = cs.severity_cd
+                            where t.test_extension_exemption_id = $1;`,
+                            [teeRecord.testExtensionExemptionIdentifier],
+                            );
+                            newItem['evalStatusCode']  = severity[0]?.severity_cd_description;
+                            if(severity[0]?.severity_cd_description?.includes("Level"))
+                                setColors("ERR");
+                            else
+                                setColors(teeRecord.evalStatusCode);
+                            break;
+                      default:
+                            newItem['evalStatusCode'] = mappedStatusCodes.get(
+                            teeRecord.evalStatusCode,)                              
+                            setColors(teeRecord.evalStatusCode);
+                            break;
+                    }             
+                   }
 
           newItem['reportUrl'] = `${this.configService.get<string>(
             'app.ecmpsHost',
@@ -294,14 +360,37 @@ export class MailEvalService {
           );
 
           newItem['Year / Quarter'] = reportPeriodInfo.periodAbbreviation;
-          if (emissionsRecord instanceof EmissionEvaluation) {
-            newItem['evalStatusCode'] = mappedStatusCodes.get(
-              emissionsRecord.evalStatusCode,
-            );
-            const colors = this.getReportColors(emissionsRecord.evalStatusCode);
-            newItem['reportColor'] = colors[0];
-            newItem['reportLineColor'] = colors[1];
+          const setColors = (evalStatusCode :string) => {
+                const colors = this.getReportColors(evalStatusCode);
+                newItem['reportColor'] = colors[0];
+                newItem['reportLineColor'] = colors[1];
           }
+          if (emissionsRecord instanceof EmissionEvaluation) {
+                switch(emissionsRecord.evalStatusCode)
+                    {
+                      case "INFO":
+                            const severity = await this.entityManager.query(
+                            `select sc.severity_cd_description from camdecmpswks.EMISSION_EVALUATION em
+                            JOIN camdecmpsmd.reporting_period prd ON prd.rpt_period_id = em.rpt_period_id 
+                            JOIN camdecmpswks.monitor_plan pln ON pln.mon_plan_id = em.mon_plan_id 
+                            JOIN camdecmpswks.check_session cs on cs.chk_session_id = em.chk_session_id
+                            JOIN camdecmpsmd.severity_code sc on sc.severity_cd = cs.severity_cd
+                            where  em.mon_plan_id = $1;`,
+                            [emissionsRecord.monPlanIdentifier],
+                            );
+                            newItem['evalStatusCode']  = severity[0]?.severity_cd_description
+                            if(severity[0]?.severity_cd_description?.includes("Level"))
+                                setColors("ERR");
+                            else
+                                setColors(emissionsRecord.evalStatusCode);
+                            break;
+                      default:
+                            newItem['evalStatusCode'] = mappedStatusCodes.get(
+                            emissionsRecord.evalStatusCode,)                              
+                            setColors(emissionsRecord.evalStatusCode);
+                            break;
+                    }
+                   }
 
           newItem['reportUrl'] = `${this.configService.get<string>(
             'app.ecmpsHost',
@@ -650,14 +739,36 @@ export class MailEvalService {
       ],
     };
 
+    const setColors = (evalStatusCode :string) => {
+        const colors = this.getReportColors(evalStatusCode);
+        templateContext['monitorPlan'].items['reportColor'] = colors[0];
+        templateContext['monitorPlan'].items['reportLineColor'] = colors[1];
+    }
+
     const mpChildRecord = records.find((r) => r.processCode === 'MP');
     if (mpChildRecord) {
       if (mpRecord instanceof MonitorPlan) {
-        templateContext['monitorPlan'].items['evalStatus'] =
-          mappedStatusCodes.get(mpRecord.evalStatusCode);
-        const colors = this.getReportColors(mpRecord.evalStatusCode);
-        templateContext['monitorPlan'].items['reportColor'] = colors[0];
-        templateContext['monitorPlan'].items['reportLineColor'] = colors[1];
+            switch(mpRecord.evalStatusCode)
+              {
+              case "INFO":
+                const severity = await this.entityManager.query(
+                `SELECT sc.severity_cd_description 
+                  FROM camdecmpswks.monitor_plan p
+                  JOIN camdecmpswks.check_session cs on cs.chk_session_id = p.chk_session_id
+                  JOIN camdecmpsmd.severity_code sc on sc.severity_cd = cs.severity_cd
+                  WHERE p.mon_plan_id = $1;`,
+                  [setRecord.monPlanIdentifier],
+                );
+                templateContext['monitorPlan'].items['evalStatus'] = severity[0]?.severity_cd_description;
+                if(severity[0]?.severity_cd_description?.includes("Level"))
+                    setColors("ERR");
+                else
+                    setColors(mpRecord.evalStatusCode);
+              break;
+              default:
+                templateContext['monitorPlan'].items['evalStatus'] = mappedStatusCodes.get(mpRecord.evalStatusCode);
+                setColors(mpRecord.evalStatusCode); break;
+              }
       }
 
       templateContext['monitorPlan'].items[
