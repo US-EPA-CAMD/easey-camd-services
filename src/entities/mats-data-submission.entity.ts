@@ -42,6 +42,9 @@ export class MatsDataSubmission extends BaseEntity {
   @Column({ name: 'user_id' })
   userId: string;
 
+  @Column({ name: 'user_email' })
+  userEmail: string;
+
   @Column({ name: 'add_time', type: 'timestamp' })
   addTime: Date;
 
@@ -49,7 +52,7 @@ export class MatsDataSubmission extends BaseEntity {
   updateTime: Date;
 
   @Column({ name: 'queued_time', type: 'timestamp', nullable: true })
-  queued_Time: Date;
+  queuedTime: Date;
 
   @Column({ name: 'started_time', type: 'timestamp', nullable: true })
   startedTime: Date;
