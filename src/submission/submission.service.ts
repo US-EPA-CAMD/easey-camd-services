@@ -28,6 +28,7 @@ import { SubmissionSetHelperService } from './submission-set-helper.service';
 import { EvaluationSet } from '../entities/evaluation-set.entity';
 import { Evaluation } from '../entities/evaluation.entity';
 import { TestSummary } from '../entities/test-summary.entity';
+import { currentDateTime } from '@us-epa-camd/easey-common/utilities/functions';
 
 @Injectable()
 export class SubmissionService {
@@ -607,6 +608,47 @@ export class SubmissionService {
         await this.ensureRelatedInactivePlansSubmitted(item.monPlanId);
       }),
     );
+
+    // Get the current date
+    const currentTime = currentDateTime();
+    const normalizedCurrentTime = new Date(currentTime.getFullYear(), currentTime.getMonth(), currentTime.getDate());
+
+    const checks = [];
+    for (const item of submissionQueueParam.items) {
+      // Check all the EM records
+      for (const period of item.emissionsReportingPeriods) {
+        const checkPromise = this.entityManager.query(
+          `SELECT window_expired_date, facility_name, oris_code, configuration
+           FROM camdecmpswks.vw_em_eval_and_submit 
+           WHERE mon_plan_id = $1 
+           `,
+          [item.monPlanId],
+        ).then(result => {
+          if (result && result.length > 0) {
+            const endDate = new Date(result[0].window_expired_date);
+            const facilityName = result[0].facility_name;
+            const orisCode = result[0].oris_code;
+            const location = result[0].configuration;
+            
+            // Check if the window is expired
+            if (endDate < normalizedCurrentTime) {
+              throw new EaseyException(
+                new Error(`Submission access has expired for ${facilityName} (${orisCode}), location ${location} with Reporting Period ${period}. The access date for this window expired after ${endDate.toLocaleDateString('en-US')}. Please contact ECMPS Support to extend the submission window.`),
+                HttpStatus.BAD_REQUEST,
+              );
+            }
+          } else {
+            throw new EaseyException(
+              new Error(`Submission access window not found for Monitor Plan ID: ${item.monPlanId} with Reporting Period: ${period}.`),
+              HttpStatus.BAD_REQUEST,
+            );
+          }
+        });
+        checks.push(checkPromise);
+      }
+    }
+
+    await Promise.all(checks);
 
     // Build submissionStages array
     const queueingStages: { action: string; dateTime: string }[] = [];
