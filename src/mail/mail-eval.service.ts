@@ -27,6 +27,7 @@ import { ReportParamsDTO } from '../dto/report-params.dto';
 import { DataSetService } from '../dataset/dataset.service';
 import { CopyOfRecordService } from '../copy-of-record/copy-of-record.service';
 import { Logger } from '@us-epa-camd/easey-common';
+import { SeverityCode } from 'src/entities/severity-code.entity';
 
 //Formats and sends emissions evaluations emails
 @Injectable()
@@ -39,6 +40,68 @@ export class MailEvalService {
     private copyOfRecordService: CopyOfRecordService,
     private readonly logger: Logger
   ) {}
+
+  private readonly severityQueryConfigs = {
+    testSummary: { table: 'camdecmpswks.test_summary', idColumn: 'test_sum_id'},
+    emissionEvaluation: { table: 'camdecmpswks.EMISSION_EVALUATION', idColumn: 'mon_plan_id'},
+    monitorPlan: { table: 'camdecmpswks.monitor_plan', idColumn: 'mon_plan_id'},
+    qaTee: { table: 'camdecmpswks.test_extension_exemption', idColumn: 'test_extension_exemption_id'},
+    qaCertEvent: { table: 'camdecmpswks.qa_cert_event', idColumn: 'qa_cert_event_id'},
+  };
+
+  async getSeverityFromConfig(configKey: string, idValue: string | number, evalStatusCode: string, mappedStatusCodes: Map<string, string>): 
+  Promise<{
+  severityDescription: string | undefined
+  color: string[]
+  } | null> {
+    const config = this.severityQueryConfigs[configKey];
+    const errorValues = ['CRIT2', 'CRIT3'];
+    let severityDescription = null;
+    let color = null;
+      switch(evalStatusCode)
+              {
+              case "INFO":
+                    let sql = null;
+                    if(configKey = "emissionEvaluation")
+                    {
+                    `select sc.severity_cd_description from ${config.table} em
+                    JOIN camdecmpsmd.reporting_period prd ON prd.rpt_period_id = em.rpt_period_id 
+                    JOIN camdecmpswks.monitor_plan pln ON pln.mon_plan_id = em.mon_plan_id 
+                    JOIN camdecmpswks.check_session cs on cs.chk_session_id = em.chk_session_id
+                    JOIN camdecmpsmd.severity_code sc on sc.severity_cd = cs.severity_cd
+                    where  em.${config.idColumn} = $1;`
+                    }
+                    else
+                    {
+                    sql = `
+                    SELECT sc.severity_cd
+                    FROM ${config.table} t
+                    JOIN camdecmpswks.check_session cs on cs.chk_session_id = t.chk_session_id
+                    JOIN camdecmpsmd.severity_code sc on sc.severity_cd = cs.severity_cd
+                    WHERE t.${config.idColumn} = $1`;
+                    }
+                    
+                    const result = await this.entityManager.query(sql, [idValue]);
+                    const severityCode = await this.entityManager.findOneBy(SeverityCode, {
+                        severityCode: result?.[0]?.severity_cd
+                    });
+                    severityDescription = severityCode?.severityCodeDescription;
+
+                if(errorValues.includes(result?.[0]?.severity_cd))
+                    color = this.getReportColors('ERR');
+                else
+                    color = this.getReportColors(evalStatusCode);
+                    break;
+                default:
+                    severityDescription = mappedStatusCodes.get(evalStatusCode);
+                    color = this.getReportColors(evalStatusCode);
+                    break;
+              }
+    return {
+            severityDescription: severityDescription,
+            color: color
+          };
+  }
 
   returnManager() {
     return this.entityManager;
@@ -112,35 +175,13 @@ export class MailEvalService {
           newItem['Test Reason'] = testSumRecord.testReasonCode;
           newItem['Test Result'] = testSumRecord.testResultCode;
 
-          const setColors = (evalStatusCode :string) => {
-          const colors = this.getReportColors(evalStatusCode);
-          newItem['reportColor'] = colors[0];
-          newItem['reportLineColor'] = colors[1];
+          if (testSumRecord instanceof TestSummary) {
+              let result = await this.getSeverityFromConfig('testSummary', testSumRecord.testSumIdentifier, testSumRecord.evalStatusCode, mappedStatusCodes);
+              newItem['evalStatusCode']  = result?.severityDescription;
+              newItem['reportColor'] = result?.color[0];
+              newItem['reportLineColor'] = result?.color[1];
           }
 
-          if (testSumRecord instanceof TestSummary) {
-               switch(testSumRecord.evalStatusCode)
-                      {
-                      case "INFO":
-                            const severity = await this.entityManager.query(
-                            `select sc.severity_cd_description from camdecmpswks.test_summary t
-                            JOIN camdecmpswks.check_session cs on cs.chk_session_id = t.chk_session_id
-                            JOIN camdecmpsmd.severity_code sc on sc.severity_cd = cs.severity_cd
-                            where t.test_sum_id = $1;`,
-                            [testSumRecord.testSumIdentifier],
-                            );
-                            newItem['evalStatusCode']  = severity[0]?.severity_cd_description;
-                            if(severity[0]?.severity_cd_description?.includes("Level"))
-                                setColors("ERR");
-                            else
-                                setColors(testSumRecord.evalStatusCode);
-                            break;
-                      default:
-                            newItem['evalStatusCode'] = mappedStatusCodes.get(testSumRecord.evalStatusCode);                
-                            setColors(testSumRecord.evalStatusCode);
-                            break;
-                      } 
-                     }
           newItem['reportUrl'] = `${this.configService.get<string>(
             'app.ecmpsHost',
           )}/workspace/reports?reportCode=TEST_EVAL&facilityId=${orisCode}&testId=${
@@ -190,33 +231,11 @@ export class MailEvalService {
           newItem['Cert Event Code'] = certEventRecord.qaCertEventCode;
           newItem['Required Test Code'] = certEventRecord.requiredTestCode;
 
-          const setColors = (evalStatusCode :string) => {
-          const colors = this.getReportColors(evalStatusCode);
-          newItem['reportColor'] = colors[0];
-          newItem['reportLineColor'] = colors[1];
-          }
           if (certEventRecord instanceof QaCertEvent) {
-               switch(certEventRecord.evalStatusCode)
-                      {
-                      case "INFO":
-                            const severity = await this.entityManager.query(
-                             `select sc.severity_cd_description from camdecmpswks.qa_cert_event qce
-                              JOIN camdecmpswks.check_session cs on cs.chk_session_id = qce.chk_session_id
-                              JOIN camdecmpsmd.severity_code sc on sc.severity_cd = cs.severity_cd
-                              where qce.qa_cert_event_id = $1;`,
-                              [certEventRecord.qaCertEventIdentifier],
-                            );
-                            newItem['evalStatusCode']  = severity[0]?.severity_cd_description;
-                            if(severity[0]?.severity_cd_description?.includes("Level"))
-                                setColors("ERR");
-                            else
-                                setColors(certEventRecord.evalStatusCode);
-                            break;
-                      default:
-                            newItem['evalStatusCode'] = mappedStatusCodes.get(certEventRecord.evalStatusCode);                
-                            setColors(certEventRecord.evalStatusCode);
-                            break;
-                      }             
+              let result = await this.getSeverityFromConfig('qaCertEvent', certEventRecord.qaCertEventIdentifier, certEventRecord.evalStatusCode, mappedStatusCodes);
+              newItem['evalStatusCode']  = result?.severityDescription;
+              newItem['reportColor'] = result?.color[0];
+              newItem['reportLineColor'] = result?.color[1];            
           }
 
           newItem['reportUrl'] = `${this.configService.get<string>(
@@ -283,35 +302,12 @@ export class MailEvalService {
           newItem['Hours Used'] = teeRecord.hoursUsed;
           newItem['Span Scale Code'] = teeRecord.spanScaleCode;
 
-          const setColors = (evalStatusCode :string) => {
-                const colors = this.getReportColors(evalStatusCode);
-                newItem['reportColor'] = colors[0];
-                newItem['reportLineColor'] = colors[1];
-          }
           if (teeRecord instanceof QaTee) {
-              switch(teeRecord.evalStatusCode)
-                    {
-                      case "INFO":
-                            const severity = await this.entityManager.query(
-                            `select sc.severity_cd_description from camdecmpswks.test_extension_exemption t
-                            JOIN camdecmpswks.check_session cs on cs.chk_session_id = t.chk_session_id
-                            JOIN camdecmpsmd.severity_code sc on sc.severity_cd = cs.severity_cd
-                            where t.test_extension_exemption_id = $1;`,
-                            [teeRecord.testExtensionExemptionIdentifier],
-                            );
-                            newItem['evalStatusCode']  = severity[0]?.severity_cd_description;
-                            if(severity[0]?.severity_cd_description?.includes("Level"))
-                                setColors("ERR");
-                            else
-                                setColors(teeRecord.evalStatusCode);
-                            break;
-                      default:
-                            newItem['evalStatusCode'] = mappedStatusCodes.get(
-                            teeRecord.evalStatusCode,)                              
-                            setColors(teeRecord.evalStatusCode);
-                            break;
-                    }             
-                   }
+              let result = await this.getSeverityFromConfig('qaTee', teeRecord.testExtensionExemptionIdentifier, teeRecord.evalStatusCode, mappedStatusCodes);
+              newItem['evalStatusCode']  = result?.severityDescription;
+              newItem['reportColor'] = result?.color[0];
+              newItem['reportLineColor'] = result?.color[1];               
+            }
 
           newItem['reportUrl'] = `${this.configService.get<string>(
             'app.ecmpsHost',
@@ -360,37 +356,13 @@ export class MailEvalService {
           );
 
           newItem['Year / Quarter'] = reportPeriodInfo.periodAbbreviation;
-          const setColors = (evalStatusCode :string) => {
-                const colors = this.getReportColors(evalStatusCode);
-                newItem['reportColor'] = colors[0];
-                newItem['reportLineColor'] = colors[1];
-          }
+
           if (emissionsRecord instanceof EmissionEvaluation) {
-                switch(emissionsRecord.evalStatusCode)
-                    {
-                      case "INFO":
-                            const severity = await this.entityManager.query(
-                            `select sc.severity_cd_description from camdecmpswks.EMISSION_EVALUATION em
-                            JOIN camdecmpsmd.reporting_period prd ON prd.rpt_period_id = em.rpt_period_id 
-                            JOIN camdecmpswks.monitor_plan pln ON pln.mon_plan_id = em.mon_plan_id 
-                            JOIN camdecmpswks.check_session cs on cs.chk_session_id = em.chk_session_id
-                            JOIN camdecmpsmd.severity_code sc on sc.severity_cd = cs.severity_cd
-                            where  em.mon_plan_id = $1;`,
-                            [emissionsRecord.monPlanIdentifier],
-                            );
-                            newItem['evalStatusCode']  = severity[0]?.severity_cd_description
-                            if(severity[0]?.severity_cd_description?.includes("Level"))
-                                setColors("ERR");
-                            else
-                                setColors(emissionsRecord.evalStatusCode);
-                            break;
-                      default:
-                            newItem['evalStatusCode'] = mappedStatusCodes.get(
-                            emissionsRecord.evalStatusCode,)                              
-                            setColors(emissionsRecord.evalStatusCode);
-                            break;
-                    }
-                   }
+              let result = await this.getSeverityFromConfig('emissionEvaluation', emissionsRecord.monPlanIdentifier, emissionsRecord.evalStatusCode, mappedStatusCodes);
+              newItem['evalStatusCode']  = result?.severityDescription;
+              newItem['reportColor'] = result?.color[0];
+              newItem['reportLineColor'] = result?.color[1]; 
+            }
 
           newItem['reportUrl'] = `${this.configService.get<string>(
             'app.ecmpsHost',
@@ -739,36 +711,13 @@ export class MailEvalService {
       ],
     };
 
-    const setColors = (evalStatusCode :string) => {
-        const colors = this.getReportColors(evalStatusCode);
-        templateContext['monitorPlan'].items['reportColor'] = colors[0];
-        templateContext['monitorPlan'].items['reportLineColor'] = colors[1];
-    }
-
     const mpChildRecord = records.find((r) => r.processCode === 'MP');
     if (mpChildRecord) {
       if (mpRecord instanceof MonitorPlan) {
-            switch(mpRecord.evalStatusCode)
-              {
-              case "INFO":
-                const severity = await this.entityManager.query(
-                `SELECT sc.severity_cd_description 
-                  FROM camdecmpswks.monitor_plan p
-                  JOIN camdecmpswks.check_session cs on cs.chk_session_id = p.chk_session_id
-                  JOIN camdecmpsmd.severity_code sc on sc.severity_cd = cs.severity_cd
-                  WHERE p.mon_plan_id = $1;`,
-                  [setRecord.monPlanIdentifier],
-                );
-                templateContext['monitorPlan'].items['evalStatus'] = severity[0]?.severity_cd_description;
-                if(severity[0]?.severity_cd_description?.includes("Level"))
-                    setColors("ERR");
-                else
-                    setColors(mpRecord.evalStatusCode);
-              break;
-              default:
-                templateContext['monitorPlan'].items['evalStatus'] = mappedStatusCodes.get(mpRecord.evalStatusCode);
-                setColors(mpRecord.evalStatusCode); break;
-              }
+            let result = await this.getSeverityFromConfig('monitorPlan', mpRecord.monPlanIdentifier, mpRecord.evalStatusCode, mappedStatusCodes);
+            templateContext['monitorPlan'].items['evalStatus'] = result?.severityDescription;
+            templateContext['monitorPlan'].items['reportColor'] = result?.color[0];
+            templateContext['monitorPlan'].items['reportLineColor'] = result?.color[1];
       }
 
       templateContext['monitorPlan'].items[
