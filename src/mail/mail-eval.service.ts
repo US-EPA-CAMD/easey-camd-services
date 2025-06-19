@@ -64,7 +64,7 @@ export class MailEvalService {
                     let sql = null;
                     if(configKey = "emissionEvaluation")
                     {
-                    `select sc.severity_cd_description from ${config.table} em
+                    sql = `select sc.severity_cd_description from ${config.table} em
                     JOIN camdecmpsmd.reporting_period prd ON prd.rpt_period_id = em.rpt_period_id 
                     JOIN camdecmpswks.monitor_plan pln ON pln.mon_plan_id = em.mon_plan_id 
                     JOIN camdecmpswks.check_session cs on cs.chk_session_id = em.chk_session_id
@@ -73,8 +73,7 @@ export class MailEvalService {
                     }
                     else
                     {
-                    sql = `
-                    SELECT sc.severity_cd
+                    sql = `SELECT sc.severity_cd
                     FROM ${config.table} t
                     JOIN camdecmpswks.check_session cs on cs.chk_session_id = t.chk_session_id
                     JOIN camdecmpsmd.severity_code sc on sc.severity_cd = cs.severity_cd
