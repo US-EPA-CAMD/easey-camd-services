@@ -27,7 +27,7 @@ import { ReportParamsDTO } from '../dto/report-params.dto';
 import { DataSetService } from '../dataset/dataset.service';
 import { CopyOfRecordService } from '../copy-of-record/copy-of-record.service';
 import { Logger } from '@us-epa-camd/easey-common';
-import { SeverityCode } from 'src/entities/severity-code.entity';
+import { SeverityCode } from '../entities/severity-code.entity';
 
 //Formats and sends emissions evaluations emails
 @Injectable()
