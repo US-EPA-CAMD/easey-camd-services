@@ -71,7 +71,7 @@ export class SubmissionProcessService {
 
       // Send documents for signing
       this.logger.log(`Sending for signing ... `);
-      await this.documentService.sendForSigning(set, folderPath);
+      await this.documentService.sendForSigning(set.activityId, folderPath);
 
       //Push the submission stage here
       submissionStages.push({ action: 'DOCUMENTS_SIGNED', dateTime: (await this.submissionSetHelper.getFormattedDateTime())  || 'N/A' });

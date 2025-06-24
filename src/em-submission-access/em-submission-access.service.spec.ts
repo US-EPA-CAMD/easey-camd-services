@@ -244,7 +244,7 @@ describe('EmSubmissionAccessService', () => {
     map.one.mockReturnValue(mockedDto);
     let payload = new EmSubmissionAccessCreateDTO();
     viewRepository.findOneBy.mockResolvedValue(new EmSubmissionAccess());
-    const result = await service.createEmSubmissionAccess(payload, 'user');
+    const result = await service.createEmSubmissionAccess(payload);
     expect(result).toEqual(mockedDto);
   });
 

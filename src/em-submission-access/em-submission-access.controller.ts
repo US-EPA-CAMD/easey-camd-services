@@ -81,9 +81,8 @@ export class EmSubmissionAccessController {
   })
   async createEmSubmissionAccess(
     @Body() payload: EmSubmissionAccessCreateDTO,
-    @User() user: CurrentUser,
   ) {
-    return this.service.createEmSubmissionAccess(payload, user.userId);
+    return this.service.createEmSubmissionAccess(payload);
   }
 
   @Put(':id')
