@@ -7,7 +7,7 @@ import { QueryBuilderHelper } from '../utilities/query-builder.helper';
 
 @Injectable()
 export class ErrorSuppressionsRepository extends Repository<EsSpec> {
-  constructor(entityManager: EntityManager  ) {
+  constructor(entityManager: EntityManager ) {
     super(EsSpec, entityManager);
   }
 
