@@ -14,7 +14,7 @@ import { QaTestExtensionExemptionModule } from './qa-test-extension-exemption/qa
 import { EmSubmissionAccessModule } from './em-submission-access/em-submission-access.module';
 import { SubmissionModule } from './submission/submission.module';
 import { MatsFileUploadModule } from './mats-file-upload/mats-file-upload.module';
-import { TestTypeCode } from './test-type-code/test-type-code.module';
+import { TestTypeCodeModule } from './test-type-code/test-type-code.module';
 import { HealthModule } from '@us-epa-camd/easey-common/health/health.module';
 
 const routes = [
@@ -56,7 +56,7 @@ const routes = [
   },
   {
     path: '/',
-    module: TestTypeCode,
+    module: TestTypeCodeModule,
   },
   {
     path: '/admin',

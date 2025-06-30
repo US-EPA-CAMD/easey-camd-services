@@ -8,4 +8,4 @@ import { TestTypeCodeService } from './test-type-code.service';
   controllers: [TestTypeCodeController],
   providers: [TestTypeCodeService],
 })
-export class TestTypeCode {}
+export class TestTypeCodeModule {}
