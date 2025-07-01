@@ -21,14 +21,29 @@ export class SubmissionListView extends BaseEntity {
   state: string;
 
   @Column({
+    name: 'qa_data_type_cd',
+  })
+  qaDataTypeCode: string;
+
+  @Column({
+    name: 'test_type_cd',
+  })
+  testTypeCode: string;
+
+  @Column({
     name: 'locations',
   })
   locations: string;
 
-  @Column({
+    @Column({
     name: 'reporting_period',
   })
   reportingPeriod: string;
+  
+  @Column({
+    name: 'identifying_information',
+  })
+  identifyingInformation: string;
 
   @Column({
     name: 'reporting_frequency',
@@ -48,7 +63,7 @@ export class SubmissionListView extends BaseEntity {
 
   @Column({
     name: 'queued_time',
-    type: 'date',
+    type: 'timestamp',
   })
   submissionDateTime: Date;
 
@@ -71,31 +86,6 @@ export class SubmissionListView extends BaseEntity {
     name: 'severity_cd',
   })
   severityCode: string;
-
-  @Column({
-    name: 'severity_critical_1',
-  })
-  criticalErrLevelOne: string;
-
-  @Column({
-    name: 'severity_critical_2',
-  })
-  criticalErrLevelTwo: string;
-
-  @Column({
-    name: 'severity_non_critical',
-  })
-  nonCritical: string;
-
-  @Column({
-    name: 'severity_informational',
-  })
-  infoMessage: string;
-
-  @Column({
-    name: 'severity_administrative_override',
-  })
-  adminOverride: string;
 
   @Column({
     name: 'submitter',

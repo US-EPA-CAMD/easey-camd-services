@@ -1,6 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { LoggerModule } from '@us-epa-camd/easey-common/logger';
 import { EntityManager } from 'typeorm';
+import { getRepositoryToken } from '@nestjs/typeorm';
 
 import { EvaluationDTO, EvaluationItem } from '../dto/evaluation.dto';
 import { EmissionEvaluation } from '../entities/emission-evaluation.entity';
@@ -14,6 +15,7 @@ import { EvaluationService } from './evaluation.service';
 import { EvaluationSetHelperService } from './evaluation-set-helper.service';
 import { EvaluationErrorHandlerService } from './evaluation-error-handler.service';
 import { HttpStatus } from '@nestjs/common';
+import { EvaluationQueuePosition } from '../entities/evaluation-queue-position.entity';
 
 const dtoItem = new EvaluationItem();
 dtoItem.monPlanId = 'mockMonPlanId';
@@ -82,6 +84,10 @@ describe('-- Evaluation Service --', () => {
         {
           provide: EntityManager,
           useValue: mockedEntityManager,
+        },
+        {
+          provide: getRepositoryToken(EvaluationQueuePosition),
+          useValue: EvaluationQueuePosition,
         },
         {
           provide: EvaluationSetHelperService,

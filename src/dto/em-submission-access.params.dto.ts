@@ -27,7 +27,7 @@ export class EmSubmissionAccessParamsDTO {
     };
   })
   @Type(() => Number)
-  orisCode?: number;
+  orisCode: number;
 
   @IsNotEmpty({message: () => 'Year is required'})
   @ApiProperty()
@@ -37,7 +37,7 @@ export class EmSubmissionAccessParamsDTO {
     },
   })
   @Type(() => Number)
-  year?: number;
+  year: number;
 
   @IsNotEmpty({message: () => 'Quarter is required'})
   @ApiProperty()
@@ -47,7 +47,7 @@ export class EmSubmissionAccessParamsDTO {
     },
   })
   @Type(() => Number)
-  quarter?: number;
+  quarter: number;
 
   @IsOptional()
   @ApiProperty({ enum: Status })

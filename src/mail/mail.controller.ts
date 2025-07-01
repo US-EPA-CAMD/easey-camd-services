@@ -17,6 +17,7 @@ import { ProcessMailDTO } from '../dto/process-mail.dto';
 import { MassEvalParamsDTO } from '../dto/mass-eval-params.dto';
 import { MailTemplateService } from './mail-template.service';
 import { MailEvalService } from './mail-eval.service';
+import { ApiExcludeEndpointByEnv } from '../decorators/swagger-decorator';
 import { EmailRecipientListRequestDto } from '../dto/email-recipient-list-request.dto';
 import { EmailRecipientListResponseDto } from '../dto/email-recipient-list-response.dto';
 import { RecipientListService } from '../submission/recipient-list.service';
@@ -36,6 +37,7 @@ export class MailController {
   ) {}
 
   @Post('contact-us')
+  @ApiExcludeEndpointByEnv()
   @ApiOkResponse({
     description: 'Data sent successfully',
   })
@@ -53,6 +55,7 @@ export class MailController {
   }
 
   @Post('email/process')
+  @ApiExcludeEndpointByEnv()
   @ApiOkResponse({
     description: 'Data sent successfully',
   })
@@ -71,6 +74,7 @@ export class MailController {
   }
 
   @Post('email/mass-eval')
+  @ApiExcludeEndpointByEnv()
   @ApiOkResponse({
     description: 'Data sent successfully',
   })

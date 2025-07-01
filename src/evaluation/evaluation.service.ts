@@ -1,4 +1,4 @@
-import { EntityManager, In } from 'typeorm';
+import { EntityManager, In, Repository } from 'typeorm';
 import {
   Injectable,
   HttpException,
@@ -6,7 +6,10 @@ import {
   Inject,
   forwardRef,
 } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { Logger } from '@us-epa-camd/easey-common/logger';
+import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
+
 import { EvaluationDTO, EvaluationItem } from '../dto/evaluation.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { EvaluationSet } from '../entities/evaluation-set.entity';
@@ -22,7 +25,8 @@ import { EvaluationSetHelperService } from './evaluation-set-helper.service';
 import { EvaluationErrorHandlerService } from './evaluation-error-handler.service';
 import { SubmissionSet } from '../entities/submission-set.entity';
 import { SubmissionQueue } from '../entities/submission-queue.entity';
-import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
+import { EvalSubmissionQueueOrderParamsDTO, EvaluationQueuePlaceDTO } from '../dto/eval-submission-queue.dto';
+import { EvaluationQueuePosition } from '../entities/evaluation-queue-position.entity';
 
 @Injectable()
 export class EvaluationService {
@@ -33,6 +37,9 @@ export class EvaluationService {
     @Inject(forwardRef(() => EvaluationErrorHandlerService))
     private readonly errorHandlerService: EvaluationErrorHandlerService,
     private readonly evaluationSetHelper: EvaluationSetHelperService,
+
+    @InjectRepository(EvaluationQueuePosition)
+    private readonly evaluationQueuePositionRepo: Repository<EvaluationQueuePosition>,
   ) { }
 
   private async validateEvaluationInput(evaluationItem: EvaluationItem, entityManager: EntityManager) {
@@ -523,5 +530,15 @@ export class EvaluationService {
         status,
       );
     }
+  }
+
+  async getEvaluationQueueOrder(params: EvalSubmissionQueueOrderParamsDTO): Promise<EvaluationQueuePlaceDTO[]> {
+
+    const { orisCodes } = params;
+
+    return this.evaluationQueuePositionRepo
+      .createQueryBuilder('evs')
+      .where('evs.oris_code = ANY(:orisCodes)', { orisCodes })
+      .getMany();
   }
 }
