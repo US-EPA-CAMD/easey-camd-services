@@ -20,14 +20,20 @@ export class SubmissionListViewRepository extends Repository<SubmissionListView>
       severityCode,
       submissionType,
       submissionFrom,
-      submissionTo
+      submissionTo,
+      qaDataType,
+      testType,
+      locations
     } = params;
     let query = this.createQueryBuilder('ss').select([
         'ss.orisCode',
         'ss.facilityName',
         'ss.state',
+        'ss.qaDataTypeCode',
+        'ss.testTypeCode',
         'ss.locations',
         'ss.reportingPeriod',
+        'ss.identifyingInformation',
         'ss.reportingFrequencyCode',
         'ss.submissionTypeCode',
         'ss.submissionId',
@@ -36,11 +42,6 @@ export class SubmissionListViewRepository extends Repository<SubmissionListView>
         'ss.mostRecent',
         'ss.submissionStatus',
         'ss.severityCode',
-        'ss.criticalErrLevelOne',
-        'ss.criticalErrLevelTwo',
-        'ss.nonCritical',
-        'ss.infoMessage',
-        'ss.adminOverride',
         'ss.submitter',
         'ss.monitorPlanId',
         'ss.reportingPeriodId'
@@ -52,12 +53,12 @@ export class SubmissionListViewRepository extends Repository<SubmissionListView>
         });
       }
   
-      if (quarter && year) {
+       if (quarter && year) {
         query.andWhere('ss.reportingPeriod = :reportingPeriod', {
             reportingPeriod: `${year} Q${quarter}`,
         });
       }
-  
+      
       if (severityCode) {
         query.andWhere(
           `(ss.severityCode = :severityCode)`,
@@ -85,6 +86,27 @@ export class SubmissionListViewRepository extends Repository<SubmissionListView>
           { submissionTo },
         );
       }
+
+          if (qaDataType) {
+        query.andWhere(
+          `(ss.qaDataTypeCode = :qaDataType)`,
+          { qaDataType},
+        );
+      } 
+
+    if (testType) {
+        query.andWhere(
+          `(ss.testTypeCode = :testType)`,
+          { testType},
+        );
+      } 
+
+    if (locations) {
+      query.andWhere(
+        `string_to_array(replace(ss.locations, ' ', ''), ',') && :locations::text[]`,
+        { locations },
+      );
+    }
 
       return query.getMany();
     }

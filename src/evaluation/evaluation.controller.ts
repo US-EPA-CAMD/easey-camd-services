@@ -4,11 +4,14 @@ import {
   ApiOkResponse,
   ApiOperation,
   ApiInternalServerErrorResponse,
+  ApiQuery,
 } from '@nestjs/swagger';
-import { Body, Controller, Post, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, UseInterceptors } from '@nestjs/common';
+import { ArrayResponse } from '@us-epa-camd/easey-common/interfaces/common.interface';
 import { EvaluationService } from './evaluation.service';
 import { RoleGuard, AuditLog } from '@us-epa-camd/easey-common/decorators';
 import { EvaluationDTO } from '../dto/evaluation.dto';
+import { EvalSubmissionQueueOrderParamsDTO, EvaluationQueuePlaceDTO } from '../dto/eval-submission-queue.dto';
 import { LookupType } from '@us-epa-camd/easey-common/enums';
 import { EvalErrorParamsDTO } from '../dto/eval-error-params.dto';
 import { EvaluationErrorHandlerService } from './evaluation-error-handler.service';
@@ -23,7 +26,7 @@ export class EvaluationController {
   constructor(
     private service: EvaluationService,
     private evaluationErrorHandlerService: EvaluationErrorHandlerService,
-  ) {}
+  ) { }
 
   @Post('evaluate')
   @ApiOkResponse({
@@ -38,11 +41,42 @@ export class EvaluationController {
   )
   @AuditLog({
     label: 'Creates Evaluation Queue',
-    requestBodyOutFields:'*',
-    omitFields:['userEmail']
+    requestBodyOutFields: '*',
+    omitFields: ['userEmail']
   })
   async evaluate(@Body() params: EvaluationDTO): Promise<void> {
     await this.service.queueEvaluationRecords(params);
+  }
+
+  @Get('evaluate/queueOrder')
+  @ApiOkResponse({
+    type: EvaluationQueuePlaceDTO,
+    description: 'Get evaluation queue list for users facilities',
+  })
+  @ApiQuery({
+    style: 'pipeDelimited',
+    name: 'orisCodes',
+    required: true,
+    explode: false,
+  })
+  @RoleGuard(
+    {
+      enforceCheckout: false,
+      queryParam: 'orisCodes',
+      isPipeDelimitted: true,
+      enforceEvalSubmitCheck: false,
+    },
+    LookupType.Facility,
+  )
+  @AuditLog({
+    label: 'Retrieved evaluation queue lists',
+    requestQueryOutFields: ['orisCodes']
+  })
+  async getEvaluationQueueOrder(@Query() params: EvalSubmissionQueueOrderParamsDTO): Promise<ArrayResponse<EvaluationQueuePlaceDTO>> {
+    const evaluationQueueOrder = await this.service.getEvaluationQueueOrder(params);
+    return {
+      items: evaluationQueueOrder
+    }
   }
 
   @Post('email/eval-error')
