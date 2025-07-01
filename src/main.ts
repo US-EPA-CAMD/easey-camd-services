@@ -5,11 +5,18 @@ import {
   applySwagger,
 } from '@us-epa-camd/easey-common/nestjs';
 import { useContainer } from 'class-validator';
+import { ValidationPipe } from '@nestjs/common';
 
 import { AppModule } from './app.module';
 
 export async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+   app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true, // needed to use @Transform to work
+    }),
+  );
 
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
   await applyMiddleware(AppModule, app, true);

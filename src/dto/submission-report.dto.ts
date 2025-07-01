@@ -1,6 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
-  IsDate,
   IsNumber,
   IsString,
 } from 'class-validator';
@@ -24,7 +23,7 @@ export class SubmissionReportDTO {
 
   @ApiProperty()
   @IsString()
-  reportingPeriodAbbreviation: string;
+  identifyingInformation: string;
 
   @ApiProperty()
   @IsString()
@@ -39,8 +38,8 @@ export class SubmissionReportDTO {
   submissionId: number;
 
   @ApiProperty()
-  @IsDate()
-  submissionDateTime: Date;
+  @IsString()
+  submissionDateTime: string;
 
   @ApiProperty()
   @IsString()
@@ -57,26 +56,6 @@ export class SubmissionReportDTO {
   @ApiProperty()
   @IsString()
   severityCode: string;
-
-  @ApiProperty()
-  @IsString()
-  criticalErrLevelOne: string;
-
-  @ApiProperty()
-  @IsString()
-  criticalErrLevelTwo: string;
-
-  @ApiProperty()
-  @IsString()
-  nonCritical: string;
-
-  @ApiProperty()
-  @IsString()
-  infoMessage: string;
-
-  @ApiProperty()
-  @IsString()
-  adminOverride: string;
 
   @ApiProperty()
   @IsString()

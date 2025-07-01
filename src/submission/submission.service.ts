@@ -1,8 +1,9 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
 import { Logger } from '@us-epa-camd/easey-common/logger';
-import { EntityManager, In, MoreThanOrEqual, Not } from 'typeorm';
+import { EntityManager, In, MoreThanOrEqual, Not, Repository } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
+import { InjectRepository } from '@nestjs/typeorm';
 
 import { EvaluationItem } from '../dto/evaluation.dto';
 import { SubmissionsLastUpdatedResponseDTO } from '../dto/submission-last-updated.dto';
@@ -29,6 +30,8 @@ import { EvaluationSet } from '../entities/evaluation-set.entity';
 import { Evaluation } from '../entities/evaluation.entity';
 import { TestSummary } from '../entities/test-summary.entity';
 import { currentDateTime } from '@us-epa-camd/easey-common/utilities/functions';
+import { EvalSubmissionQueueOrderParamsDTO, SubmissionQueuePlaceDTO } from '../dto/eval-submission-queue.dto';
+import { SubmissionQueuePosition } from '../entities/submission_queue_position.entity';
 
 @Injectable()
 export class SubmissionService {
@@ -39,6 +42,9 @@ export class SubmissionService {
     private readonly emissionsLastUpdatedMap: EmissionsLastUpdatedMap,
     private readonly errorHandlerService: ErrorHandlerService,
     private readonly submissionSetHelper: SubmissionSetHelperService,
+
+    @InjectRepository(SubmissionQueuePosition)
+    private readonly submissionQueuePositionRepo: Repository<SubmissionQueuePosition>,
   ) { }
 
   private async ensureRelatedInactivePlansSubmitted(monPlanId: string) {
@@ -733,5 +739,15 @@ export class SubmissionService {
     dto.mostRecentUpdateDate = clock;
 
     return dto;
+  }
+
+  async getSubmissionQueueOrder(params: EvalSubmissionQueueOrderParamsDTO): Promise<SubmissionQueuePlaceDTO[]> {
+
+    const { orisCodes } = params;
+
+    return this.submissionQueuePositionRepo
+      .createQueryBuilder('ss')
+      .where('ss.oris_code = ANY(:orisCodes)', { orisCodes })
+      .getMany();
   }
 }
