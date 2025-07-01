@@ -7,7 +7,7 @@ import {
   ApiOkResponse,
   ApiOperation,
   ApiSecurity,
-  ApiTags, ApiExtraModels, getSchemaPath } from '@nestjs/swagger';
+  ApiTags, ApiExtraModels, getSchemaPath, ApiQuery } from '@nestjs/swagger';
 import { ApiExcludeControllerByEnv } from '../decorators/swagger-decorator';
 import { BadRequestResponse, NotFoundResponse } from '@us-epa-camd/easey-common/utilities/common-swagger';
 import { ArrayResponse } from '@us-epa-camd/easey-common/interfaces/common.interface';
@@ -49,6 +49,12 @@ export class SubmissionReportController {
   })
   @NotFoundResponse()
   @BadRequestResponse()
+  @ApiQuery({
+      style: 'pipeDelimited',
+      name: 'locations',
+      required: false,
+      explode: false,
+    })
   @ApiOperation({
     description: 'Retrieves Submission Report (CAT) per filter criteria.',
   })

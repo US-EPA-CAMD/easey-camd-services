@@ -21,11 +21,6 @@ export const genSubmissionList = <RepoType>(amount = 1): RepoType[] => {
       mostRecent :  faker.datatype.string(),
       submissionStatus :  faker.datatype.string(),
       severityCode :  faker.datatype.string(),
-      criticalErrLevelOne :  faker.datatype.string(),
-      criticalErrLevelTwo :  faker.datatype.string(),
-      nonCritical :  faker.datatype.string(),
-      infoMessage :  faker.datatype.string(),
-      adminOverride :  faker.datatype.string(),
       submitter :  faker.datatype.string()
     } as unknown as RepoType);
   }
