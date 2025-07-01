@@ -7,9 +7,7 @@ import {
   ApiOkResponse,
   ApiOperation,
   ApiSecurity,
-  ApiTags,
-  ApiQuery
-} from '@nestjs/swagger';
+  ApiTags, ApiExtraModels, getSchemaPath, ApiQuery } from '@nestjs/swagger';
 import { ApiExcludeControllerByEnv } from '../decorators/swagger-decorator';
 import { BadRequestResponse, NotFoundResponse } from '@us-epa-camd/easey-common/utilities/common-swagger';
 import { ArrayResponse } from '@us-epa-camd/easey-common/interfaces/common.interface';
@@ -22,6 +20,7 @@ import { Logger } from '@us-epa-camd/easey-common/logger';
 @ApiSecurity('APIKey')
 @ApiTags('Submission Report')
 @ApiExcludeControllerByEnv()
+@ApiExtraModels(SubmissionReportDTO)
 export class SubmissionReportController {
   constructor(
     private readonly logger: Logger,
@@ -32,9 +31,21 @@ export class SubmissionReportController {
 
   @Get()
   @ApiOkResponse({
-    isArray: true,
     type: SubmissionReportDTO,
     description: 'Data retrieved successfully',
+    content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            properties: {
+              items: {
+                type: 'array',
+                items: { $ref: getSchemaPath(SubmissionReportDTO) },
+              },
+            },
+          },
+        },
+      }
   })
   @NotFoundResponse()
   @BadRequestResponse()

@@ -11,8 +11,7 @@ import {
   ApiOkResponse,
   ApiOperation,
   ApiSecurity,
-  ApiTags,
-} from '@nestjs/swagger';
+  ApiTags, ApiExtraModels, getSchemaPath } from '@nestjs/swagger';
 import { BadRequestResponse, NotFoundResponse } from '@us-epa-camd/easey-common/utilities/common-swagger';
 import { QaCertEventService } from './qa-cert-event.service';
 import { QaCertMaintParamsDto } from '../dto/qa-cert-maint-params.dto';
@@ -29,6 +28,7 @@ import { ApiExcludeControllerByEnv } from '../decorators/swagger-decorator';
 @ApiSecurity('APIKey')
 @ApiTags('QA Cert Event Maintenance')
 @ApiExcludeControllerByEnv()
+@ApiExtraModels(QaCertEventMaintViewDTO)
 export class QaCertEventController {
   constructor(private service: QaCertEventService) {}
 
@@ -40,9 +40,20 @@ export class QaCertEventController {
       'Retrieves QA Cert Event maintenance data per filter criteria.',
   })
   @ApiOkResponse({
-    isArray: true,
-    type: QaCertEventMaintViewDTO,
     description: 'Data retrieved successfully',
+    content: {
+      'application/json': {
+        schema: {
+          type: 'object',
+          properties: {
+            items: {
+              type: 'array',
+              items: { $ref: getSchemaPath(QaCertEventMaintViewDTO) },
+            },
+          },
+        },
+      },
+    }
   })
   async getQaCertEventViewData(
     @Query() params: QaCertMaintParamsDto,
