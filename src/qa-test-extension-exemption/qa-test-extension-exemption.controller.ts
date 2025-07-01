@@ -11,8 +11,7 @@ import {
   ApiOkResponse,
   ApiOperation,
   ApiSecurity,
-  ApiTags,
-} from '@nestjs/swagger';
+  ApiTags, ApiExtraModels, getSchemaPath } from '@nestjs/swagger';
 import { QaTestExtensionExemptionService } from './qa-test-extension-exemption.service';
 import { QaCertMaintParamsDto } from '../dto/qa-cert-maint-params.dto';
 import { AuditLog, RoleGuard, User } from '@us-epa-camd/easey-common/decorators';
@@ -28,6 +27,7 @@ import { ApiExcludeControllerByEnv } from '../decorators/swagger-decorator';
 @ApiSecurity('APIKey')
 @ApiTags('QA Test Extension Exemption Maintenance')
 @ApiExcludeControllerByEnv()
+@ApiExtraModels(QaTeeMaintViewDTO)
 export class QaTestExtensionExemptionController {
   constructor(private service: QaTestExtensionExemptionService) {}
 
@@ -39,9 +39,20 @@ export class QaTestExtensionExemptionController {
       'Retrieves QA Test Extension Exemption maintenance recorcds per filter criteria.',
   })
   @ApiOkResponse({
-    isArray: true,
-    type: QaTeeMaintViewDTO,
     description: 'Data retrieved successfully',
+    content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            properties: {
+              items: {
+                type: 'array',
+                items: { $ref: getSchemaPath(QaTeeMaintViewDTO) },
+              },
+            },
+          },
+        },
+      }
   })
   async getQaTeeViewData(
     @Query() params: QaCertMaintParamsDto,
