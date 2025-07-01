@@ -52,6 +52,16 @@ export class EvaluationErrorHandlerService {
 
     const evaluationStages = evalErrorParamsDTO.evaluationStages || [];
     const rootError = !evalErrorParamsDTO.rootError ? new Error('No error message') : new Error(evalErrorParamsDTO.rootError);
+    
+    // Use provided stack trace if available, otherwise keep the generated one
+    if (evalErrorParamsDTO.errorStack) {
+      // Truncate stack trace if too long (max 8000 chars to leave room for other email content)
+      let stackTrace = evalErrorParamsDTO.errorStack;
+      if (stackTrace.length > 8000) {
+        stackTrace = stackTrace.substring(0, 8000) + '\n... [Stack trace truncated]';
+      }
+      rootError.stack = stackTrace;
+    }
 
     await this.handleQueueingError(evaluation, evaluationQueue, evaluationStages, evaluation.userEmail, evaluation.userIdentifier, rootError, true);
   }

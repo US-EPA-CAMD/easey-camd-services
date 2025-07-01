@@ -1,10 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
+import { Type, Transform } from 'class-transformer';
 import {
   IsOptional,
   IsString,
   ValidationArguments,
-  IsEnum
+  IsEnum,
+  IsArray
 } from 'class-validator';
 
 import { IsValidCode, IsInRange } from '@us-epa-camd/easey-common/pipes';
@@ -16,6 +17,7 @@ import { FindOneOptions } from 'typeorm/find-options/FindOneOptions';
 import { Plant } from '../entities/plant.entity';
 import { currentDateTime } from '@us-epa-camd/easey-common/utilities/functions';
 import { SubmissionTypeCodes } from '../enums/submission-code.enum';
+import { QADataType } from '../enums/qa-data-type.enum';
 const msgA =
   'The [property] is not valid refer to the list of available [property]s for valid values';
 const msgB = `Ensure [property] are in the following formats Date Range - YYYY-mm-dd /Hour Range- YYYY-mm-dd hh/Quarter Range – YYYY Q1/Q2/Q3/Q4`;
@@ -104,4 +106,24 @@ submissionFrom?: string;
     },
 })
 submissionTo?: string;
+
+@IsOptional()
+@ApiProperty({ enum: QADataType })
+@IsString()
+@IsEnum(QADataType, {
+    message: () => {
+      return `The status must have a valid QA Data Type`;
+    },
+  })
+qaDataType?: string;
+
+@IsOptional()
+@IsString()
+testType?: string;
+
+@IsOptional()
+@ApiProperty({ isArray: true })
+@Transform(({ value }) => value.split('|').map((item) => item.trim()))
+@IsArray()
+locations?: string[];
 }

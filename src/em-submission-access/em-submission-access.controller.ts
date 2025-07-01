@@ -5,8 +5,7 @@ import {
   ApiOkResponse,
   ApiOperation,
   ApiSecurity,
-  ApiTags,
-} from '@nestjs/swagger';
+  ApiTags, ApiExtraModels, getSchemaPath } from '@nestjs/swagger';
 import { ApiExcludeControllerByEnv } from '../decorators/swagger-decorator';
 import { BadRequestResponse, NotFoundResponse } from '@us-epa-camd/easey-common/utilities/common-swagger';
 import { ArrayResponse } from '@us-epa-camd/easey-common/interfaces/common.interface';
@@ -29,14 +28,26 @@ import { LookupType } from '@us-epa-camd/easey-common/enums';
 @ApiSecurity('APIKey')
 @ApiTags('Em Submission Access')
 @ApiExcludeControllerByEnv()
+@ApiExtraModels(EmSubmissionAccessDTO)
 export class EmSubmissionAccessController {
   constructor(private service: EmSubmissionAccessService) {}
 
   @Get()
   @ApiOkResponse({
-    isArray: true,
-    type: EmSubmissionAccessDTO,
     description: 'Data retrieved successfully',
+    content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            properties: {
+              items: {
+                type: 'array',
+                items: { $ref: getSchemaPath(EmSubmissionAccessDTO) },
+              },
+            },
+          },
+        },
+      }
   })
   @NotFoundResponse()
   @BadRequestResponse()
