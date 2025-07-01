@@ -1,11 +1,18 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { EntityManager } from 'typeorm';
+import { HttpService } from '@nestjs/axios';
 import { MatsFileUploadService } from './mats-file-upload.service';
 import { ConfigService } from '@nestjs/config';
 import { MonitorPlan } from '../entities/monitor-plan.entity';
 import { TestTypeCode } from '../entities/test-type-code.entity';
 import { MatsBulkFile } from '../entities/mats-bulk-file.entity';
 import { Plant } from '../entities/plant.entity';
+import { DocumentService } from '../submission/document.service';
+import { RecipientListService } from '../submission/recipient-list.service';
+import { MailEvalService } from '../mail/mail-eval.service';
+import { LoggerModule } from '@us-epa-camd/easey-common';
+import { EvaluationSetHelperService } from '../evaluation/evaluation-set-helper.service';
+
 
 jest.mock('@aws-sdk/client-s3');
 
@@ -15,7 +22,43 @@ describe('MatsFileUploadService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [ConfigService, MatsFileUploadService, EntityManager],
+      imports: [LoggerModule],
+      providers: [ConfigService,
+        MatsFileUploadService,
+        EntityManager,
+        {
+          provide: RecipientListService,
+          useValue: {
+            getEmailRecipients: jest.fn(),
+          },
+        },
+        {
+          provide: MailEvalService,
+          useValue: {
+            sendEmailWithRetry: jest.fn(),
+          },
+        },
+        {
+          provide: DocumentService,
+          useValue: {
+            addCertificationStatements: jest.fn(),
+            sendForSigning: jest.fn(),
+          },
+        },
+        {
+          provide: EvaluationSetHelperService,
+          useValue: {
+            getECMPSClientConfig: jest.fn(),
+          }
+        },
+        {
+          provide: HttpService,
+          useValue: {
+            get: jest.fn(),
+            post: jest.fn(),
+          },
+        },
+      ],
     }).compile();
 
     service = module.get(MatsFileUploadService);

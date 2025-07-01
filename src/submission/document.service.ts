@@ -37,7 +37,7 @@ export class DocumentService {
 
     // Add certification statements
     this.logger.log(`Adding certification statements`);
-    await this.addCertificationStatements(set, documents);
+    await this.addCertificationStatements(set.monPlanIdentifier, documents);
 
     // Write documents to files.
     this.logger.log(`Writing documents to files...`);
@@ -197,12 +197,12 @@ export class DocumentService {
     }
   }
 
-  public async addCertificationStatements(set: SubmissionSet, documents: any[]) {
+  public async addCertificationStatements(monPlanIdentifier: string, documents: any[]) {
     const response = await firstValueFrom(
       this.httpService.get(
         `${this.configService.get<string>(
           'app.authApi.uri',
-        )}/certifications/statements?monitorPlanIds=${set.monPlanIdentifier}`,
+        )}/certifications/statements?monitorPlanIds=${monPlanIdentifier}`,
         {
           headers: {
             'x-api-key': this.configService.get<string>('app.apiKey'),
@@ -219,7 +219,7 @@ export class DocumentService {
     });
   }
 
-  async sendForSigning(set: SubmissionSet, folderPath: string) {
+  async sendForSigning(activityId: string, folderPath: string) {
     const files = readdirSync(folderPath);
     const formData = new FormData();
 
@@ -228,7 +228,7 @@ export class DocumentService {
       formData.append('files', createReadStream(filePath), file);
     }
 
-    formData.append('activityId', set.activityId);
+    formData.append('activityId', activityId);
 
     const response = await firstValueFrom(
       this.httpService.post(

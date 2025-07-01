@@ -90,7 +90,7 @@ describe('DocumentService', () => {
 
       expect(service.addEvalReports).toHaveBeenCalledWith(set, records, expect.any(Array));
       expect(service.buildCopyOfRecords).toHaveBeenCalledWith(set, records, expect.any(Array));
-      expect(service.addCertificationStatements).toHaveBeenCalledWith(set, expect.any(Array));
+      expect(service.addCertificationStatements).toHaveBeenCalledWith(set.monPlanIdentifier, expect.any(Array));
       expect(result).toBeDefined();
     });
   });
