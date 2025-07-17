@@ -12,6 +12,8 @@ import { createReadStream, writeFileSync, rmSync, stat } from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 import type { Response } from 'express';
 import { Plant } from '../entities/plant.entity';
+import * as createDOMPurify from 'dompurify';
+import { JSDOM } from 'jsdom';
 
 @Injectable()
 export class CopyOfRecordService {
@@ -191,14 +193,14 @@ export class CopyOfRecordService {
     let innerContent = '';
 
     statements.forEach((val, idx) => {
-      innerContent += `<p> ${val['statementText']} </p>`;
+      let safeHTMLContent = this.sanitizeHTMLText(val['statementText']);
+      innerContent += safeHTMLContent;
       if (idx + 1 < statements.length) {
         innerContent += '<hr/>';
       }
     });
 
     documentContent = documentContent.replace('{CONTENT}', innerContent);
-
     return documentContent;
   }
 
@@ -283,5 +285,10 @@ export class CopyOfRecordService {
     });
 
     return new StreamableFile(stream);
+  }
+
+  sanitizeHTMLText(html: string): string {
+    let DOMPurify = createDOMPurify(new JSDOM('').window);
+    return DOMPurify.sanitize(html, { USE_PROFILES: { html: true } });
   }
 }
