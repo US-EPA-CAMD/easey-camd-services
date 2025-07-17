@@ -201,6 +201,7 @@ export class CopyOfRecordService {
     });
 
     documentContent = documentContent.replace('{CONTENT}', innerContent);
+    
     return documentContent;
   }
 
