@@ -31,7 +31,6 @@ export class SubmissionReportController {
 
   @Get()
   @ApiOkResponse({
-    type: SubmissionReportDTO,
     description: 'Data retrieved successfully',
     content: {
         'application/json': {
