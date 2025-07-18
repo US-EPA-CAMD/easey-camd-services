@@ -5,8 +5,7 @@ import {
   ApiOkResponse,
   ApiSecurity,
   ApiOperation,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
+  ApiBearerAuth, ApiExtraModels, getSchemaPath } from '@nestjs/swagger';
 
 import { Controller, Get, Req, Post, Body, UseGuards } from '@nestjs/common';
 import { ClientTokenGuard } from '@us-epa-camd/easey-common/guards';
@@ -28,6 +27,7 @@ import { ApiExcludeEndpointByEnv } from '../decorators/swagger-decorator';
 @Controller()
 @ApiSecurity('APIKey')
 @ApiTags('Bulk Files')
+@ApiExtraModels(BulkFileDTO)
 export class BulkFileController {
   constructor(
     private service: BulkFileService,
@@ -36,9 +36,20 @@ export class BulkFileController {
 
   @Get()
   @ApiOkResponse({
-    isArray: true,
-    type: BulkFileDTO,
     description: 'Data retrieved successfully',
+    content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            properties: {
+              items: {
+                type: 'array',
+                items: { $ref: getSchemaPath(BulkFileDTO) },
+              },
+            },
+          },
+        },
+      }
   })
   @ApiOperation({
     description:

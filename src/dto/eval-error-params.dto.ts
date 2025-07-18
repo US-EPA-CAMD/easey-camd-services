@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsNumber, IsString, ValidateNested } from 'class-validator';
+import { IsArray, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 
 class EvaluationStageDTO {
@@ -24,6 +24,11 @@ export class EvalErrorParamsDTO {
   @ApiProperty()
   @IsString()
   rootError: string;
+
+  @ApiProperty({ required: false, description: 'Stack trace from the original exception' })
+  @IsOptional()
+  @IsString()
+  errorStack?: string;
 
   @ApiProperty({ type: [EvaluationStageDTO] })
   @IsArray()
