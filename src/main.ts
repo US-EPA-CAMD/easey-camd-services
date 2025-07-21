@@ -5,6 +5,7 @@ import {
   applySwagger,
 } from '@us-epa-camd/easey-common/nestjs';
 import { useContainer } from 'class-validator';
+import { ValidationPipe } from '@nestjs/common';
 
 import { AppModule } from './app.module';
 

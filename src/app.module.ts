@@ -39,6 +39,7 @@ import { SubmissionModule } from './submission/submission.module';
 import { MatsFileUploadModule } from './mats-file-upload/mats-file-upload.module';
 import { CopyOfRecordModule } from './copy-of-record/copy-of-record.module';
 import { SubmissionReportModule } from './submission-report/submission-report.module';
+import { TestTypeCodeModule } from './test-type-code/test-type-code.module';
 import { HealthModule } from '@us-epa-camd/easey-common/health/health.module';
 
 @Module({
@@ -62,6 +63,7 @@ import { HealthModule } from '@us-epa-camd/easey-common/health/health.module';
     MailModule,
     ErrorSuppressionsModule,
     SubmissionReportModule,
+    TestTypeCodeModule,
     EvaluationModule,
     AdminModule,
     QaTestExtensionExemptionModule,

@@ -11,8 +11,7 @@ import {
   ApiOkResponse,
   ApiOperation,
   ApiSecurity,
-  ApiTags,
-} from '@nestjs/swagger';
+  ApiTags, ApiExtraModels, getSchemaPath } from '@nestjs/swagger';
 import { QaTestSummaryService } from './qa-test-summary.service';
 import { QaCertMaintParamsDto } from '../dto/qa-cert-maint-params.dto';
 import { AuditLog, RoleGuard, User } from '@us-epa-camd/easey-common/decorators';
@@ -28,6 +27,7 @@ import { ApiExcludeControllerByEnv } from '../decorators/swagger-decorator';
 @ApiSecurity('APIKey')
 @ApiTags('QA Test Data Maintenance')
 @ApiExcludeControllerByEnv()
+@ApiExtraModels(QaTestSummaryMaintViewDTO)
 export class QaTestSummaryController {
   constructor(private service: QaTestSummaryService) {}
 
@@ -38,9 +38,20 @@ export class QaTestSummaryController {
     description: 'Retrieves QA test maintenance records per filter criteria.',
   })
   @ApiOkResponse({
-    isArray: true,
-    type: QaTestSummaryMaintViewDTO,
     description: 'Data retrieved successfully',
+    content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            properties: {
+              items: {
+                type: 'array',
+                items: { $ref: getSchemaPath(QaTestSummaryMaintViewDTO) },
+              },
+            },
+          },
+        },
+      }
   })
   async getQaTestSummaryViewData(
     @Query() params: QaCertMaintParamsDto,

@@ -82,7 +82,7 @@ export class ErrorSuppressionsRepository extends Repository<EsSpec> {
     }
     if (locations) {
       query.andWhere(
-        `string_to_array(es.locations, ',') && :locations`,
+        `string_to_array(replace(es.locations, ' ', ''), ',') && :locations::text[]`,
         { locations },
       );
     }

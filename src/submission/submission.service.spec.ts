@@ -1,6 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { EntityManager } from 'typeorm';
 import { LoggerModule } from '@us-epa-camd/easey-common/logger';
+import { getRepositoryToken } from '@nestjs/typeorm';
 
 import { MonitorPlan } from '../entities/monitor-plan.entity';
 import { EvaluationItem } from '../dto/evaluation.dto';
@@ -22,6 +23,7 @@ import { SeverityCode } from '../entities/severity-code.entity';
 import { SubmissionSet } from '../entities/submission-set.entity';
 import { EvaluationSet } from '../entities/evaluation-set.entity';
 import { TestSummary } from '../entities/test-summary.entity';
+import { SubmissionQueuePosition } from '../entities/submission_queue_position.entity';
 
 const dtoItem = new EvaluationItem();
 dtoItem.monPlanId = 'mock';
@@ -135,6 +137,10 @@ describe('-- Submission Service --', () => {
         {
           provide: EntityManager,
           useValue: entityManagerMock,
+        },
+        {
+          provide: getRepositoryToken(SubmissionQueuePosition),
+          useValue: SubmissionQueuePosition,
         },
         {
           provide: ErrorHandlerService,
