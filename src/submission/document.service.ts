@@ -183,10 +183,23 @@ export class DocumentService {
             break;
         }
 
-        const reportInformation = await this.dataSetService.getDataSet(
+        let reportInformation = await this.dataSetService.getDataSet(
           params,
           true,
         );
+
+        // Filter out the `submissionStatus` column for QA reports. These reports are generated prior to processing, so the submission status will always be 'PENDING'.
+        if (['QA_TEST', 'QA_QCE', 'QA_TEE'].includes(processCd)) {
+          reportInformation = {
+            ...reportInformation,
+            columns: reportInformation.columns.map((col) => ({
+              ...col,
+              values: col.values.filter(
+                (val) => val.name !== 'submissionStatus',
+              ),
+            })),
+          };
+        }
 
         documents.push({
           documentTitle: `${set.orisCode}_${titleContext}`,
