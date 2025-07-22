@@ -18,6 +18,9 @@ import { MassEvalParamsDTO } from '../dto/mass-eval-params.dto';
 import { MailTemplateService } from './mail-template.service';
 import { MailEvalService } from './mail-eval.service';
 import { ApiExcludeEndpointByEnv } from '../decorators/swagger-decorator';
+import { EmailRecipientListRequestDto } from '../dto/email-recipient-list-request.dto';
+import { EmailRecipientListResponseDto } from '../dto/email-recipient-list-response.dto';
+import { RecipientListService } from '../submission/recipient-list.service';
 
 @Controller()
 @ApiTags('Support')
@@ -30,6 +33,7 @@ export class MailController {
     private mailService: MailService,
     private mailTemplateService: MailTemplateService,
     private mailEvalService: MailEvalService,
+    private recipientListService: RecipientListService,
   ) {}
 
   @Post('contact-us')
@@ -63,10 +67,10 @@ export class MailController {
   @AuditLog({
     label:'Email processed',
     requestHeadersOutFields: ['x-client-id'],
-    requestBodyOutFields: ['emailToProcessId']
+    requestBodyOutFields: ['emailToSendId']
   })
   async sendRecord(@Body() payload: ProcessMailDTO) {
-    await this.mailTemplateService.sendEmailRecord(payload.emailToProcessId);
+    await this.mailTemplateService.sendEmailRecord(payload.emailToSendId);
   }
 
   @Post('email/mass-eval')
@@ -91,5 +95,26 @@ export class MailController {
       payload.fromEmail,
       payload.evaluationSetId
     );
+  }
+
+  @Post('email/emailRecipientList')
+  @ApiOkResponse({
+    description: 'Email recipient list retrieved successfully',
+    type: EmailRecipientListResponseDto,
+  })
+  @ApiOperation({
+    description:
+      'Retrieves a list of email recipients based on email type and plant IDs.',
+  })
+  @ApiInternalServerErrorResponse()
+  @AuditLog({
+    label:'Email recipient list retrieved',
+    requestHeadersOutFields: ['x-client-id'],
+    requestBodyOutFields: ['emailType', 'plantIdList']
+  })
+  async getEmailRecipientList(
+    @Body() payload: EmailRecipientListRequestDto,
+  ): Promise<EmailRecipientListResponseDto> {
+    return await this.recipientListService.getEmailRecipientList(payload);
   }
 }

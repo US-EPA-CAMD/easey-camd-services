@@ -4,8 +4,10 @@ import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
 import { EntityManager } from 'typeorm';
 import { Logger } from '@us-epa-camd/easey-common/logger';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { AxiosResponse, AxiosHeaders } from 'axios';
+import { EmailRecipientListRequestDto } from '../dto/email-recipient-list-request.dto';
+import { EmailRecipientListResponseDto } from '../dto/email-recipient-list-response.dto';
 
 describe('RecipientListService', () => {
   let service: RecipientListService;
@@ -187,6 +189,170 @@ describe('RecipientListService', () => {
         'Error occurred during the API call to emailRecipients',
         'API Error With Logging',
       );
+    });
+  });
+
+  describe('getEmailRecipientList', () => {
+    it('should return error when API is disabled', async () => {
+      jest.spyOn(configService, 'get').mockImplementation((key: string) => {
+        if (key === 'app.recipientsListApiEnabled') {
+          return false;
+        }
+        return null;
+      });
+
+      const payload: EmailRecipientListRequestDto = {
+        emailType: 'SUBMISSIONREMINDER',
+        plantIdList: [1, 3, 5],
+      };
+
+      const result = await service.getEmailRecipientList(payload);
+      
+      expect(result.hasError).toBe(true);
+      expect(result.errorMessage).toBe('Recipients list API is disabled');
+      expect(result.recipients).toEqual([]);
+    });
+
+    it('should return recipient list when API call is successful', async () => {
+      const mockRecipients = [
+        { 
+          emailAddressList: 'Trey Lightsey <test1@example.com>',
+          plantIdList: [5, 3, 1]
+        },
+        { 
+          emailAddressList: 'Brad Vick <test2@example.com>',
+          plantIdList: [3, 1, 5]
+        },
+      ];
+      
+      const mockResponse: AxiosResponse<typeof mockRecipients> = {
+        data: mockRecipients,
+        status: 200,
+        statusText: 'OK',
+        headers: {},
+        config: { method: 'GET', headers: {} as AxiosHeaders },
+      };
+
+      jest.spyOn(configService, 'get').mockImplementation((key: string) => {
+        if (key === 'app.recipientsListApiEnabled') {
+          return true;
+        } else if (key === 'app.recipientsListApi') {
+          return 'http://mock-recipients-list-api.com';
+        } else if (key === 'app.apiKey') {
+          return 'mockApiKey';
+        } else if (key === 'app.clientId') {
+          return 'mockClientId';
+        } else if (key === 'app.authApi.uri') {
+          return 'http://mock-auth-api.com';
+        } else if (key === 'app.clientSecret') {
+          return 'mockClientSecret';
+        }
+        return null;
+      });
+
+      jest.spyOn(httpService, 'request').mockReturnValue(of(mockResponse) as any);
+      jest.spyOn(service, 'getClientToken').mockResolvedValue('mockToken');
+
+      const payload: EmailRecipientListRequestDto = {
+        emailType: 'SUBMISSIONREMINDER',
+        plantIdList: [1, 3, 5],
+      };
+
+      const result = await service.getEmailRecipientList(payload);
+      
+      expect(result.hasError).toBe(false);
+      expect(result.errorMessage).toBe('');
+      expect(result.recipients).toEqual(mockRecipients);
+      
+      // Verify the API was called with correct body
+      expect(httpService.request).toHaveBeenCalledWith(expect.objectContaining({
+        data: expect.objectContaining({
+          emailType: 'SUBMISSIONREMINDER',
+          plantIdList: '1,3,5',
+        }),
+      }));
+    });
+
+    it('should return error when API call fails', async () => {
+      jest.spyOn(configService, 'get').mockImplementation((key: string) => {
+        if (key === 'app.recipientsListApiEnabled') {
+          return true;
+        } else if (key === 'app.recipientsListApi') {
+          return 'http://mock-recipients-list-api.com';
+        } else if (key === 'app.apiKey') {
+          return 'mockApiKey';
+        } else if (key === 'app.clientId') {
+          return 'mockClientId';
+        } else if (key === 'app.authApi.uri') {
+          return 'http://mock-auth-api.com';
+        } else if (key === 'app.clientSecret') {
+          return 'mockClientSecret';
+        }
+        return null;
+      });
+
+      jest.spyOn(service, 'getClientToken').mockResolvedValue('mockToken');
+      jest.spyOn(httpService, 'request').mockImplementation(() => {
+        throw new Error('Network error');
+      });
+
+      const payload: EmailRecipientListRequestDto = {
+        emailType: 'SUBMISSIONREMINDER',
+        plantIdList: [1, 3, 5],
+      };
+
+      const result = await service.getEmailRecipientList(payload);
+      
+      expect(result.hasError).toBe(true);
+      expect(result.errorMessage).toBe('Network error');
+      expect(result.recipients).toEqual([]);
+      expect(logger.error).toHaveBeenCalledWith(
+        'Error occurred in getEmailRecipientList',
+        'Network error',
+      );
+    });
+
+    it('should return error with response details when API returns error response', async () => {
+      jest.spyOn(configService, 'get').mockImplementation((key: string) => {
+        if (key === 'app.recipientsListApiEnabled') {
+          return true;
+        } else if (key === 'app.recipientsListApi') {
+          return 'http://mock-recipients-list-api.com';
+        } else if (key === 'app.apiKey') {
+          return 'mockApiKey';
+        } else if (key === 'app.clientId') {
+          return 'mockClientId';
+        } else if (key === 'app.authApi.uri') {
+          return 'http://mock-auth-api.com';
+        } else if (key === 'app.clientSecret') {
+          return 'mockClientSecret';
+        }
+        return null;
+      });
+
+      const errorWithResponse = new Error('API Error') as any;
+      errorWithResponse.response = {
+        status: 400,
+        data: { message: 'Bad Request' },
+      };
+
+      jest.spyOn(service, 'getClientToken').mockResolvedValue('mockToken');
+      jest.spyOn(httpService, 'request').mockImplementation(() => {
+        throw errorWithResponse;
+      });
+
+      const payload: EmailRecipientListRequestDto = {
+        emailType: 'SUBMISSIONREMINDER',
+        plantIdList: [1, 3, 5],
+      };
+
+      const result = await service.getEmailRecipientList(payload);
+      
+      expect(result.hasError).toBe(true);
+      expect(result.errorMessage).toBe('HTTP 400: API Error');
+      expect(result.recipients).toEqual([]);
+      expect(logger.error).toHaveBeenCalledWith('API response error status:', 400);
+      expect(logger.error).toHaveBeenCalledWith('API response error data:', { message: 'Bad Request' });
     });
   });
 });

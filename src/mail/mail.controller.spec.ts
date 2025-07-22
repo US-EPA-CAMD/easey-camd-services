@@ -9,6 +9,9 @@ import { ProcessMailDTO } from '../dto/process-mail.dto';
 import { MailEvalService } from './mail-eval.service';
 import { MailTemplateService } from './mail-template.service';
 import { MassEvalParamsDTO } from '../dto/mass-eval-params.dto';
+import { RecipientListService } from '../submission/recipient-list.service';
+import { EmailRecipientListRequestDto } from '../dto/email-recipient-list-request.dto';
+import { EmailRecipientListResponseDto } from '../dto/email-recipient-list-response.dto';
 
 const mockMailService = () => ({
   sendEmail: jest.fn(),
@@ -24,11 +27,16 @@ const mockTemplateService = () => ({
   sendEmailRecord: jest.fn(),
 });
 
+const mockRecipientListService = () => ({
+  getEmailRecipientList: jest.fn(),
+});
+
 describe('Mail Controller', () => {
   let controller: MailController;
   let service: MailService;
   let evalService: MailEvalService;
   let templateService: MailTemplateService;
+  let recipientListService: RecipientListService;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -38,6 +46,7 @@ describe('Mail Controller', () => {
         { provide: MailService, useFactory: mockMailService },
         { provide: MailEvalService, useFactory: mockEvalService },
         { provide: MailTemplateService, useFactory: mockTemplateService },
+        { provide: RecipientListService, useFactory: mockRecipientListService },
         ConfigService,
       ],
     }).compile();
@@ -45,6 +54,7 @@ describe('Mail Controller', () => {
     service = module.get(MailService);
     evalService = module.get(MailEvalService);
     templateService = module.get(MailTemplateService);
+    recipientListService = module.get(RecipientListService);
     controller = module.get(MailController);
   });
 
@@ -68,5 +78,30 @@ describe('Mail Controller', () => {
     controller.sendRecord(new ProcessMailDTO());
 
     expect(templateService.sendEmailRecord).toHaveBeenCalled();
+  });
+
+  it('should call the recipient list service', async () => {
+    const mockRequest: EmailRecipientListRequestDto = {
+      emailType: 'SUBMISSIONREMINDER',
+      plantIdList: [1, 3, 5],
+    };
+
+    const mockResponse: EmailRecipientListResponseDto = {
+      recipients: [
+        {
+          emailAddressList: 'test@example.com',
+          plantIdList: [1, 3, 5],
+        },
+      ],
+      hasError: false,
+      errorMessage: '',
+    };
+
+    recipientListService.getEmailRecipientList = jest.fn().mockResolvedValue(mockResponse);
+
+    const result = await controller.getEmailRecipientList(mockRequest);
+
+    expect(recipientListService.getEmailRecipientList).toHaveBeenCalledWith(mockRequest);
+    expect(result).toEqual(mockResponse);
   });
 });
