@@ -10,6 +10,7 @@ import { MailEvalService } from './mail-eval.service';
 import { MailTemplateService } from './mail-template.service';
 import { DataSetModule } from '../dataset/dataset.module';
 import { CopyOfRecordModule } from '../copy-of-record/copy-of-record.module';
+import { RecipientListService } from '../submission/recipient-list.service';
 
 @Module({
   imports: [
@@ -43,7 +44,7 @@ import { CopyOfRecordModule } from '../copy-of-record/copy-of-record.module';
     CopyOfRecordModule,
   ],
   controllers: [MailController],
-  providers: [MailService, MailEvalService, MailTemplateService],
-  exports: [MailEvalService],
+  providers: [MailService, MailEvalService, MailTemplateService, RecipientListService],
+  exports: [MailEvalService, RecipientListService],
 })
 export class MailModule {}
