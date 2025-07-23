@@ -30,7 +30,7 @@
   "resolutions": {
     "xml2js": "^0.5.0",
     "wrap-ansi": "^7.0.0",
-    "class-validator": "0.14.1"
+    "class-validator": "0.14.2"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.797.0",
@@ -45,7 +45,7 @@
     "@us-epa-camd/easey-common": "21.1.15",
     "axios": "^1.9.0",
     "class-transformer": "0.5.1",
-    "class-validator": "0.14.1",
+    "class-validator": "0.14.2",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "fs": "^0.0.1-security",
