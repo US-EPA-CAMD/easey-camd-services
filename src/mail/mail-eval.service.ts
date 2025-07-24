@@ -61,7 +61,7 @@ export class MailEvalService {
                    
     if(configKey == "emissionEvaluation")
         {
-          sql =`select sc.severity_cd_description from ${config.table} em
+          sql =`select sc.severity_cd from ${config.table} em
              JOIN camdecmpsmd.reporting_period prd ON prd.rpt_period_id = em.rpt_period_id 
              JOIN camdecmpswks.monitor_plan pln ON pln.mon_plan_id = em.mon_plan_id 
              JOIN camdecmpswks.check_session cs on cs.chk_session_id = em.chk_session_id
@@ -80,7 +80,7 @@ export class MailEvalService {
     const severityCode = await this.entityManager.findOneBy(SeverityCode, {
                          severityCode: result?.[0]?.severity_cd
                          });
-
+console.log(severityCode)
     severityDescription = severityCode?.severityCodeDescription;
     if(errorValues.includes(result?.[0]?.severity_cd))
       color = this.getReportColors('ERR');
