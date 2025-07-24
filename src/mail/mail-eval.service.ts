@@ -80,7 +80,6 @@ export class MailEvalService {
     const severityCode = await this.entityManager.findOneBy(SeverityCode, {
                          severityCode: result?.[0]?.severity_cd
                          });
-console.log(severityCode)
     severityDescription = severityCode?.severityCodeDescription;
     if(errorValues.includes(result?.[0]?.severity_cd))
       color = this.getReportColors('ERR');
