@@ -47,7 +47,7 @@ export class MailEvalService {
     qaCertEvent: { table: 'camdecmpswks.qa_cert_event', idColumn: 'qa_cert_event_id'},
   };
 
-  async getSeverityFromConfig(configKey: string, idValue: string | number, evalStatusCode: string, mappedStatusCodes: Map<string, string>): 
+  async getSeverityFromConfig(configKey: string, idValue: string | number, evalStatusCode: string, rptPeriodIdentifier: number = null): 
   Promise<{
   severityDescription: string | undefined
   color: string[]
@@ -58,7 +58,8 @@ export class MailEvalService {
     let color = null;
     let result = null;
     let sql = null;
-                   
+    const parameters = [idValue]
+    
     if(configKey == "emissionEvaluation")
         {
           sql =`select sc.severity_cd from ${config.table} em
@@ -66,7 +67,7 @@ export class MailEvalService {
              JOIN camdecmpswks.monitor_plan pln ON pln.mon_plan_id = em.mon_plan_id 
              JOIN camdecmpswks.check_session cs on cs.chk_session_id = em.chk_session_id
              JOIN camdecmpsmd.severity_code sc on sc.severity_cd = cs.severity_cd
-             where  em.${config.idColumn} = $1;`;
+             where  em.${config.idColumn} = $1 and em.rpt_period_id = $2;`;
         }
     else{
           sql = `SELECT sc.severity_cd
@@ -75,11 +76,16 @@ export class MailEvalService {
             JOIN camdecmpsmd.severity_code sc on sc.severity_cd = cs.severity_cd
             WHERE t.${config.idColumn} = $1;`;
         }
-    result = await this.entityManager.query(sql, [idValue]);
+    if(rptPeriodIdentifier != null)
+      {
+          parameters.push(rptPeriodIdentifier)
+      }
+    result = await this.entityManager.query(sql, parameters);
                          
     const severityCode = await this.entityManager.findOneBy(SeverityCode, {
                          severityCode: result?.[0]?.severity_cd
                          });
+
     severityDescription = severityCode?.severityCodeDescription;
     if(errorValues.includes(result?.[0]?.severity_cd))
       color = this.getReportColors('ERR');
@@ -165,7 +171,7 @@ export class MailEvalService {
           newItem['Test Result'] = testSumRecord.testResultCode;
 
           if (testSumRecord instanceof TestSummary) {
-              let result = await this.getSeverityFromConfig('testSummary', testSumRecord.testSumIdentifier, testSumRecord.evalStatusCode, mappedStatusCodes);
+              let result = await this.getSeverityFromConfig('testSummary', testSumRecord.testSumIdentifier, testSumRecord.evalStatusCode);
               newItem['evalStatusCode']  = result?.severityDescription;
               newItem['reportColor'] = result?.color[0];
               newItem['reportLineColor'] = result?.color[1];
@@ -221,7 +227,7 @@ export class MailEvalService {
           newItem['Required Test Code'] = certEventRecord.requiredTestCode;
 
           if (certEventRecord instanceof QaCertEvent) {
-              let result = await this.getSeverityFromConfig('qaCertEvent', certEventRecord.qaCertEventIdentifier, certEventRecord.evalStatusCode, mappedStatusCodes);
+              let result = await this.getSeverityFromConfig('qaCertEvent', certEventRecord.qaCertEventIdentifier, certEventRecord.evalStatusCode);
               newItem['evalStatusCode']  = result?.severityDescription;
               newItem['reportColor'] = result?.color[0];
               newItem['reportLineColor'] = result?.color[1];            
@@ -292,7 +298,7 @@ export class MailEvalService {
           newItem['Span Scale Code'] = teeRecord.spanScaleCode;
 
           if (teeRecord instanceof QaTee) {
-              let result = await this.getSeverityFromConfig('qaTee', teeRecord.testExtensionExemptionIdentifier, teeRecord.evalStatusCode, mappedStatusCodes);
+              let result = await this.getSeverityFromConfig('qaTee', teeRecord.testExtensionExemptionIdentifier, teeRecord.evalStatusCode);
               newItem['evalStatusCode']  = result?.severityDescription;
               newItem['reportColor'] = result?.color[0];
               newItem['reportLineColor'] = result?.color[1];               
@@ -347,7 +353,7 @@ export class MailEvalService {
           newItem['Year / Quarter'] = reportPeriodInfo.periodAbbreviation;
 
           if (emissionsRecord instanceof EmissionEvaluation) {
-              let result = await this.getSeverityFromConfig('emissionEvaluation', emissionsRecord.monPlanIdentifier, emissionsRecord.evalStatusCode, mappedStatusCodes);
+              let result = await this.getSeverityFromConfig('emissionEvaluation', emissionsRecord.monPlanIdentifier, emissionsRecord.evalStatusCode, emissionsRecord.rptPeriodIdentifier);
               newItem['evalStatusCode']  = result?.severityDescription;
               newItem['reportColor'] = result?.color[0];
               newItem['reportLineColor'] = result?.color[1]; 
@@ -703,7 +709,7 @@ export class MailEvalService {
     const mpChildRecord = records.find((r) => r.processCode === 'MP');
     if (mpChildRecord) {
       if (mpRecord instanceof MonitorPlan) {
-            let result = await this.getSeverityFromConfig('monitorPlan', mpRecord.monPlanIdentifier, mpRecord.evalStatusCode, mappedStatusCodes);
+            let result = await this.getSeverityFromConfig('monitorPlan', mpRecord.monPlanIdentifier, mpRecord.evalStatusCode);
             templateContext['monitorPlan'].items['evalStatus'] = result?.severityDescription;
             templateContext['monitorPlan'].items['reportColor'] = result?.color[0];
             templateContext['monitorPlan'].items['reportLineColor'] = result?.color[1];
