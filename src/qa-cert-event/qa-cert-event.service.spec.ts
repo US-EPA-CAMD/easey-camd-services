@@ -60,13 +60,33 @@ describe('QaCertEventService', () => {
     expect(errored).toEqual(true);
   });
 
-  it('should successfully delete data', async () => {
-    jest.spyOn(entityManager, 'query').mockResolvedValue([[], 1]);
+  it('should successfully delete data from official and workspace tables', async () => {
+    
+    const querySpy = jest.spyOn(entityManager, 'query').mockResolvedValue([[], 1]);
+    const idToDelete = '1';
 
-    const result = await service.deleteQACertEventData('1');
+    const result = await service.deleteQACertEventData(idToDelete);
+
     expect(result).toEqual({
-      message: `Record with id 1 has been successfully deleted.`,
+      message: `Record with id ${idToDelete} has been successfully deleted.`,
     });
+
+    expect(querySpy).toHaveBeenCalledTimes(3);
+    
+    expect(querySpy).toHaveBeenCalledWith(
+      expect.stringContaining('DELETE FROM camdecmps.qa_cert_event'),
+      [idToDelete],
+    );
+
+    expect(querySpy).toHaveBeenCalledWith(
+      expect.stringContaining('DELETE FROM camdecmpswks.qa_cert_event'),
+      [idToDelete],
+    );
+
+    expect(querySpy).toHaveBeenCalledWith(
+      expect.stringContaining('DELETE FROM camdecmpswks.qa_cert_event_supp_data'),
+      [idToDelete],
+    );
   });
 
   it('should throw error while deleting data', async () => {

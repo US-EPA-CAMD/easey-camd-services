@@ -73,6 +73,20 @@ export class QaCertEventService {
         WHERE qa_cert_event_id = $1`,
         [id],
       );
+      
+      // DELETE FROM WORKSPACE TABLES
+      await this.manager.query(
+        `DELETE FROM camdecmpswks.qa_cert_event 
+        WHERE qa_cert_event_id = $1`,
+        [id],
+      );
+
+      await this.manager.query(
+        `DELETE FROM camdecmpswks.qa_cert_event_supp_data
+        WHERE qa_cert_event_id = $1`,
+        [id],
+      );
+
     } catch (e) {
       throw new EaseyException(e, e.status);
     }
