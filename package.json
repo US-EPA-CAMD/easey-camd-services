@@ -33,7 +33,7 @@
     "class-validator": "0.14.2"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.850.0",
+    "@aws-sdk/client-s3": "^3.856.0",
     "@nestjs-modules/mailer": "^2.0.2",
     "@nestjs/axios": "^4.0.0",
     "@nestjs/common": "^11.1.5",
@@ -65,7 +65,7 @@
   "devDependencies": {
     "@faker-js/faker": "^7.6.0",
     "@golevelup/ts-jest": "^0.6.2",
-    "@nestjs/cli": "^11.0.7",
+    "@nestjs/cli": "^11.0.8",
     "@nestjs/schematics": "^11.0.5",
     "@nestjs/testing": "^11.1.5",
     "@types/express": "^5.0.3",
@@ -88,7 +88,7 @@
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.8.3",
-    "webpack": "^5.100.2"
+    "webpack": "^5.101.0"
   },
   "jest": {
     "moduleFileExtensions": [
