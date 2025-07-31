@@ -83,7 +83,7 @@ export class QaTestSummaryService {
   async deleteQATestSummaryData(id: string): Promise<any> {
     try {
       await this.manager.transaction(async (transactionalEntityManager) => {
-        // DELETE FROM OFFICIAL TABLE
+        // DELETE FROM OFFICIAL TABLES
         await transactionalEntityManager.query(
           `DELETE FROM camdecmps.test_summary 
             WHERE test_sum_id = $1`,
@@ -95,7 +95,12 @@ export class QaTestSummaryService {
           [id],
         );
 
-        // DELETE FROM WORKSPACE TABLE
+        // DELETE FROM WORKSPACE TABLES
+        await transactionalEntityManager.query(
+          `DELETE FROM camdecmpswks.test_summary 
+            WHERE test_sum_id = $1`,
+          [id],
+        );
         await transactionalEntityManager.query(
           `DELETE FROM camdecmpswks.qa_supp_data 
             WHERE test_sum_id = $1`,
