@@ -26,6 +26,7 @@ import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
 import { ReportParamsDTO } from '../dto/report-params.dto';
 import { DataSetService } from '../dataset/dataset.service';
 import { CopyOfRecordService } from '../copy-of-record/copy-of-record.service';
+import { SeverityCode } from '../entities/severity-code.entity';
 
 //Formats and sends emissions evaluations emails
 @Injectable()
@@ -37,6 +38,65 @@ export class MailEvalService {
     private dataSetService: DataSetService,
     private copyOfRecordService: CopyOfRecordService,
   ) {}
+
+  private readonly severityQueryConfigs = {
+    testSummary: { table: 'camdecmpswks.test_summary', idColumn: 'test_sum_id'},
+    emissionEvaluation: { table: 'camdecmpswks.EMISSION_EVALUATION', idColumn: 'mon_plan_id'},
+    monitorPlan: { table: 'camdecmpswks.monitor_plan', idColumn: 'mon_plan_id'},
+    qaTee: { table: 'camdecmpswks.test_extension_exemption', idColumn: 'test_extension_exemption_id'},
+    qaCertEvent: { table: 'camdecmpswks.qa_cert_event', idColumn: 'qa_cert_event_id'},
+  };
+
+  async getSeverityFromConfig(configKey: string, idValue: string | number, evalStatusCode: string, rptPeriodIdentifier: number = null): 
+  Promise<{
+  severityDescription: string | undefined
+  color: string[]
+  } | null> {
+    const config = this.severityQueryConfigs[configKey];
+    const errorValues = ['CRIT2', 'CRIT3', 'FATAL', 'CRIT1'];
+    let severityDescription = null;
+    let color = null;
+    let result = null;
+    let sql = null;
+    const parameters = [idValue]
+    
+    if(configKey == "emissionEvaluation")
+        {
+          sql =`select sc.severity_cd from ${config.table} em
+             JOIN camdecmpsmd.reporting_period prd ON prd.rpt_period_id = em.rpt_period_id 
+             JOIN camdecmpswks.monitor_plan pln ON pln.mon_plan_id = em.mon_plan_id 
+             JOIN camdecmpswks.check_session cs on cs.chk_session_id = em.chk_session_id
+             JOIN camdecmpsmd.severity_code sc on sc.severity_cd = cs.severity_cd
+             where  em.${config.idColumn} = $1 and em.rpt_period_id = $2;`;
+        }
+    else{
+          sql = `SELECT sc.severity_cd
+            FROM ${config.table} t
+            JOIN camdecmpswks.check_session cs on cs.chk_session_id = t.chk_session_id
+            JOIN camdecmpsmd.severity_code sc on sc.severity_cd = cs.severity_cd
+            WHERE t.${config.idColumn} = $1;`;
+        }
+    if(rptPeriodIdentifier != null)
+      {
+          parameters.push(rptPeriodIdentifier)
+      }
+    result = await this.entityManager.query(sql, parameters);
+                         
+    const severityCode = await this.entityManager.findOneBy(SeverityCode, {
+                         severityCode: result?.[0]?.severity_cd
+                         });
+
+    severityDescription = severityCode?.severityCodeDescription;
+    if(errorValues.includes(result?.[0]?.severity_cd))
+      color = this.getReportColors('ERR');
+    else
+      color = this.getReportColors(evalStatusCode);
+    
+    return {
+            severityDescription: severityDescription,
+            color: color
+          };
+  }
 
   returnManager() {
     return this.entityManager;
@@ -109,13 +169,12 @@ export class MailEvalService {
           newItem['Test Type'] = testSumRecord.testTypeCode;
           newItem['Test Reason'] = testSumRecord.testReasonCode;
           newItem['Test Result'] = testSumRecord.testResultCode;
+
           if (testSumRecord instanceof TestSummary) {
-            newItem['evalStatusCode'] = mappedStatusCodes.get(
-              testSumRecord.evalStatusCode,
-            );
-            const colors = this.getReportColors(testSumRecord.evalStatusCode);
-            newItem['reportColor'] = colors[0];
-            newItem['reportLineColor'] = colors[1];
+              let result = await this.getSeverityFromConfig('testSummary', testSumRecord.testSumIdentifier, testSumRecord.evalStatusCode);
+              newItem['evalStatusCode']  = result?.severityDescription;
+              newItem['reportColor'] = result?.color[0];
+              newItem['reportLineColor'] = result?.color[1];
           }
 
           newItem['reportUrl'] = `${this.configService.get<string>(
@@ -166,13 +225,12 @@ export class MailEvalService {
             );
           newItem['Cert Event Code'] = certEventRecord.qaCertEventCode;
           newItem['Required Test Code'] = certEventRecord.requiredTestCode;
+
           if (certEventRecord instanceof QaCertEvent) {
-            newItem['evalStatusCode'] = mappedStatusCodes.get(
-              certEventRecord.evalStatusCode,
-            );
-            const colors = this.getReportColors(certEventRecord.evalStatusCode);
-            newItem['reportColor'] = colors[0];
-            newItem['reportLineColor'] = colors[1];
+              let result = await this.getSeverityFromConfig('qaCertEvent', certEventRecord.qaCertEventIdentifier, certEventRecord.evalStatusCode);
+              newItem['evalStatusCode']  = result?.severityDescription;
+              newItem['reportColor'] = result?.color[0];
+              newItem['reportLineColor'] = result?.color[1];            
           }
 
           newItem['reportUrl'] = `${this.configService.get<string>(
@@ -238,14 +296,13 @@ export class MailEvalService {
           newItem['Extension Exemption Code'] = teeRecord.extensExemptCode;
           newItem['Hours Used'] = teeRecord.hoursUsed;
           newItem['Span Scale Code'] = teeRecord.spanScaleCode;
+
           if (teeRecord instanceof QaTee) {
-            newItem['evalStatusCode'] = mappedStatusCodes.get(
-              teeRecord.evalStatusCode,
-            );
-            const colors = this.getReportColors(teeRecord.evalStatusCode);
-            newItem['reportColor'] = colors[0];
-            newItem['reportLineColor'] = colors[1];
-          }
+              let result = await this.getSeverityFromConfig('qaTee', teeRecord.testExtensionExemptionIdentifier, teeRecord.evalStatusCode);
+              newItem['evalStatusCode']  = result?.severityDescription;
+              newItem['reportColor'] = result?.color[0];
+              newItem['reportLineColor'] = result?.color[1];               
+            }
 
           newItem['reportUrl'] = `${this.configService.get<string>(
             'app.ecmpsHost',
@@ -294,14 +351,13 @@ export class MailEvalService {
           );
 
           newItem['Year / Quarter'] = reportPeriodInfo.periodAbbreviation;
+
           if (emissionsRecord instanceof EmissionEvaluation) {
-            newItem['evalStatusCode'] = mappedStatusCodes.get(
-              emissionsRecord.evalStatusCode,
-            );
-            const colors = this.getReportColors(emissionsRecord.evalStatusCode);
-            newItem['reportColor'] = colors[0];
-            newItem['reportLineColor'] = colors[1];
-          }
+              let result = await this.getSeverityFromConfig('emissionEvaluation', emissionsRecord.monPlanIdentifier, emissionsRecord.evalStatusCode, emissionsRecord.rptPeriodIdentifier);
+              newItem['evalStatusCode']  = result?.severityDescription;
+              newItem['reportColor'] = result?.color[0];
+              newItem['reportLineColor'] = result?.color[1]; 
+            }
 
           newItem['reportUrl'] = `${this.configService.get<string>(
             'app.ecmpsHost',
@@ -653,11 +709,10 @@ export class MailEvalService {
     const mpChildRecord = records.find((r) => r.processCode === 'MP');
     if (mpChildRecord) {
       if (mpRecord instanceof MonitorPlan) {
-        templateContext['monitorPlan'].items['evalStatus'] =
-          mappedStatusCodes.get(mpRecord.evalStatusCode);
-        const colors = this.getReportColors(mpRecord.evalStatusCode);
-        templateContext['monitorPlan'].items['reportColor'] = colors[0];
-        templateContext['monitorPlan'].items['reportLineColor'] = colors[1];
+            let result = await this.getSeverityFromConfig('monitorPlan', mpRecord.monPlanIdentifier, mpRecord.evalStatusCode);
+            templateContext['monitorPlan'].items['evalStatus'] = result?.severityDescription;
+            templateContext['monitorPlan'].items['reportColor'] = result?.color[0];
+            templateContext['monitorPlan'].items['reportLineColor'] = result?.color[1];
       }
 
       templateContext['monitorPlan'].items[
