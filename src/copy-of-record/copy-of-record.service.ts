@@ -17,11 +17,14 @@ import { JSDOM } from 'jsdom';
 
 @Injectable()
 export class CopyOfRecordService {
+  private readonly domPurify: createDOMPurify.DOMPurify;
   constructor(
     private readonly logger: Logger,
     private dataService: DataSetService,
     private readonly entityManager: EntityManager,
-  ) { }
+  ) { 
+        this.domPurify = createDOMPurify(new JSDOM('').window);
+  }
 
   addDocumentHeader(content: string, title: string): string {
     const date = new Date();
@@ -193,7 +196,7 @@ export class CopyOfRecordService {
     let innerContent = '';
 
     statements.forEach((val, idx) => {
-      let safeHTMLContent = this.sanitizeHTMLText(val['statementText']);
+      let safeHTMLContent = this.domPurify.sanitize(val['statementText'], { USE_PROFILES: { html: true } });
       innerContent += safeHTMLContent;
       if (idx + 1 < statements.length) {
         innerContent += '<hr/>';
@@ -286,10 +289,5 @@ export class CopyOfRecordService {
     });
 
     return new StreamableFile(stream);
-  }
-
-  sanitizeHTMLText(html: string): string {
-    let DOMPurify = createDOMPurify(new JSDOM('').window);
-    return DOMPurify.sanitize(html, { USE_PROFILES: { html: true } });
   }
 }

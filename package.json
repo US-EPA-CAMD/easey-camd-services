@@ -28,7 +28,7 @@
     "up": "yarn && yarn start:dev"
   },
   "resolutions": {
-    "jsdom": "^16.6.0",
+    "jsdom": "26.1.0",
     "xml2js": "^0.5.0",
     "wrap-ansi": "^7.0.0",
     "class-validator": "0.14.2"
@@ -63,7 +63,7 @@
     "typeorm": "0.3.10",
     "uuidv4": "^6.2.13",
     "dompurify": "^3.2.4",
-    "jsdom": "^16.6.0"
+    "jsdom": "26.1.0"
   },
   "devDependencies": {
     "@faker-js/faker": "^7.6.0",
