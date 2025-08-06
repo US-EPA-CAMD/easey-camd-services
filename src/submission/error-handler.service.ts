@@ -172,9 +172,11 @@ export class ErrorHandlerService {
       );
 
       // Email subject
-      const processCode = emailTemplateContextForUser.processCode || 'N/A';
-      const emailSubject = this.buildEmailSubject(processCode, emailTemplateContextForUser.orisCode, emailTemplateContextForUser.configuration);
-
+    const processCode = emailTemplateContextForUser?.processCode || 'N/A';
+    const env = this.configService.get<string>('app.env')?.trim()?.toLowerCase();
+    const subjectSuffix = env && !['prod', 'production', ''].includes(env) ? ` (sent from ECMPS 2.0 ${env})` : '';
+    const emailSubject = `Error - ${processCode} Feedback for ORIS code ${emailTemplateContextForUser?.orisCode} Unit ${emailTemplateContextForUser?.configuration} ${subjectSuffix}`;
+  
       // Send email to user
       await this.sendEmail(
         emailTemplateContextForUser,
