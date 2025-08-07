@@ -90,6 +90,11 @@
     "typescript": "^5.9.2",
     "webpack": "^5.101.0"
   },
+   "overrides": {
+      "@nestjs-modules/mailer": {
+          "mjml": "^5.0.0-alpha.4"
+      }
+  },
   "jest": {
     "moduleFileExtensions": [
       "js",
