@@ -67,32 +67,29 @@ export class QaCertEventService {
 
   async deleteQACertEventData(id: string): Promise<any> {
     try {
-      // DELETE FROM OFFICIAL TABLE
-      await this.manager.query(
-        `DELETE FROM camdecmps.qa_cert_event 
-        WHERE qa_cert_event_id = $1`,
-        [id],
-      );
-      
-      // DELETE FROM WORKSPACE TABLES
-      await this.manager.query(
-        `DELETE FROM camdecmpswks.qa_cert_event 
-        WHERE qa_cert_event_id = $1`,
-        [id],
-      );
+      await this.manager.transaction(async (transactionalEntityManager) => {
+        // DELETE FROM OFFICIAL TABLE
+        await transactionalEntityManager.query(
+          `DELETE FROM camdecmps.qa_cert_event 
+           WHERE qa_cert_event_id = $1`,
+          [id],
+        );
 
-      await this.manager.query(
-        `DELETE FROM camdecmpswks.qa_cert_event_supp_data
-        WHERE qa_cert_event_id = $1`,
-        [id],
-      );
+        // DELETE FROM WORKSPACE TABLES
+        await transactionalEntityManager.query(
+          `DELETE FROM camdecmpswks.qa_cert_event 
+           WHERE qa_cert_event_id = $1`,
+          [id],
+        );
 
+        await transactionalEntityManager.query(
+          `DELETE FROM camdecmpswks.qa_cert_event_supp_data
+           WHERE qa_cert_event_id = $1`,
+          [id],
+        );
+      });
     } catch (e) {
       throw new EaseyException(e, e.status);
     }
-
-    return {
-      message: `Record with id ${id} has been successfully deleted.`,
-    };
   }
 }
