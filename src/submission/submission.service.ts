@@ -625,7 +625,7 @@ export class SubmissionService {
       for (const period of item.emissionsReportingPeriods) {
         const checkPromise = this.entityManager.query(
           `SELECT window_expired_date, facility_name, oris_code, configuration
-           FROM camdecmpswks.vw_em_eval_and_submit 
+           FROM camdecmpswks.vw_em_eval_and_submit_earliest
            WHERE mon_plan_id = $1 
            `,
           [item.monPlanId],
