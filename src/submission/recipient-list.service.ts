@@ -170,12 +170,10 @@ export class RecipientListService {
         };
       }
 
-      // Convert plantIdList to comma-separated string for the API
-      const plantIdString = payload.plantIdList.join(',');
-
+      //CBS recipient api expects plantIdList to be a number. Send as is.
       const body = {
         emailType: payload.emailType,
-        plantIdList: plantIdString,
+        plantIdList: payload.plantIdList,
       };
 
       const recipientData = await this.callRecipientListAPI(body);
