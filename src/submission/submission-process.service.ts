@@ -43,8 +43,30 @@ export class SubmissionProcessService {
         throw new Error(`SubmissionSet with id ${id} not found.`);
       }
 
+      if (set.statusCode === 'WIP' || set.statusCode === 'COMPLETE') {
+        this.logger.warn(`SubmissionSet ${id} is already ${set.statusCode}, skipping duplicate processing.`);
+        return;
+      }
+
+      // Atomic update to WIP - only if still QUEUED
+      const updateResult = await this.entityManager.update(
+        SubmissionSet,
+        { submissionSetIdentifier: id, statusCode: 'QUEUED' },
+        { statusCode: 'WIP', startedTime: new Date() }
+      );
+
+      if (updateResult.affected === 0) {
+        this.logger.warn(`SubmissionSet ${id} was already processed by another instance, skipping.`);
+        return;
+      }
+
+      this.logger.log(`Successfully acquired lock for SubmissionSet ${id}, proceeding with processing.`);
+
       //Push the submission stage here
       submissionStages.push({ action: 'SUBMISSION_LOADED', dateTime: (await this.submissionSetHelper.getFormattedDateTime())  || 'N/A' });
+
+      // Refresh set data after atomic update
+      set = await this.entityManager.findOne(SubmissionSet, { where: { submissionSetIdentifier: id }, });
 
       // Update the submission set and submission queue statuses to 'WIP'
       await this.submissionSetHelper.updateSubmissionSetStatus(set, 'WIP');

@@ -106,6 +106,7 @@ describe('SubmissionEmailService', () => {
         'MP': { processCode: 'MP', records: submissionSetRecords },
         'qaCriticalRecords': { processCode: 'QA_CRITICAL', records: [] },
         'qaNonCriticalRecords': { processCode: 'QA_NON_CRITICAL', records: [] },
+        'EM': { processCode: 'EM', records: [] },
       });
 
       jest
@@ -117,5 +118,83 @@ describe('SubmissionEmailService', () => {
       expect(result).toContain(feedbackEmailData);
     });
 
+  });
+
+  // TESTS FOR EM GROUPING FIX
+  describe('groupSubmissionRecords - EM Grouping Fix Tests', () => {
+    it('should group multiple EM records into single EM group (TT6771 fix)', () => {
+      const mockRecords = [
+        { processCode: 'EM', monLocationId: 'unit3', submissionSetIdentifier: 'test-set' },
+        { processCode: 'EM', monLocationId: 'unit4', submissionSetIdentifier: 'test-set' },
+        { processCode: 'EM', monLocationId: 'CT5', submissionSetIdentifier: 'test-set' },
+        { processCode: 'EM', monLocationId: 'CT7', submissionSetIdentifier: 'test-set' },
+      ] as any[];
+
+      const result = service.groupSubmissionRecords(mockRecords);
+
+      // Should have single EM group with all 4 records (ORIS 2706 scenario)
+      expect(result.EM).toBeDefined();
+      expect(result.EM.records).toHaveLength(4);
+      expect(result.EM.processCode).toBe('EM');
+
+      expect(result['EM_0']).toBeUndefined();
+      expect(result['EM_1']).toBeUndefined();
+      expect(result['EM_2']).toBeUndefined();
+      expect(result['EM_3']).toBeUndefined();
+    });
+
+    it('should maintain MP and QA grouping behavior unchanged', () => {
+      const mockRecords = [
+        { processCode: 'MP', submissionSetIdentifier: 'test-set' },
+        { processCode: 'QA', severityCode: 'CRIT1', testSumIdentifier: 'test1' },
+        { processCode: 'QA', severityCode: 'INFORM', qaCertEventIdentifier: 'cert1' },
+      ] as any[];
+
+      const result = service.groupSubmissionRecords(mockRecords);
+
+      // MP should remain single group
+      expect(result.MP.records).toHaveLength(1);
+      expect(result.MP.processCode).toBe('MP');
+
+      // QA should remain split by severity
+      expect(result.qaCriticalRecords.records).toHaveLength(1);
+      expect(result.qaNonCriticalRecords.records).toHaveLength(1);
+    });
+
+    it('should handle mixed submission with MP, QA, and EM records correctly', () => {
+      const mockRecords = [
+        { processCode: 'MP', submissionSetIdentifier: 'test-set' },
+        { processCode: 'QA', severityCode: 'CRIT1', testSumIdentifier: 'test1' },
+        { processCode: 'EM', monLocationId: 'unit3', submissionSetIdentifier: 'test-set' },
+        { processCode: 'EM', monLocationId: 'unit4', submissionSetIdentifier: 'test-set' },
+        { processCode: 'EM', monLocationId: 'CT5', submissionSetIdentifier: 'test-set' },
+        { processCode: 'EM', monLocationId: 'CT7', submissionSetIdentifier: 'test-set' },
+      ] as any[];
+
+      const result = service.groupSubmissionRecords(mockRecords);
+
+      // Should generate exactly 3 email groups (not 6 as before the fix):
+      // 1. MP: 1 email
+      // 2. QA Critical: 1 email
+      // 3. EM: 1 email (not 4 emails)
+      const nonEmptyGroups = Object.entries(result).filter(([_, group]) => group.records.length > 0);
+      expect(nonEmptyGroups).toHaveLength(3);
+
+      expect(result.MP.records).toHaveLength(1);
+      expect(result.qaCriticalRecords.records).toHaveLength(1);
+      expect(result.EM.records).toHaveLength(4); // All EM records in single group
+    });
+
+    it('should handle empty EM records gracefully', () => {
+      const mockRecords = [
+        { processCode: 'MP', submissionSetIdentifier: 'test-set' },
+      ] as any[];
+
+      const result = service.groupSubmissionRecords(mockRecords);
+
+      expect(result.EM).toBeDefined();
+      expect(result.EM.records).toHaveLength(0);
+      expect(result.EM.processCode).toBe('EM');
+    });
   });
 });

@@ -43,8 +43,13 @@ export class SubmissionEmailService {
 
     const severityCodes: SeverityCode[] = await this.entityManager.find(SeverityCode,);
 
-    this.logger.debug('Grouping submission records by file type.');
+    this.logger.debug(`Grouping submission records by file type. Found ${submissionSetRecords.length} total records for submission set ${set.submissionSetIdentifier}.`);
     const submissionQueueRecordsByFileType = this.groupSubmissionRecords(submissionSetRecords,);
+
+    // Log the grouping results for duplicate detection tracking
+    Object.entries(submissionQueueRecordsByFileType).forEach(([key, { processCode, records }]) => {
+      this.logger.debug(`Email group "${key}" (${processCode}): ${records.length} records`);
+    });
 
     const emailPromises = Object.entries(
       submissionQueueRecordsByFileType,
@@ -127,12 +132,11 @@ export class SubmissionEmailService {
         ),
       },
 
-      ...submissionQueueRecords
-        .filter((r) => r.processCode === 'EM')
-        .reduce((acc, record, index) => {
-          acc[`EM_${index}`] = { processCode: 'EM', records: [record] };
-          return acc;
-        }, {}),
+      // FIXED: Group all EM records into single email instead of individual emails per record
+      EM: {
+        processCode: 'EM',
+        records: submissionQueueRecords.filter((r) => r.processCode === 'EM'),
+      },
     };
 
     return submissionQueueRecordsByFileType;

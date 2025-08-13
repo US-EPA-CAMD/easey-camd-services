@@ -68,7 +68,7 @@ export class SubmissionController {
   @ApiBearerAuth('ClientToken')
   @UseGuards(ClientTokenGuard)
   async process(@Body() params: ProcessParamsDTO): Promise<void> {
-    this.processService.processSubmissionSet(params.submissionSetId);
+    await this.processService.processSubmissionSet(params.submissionSetId);
   }
 
   @Get('/queueOrder')

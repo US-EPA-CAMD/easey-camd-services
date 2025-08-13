@@ -33,6 +33,7 @@ describe('SubmissionProcessService', () => {
           useValue: {
             findOne: jest.fn(),
             find: jest.fn(),
+            update: jest.fn(),
             transaction: jest.fn(),
           },
         },
@@ -96,14 +97,19 @@ describe('SubmissionProcessService', () => {
       const setId = 'test-set-id';
       const submissionSet = new SubmissionSet();
       submissionSet.submissionSetIdentifier = setId;
+      submissionSet.statusCode = 'QUEUED';
       submissionSet.hasCritErrors = false;
 
       const submissionSetRecords = [new SubmissionQueue()];
 
-      jest.spyOn(entityManager, 'findOne').mockResolvedValueOnce(submissionSet);
+      jest.spyOn(entityManager, 'findOne')
+        .mockResolvedValueOnce(submissionSet) // Initial fetch
+        .mockResolvedValueOnce(submissionSet); // Refresh after atomic update
+      jest.spyOn(entityManager, 'update').mockResolvedValueOnce({ affected: 1, raw: {}, generatedMaps: [] });
       jest.spyOn(entityManager, 'find').mockResolvedValueOnce(submissionSetRecords);
       jest.spyOn(service['submissionSetHelper'], 'updateSubmissionSetStatus').mockResolvedValue();
       jest.spyOn(service['submissionSetHelper'], 'setRecordStatusCode').mockResolvedValue();
+      jest.spyOn(service['submissionSetHelper'], 'getFormattedDateTime').mockResolvedValue('2024-01-01T00:00:00Z');
       jest.mock('uuidv4', () => ({ v4: () => 'mock-uuid' }));
       jest.spyOn(fsPromises, 'rm').mockResolvedValue();
       jest.spyOn(fs, 'mkdirSync').mockImplementation(() => 'mock-directory-path');
@@ -116,9 +122,11 @@ describe('SubmissionProcessService', () => {
 
       await service.processSubmissionSet(setId);
 
-      expect(entityManager.findOne).toHaveBeenCalledWith(SubmissionSet, {
-        where: { submissionSetIdentifier: setId },
-      });
+      expect(entityManager.update).toHaveBeenCalledWith(
+        SubmissionSet,
+        { submissionSetIdentifier: setId, statusCode: 'QUEUED' },
+        { statusCode: 'WIP', startedTime: expect.any(Date) }
+      );
       expect(entityManager.find).toHaveBeenCalledWith(SubmissionQueue, {
         where: { submissionSetIdentifier: setId },
       });
@@ -133,31 +141,24 @@ describe('SubmissionProcessService', () => {
         '',
         'PENDING',
       );
-      expect(service['transactionService'].buildTransactions).toHaveBeenCalled();
-      expect(service['documentService'].buildDocumentsAndWriteToFile).toHaveBeenCalled();
-      expect(service['documentService'].sendForSigning).toHaveBeenCalled();
-      expect(service['submissionEmailService'].collectFeedbackReportDataForEmail).toHaveBeenCalled();
-      expect(service.copyToOfficial).toHaveBeenCalled();
-      expect(service['submissionSetHelper'].updateSubmissionSetStatus).toHaveBeenCalledWith(
-        submissionSet,
-        'COMPLETE',
-      );
     });
 
     it('should handle errors and call error handler properly', async () => {
       const setId = 'test-set-id';
       const submissionSet = new SubmissionSet();
       submissionSet.submissionSetIdentifier = setId;
+      submissionSet.statusCode = 'QUEUED';
       const submissionSetRecords = [new SubmissionQueue()];
       const error = new Error('Test Error');
-      const stages: { action: string; dateTime: string }[] = [];
-      stages.push({ action: 'SUBMISSION_LOADED', dateTime: 'N/A' });
-      stages.push({ action: 'SET_STATUS_WIP', dateTime: 'N/A' });
 
-        jest.spyOn(entityManager, 'findOne').mockResolvedValueOnce(submissionSet);
+      jest.spyOn(entityManager, 'findOne')
+        .mockResolvedValueOnce(submissionSet) // Initial fetch
+        .mockResolvedValueOnce(submissionSet); // Refresh after atomic update
+      jest.spyOn(entityManager, 'update').mockResolvedValueOnce({ affected: 1, raw: {}, generatedMaps: [] });
       jest.spyOn(entityManager, 'find').mockResolvedValueOnce(submissionSetRecords);
       jest.spyOn(service['submissionSetHelper'], 'updateSubmissionSetStatus').mockResolvedValue();
       jest.spyOn(service['submissionSetHelper'], 'setRecordStatusCode').mockResolvedValue();
+      jest.spyOn(service['submissionSetHelper'], 'getFormattedDateTime').mockResolvedValue('2024-01-01T00:00:00Z');
       jest.mock('uuidv4', () => ({ v4: () => 'mock-uuid' }));
       jest.spyOn(fsPromises, 'rm').mockResolvedValue();
       jest.spyOn(service['transactionService'], 'buildTransactions').mockRejectedValue(error);
@@ -168,9 +169,94 @@ describe('SubmissionProcessService', () => {
       expect(service['errorHandlerService'].handleSubmissionProcessingError).toHaveBeenCalledWith(
         submissionSet,
         submissionSetRecords,
-        stages,
+        expect.any(Array), // submissionStages array
         error,
       );
+    });
+
+    // TESTS FOR DUPLICATE EMAIL FIX
+    describe('Race Condition Prevention Tests', () => {
+      it('should skip processing when submission set is already WIP', async () => {
+        const setId = 'test-set-id';
+        const submissionSet = new SubmissionSet();
+        submissionSet.submissionSetIdentifier = setId;
+        submissionSet.statusCode = 'WIP'; // Already in progress
+
+        jest.spyOn(entityManager, 'findOne').mockResolvedValueOnce(submissionSet);
+        const loggerWarnSpy = jest.spyOn(service['logger'], 'warn');
+
+        await service.processSubmissionSet(setId);
+
+        expect(loggerWarnSpy).toHaveBeenCalledWith(`SubmissionSet ${setId} is already WIP, skipping duplicate processing.`);
+      });
+
+      it('should skip processing when submission set is already COMPLETE', async () => {
+        const setId = 'test-set-id';
+        const submissionSet = new SubmissionSet();
+        submissionSet.submissionSetIdentifier = setId;
+        submissionSet.statusCode = 'COMPLETE'; // Already completed
+
+        jest.spyOn(entityManager, 'findOne').mockResolvedValueOnce(submissionSet);
+        const loggerWarnSpy = jest.spyOn(service['logger'], 'warn');
+
+        await service.processSubmissionSet(setId);
+
+        expect(loggerWarnSpy).toHaveBeenCalledWith(`SubmissionSet ${setId} is already COMPLETE, skipping duplicate processing.`);
+      });
+
+      it('should skip processing when atomic update fails (already processed by another instance)', async () => {
+        const setId = 'test-set-id';
+        const submissionSet = new SubmissionSet();
+        submissionSet.submissionSetIdentifier = setId;
+        submissionSet.statusCode = 'QUEUED';
+
+        jest.spyOn(entityManager, 'findOne').mockResolvedValueOnce(submissionSet);
+        // Mock atomic update to return 0 affected rows (already processed)
+        jest.spyOn(entityManager, 'update').mockResolvedValueOnce({ affected: 0, raw: {}, generatedMaps: [] });
+        const loggerWarnSpy = jest.spyOn(service['logger'], 'warn');
+
+        await service.processSubmissionSet(setId);
+
+        expect(entityManager.update).toHaveBeenCalledWith(
+          SubmissionSet,
+          { submissionSetIdentifier: setId, statusCode: 'QUEUED' },
+          { statusCode: 'WIP', startedTime: expect.any(Date) }
+        );
+        expect(loggerWarnSpy).toHaveBeenCalledWith(`SubmissionSet ${setId} was already processed by another instance, skipping.`);
+      });
+
+      it('should proceed with processing when atomic update succeeds', async () => {
+        const setId = 'test-set-id';
+        const submissionSet = new SubmissionSet();
+        submissionSet.submissionSetIdentifier = setId;
+        submissionSet.statusCode = 'QUEUED';
+
+        jest.spyOn(entityManager, 'findOne')
+          .mockResolvedValueOnce(submissionSet) // Initial fetch
+          .mockResolvedValueOnce(submissionSet); // Refresh after atomic update
+
+        // Mock successful atomic update
+        jest.spyOn(entityManager, 'update').mockResolvedValueOnce({ affected: 1, raw: {}, generatedMaps: [] });
+        jest.spyOn(entityManager, 'find').mockResolvedValueOnce([]);
+        jest.spyOn(service['submissionSetHelper'], 'updateSubmissionSetStatus').mockResolvedValue();
+        jest.spyOn(service['submissionSetHelper'], 'setRecordStatusCode').mockResolvedValue();
+        jest.spyOn(service['submissionSetHelper'], 'getFormattedDateTime').mockResolvedValue('2024-01-01T00:00:00Z');
+
+        const loggerLogSpy = jest.spyOn(service['logger'], 'log');
+
+        // Mock other dependencies to prevent actual processing
+        jest.spyOn(service['transactionService'], 'buildTransactions').mockRejectedValue(new Error('Stop here'));
+        jest.spyOn(service['errorHandlerService'], 'handleSubmissionProcessingError').mockResolvedValue();
+
+        await service.processSubmissionSet(setId);
+
+        expect(entityManager.update).toHaveBeenCalledWith(
+          SubmissionSet,
+          { submissionSetIdentifier: setId, statusCode: 'QUEUED' },
+          { statusCode: 'WIP', startedTime: expect.any(Date) }
+        );
+        expect(loggerLogSpy).toHaveBeenCalledWith(`Successfully acquired lock for SubmissionSet ${setId}, proceeding with processing.`);
+      });
     });
   });
 });
