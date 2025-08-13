@@ -163,6 +163,7 @@ export class RecipientListService {
       // Check if API is enabled
       const isApiEnabled = this.configService.get<boolean>('app.recipientsListApiEnabled');
       if (!isApiEnabled) {
+        this.logger.error('Recipients list API is disabled');
         return {
           recipients: [],
           hasError: true,
@@ -205,6 +206,7 @@ export class RecipientListService {
         errorMessage = error.message;
       }
 
+      // Always return structured response, no exceptions
       return {
         recipients: [],
         hasError: true,
