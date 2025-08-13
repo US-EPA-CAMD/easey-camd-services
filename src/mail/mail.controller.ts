@@ -9,6 +9,7 @@ import {
 import { Controller, Post, Body, UseGuards } from '@nestjs/common';
 import { ClientTokenGuard } from '@us-epa-camd/easey-common/guards';
 import { AuditLog } from '@us-epa-camd/easey-common/decorators';
+import { Logger } from '@us-epa-camd/easey-common/logger';
 
 import { MailService } from './mail.service';
 import { CreateMailDto } from '../dto/create-mail.dto';
@@ -35,6 +36,7 @@ export class MailController {
     private mailTemplateService: MailTemplateService,
     private mailEvalService: MailEvalService,
     private recipientListService: RecipientListService,
+    private readonly logger: Logger,
   ) {}
 
   @Post('contact-us')
@@ -117,6 +119,16 @@ export class MailController {
   async getEmailRecipientList(
     @Body() payload: EmailRecipientListRequestDto,
   ): Promise<EmailRecipientListResponseDto> {
-    return await this.recipientListService.getEmailRecipientList(payload);
+    this.logger.log('MailController.getEmailRecipientList - Request payload: ' + JSON.stringify(payload));
+    
+    const result = await this.recipientListService.getEmailRecipientList(payload);
+    
+    this.logger.log(`MailController.getEmailRecipientList - Response summary: ${result.recipients?.length || 0} recipients, hasError: ${result.hasError}, errorMessage: ${result.errorMessage}`);
+    
+    if (result.recipients && result.recipients.length > 0) {
+      this.logger.log(`MailController.getEmailRecipientList - First recipient sample: email="${result.recipients[0].emailAddressList}", plantIds=[${result.recipients[0].plantIdList?.join(', ') || 'none'}]`);
+    }
+    
+    return result;
   }
 }
