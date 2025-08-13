@@ -54,6 +54,7 @@ describe('RecipientListService', () => {
           useValue: {
             debug: jest.fn(),
             error: jest.fn(),
+            log: jest.fn(),
           },
         },
       ],
