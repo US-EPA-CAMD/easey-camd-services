@@ -20,6 +20,7 @@ import { MailEvalService } from './mail-eval.service';
 import { ApiExcludeEndpointByEnv } from '../decorators/swagger-decorator';
 import { EmailRecipientListRequestDto } from '../dto/email-recipient-list-request.dto';
 import { EmailRecipientListResponseDto } from '../dto/email-recipient-list-response.dto';
+import { EmailProcessResponseDto } from '../dto/email-process-response.dto';
 import { RecipientListService } from '../submission/recipient-list.service';
 
 @Controller()
@@ -58,6 +59,7 @@ export class MailController {
   @ApiExcludeEndpointByEnv()
   @ApiOkResponse({
     description: 'Data sent successfully',
+    type: EmailProcessResponseDto,
   })
   @ApiOperation({
     description:
@@ -69,8 +71,8 @@ export class MailController {
     requestHeadersOutFields: ['x-client-id'],
     requestBodyOutFields: ['emailToSendId']
   })
-  async sendRecord(@Body() payload: ProcessMailDTO) {
-    await this.mailTemplateService.sendEmailRecord(payload.emailToSendId);
+  async sendRecord(@Body() payload: ProcessMailDTO): Promise<EmailProcessResponseDto> {
+    return await this.mailTemplateService.sendEmailRecord(payload.emailToSendId);
   }
 
   @Post('email/mass-eval')
