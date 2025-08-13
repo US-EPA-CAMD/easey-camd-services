@@ -268,7 +268,7 @@ describe('RecipientListService', () => {
       expect(httpService.request).toHaveBeenCalledWith(expect.objectContaining({
         data: expect.objectContaining({
           emailType: 'SUBMISSIONREMINDER',
-          plantIdList: '1,3,5',
+          plantIdList: [1,3,5],
         }),
       }));
     });
