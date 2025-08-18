@@ -119,16 +119,6 @@ export class MailController {
   async getEmailRecipientList(
     @Body() payload: EmailRecipientListRequestDto,
   ): Promise<EmailRecipientListResponseDto> {
-    this.logger.log('MailController.getEmailRecipientList - Request payload: ' + JSON.stringify(payload));
-    
-    const result = await this.recipientListService.getEmailRecipientList(payload);
-    
-    this.logger.log(`MailController.getEmailRecipientList - Response summary: ${result.recipients?.length || 0} recipients, hasError: ${result.hasError}, errorMessage: ${result.errorMessage}`);
-    
-    if (result.recipients && result.recipients.length > 0) {
-      this.logger.log(`MailController.getEmailRecipientList - First recipient sample: email="${result.recipients[0].emailAddressList}", plantIds=[${result.recipients[0].plantIdList?.join(', ') || 'none'}]`);
-    }
-    
-    return result;
+    return await this.recipientListService.getEmailRecipientList(payload);
   }
 }
