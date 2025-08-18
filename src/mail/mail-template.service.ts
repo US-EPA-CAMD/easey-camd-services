@@ -8,6 +8,7 @@ import { Logger } from '@us-epa-camd/easey-common/logger';
 import { EmailToSend } from '../entities/email-to-send.entity';
 import { EmailTemplate } from '../entities/email-template.entity';
 import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
+import { EmailProcessResponseDto } from '../dto/email-process-response.dto';
 
 //Sends and formats html templates based on the content-url
 @Injectable()
@@ -80,39 +81,52 @@ export class MailTemplateService {
       });
   }
 
-  async sendEmailRecord(queueId: number): Promise<void> {
+  async sendEmailRecord(emailToSendId: number): Promise<EmailProcessResponseDto> {
     try {
       const record = await this.entityManager.findOneBy(EmailToSend, {
-        toSendIdentifier: queueId,
+        toSendIdentifier: emailToSendId,
       });
-      if (record) {
-        //Call into the template email service
-        const template =
-          record.templateIdentifier &&
-          (await this.entityManager.findOneBy(EmailTemplate, {
-            templateIdentifier: record.templateIdentifier,
-          }));
-
-        let context; //Extract context
-        if (record.context) {
-          context = JSON.parse(record.context);
-        } else {
-          context = {};
-        }
-
-        await this.sendTemplateEmail(
-          record.toEmail,
-          record.fromEmail,
-          template.templateSubject,
-          template.templateLocation,
-          context,
-        );
-
-        record.statusCode = 'COMPLETE';
-        await this.entityManager.save(record);
+      
+      if (!record) {
+        // Scenario 2: Record not found
+        this.logger.error(`Email record not found for emailToSendId: ${emailToSendId}`);
+        return { success: false, message: `Email record ${emailToSendId} not found` };
       }
+
+      //Call into the template email service
+      const template =
+        record.templateIdentifier &&
+        (await this.entityManager.findOneBy(EmailTemplate, {
+          templateIdentifier: record.templateIdentifier,
+        }));
+
+      if (!template) {
+        this.logger.error(`Template not found for templateId: ${record.templateIdentifier ?? 'null'}`);
+        return { success: false, message: `Template ${record.templateIdentifier ?? 'null'} not found` };
+      }
+
+      let context; //Extract context
+      if (record.context) {
+        context = JSON.parse(record.context);
+      } else {
+        context = {};
+      }
+
+      await this.sendTemplateEmail(
+        record.toEmail,
+        record.fromEmail,
+        template.templateSubject,
+        template.templateLocation,
+        context,
+      );
+
+      record.statusCode = 'COMPLETE';
+      await this.entityManager.save(record);
+      
+      return { success: true };
     } catch (e) {
-      throw new EaseyException(e, HttpStatus.INTERNAL_SERVER_ERROR);
+      this.logger.error(`Failed to process email ${emailToSendId}: ${e.message}`, e.stack);
+      return { success: false, message: e.message };
     }
   }
 }
