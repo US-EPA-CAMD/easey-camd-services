@@ -61,6 +61,11 @@ describe('Mail Eval Service', () => {
       query: jest.fn().mockResolvedValue([]),
     } as any as EntityManager;
 
+    jest
+      .spyOn(service, 'getSeverityFromConfig')
+      .mockResolvedValue({ severityDescription: '',
+      color: ['#FF6862', '#FF6862']});
+
     jest.spyOn(service, 'returnManager').mockReturnValue(mockManager);
   });
 
@@ -133,6 +138,7 @@ describe('Mail Eval Service', () => {
     jest
       .spyOn(service, 'getReportColors')
       .mockReturnValue(['#FF6862', '#FF6862']);
+
     jest.spyOn(service, 'returnManager').mockReturnValue(mockManager);
     mockEvalList.forEach((e) => (e.testSumIdentifier = 'MOCK'));
     const result = await service.formatTestDataContext(

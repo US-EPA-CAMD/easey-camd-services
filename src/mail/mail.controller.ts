@@ -9,6 +9,7 @@ import {
 import { Controller, Post, Body, UseGuards } from '@nestjs/common';
 import { ClientTokenGuard } from '@us-epa-camd/easey-common/guards';
 import { AuditLog } from '@us-epa-camd/easey-common/decorators';
+import { Logger } from '@us-epa-camd/easey-common/logger';
 
 import { MailService } from './mail.service';
 import { CreateMailDto } from '../dto/create-mail.dto';
@@ -18,6 +19,10 @@ import { MassEvalParamsDTO } from '../dto/mass-eval-params.dto';
 import { MailTemplateService } from './mail-template.service';
 import { MailEvalService } from './mail-eval.service';
 import { ApiExcludeEndpointByEnv } from '../decorators/swagger-decorator';
+import { EmailRecipientListRequestDto } from '../dto/email-recipient-list-request.dto';
+import { EmailRecipientListResponseDto } from '../dto/email-recipient-list-response.dto';
+import { EmailProcessResponseDto } from '../dto/email-process-response.dto';
+import { RecipientListService } from '../submission/recipient-list.service';
 
 @Controller()
 @ApiTags('Support')
@@ -30,6 +35,8 @@ export class MailController {
     private mailService: MailService,
     private mailTemplateService: MailTemplateService,
     private mailEvalService: MailEvalService,
+    private recipientListService: RecipientListService,
+    private readonly logger: Logger,
   ) {}
 
   @Post('contact-us')
@@ -54,6 +61,7 @@ export class MailController {
   @ApiExcludeEndpointByEnv()
   @ApiOkResponse({
     description: 'Data sent successfully',
+    type: EmailProcessResponseDto,
   })
   @ApiOperation({
     description:
@@ -63,10 +71,10 @@ export class MailController {
   @AuditLog({
     label:'Email processed',
     requestHeadersOutFields: ['x-client-id'],
-    requestBodyOutFields: ['emailToProcessId']
+    requestBodyOutFields: ['emailToSendId']
   })
-  async sendRecord(@Body() payload: ProcessMailDTO) {
-    await this.mailTemplateService.sendEmailRecord(payload.emailToProcessId);
+  async sendRecord(@Body() payload: ProcessMailDTO): Promise<EmailProcessResponseDto> {
+    return await this.mailTemplateService.sendEmailRecord(payload.emailToSendId);
   }
 
   @Post('email/mass-eval')
@@ -91,5 +99,26 @@ export class MailController {
       payload.fromEmail,
       payload.evaluationSetId
     );
+  }
+
+  @Post('email/emailRecipientList')
+  @ApiOkResponse({
+    description: 'Email recipient list retrieved successfully',
+    type: EmailRecipientListResponseDto,
+  })
+  @ApiOperation({
+    description:
+      'Retrieves a list of email recipients based on email type and plant IDs.',
+  })
+  @ApiInternalServerErrorResponse()
+  @AuditLog({
+    label:'Email recipient list retrieved',
+    requestHeadersOutFields: ['x-client-id'],
+    requestBodyOutFields: ['emailType', 'plantIdList']
+  })
+  async getEmailRecipientList(
+    @Body() payload: EmailRecipientListRequestDto,
+  ): Promise<EmailRecipientListResponseDto> {
+    return await this.recipientListService.getEmailRecipientList(payload);
   }
 }
