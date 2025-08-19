@@ -1,84 +1,111 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { QaTestSummaryService } from './qa-test-summary.service';
 import { EntityManager } from 'typeorm';
-import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
+
+import { QaTestSummaryService } from './qa-test-summary.service';
 import { QaUpdateDto } from '../dto/qa-update.dto';
-import { QaTestSummaryMaintMap } from '../maps/qa-test-summary-maint.map';
+import { QaTestSummaryMaintViewDTO } from '../dto/qa-test-summary-maint-vw.dto';
+
+const mockQaDto = new QaTestSummaryMaintViewDTO();
+
+const mockDbRow = {
+  test_sum_id: '1',
+  location_id: '1',
+  oris_code: 3,
+  unit_stack: 'A',
+};
+
+const mockEntityManager = {
+  transaction: jest.fn().mockImplementation(async (callback) => {
+    return await callback(mockEntityManager);
+  }),
+  query: jest.fn(),
+};
 
 describe('QaTestSummaryService', () => {
   let service: QaTestSummaryService;
   let entityManager: EntityManager;
-  let updatePayload;
+  const updatePayload = new QaUpdateDto();
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [QaTestSummaryService, EntityManager, QaTestSummaryMaintMap],
+      providers: [
+        QaTestSummaryService,
+        {
+          provide: EntityManager,
+          useValue: mockEntityManager,
+        },
+      ],
     }).compile();
 
     service = module.get<QaTestSummaryService>(QaTestSummaryService);
     entityManager = module.get<EntityManager>(EntityManager);
-    updatePayload = new QaUpdateDto();
+
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {
     expect(service).toBeDefined();
   });
 
-  it('should successfully return data', async () => {
-    jest.spyOn(entityManager, 'find').mockResolvedValue([]);
+  describe('getQaTestSummaryViewData', () => {
 
-    const result = await service.getQaTestSummaryViewData(1, '');
-    expect(result).toEqual([]);
-  });
-  it('should successfully update and return data', async () => {
-    jest.spyOn(entityManager, 'transaction').mockResolvedValue([[], 1]);
-    // jest.spyOn(entityManager, 'query').mockResolvedValue([[], 1]);
-    jest.spyOn(entityManager, 'findOneBy').mockResolvedValue({});
+    it('should successfully return data', async () => {
+      (entityManager.query as jest.Mock).mockResolvedValue([mockDbRow]);
+      const mapSpy = jest
+        .spyOn(service as any, 'mapToQaTestSummaryMaintViewDTO')
+        .mockReturnValue(mockQaDto);
 
-    const result = await service.updateSubmissionStatus(
-      'id',
-      'userId',
-      updatePayload,
-    );
-    expect(result).toEqual({});
-  });
-
-  it('should throw error while updating data', async () => {
-    jest.spyOn(entityManager, 'transaction').mockResolvedValue([[], 1]);
-
-    jest
-      .spyOn(entityManager, 'findOneBy')
-      .mockRejectedValue(new EaseyException(new Error('Error'), 500));
-
-    let errored = false;
-    try {
-      await service.updateSubmissionStatus('id', 'userId', updatePayload);
-    } catch {
-      errored = true;
-    }
-    expect(errored).toEqual(true);
-  });
-
-  it('should successfully delete data', async () => {
-    jest.spyOn(entityManager, 'transaction').mockResolvedValue([[], 1]);
-
-    const result = await service.deleteQATestSummaryData('1');
-    expect(result).toEqual({
-      message: `Record with id 1 has been successfully deleted.`,
+      const result = await service.getQaTestSummaryViewData(3, 'A');
+      
+      expect(mapSpy).toHaveBeenCalledWith(mockDbRow);
+      expect(result).toEqual([mockQaDto]);
     });
   });
 
-  it('should throw error while deleting data', async () => {
-    jest
-      .spyOn(entityManager, 'transaction')
-      .mockRejectedValue(new EaseyException(new Error('Error'), 500));
+  describe('updateSubmissionStatus', () => {
+    it('should successfully update and return data', async () => {
+      (entityManager.query as jest.Mock).mockResolvedValue([mockDbRow]);
+      const mapSpy = jest
+        .spyOn(service as any, 'mapToQaTestSummaryMaintViewDTO')
+        .mockReturnValue(mockQaDto);
 
-    let errored = false;
-    try {
-      await service.deleteQATestSummaryData('1');
-    } catch {
-      errored = true;
-    }
-    expect(errored).toEqual(true);
+      const result = await service.updateSubmissionStatus(
+        '1',
+        'testuser',
+        updatePayload,
+      );
+
+      expect(entityManager.query).toHaveBeenCalledTimes(3);
+
+      expect(mapSpy).toHaveBeenCalledWith([mockDbRow]);
+
+      expect(result).toEqual(mockQaDto);
+    });
+
+    it('should throw error if record not found after update', async () => {
+      (entityManager.query as jest.Mock).mockResolvedValue([]);
+
+      const result = await service.updateSubmissionStatus(
+        '1',
+        'testuser',
+        updatePayload,
+      );
+
+      expect(result).toBeInstanceOf(QaTestSummaryMaintViewDTO);
+      expect(result.id).toBeUndefined();
+      expect(result.orisCode).toBeNaN();
+    });
+  });
+  
+  describe('deleteQATestSummaryData', () => {
+    it('should successfully delete data', async () => {
+        (entityManager.query as jest.Mock).mockResolvedValue(undefined);
+
+        const result = await service.deleteQATestSummaryData('1');
+        expect(result).toEqual({
+            message: `Record with id 1 has been successfully deleted.`,
+        });
+        expect(entityManager.query).toHaveBeenCalledTimes(3);
+    });
   });
 });
