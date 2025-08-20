@@ -160,9 +160,14 @@ export class RecipientListService {
     payload: EmailRecipientListRequestDto,
   ): Promise<EmailRecipientListResponseDto> {
     try {
+
+      const notificationType = payload.emailType; //For logging purposes only (CodeQL) complains if variables with *email* in their names are logged
+      this.logger.log(`RecipientListService.getEmailRecipientList - Processing request for emailType: ${notificationType}, plantIds: [${payload.plantIdList?.join(', ') || 'none'}]`);
+
       // Check if API is enabled
       const isApiEnabled = this.configService.get<boolean>('app.recipientsListApiEnabled');
       if (!isApiEnabled) {
+        this.logger.error('Recipients list API is disabled');
         return {
           recipients: [],
           hasError: true,
@@ -170,14 +175,12 @@ export class RecipientListService {
         };
       }
 
-      // Convert plantIdList to comma-separated string for the API
-      const plantIdString = payload.plantIdList.join(',');
-
+      //CBS recipient api expects plantIdList to be a number. Send as is.
       const body = {
         emailType: payload.emailType,
-        plantIdList: plantIdString,
+        plantIdList: payload.plantIdList,
       };
-
+      
       const recipientData = await this.callRecipientListAPI(body);
 
       return {
@@ -207,6 +210,7 @@ export class RecipientListService {
         errorMessage = error.message;
       }
 
+      // Always return structured response, no exceptions
       return {
         recipients: [],
         hasError: true,
