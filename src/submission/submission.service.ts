@@ -371,7 +371,16 @@ export class SubmissionService {
         mpRecord.severityCode = cs?.severityCode || 'NONE';
 
         await entityManager.save(mpRecord);
-        await entityManager.save(mp);
+        // Retrieve the saved record to get the auto-generated submission_id
+        const savedMpRecord = await entityManager.findOne(SubmissionQueue, {
+          where: { submissionSetIdentifier: setId, processCode: 'MP' }
+        });
+        mpRecord.submissionIdentifier = savedMpRecord.submissionIdentifier;
+
+        if (mp) {
+          mp.submissionIdentifier = savedMpRecord.submissionIdentifier;
+          await entityManager.save(mp);
+        }
 
         //Push queueing stage here
         queueingStages.push({ action: 'MP_QUEUED', dateTime: (await this.submissionSetHelper.getFormattedDateTime()) || 'N/A' });
@@ -405,8 +414,15 @@ export class SubmissionService {
         tsRecord.severityCode = cs?.severityCode || 'NONE';
         await entityManager.save(tsRecord);
 
+        // Retrieve the saved record to get the auto-generated submission_id
+        const savedTsRecord = await entityManager.findOne(SubmissionQueue, {
+          where: { submissionSetIdentifier: setId, processCode: 'QA', testSumIdentifier: id }
+        });
+        tsRecord.submissionIdentifier = savedTsRecord.submissionIdentifier;
+
         if (ts) {
           ts.submissionAvailabilityCode = 'PENDING'; //TODO FIND SUPP RECORD CORRESPONDING
+          ts.submissionIdentifier = savedTsRecord.submissionIdentifier;
           await entityManager.save(ts);
         }
 
@@ -442,8 +458,16 @@ export class SubmissionService {
         this.logger.log(`Queueing QCE with ID ${id} ...`,);
         qceRecord.severityCode = cs?.severityCode || 'NONE';
         await entityManager.save(qceRecord);
+
+        // Retrieve the saved record to get the auto-generated submission_id
+        const savedQceRecord = await entityManager.findOne(SubmissionQueue, {
+          where: { submissionSetIdentifier: setId, processCode: 'QA', qaCertEventIdentifier: id }
+        });
+        qceRecord.submissionIdentifier = savedQceRecord.submissionIdentifier;
+
         if (qce) {
           qce.submissionAvailabilityCode = 'PENDING';
+          qce.submissionIdentifier = savedQceRecord.submissionIdentifier;
           await entityManager.save(qce);
         }
         //Push queueing stage here
@@ -475,8 +499,16 @@ export class SubmissionService {
 
         teeRecord.severityCode = cs?.severityCode || 'NONE';
         await entityManager.save(teeRecord);
+
+        // Retrieve the saved record to get the auto-generated submission_id
+        const savedTeeRecord = await entityManager.findOne(SubmissionQueue, {
+          where: { submissionSetIdentifier: setId, processCode: 'QA', testExtensionExemptionIdentifier: id }
+        });
+        teeRecord.submissionIdentifier = savedTeeRecord.submissionIdentifier;
+
         if (tee) {
           tee.submissionAvailabilityCode = 'PENDING';
+          tee.submissionIdentifier = savedTeeRecord.submissionIdentifier;
           await entityManager.save(tee);
         }
 
@@ -491,7 +523,7 @@ export class SubmissionService {
         });
 
         this.logger.log(`Queueing EM with ID ${rp?.rptPeriodIdentifier} and monPlanId ${evaluationItem?.monPlanId} ...`,);
-        const ee: EmissionEvaluation = await entityManager.findOneBy(
+        const emissionEvaluation: EmissionEvaluation = await entityManager.findOneBy(
           EmissionEvaluation,
           {
             monPlanIdentifier: evaluationItem.monPlanId,
@@ -520,9 +552,15 @@ export class SubmissionService {
         emissionRecord.severityCode = cs?.severityCode || 'NONE';
 
         await entityManager.save(emissionRecord);
-        if (ee) {
-          ee.submissionAvailabilityCode = 'PENDING';
-          await entityManager.save(ee);
+        // Retrieve the saved record to get the auto-generated submission_id
+        const savedEmissionsRecord = await entityManager.findOne(SubmissionQueue, {
+          where: { submissionSetIdentifier: setId, processCode: 'EM', rptPeriodIdentifier: rp.rptPeriodIdentifier }
+        });
+        emissionRecord.submissionIdentifier = savedEmissionsRecord.submissionIdentifier;
+        if (emissionEvaluation) {
+          emissionEvaluation.submissionAvailabilityCode = 'PENDING';
+          emissionEvaluation.submissionIdentifier = savedEmissionsRecord.submissionIdentifier;
+          await entityManager.save(emissionEvaluation);
         }
 
         //Push queueing stage here
@@ -550,10 +588,17 @@ export class SubmissionService {
 
           matsRecord.severityCode = 'NONE';
 
-
           await entityManager.save(matsRecord);
+
+          // Retrieve the saved record to get the auto-generated submission_id
+          const savedMatsRecord = await entityManager.findOne(SubmissionQueue, {
+            where: { submissionSetIdentifier: setId, processCode: 'MATS', matsBulkFileId: matsId }
+          });
+          matsRecord.submissionIdentifier = savedMatsRecord.submissionIdentifier;
+
           if (mf) {
             mf.submissionAvailabilityCode = 'PENDING';
+            mf.submissionIdentifier = savedMatsRecord.submissionIdentifier;
             await entityManager.save(mf);
           }
 
@@ -563,6 +608,9 @@ export class SubmissionService {
       }
 
       // Determine if there are any critical errors based on evalStatusCode in the submission
+      // Force flush all pending saves to ensure all records are findable
+      await entityManager.query('SELECT 1');
+
       // Get all submission queue records for this set
       const submissionQueueRecords = await entityManager.find(SubmissionQueue, {
         where: { submissionSetIdentifier: setId },

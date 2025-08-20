@@ -24,6 +24,7 @@ import { SubmissionSet } from '../entities/submission-set.entity';
 import { EvaluationSet } from '../entities/evaluation-set.entity';
 import { TestSummary } from '../entities/test-summary.entity';
 import { SubmissionQueuePosition } from '../entities/submission_queue_position.entity';
+import { SubmissionQueue } from '../entities/submission-queue.entity';
 
 const dtoItem = new EvaluationItem();
 dtoItem.monPlanId = 'mock';
@@ -110,6 +111,14 @@ describe('-- Submission Service --', () => {
         mp.facIdentifier = 1;
         mp.locations = []; // Add mock locations
         return mp;
+      }
+      // Handle SubmissionQueue for the flush-and-update pattern
+      if (entity === SubmissionQueue) {
+        const sq = new SubmissionQueue();
+        sq.submissionIdentifier = Math.floor(Math.random() * 10000);
+        sq.submissionSetIdentifier = criteria?.where?.submissionSetIdentifier;
+        sq.processCode = criteria?.where?.processCode;
+        return sq;
       }
       return null;
     });
