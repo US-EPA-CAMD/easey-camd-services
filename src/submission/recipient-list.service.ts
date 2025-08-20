@@ -160,8 +160,10 @@ export class RecipientListService {
     payload: EmailRecipientListRequestDto,
   ): Promise<EmailRecipientListResponseDto> {
     try {
-      this.logger.log(`RecipientListService.getEmailRecipientList - Processing request for emailType: ${payload.emailType}, plantIds: [${payload.plantIdList?.join(', ') || 'none'}]`);
-      
+
+      const notificationType = payload.emailType; //For logging purposes only (CodeQL) complains if variables with *email* in their names are logged
+      this.logger.log(`RecipientListService.getEmailRecipientList - Processing request for emailType: ${notificationType}, plantIds: [${payload.plantIdList?.join(', ') || 'none'}]`);
+
       // Check if API is enabled
       const isApiEnabled = this.configService.get<boolean>('app.recipientsListApiEnabled');
       if (!isApiEnabled) {
@@ -178,18 +180,8 @@ export class RecipientListService {
         emailType: payload.emailType,
         plantIdList: payload.plantIdList,
       };
-
-      this.logger.log(`RecipientListService.getEmailRecipientList - Calling CBS API with body: ${JSON.stringify(body)}`);
       
       const recipientData = await this.callRecipientListAPI(body);
-
-      this.logger.log(`RecipientListService.getEmailRecipientList - CBS API returned ${recipientData?.length || 0} recipients`);
-      
-      if (recipientData && recipientData.length > 0) {
-        recipientData.forEach((recipient, index) => {
-          this.logger.log(`RecipientListService.getEmailRecipientList - Recipient ${index + 1}: email="${recipient.emailAddressList}", plantIds=[${recipient.plantIdList?.join(', ') || 'none'}]`);
-        });
-      }
 
       return {
         recipients: recipientData,

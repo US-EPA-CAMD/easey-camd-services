@@ -36,6 +36,10 @@ export class MailTemplateService {
       throw new EaseyException(e, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
+    // Process loop syntax first: [[#arrayName]]...[[/arrayName]]
+    templateString = this.processLoopSyntax(templateString, context);
+
+    // Process regular variable substitution
     for (const key in context) {
       if (Object.prototype.hasOwnProperty.call(context, key)) {
         const regex = new RegExp(`\\[\\[${key}\\]\\]`, 'g');
@@ -45,7 +49,7 @@ export class MailTemplateService {
         if (typeof context[key] === 'object') {
           formattedValue = context[key].join(', ');
         } else {
-          formattedValue = context[key];
+          formattedValue = context[key] ?? '';
         }
 
         templateString = templateString.replace(regex, formattedValue);
@@ -54,6 +58,40 @@ export class MailTemplateService {
 
     return templateString;
   }
+
+  private processLoopSyntax(templateString: string, context: any): string {
+    // Find loop patterns: [[#arrayName]]content[[/arrayName]]
+    const loopPattern = /\[\[#(\w+)]]([\s\S]*?)\[\[\/\1]]/g;
+    
+    return templateString.replace(loopPattern, (match, arrayName, loopContent) => {
+      const arrayData = context[arrayName];
+      if (!arrayData || !Array.isArray(arrayData)) {
+        return '';
+      }
+      
+      // Process each item in the array
+      const processedItems = arrayData.map(item => {
+        if (!item || typeof item !== 'object') {
+          return ''; // Skip invalid items
+        }
+        
+        let processedContent = loopContent;
+        // Replace variables within this loop iteration
+        for (const key in item) {
+          if (Object.prototype.hasOwnProperty.call(item, key)) {
+            const regex = new RegExp(`\\[\\[${key}\\]\\]`, 'g');
+            const value = item[key] ?? '';
+            processedContent = processedContent.replace(regex, value);
+          }
+        }
+        
+        return processedContent;
+      });
+      
+      return processedItems.join('');
+    });
+  }
+
 
   async sendTemplateEmail(
     to: string,
