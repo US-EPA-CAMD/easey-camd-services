@@ -30,6 +30,17 @@ export class SubmissionTransactionService {
   }
 
   async buildTransactions(set: SubmissionSet, records: SubmissionQueue[], folderPath: string): Promise<any[]> {
+    // Sort records by process code and, for 'EM' process code, by reporting period.
+    const processCodeOrder = { 'MP': 1, 'QA': 2, 'EM': 3, 'MATS': 4 };
+    records
+      .sort((a, b) => processCodeOrder[a.processCode] - processCodeOrder[b.processCode])
+      .sort((a, b) => {
+        if (a.processCode !== 'EM' || b.processCode !== 'EM') return 0;
+        if (a.reportingPeriod.calendarYear !== b.reportingPeriod.calendarYear) {
+          return a.reportingPeriod.calendarYear - b.reportingPeriod.calendarYear;
+        }
+        return a.reportingPeriod.quarter - b.reportingPeriod.quarter;
+      });
 
     let transactions: any[] = [];
     this.logger.log(`building transactions...`);
