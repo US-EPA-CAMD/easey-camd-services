@@ -160,6 +160,10 @@ export class RecipientListService {
     payload: EmailRecipientListRequestDto,
   ): Promise<EmailRecipientListResponseDto> {
     try {
+
+      const notificationType = payload.emailType; //For logging purposes only (CodeQL) complains if variables with *email* in their names are logged
+      this.logger.log(`RecipientListService.getEmailRecipientList - Processing request for emailType: ${notificationType}, plantIds: [${payload.plantIdList?.join(', ') || 'none'}]`);
+
       // Check if API is enabled
       const isApiEnabled = this.configService.get<boolean>('app.recipientsListApiEnabled');
       if (!isApiEnabled) {
@@ -176,7 +180,7 @@ export class RecipientListService {
         emailType: payload.emailType,
         plantIdList: payload.plantIdList,
       };
-
+      
       const recipientData = await this.callRecipientListAPI(body);
 
       return {

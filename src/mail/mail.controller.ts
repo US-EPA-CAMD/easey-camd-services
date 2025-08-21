@@ -9,6 +9,7 @@ import {
 import { Controller, Post, Body, UseGuards } from '@nestjs/common';
 import { ClientTokenGuard } from '@us-epa-camd/easey-common/guards';
 import { AuditLog } from '@us-epa-camd/easey-common/decorators';
+import { Logger } from '@us-epa-camd/easey-common/logger';
 
 import { MailService } from './mail.service';
 import { CreateMailDto } from '../dto/create-mail.dto';
@@ -35,6 +36,7 @@ export class MailController {
     private mailTemplateService: MailTemplateService,
     private mailEvalService: MailEvalService,
     private recipientListService: RecipientListService,
+    private readonly logger: Logger,
   ) {}
 
   @Post('contact-us')
