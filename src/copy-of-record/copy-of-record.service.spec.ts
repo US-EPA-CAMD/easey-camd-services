@@ -95,6 +95,6 @@ describe('-- Copy of Record Service --', () => {
   it('should add a default table correctly', () => {
     expect(() => {
       service.generateCopyOfRecord(report);
-    }).not.toThrowError();
+    }).not.toThrow();
   });
 });
