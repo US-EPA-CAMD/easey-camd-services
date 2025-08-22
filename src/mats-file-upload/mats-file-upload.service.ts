@@ -178,6 +178,10 @@ export class MatsFileUploadService {
       // Writing Certification Statements...
       writeFileSync(`${folderPath}/${documents[0]?.documentTitle}.html`, documents[0]?.context);
 
+      // MATS metadata HTML report if provided
+      if (matsProcessParams.htmlMetadataReport) {
+        writeFileSync(`${folderPath}/MATS_Metadata_Report.html`, matsProcessParams.htmlMetadataReport);
+      }
       // Download files from import bucket - similar to existing processMatsRecord
       for (const file of payloadFiles) {
         const getObjectResponse = await this.importS3Client.send(
