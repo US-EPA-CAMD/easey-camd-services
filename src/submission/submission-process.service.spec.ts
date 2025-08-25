@@ -120,6 +120,7 @@ describe('SubmissionProcessService', () => {
         where: { submissionSetIdentifier: setId },
       });
       expect(entityManager.find).toHaveBeenCalledWith(SubmissionQueue, {
+        relations: { reportingPeriod: true },
         where: { submissionSetIdentifier: setId },
       });
       expect(service['submissionSetHelper'].updateSubmissionSetStatus).toHaveBeenCalledWith(
