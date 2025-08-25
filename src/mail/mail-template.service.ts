@@ -150,6 +150,10 @@ export class MailTemplateService {
         context = {};
       }
 
+      // Add email addresses to context for template variables
+      context.toEmail = record.toEmail;
+      context.fromEmail = record.fromEmail;
+
       await this.sendTemplateEmail(
         record.toEmail,
         record.fromEmail,

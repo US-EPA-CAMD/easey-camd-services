@@ -72,7 +72,7 @@ describe('MatsFileUploadService', () => {
   it('Should call into s3 to upload a file without error', async () => {
     expect(async () => {
       await service.uploadFile(Buffer.from('mock'), '');
-    }).not.toThrowError();
+    }).not.toThrow();
   });
 
   it('Should go through the process of the importFile procedure correctly', async () => {
