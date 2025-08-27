@@ -210,7 +210,7 @@ export class DocumentService {
     }
   }
 
-  public async addCertificationStatements(monPlanIdentifier: string, documents: any[]) {
+  public async addCertificationStatements(monPlanIdentifier: string, documents: any[], addMat?: boolean) {
     const response = await firstValueFrom(
       this.httpService.get(
         `${this.configService.get<string>(
@@ -224,7 +224,11 @@ export class DocumentService {
       ),
     );
 
-    const statements = response.data.items;
+    let statements
+    if(addMat)
+      statements = response.data.items.filter( i => i?.statementId === 3);
+    else
+      statements = response.data.items;
 
     documents.push({
       documentTitle: `Certification Statements`,
