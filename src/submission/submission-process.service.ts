@@ -48,8 +48,13 @@ export class SubmissionProcessService {
 
       // Update the submission set and submission queue statuses to 'WIP'
       await this.submissionSetHelper.updateSubmissionSetStatus(set, 'WIP');
-      submissionQueueRecords = await this.entityManager.find(SubmissionQueue, { where: { submissionSetIdentifier: id },});
-      await this.submissionSetHelper.setRecordStatusCode(set, submissionQueueRecords, 'WIP', '', 'PENDING');
+      submissionQueueRecords = await this.entityManager.find(SubmissionQueue, {
+        where: { submissionSetIdentifier: id },
+        relations: { severityCodeRecord: true },
+      });
+      for (const record of submissionQueueRecords) {
+        await this.submissionSetHelper.setRecordStatusCode(set, record, 'WIP', '', 'PENDING');
+      }
       this.logger.log(`Updating submission records to IP status.`);
 
       //Push the submission stage here
@@ -119,11 +124,18 @@ export class SubmissionProcessService {
 
       submissionStages.push({ action: 'FEEDBACK_EMAILS_SENT', dateTime: (await this.submissionSetHelper.getFormattedDateTime())  || 'N/A' });
 
-      // Update the submission set and submission queue statuses to 'COMPLETE' and submission status to 'UPDATED'
-      // ONLY if there are no submission queue records that have Errors
+      // Update the submission set and submission queue statuses to 'COMPLETE' and submission status to 'UPDATED' or 'CRITERR'
       const nonErrorRecords = submissionQueueRecords.filter(record => record.statusCode !== 'ERROR');
       const errorRecords = submissionQueueRecords.filter(record => record.statusCode === 'ERROR');
-      await this.submissionSetHelper.setRecordStatusCode(set, nonErrorRecords, 'COMPLETE', '', set.hasCritErrors ? 'CRITERR' : 'UPDATED');
+      for (const record of nonErrorRecords) {
+        await this.submissionSetHelper.setRecordStatusCode(
+          set,
+          record,
+          'COMPLETE',
+          '',
+          record.severityCodeRecord.evalStatusCode === 'ERR' ? 'CRITERR' : 'UPDATED',
+        );
+      }
       if (errorRecords.length <= 0) {
         await this.submissionSetHelper.updateSubmissionSetStatus(set, 'COMPLETE');
       }
@@ -144,14 +156,11 @@ export class SubmissionProcessService {
     transactions: any[],
   ) {
     try {
-
-      if (!set.hasCritErrors) {
-        await this.entityManager.transaction(async (manager) => {
-          for (const trans of transactions) {
-            await manager.query(trans.command, trans.params);
-          }
-        });
-      }
+      await this.entityManager.transaction(async (manager) => {
+        for (const trans of transactions) {
+          await manager.query(trans.command, trans.params);
+        }
+      });
     } catch (e) {
       this.logger.error('Error during copyToOfficial processing.', e.stack, 'SubmissionProcessService');
       throw e; //Rethrow so that error handling takes over
