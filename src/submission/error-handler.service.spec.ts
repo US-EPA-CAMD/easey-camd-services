@@ -141,7 +141,7 @@ describe('ErrorHandlerService', () => {
       );
       expect(submissionSetHelper.setRecordStatusCode).toHaveBeenCalledWith(
         set,
-        queueRecords,
+        queueRecords[0],
         'ERROR',
         JSON.stringify({
           message: error.message,

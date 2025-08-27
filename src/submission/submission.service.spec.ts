@@ -11,6 +11,7 @@ import { QaTee } from '../entities/qa-tee.entity';
 import { MatsBulkFile } from '../entities/mats-bulk-file.entity';
 import { ReportingPeriod } from '../entities/reporting-period.entity';
 import { EmissionEvaluation } from '../entities/emission-evaluation.entity';
+import { SubmissionQueue } from '../entities/submission-queue.entity';
 import { SubmissionService } from './submission.service';
 import { SubmissionQueueDTO } from '../dto/submission-queue.dto';
 import { QaSuppData } from '../entities/qa-supp.entity';
@@ -237,8 +238,8 @@ describe('-- Submission Service --', () => {
 
     // Mock the find method to return submission queue records
     const mockSubmissionQueueRecords = [
-      { submissionSetIdentifier: 'test-set-id', severityCode: 'CRIT1' },
-      { submissionSetIdentifier: 'test-set-id', severityCode: 'CRIT2' }
+      { submissionSetIdentifier: 'test-set-id', severityCode: 'CRIT1', severityCodeRecord: { evalStatusCode: 'ERR' } },
+      { submissionSetIdentifier: 'test-set-id', severityCode: 'CRIT2', severityCodeRecord: { evalStatusCode: 'ERR' } },
     ];
 
     // Mock SeverityCodes
@@ -266,10 +267,6 @@ describe('-- Submission Service --', () => {
         if (criteria.id === 'qce-session-id') return qceCheckSession;
         if (criteria.id === 'tee-session-id') return teeCheckSession;
         if (criteria.id === 'em-session-id') return emCheckSession;
-      }
-      if (entity === SeverityCode) {
-        if (criteria.severityCode === 'CRIT1') return crit1Severity;
-        if (criteria.severityCode === 'CRIT2') return crit2Severity;
       }
       return null;
     });
