@@ -19,7 +19,6 @@ import { QaCertEvent } from '../entities/qa-cert-event.entity';
 import { QaSuppData } from '../entities/qa-supp.entity';
 import { QaTee } from '../entities/qa-tee.entity';
 import { ReportingPeriod } from '../entities/reporting-period.entity';
-import { SeverityCode } from '../entities/severity-code.entity';
 import { SubmissionQueue } from '../entities/submission-queue.entity';
 import { SubmissionSet } from '../entities/submission-set.entity';
 import { CombinedSubmissionsMap } from '../maps/combined-submissions.map';
