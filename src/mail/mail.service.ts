@@ -3,14 +3,14 @@ import { EntityManager } from 'typeorm';
 import { CreateMailDto } from '../dto/create-mail.dto';
 import { Logger } from '@us-epa-camd/easey-common/logger';
 import { ClientConfig } from '../entities/client-config.entity';
-import { MailerService } from '@nestjs-modules/mailer';
+import { NodemailerService } from './nodemailer/nodemailer.service';
 
 @Injectable()
 export class MailService {
   constructor(
     private readonly entityManager: EntityManager,
     private readonly logger: Logger,
-    private readonly mailerService: MailerService,
+    private readonly nodemailerService: NodemailerService,
   ) {}
 
   returnManager() {
@@ -23,18 +23,17 @@ export class MailService {
       { id: clientId },
     );
 
-    this.mailerService
-      .sendMail({
-        from: payload.fromEmail,
-        to: dbRecord.supportEmail, // List of receivers email address
-        subject: payload.subject, // Subject line
-        text: payload.message,
-      })
-      .then((_success) => {
-        this.logger.debug(`Successfully sent an email`);
-      })
-      .catch((_err) => {
-        this.logger.error(`Failed to sent an email`);
-      });
+    this.nodemailerService.sendMail({
+      from: payload.fromEmail,
+      to: dbRecord.supportEmail, // List of receivers email address
+      subject: payload.subject, // Subject line
+      text: payload.message,
+    })
+    .then((_success) => {
+      this.logger.debug(`Successfully sent an email`);
+    })
+    .catch((_err) => {
+      this.logger.error(`Failed to sent an email`);
+    });
   }
 }
