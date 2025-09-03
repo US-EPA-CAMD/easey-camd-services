@@ -2,12 +2,10 @@ import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import { MailController } from './mail.controller';
 import { MailService } from './mail.service';
-import { MailerModule } from '@nestjs-modules/mailer';
-import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
-import { smtpHost, smtpPort } from '../config/app.config';
-import { join } from 'path';
+import { NodemailerModule } from './nodemailer/nodemailer.module';
+import { TemplateService } from './template/template.service';
 import { MailEvalService } from './mail-eval.service';
-import { MailTemplateService } from './mail-template.service';
+import { EaseyContentTemplateService } from './easey-content-template.service';
 import { DataSetModule } from '../dataset/dataset.module';
 import { CopyOfRecordModule } from '../copy-of-record/copy-of-record.module';
 import { RecipientListService } from '../submission/recipient-list.service';
@@ -15,36 +13,12 @@ import { RecipientListService } from '../submission/recipient-list.service';
 @Module({
   imports: [
     HttpModule,
-    MailerModule.forRoot({
-      transport: {
-        host: smtpHost,
-        port: smtpPort,
-      },
-      template: {
-        dir: join(__dirname, 'templates'),
-        adapter: new HandlebarsAdapter(
-          {
-            equals: (a, b) => {
-              return a === b;
-            },
-            notEquals: (a, b) => {
-              return a !== b;
-            },
-          },
-          {
-            inlineCssEnabled: true,
-          },
-        ),
-        options: {
-          strict: true,
-        },
-      },
-    }),
+    NodemailerModule,
     DataSetModule,
     CopyOfRecordModule,
   ],
   controllers: [MailController],
-  providers: [MailService, MailEvalService, MailTemplateService, RecipientListService],
+  providers: [MailService, MailEvalService, EaseyContentTemplateService, TemplateService, RecipientListService],
   exports: [MailEvalService, RecipientListService],
 })
 export class MailModule {}
