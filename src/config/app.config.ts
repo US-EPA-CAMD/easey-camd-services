@@ -133,6 +133,9 @@ export default registerAs('app', () => ({
   ),
   recipientsListApi: getConfigValue('EASEY_CAMD_SERVICES_RECIPIENT_LIST_API', 'https://cbsstagei.epa.gov/CBSD'),
   recipientsListApiEnabled: getConfigValueBoolean('EASEY_CAMD_SERVICES_RECIPIENT_LIST_API_ENABLED',true),
+  enableLocalEmailPreview: getConfigValueBoolean('EASEY_CAMD_SERVICES_ENABLE_LOCAL_EMAIL_PREVIEW',false),
+  localEmailPreviewDirectory: getConfigValue('EASEY_CAMD_SERVICES_LOCAL_EMAIL_PREVIEW_DIRECTORY'),
+  localEmailPreviewOpen: getConfigValueBoolean('EASEY_CAMD_SERVICES_LOCAL_EMAIL_PREVIEW_OPEN', true),
 
   maxConnectionPool: getConfigValueNumber('EASEY_DB_MAX_CONNECTION_POOL',15),
   idleTimeout: getConfigValueNumber( 'EASEY_DB_IDLE_TIMEOUT', 30000, ),

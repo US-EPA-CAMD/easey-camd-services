@@ -16,7 +16,7 @@ import { CreateMailDto } from '../dto/create-mail.dto';
 import { ClientId } from '../decorators/client-id.decorator';
 import { ProcessMailDTO } from '../dto/process-mail.dto';
 import { MassEvalParamsDTO } from '../dto/mass-eval-params.dto';
-import { MailTemplateService } from './mail-template.service';
+import { EaseyContentTemplateService } from './easey-content-template.service';
 import { MailEvalService } from './mail-eval.service';
 import { ApiExcludeEndpointByEnv } from '../decorators/swagger-decorator';
 import { EmailRecipientListRequestDto } from '../dto/email-recipient-list-request.dto';
@@ -33,7 +33,7 @@ import { RecipientListService } from '../submission/recipient-list.service';
 export class MailController {
   constructor(
     private mailService: MailService,
-    private mailTemplateService: MailTemplateService,
+    private easeyContentTemplateService: EaseyContentTemplateService,
     private mailEvalService: MailEvalService,
     private recipientListService: RecipientListService,
     private readonly logger: Logger,
@@ -74,7 +74,7 @@ export class MailController {
     requestBodyOutFields: ['emailToSendId']
   })
   async sendRecord(@Body() payload: ProcessMailDTO): Promise<EmailProcessResponseDto> {
-    return await this.mailTemplateService.sendEmailRecord(payload.emailToSendId);
+    return await this.easeyContentTemplateService.sendEmailRecord(payload.emailToSendId);
   }
 
   @Post('email/mass-eval')
@@ -119,16 +119,6 @@ export class MailController {
   async getEmailRecipientList(
     @Body() payload: EmailRecipientListRequestDto,
   ): Promise<EmailRecipientListResponseDto> {
-    this.logger.log('MailController.getEmailRecipientList - Request payload: ' + JSON.stringify(payload));
-    
-    const result = await this.recipientListService.getEmailRecipientList(payload);
-    
-    this.logger.log(`MailController.getEmailRecipientList - Response summary: ${result.recipients?.length || 0} recipients, hasError: ${result.hasError}, errorMessage: ${result.errorMessage}`);
-    
-    if (result.recipients && result.recipients.length > 0) {
-      this.logger.log(`MailController.getEmailRecipientList - First recipient sample: email="${result.recipients[0].emailAddressList}", plantIds=[${result.recipients[0].plantIdList?.join(', ') || 'none'}]`);
-    }
-    
-    return result;
+    return await this.recipientListService.getEmailRecipientList(payload);
   }
 }
