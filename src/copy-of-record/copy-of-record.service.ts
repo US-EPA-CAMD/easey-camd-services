@@ -12,14 +12,19 @@ import { createReadStream, writeFileSync, rmSync, stat } from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 import type { Response } from 'express';
 import { Plant } from '../entities/plant.entity';
+import * as createDOMPurify from 'dompurify';
+import { JSDOM } from 'jsdom';
 
 @Injectable()
 export class CopyOfRecordService {
+  private readonly domPurify: createDOMPurify.DOMPurify;
   constructor(
     private readonly logger: Logger,
     private dataService: DataSetService,
     private readonly entityManager: EntityManager,
-  ) { }
+  ) { 
+        this.domPurify = createDOMPurify(new JSDOM('').window);
+  }
 
   addDocumentHeader(content: string, title: string): string {
     const date = new Date();
@@ -191,14 +196,15 @@ export class CopyOfRecordService {
     let innerContent = '';
 
     statements.forEach((val, idx) => {
-      innerContent += `<p> ${val['statementText']} </p>`;
+      let safeHTMLContent = this.domPurify.sanitize(val['statementText'], { USE_PROFILES: { html: true } });
+      innerContent += safeHTMLContent;
       if (idx + 1 < statements.length) {
         innerContent += '<hr/>';
       }
     });
 
     documentContent = documentContent.replace('{CONTENT}', innerContent);
-
+    
     return documentContent;
   }
 
