@@ -60,6 +60,6 @@ describe('-- Evaluation Controller --', () => {
 
     expect(async () => {
       await controller.evaluate(dtoParams);
-    }).not.toThrowError();
+    }).not.toThrow();
   });
 });

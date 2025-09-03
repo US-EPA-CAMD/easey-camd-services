@@ -1,6 +1,6 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { EntityManager } from 'typeorm';
-import { MailerService } from '@nestjs-modules/mailer';
+import { NodemailerService } from './nodemailer/nodemailer.service';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
@@ -9,13 +9,14 @@ import { EmailToSend } from '../entities/email-to-send.entity';
 import { EmailTemplate } from '../entities/email-template.entity';
 import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
 import { EmailProcessResponseDto } from '../dto/email-process-response.dto';
+import { inline } from '@css-inline/css-inline';
 
-//Sends and formats html templates based on the content-url
+//Processes templates from easey-content API with custom syntax
 @Injectable()
-export class MailTemplateService {
+export class EaseyContentTemplateService {
   constructor(
     private readonly entityManager: EntityManager,
-    private readonly mailerService: MailerService,
+    private readonly nodemailerService: NodemailerService,
     private readonly configService: ConfigService,
     private readonly httpService: HttpService,
     private readonly logger: Logger,
@@ -100,23 +101,37 @@ export class MailTemplateService {
     templateLocation: string,
     context: object,
   ) {
-    const formattedTemplate = await this.getAndFormatTemplate(
-      templateLocation,
-      context,
-    );
-    this.mailerService
-      .sendMail({
+    try {
+      const formattedTemplate = await this.getAndFormatTemplate(
+        templateLocation,
+        context,
+      );
+      
+      // Inline CSS for better email client compatibility
+      let htmlContent = formattedTemplate;
+      try {
+        htmlContent = inline(formattedTemplate, {
+          keepAtRules: true,
+        });
+      } catch (inlineError) {
+        this.logger.warn('Failed to inline CSS, using original HTML', inlineError);
+      }
+      
+      this.nodemailerService.sendMail({
         from: from,
         to: to, // List of receivers email address
         subject: subject, // Subject line
-        html: formattedTemplate, // HTML body content
+        html: htmlContent, // HTML body content
       })
       .then((_success) => {
         this.logger.debug(`Successfully sent a template email`);
       })
       .catch((_err) => {
-        this.logger.error(`Failed to sent a template email`);
+        this.logger.error(`Failed to send a template email`);
       });
+    } catch (err) {
+      this.logger.error(`Failed to prepare template email`, err);
+    }
   }
 
   async sendEmailRecord(emailToSendId: number): Promise<EmailProcessResponseDto> {
@@ -149,6 +164,10 @@ export class MailTemplateService {
       } else {
         context = {};
       }
+
+      // Add email addresses to context for template variables
+      context.toEmail = record.toEmail;
+      context.fromEmail = record.fromEmail;
 
       await this.sendTemplateEmail(
         record.toEmail,
