@@ -1,7 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { LoggerModule } from '@us-epa-camd/easey-common/logger';
 import { HttpModule } from '@nestjs/axios';
-import { MailerService } from '@nestjs-modules/mailer';
+import { NodemailerService } from './nodemailer/nodemailer.service';
+import { TemplateService } from './template/template.service';
 import { ClientConfig } from '../entities/client-config.entity';
 import { EntityManager } from 'typeorm';
 import { MonitorSystem } from '../entities/monitor-system.entity';
@@ -28,7 +29,8 @@ const mockEvalList = [new Evaluation(), new Evaluation(), new Evaluation()];
 
 describe('Mail Eval Service', () => {
   let service: MailEvalService;
-  let wrapperService: MailerService;
+  let nodemailerService: NodemailerService;
+  let templateService: TemplateService;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -36,9 +38,15 @@ describe('Mail Eval Service', () => {
       providers: [
         MailEvalService,
         {
-          provide: MailerService,
+          provide: NodemailerService,
           useFactory: () => ({
             sendMail: jest.fn().mockResolvedValue({}),
+          }),
+        },
+        {
+          provide: TemplateService,
+          useFactory: () => ({
+            renderTemplateByName: jest.fn().mockResolvedValue('<html>Mock template</html>'),
           }),
         },
         ConfigService,
@@ -49,7 +57,8 @@ describe('Mail Eval Service', () => {
     }).compile();
 
     service = module.get(MailEvalService);
-    wrapperService = module.get(MailerService);
+    nodemailerService = module.get(NodemailerService);
+    templateService = module.get(TemplateService);
 
     const mockManager = {
       findOneBy: jest.fn().mockImplementation((val) => {
@@ -285,6 +294,6 @@ describe('Mail Eval Service', () => {
     jest.spyOn(service, 'formatEmissionsContext').mockResolvedValue({});
 
     await service.sendMassEvalEmail('', '', '', '');
-    expect(wrapperService.sendMail).toHaveBeenCalled();
+    expect(nodemailerService.sendMail).toHaveBeenCalled();
   });
 });

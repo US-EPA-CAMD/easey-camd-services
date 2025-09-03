@@ -77,7 +77,7 @@ describe('-- Bulk File Service --', () => {
 
       expect(async () => {
         await bulkFileService.updateBulkDataFile('', params);
-      }).not.toThrowError();
+      }).not.toThrow();
     });
   });
 });

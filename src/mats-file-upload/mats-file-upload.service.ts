@@ -173,7 +173,7 @@ export class MatsFileUploadService {
 
       const documents: any = [];
       // Add MATS Certification Statement
-      await this.documentService.addCertificationStatements(submission.monPlanId, documents);
+      await this.documentService.addCertificationStatements(submission.monPlanId, documents, true);
 
       // Writing Certification Statements...
       writeFileSync(`${folderPath}/${documents[0]?.documentTitle}.html`, documents[0]?.context);

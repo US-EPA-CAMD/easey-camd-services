@@ -9,17 +9,19 @@ import {
 import { Controller, Post, Body, UseGuards } from '@nestjs/common';
 import { ClientTokenGuard } from '@us-epa-camd/easey-common/guards';
 import { AuditLog } from '@us-epa-camd/easey-common/decorators';
+import { Logger } from '@us-epa-camd/easey-common/logger';
 
 import { MailService } from './mail.service';
 import { CreateMailDto } from '../dto/create-mail.dto';
 import { ClientId } from '../decorators/client-id.decorator';
 import { ProcessMailDTO } from '../dto/process-mail.dto';
 import { MassEvalParamsDTO } from '../dto/mass-eval-params.dto';
-import { MailTemplateService } from './mail-template.service';
+import { EaseyContentTemplateService } from './easey-content-template.service';
 import { MailEvalService } from './mail-eval.service';
 import { ApiExcludeEndpointByEnv } from '../decorators/swagger-decorator';
 import { EmailRecipientListRequestDto } from '../dto/email-recipient-list-request.dto';
 import { EmailRecipientListResponseDto } from '../dto/email-recipient-list-response.dto';
+import { EmailProcessResponseDto } from '../dto/email-process-response.dto';
 import { RecipientListService } from '../submission/recipient-list.service';
 
 @Controller()
@@ -31,9 +33,10 @@ import { RecipientListService } from '../submission/recipient-list.service';
 export class MailController {
   constructor(
     private mailService: MailService,
-    private mailTemplateService: MailTemplateService,
+    private easeyContentTemplateService: EaseyContentTemplateService,
     private mailEvalService: MailEvalService,
     private recipientListService: RecipientListService,
+    private readonly logger: Logger,
   ) {}
 
   @Post('contact-us')
@@ -58,6 +61,7 @@ export class MailController {
   @ApiExcludeEndpointByEnv()
   @ApiOkResponse({
     description: 'Data sent successfully',
+    type: EmailProcessResponseDto,
   })
   @ApiOperation({
     description:
@@ -69,8 +73,8 @@ export class MailController {
     requestHeadersOutFields: ['x-client-id'],
     requestBodyOutFields: ['emailToSendId']
   })
-  async sendRecord(@Body() payload: ProcessMailDTO) {
-    await this.mailTemplateService.sendEmailRecord(payload.emailToSendId);
+  async sendRecord(@Body() payload: ProcessMailDTO): Promise<EmailProcessResponseDto> {
+    return await this.easeyContentTemplateService.sendEmailRecord(payload.emailToSendId);
   }
 
   @Post('email/mass-eval')

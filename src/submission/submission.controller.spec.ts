@@ -47,18 +47,18 @@ describe('-- Submission Controller --', () => {
 
     expect(async () => {
       await controller.queue(dtoParams);
-    }).not.toThrowError();
+    }).not.toThrow();
   });
 
   it('process', async () => {
     expect(async () => {
       await controller.process(new ProcessParamsDTO());
-    }).not.toThrowError();
+    }).not.toThrow();
   });
 
   it('last-updated', async () => {
     expect(async () => {
       await controller.lastUpdated({ date: new Date('2025-02-25') });
-    }).not.toThrowError();
+    }).not.toThrow();
   });
 });
