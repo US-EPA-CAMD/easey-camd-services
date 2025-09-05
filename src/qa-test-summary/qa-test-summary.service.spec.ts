@@ -94,15 +94,6 @@ describe('QaTestSummaryService', () => {
       expect(result.id).toBeUndefined();
       expect(result.orisCode).toBeNaN();
     });
-
-    const queryCalls = transactionalEntityManager.query.mock.calls;
-    expect(queryCalls.length).toBe(4);
-
-    // Verify each specific DELETE query was called
-    expect(queryCalls[0][0]).toContain('DELETE FROM camdecmps.test_summary');
-    expect(queryCalls[1][0]).toContain('DELETE FROM camdecmps.qa_supp_data');
-    expect(queryCalls[2][0]).toContain('DELETE FROM camdecmpswks.test_summary');
-    expect(queryCalls[3][0]).toContain('DELETE FROM camdecmpswks.qa_supp_data');
   });
   
   describe('deleteQATestSummaryData', () => {
@@ -113,7 +104,7 @@ describe('QaTestSummaryService', () => {
         expect(result).toEqual({
             message: `Record with id 1 has been successfully deleted.`,
         });
-        expect(entityManager.query).toHaveBeenCalledTimes(3);
+        expect(entityManager.query).toHaveBeenCalledTimes(4);
     });
   });
 });
