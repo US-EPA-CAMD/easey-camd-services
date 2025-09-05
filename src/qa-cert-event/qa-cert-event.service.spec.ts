@@ -12,7 +12,19 @@ describe('QaCertEventService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [QaCertEventService, EntityManager, QaCertEventMaintMap],
+      providers: [
+        QaCertEventService, 
+        {
+          provide: EntityManager,
+          useValue: {
+            find: jest.fn(),
+            findOneBy: jest.fn(),
+            query: jest.fn(),
+            transaction: jest.fn(),
+          },
+        },
+        QaCertEventMaintMap,
+      ],
     }).compile();
 
     service = module.get<QaCertEventService>(QaCertEventService);
@@ -60,26 +72,51 @@ describe('QaCertEventService', () => {
     expect(errored).toEqual(true);
   });
 
-  it('should successfully delete data', async () => {
-    jest.spyOn(entityManager, 'query').mockResolvedValue([[], 1]);
+  describe('deleteQACertEventData', () => {
+    it('should successfully delete data within a transaction', async () => {
+      const transactionalQuerySpy = jest.fn().mockResolvedValue(undefined);
 
-    const result = await service.deleteQACertEventData('1');
-    expect(result).toEqual({
-      message: `Record with id 1 has been successfully deleted.`,
+      (entityManager.transaction as jest.Mock).mockImplementation(
+        async (callback) => {
+          await callback({ query: transactionalQuerySpy });
+        },
+      );
+
+      const idToDelete = '1';
+      await service.deleteQACertEventData(idToDelete);
+
+      expect(entityManager.transaction).toHaveBeenCalled();
+
+      expect(transactionalQuerySpy).toHaveBeenCalledTimes(3);
+      expect(transactionalQuerySpy).toHaveBeenCalledWith(
+        expect.stringContaining('DELETE FROM camdecmps.qa_cert_event'),
+        [idToDelete],
+      );
+      expect(transactionalQuerySpy).toHaveBeenCalledWith(
+        expect.stringContaining('DELETE FROM camdecmpswks.qa_cert_event'),
+        [idToDelete],
+      );
+      expect(transactionalQuerySpy).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'DELETE FROM camdecmpswks.qa_cert_event_supp_data',
+        ),
+        [idToDelete],
+      );
     });
-  });
 
-  it('should throw error while deleting data', async () => {
-    jest
-      .spyOn(entityManager, 'query')
-      .mockRejectedValue(new EaseyException(new Error('Error'), 500));
+    it('should throw an error if the transaction fails', async () => {
+      const testError = new Error('Database transaction failed');
 
-    let errored = false;
-    try {
-      await service.deleteQACertEventData('1');
-    } catch {
-      errored = true;
-    }
-    expect(errored).toEqual(true);
+      (entityManager.transaction as jest.Mock).mockImplementation(async () => {
+        throw testError;
+      });
+
+      await expect(service.deleteQACertEventData('1')).rejects.toThrow(
+        EaseyException,
+      );
+      await expect(service.deleteQACertEventData('1')).rejects.toThrow(
+        'Database transaction failed',
+      );
+    });
   });
 });

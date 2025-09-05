@@ -43,13 +43,13 @@ describe('-- Bulk File Controller --', () => {
           res: { removeHeader: jest.fn(), setHeader: jest.fn() },
         }),
       );
-    }).not.toThrowError();
+    }).not.toThrow();
   });
 
   it('addBulkFile', async () => {
     expect(async () => {
       await bulkFileController.addBulkFile(new BulkFileInputDTO());
-    }).not.toThrowError();
+    }).not.toThrow();
   });
 
   it('massBulkFileState', async () => {
@@ -57,7 +57,7 @@ describe('-- Bulk File Controller --', () => {
       await bulkFileController.massBulkFileState(
         new ApportionedEmissionsStateDTO(),
       );
-    }).not.toThrowError();
+    }).not.toThrow();
   });
 
   it('massBulkFileQuarter', async () => {
@@ -65,19 +65,19 @@ describe('-- Bulk File Controller --', () => {
       await bulkFileController.massBulkFileQuarter(
         new ApportionedEmissionsQuarterlyDTO(),
       );
-    }).not.toThrowError();
+    }).not.toThrow();
   });
 
   it('massBulkFileFacility', async () => {
     expect(async () => {
       await bulkFileController.massBulkFileFacility(new TimePeriodDTO());
-    }).not.toThrowError();
+    }).not.toThrow();
   });
 
   it('massBulkFileEmissionsCompliance', async () => {
     expect(async () => {
       await bulkFileController.massBulkFileEmissionsCompliance();
-    }).not.toThrowError();
+    }).not.toThrow();
   });
 
   it('massBulkFileAllowanceHoldings', async () => {
@@ -85,7 +85,7 @@ describe('-- Bulk File Controller --', () => {
       await bulkFileController.massBulkFileAllowanceHoldings(
         new ProgramCodeDTO(),
       );
-    }).not.toThrowError();
+    }).not.toThrow();
   });
 
   it('massBulkFileAllowanceCompliance', async () => {
@@ -93,7 +93,7 @@ describe('-- Bulk File Controller --', () => {
       await bulkFileController.massBulkFileAllowanceCompliance(
         new ProgramCodeDTO(),
       );
-    }).not.toThrowError();
+    }).not.toThrow();
   });
 
   it('massBulkFileAllowanceTransactions', async () => {
@@ -101,6 +101,6 @@ describe('-- Bulk File Controller --', () => {
       await bulkFileController.massBulkFileAllowanceTransactions(
         new ProgramCodeDTO(),
       );
-    }).not.toThrowError();
+    }).not.toThrow();
   });
 });
