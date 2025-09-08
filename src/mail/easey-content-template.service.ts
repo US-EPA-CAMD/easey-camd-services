@@ -1,22 +1,19 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { EntityManager } from 'typeorm';
-import { NodemailerService } from './nodemailer/nodemailer.service';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
 import { Logger } from '@us-epa-camd/easey-common/logger';
-import { EmailToSend } from '../entities/email-to-send.entity';
 import { EmailTemplate } from '../entities/email-template.entity';
 import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
-import { EmailProcessResponseDto } from '../dto/email-process-response.dto';
-import { inline } from '@css-inline/css-inline';
+import * as Handlebars from 'handlebars';
 
-//Processes templates from easey-content API with custom syntax
 @Injectable()
 export class EaseyContentTemplateService {
+  private handlebars = Handlebars.create();
+
   constructor(
     private readonly entityManager: EntityManager,
-    private readonly nodemailerService: NodemailerService,
     private readonly configService: ConfigService,
     private readonly httpService: HttpService,
     private readonly logger: Logger,
@@ -26,7 +23,47 @@ export class EaseyContentTemplateService {
     return this.entityManager;
   }
 
-  async getAndFormatTemplate(templateUrl, context): Promise<string> {
+  // Handlebars template methods
+  async getTemplateContent(templateLocation: string): Promise<string> {
+    const contentUri = this.configService.get<string>('app.contentUri');
+    try {
+      const url = `${contentUri}/${templateLocation}`;
+      const template = await firstValueFrom(this.httpService.get(url));
+      return template.data;
+    } catch (e) {
+      this.logger.error(`Failed to fetch template: ${templateLocation}`, e);
+      throw new EaseyException(e, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async getTemplateById(templateId: number): Promise<EmailTemplate> {
+    const template = await this.entityManager.findOneBy(EmailTemplate, {
+      templateIdentifier: templateId,
+    });
+    if (!template) {
+      throw new EaseyException(
+        new Error(`Template with ID ${templateId} not found`),
+        HttpStatus.NOT_FOUND,
+      );
+    }
+    return template;
+  }
+
+  //This is for rending standard handlebars syntax
+  async renderHandlebarsTemplate(templateLocation: string, context: any): Promise<string> {
+    try {
+      const templateString = await this.getTemplateContent(templateLocation);
+      // Compile template (following TemplateService pattern with strict mode)
+      const template = this.handlebars.compile(templateString, { strict: true });
+      return template(context);
+    } catch (error) {
+      this.logger.error(`Failed to render Handlebars template ${templateLocation}`, error);
+      throw error;
+    }
+  }
+
+  //This is for rending simple custom template syntax that is currently using [[]] format.
+  async renderCustomTemplate(templateUrl, context): Promise<string> {
     let templateString;
     const contentUri = this.configService.get<string>('app.contentUri');
     try {
@@ -38,7 +75,7 @@ export class EaseyContentTemplateService {
     }
 
     // Process loop syntax first: [[#arrayName]]...[[/arrayName]]
-    templateString = this.processLoopSyntax(templateString, context);
+    templateString = this.processCustomLoopSyntax(templateString, context);
 
     // Process regular variable substitution
     for (const key in context) {
@@ -60,7 +97,7 @@ export class EaseyContentTemplateService {
     return templateString;
   }
 
-  private processLoopSyntax(templateString: string, context: any): string {
+  private processCustomLoopSyntax(templateString: string, context: any): string {
     // Find loop patterns: [[#arrayName]]content[[/arrayName]]
     const loopPattern = /\[\[#(\w+)]]([\s\S]*?)\[\[\/\1]]/g;
     
@@ -94,96 +131,4 @@ export class EaseyContentTemplateService {
   }
 
 
-  async sendTemplateEmail(
-    to: string,
-    from: string,
-    subject: string,
-    templateLocation: string,
-    context: object,
-  ) {
-    try {
-      const formattedTemplate = await this.getAndFormatTemplate(
-        templateLocation,
-        context,
-      );
-      
-      // Inline CSS for better email client compatibility
-      let htmlContent = formattedTemplate;
-      try {
-        htmlContent = inline(formattedTemplate, {
-          keepAtRules: true,
-        });
-      } catch (inlineError) {
-        this.logger.warn('Failed to inline CSS, using original HTML', inlineError);
-      }
-      
-      this.nodemailerService.sendMail({
-        from: from,
-        to: to, // List of receivers email address
-        subject: subject, // Subject line
-        html: htmlContent, // HTML body content
-      })
-      .then((_success) => {
-        this.logger.debug(`Successfully sent a template email`);
-      })
-      .catch((_err) => {
-        this.logger.error(`Failed to send a template email`);
-      });
-    } catch (err) {
-      this.logger.error(`Failed to prepare template email`, err);
-    }
-  }
-
-  async sendEmailRecord(emailToSendId: number): Promise<EmailProcessResponseDto> {
-    try {
-      const record = await this.entityManager.findOneBy(EmailToSend, {
-        toSendIdentifier: emailToSendId,
-      });
-      
-      if (!record) {
-        // Scenario 2: Record not found
-        this.logger.error(`Email record not found for emailToSendId: ${emailToSendId}`);
-        return { success: false, message: `Email record ${emailToSendId} not found` };
-      }
-
-      //Call into the template email service
-      const template =
-        record.templateIdentifier &&
-        (await this.entityManager.findOneBy(EmailTemplate, {
-          templateIdentifier: record.templateIdentifier,
-        }));
-
-      if (!template) {
-        this.logger.error(`Template not found for templateId: ${record.templateIdentifier ?? 'null'}`);
-        return { success: false, message: `Template ${record.templateIdentifier ?? 'null'} not found` };
-      }
-
-      let context; //Extract context
-      if (record.context) {
-        context = JSON.parse(record.context);
-      } else {
-        context = {};
-      }
-
-      // Add email addresses to context for template variables
-      context.toEmail = record.toEmail;
-      context.fromEmail = record.fromEmail;
-
-      await this.sendTemplateEmail(
-        record.toEmail,
-        record.fromEmail,
-        template.templateSubject,
-        template.templateLocation,
-        context,
-      );
-
-      record.statusCode = 'COMPLETE';
-      await this.entityManager.save(record);
-      
-      return { success: true };
-    } catch (e) {
-      this.logger.error(`Failed to process email ${emailToSendId}: ${e.message}`, e.stack);
-      return { success: false, message: e.message };
-    }
-  }
 }

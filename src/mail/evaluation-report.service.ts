@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { EntityManager } from 'typeorm';
-import { NodemailerService } from './nodemailer/nodemailer.service';
-import { TemplateService } from './template/template.service';
+import { EaseyContentTemplateService } from './easey-content-template.service';
+import { MailService } from './mail.service';
 import { Evaluation } from '../entities/evaluation.entity';
 import { EvaluationSet } from '../entities/evaluation-set.entity';
 import { MonitorPlan } from '../entities/monitor-plan.entity';
@@ -23,19 +23,19 @@ import { TestSummaryGlobal } from '../entities/test-summary-global.entity';
 import { QaCertEventGlobal } from '../entities/qa-cert-event-global.entity';
 import { QaTeeGlobal } from '../entities/qa-tee-global.entity';
 import { EmissionEvaluationGlobal } from '../entities/emission-evaluation-global.entity';
-import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
 import { ReportParamsDTO } from '../dto/report-params.dto';
 import { DataSetService } from '../dataset/dataset.service';
 import { CopyOfRecordService } from '../copy-of-record/copy-of-record.service';
 import { SeverityCode } from '../entities/severity-code.entity';
+import { EMAIL_TEMPLATE_IDS } from '../constants/email-template-ids';
 
 //Formats and sends emissions evaluations emails
 @Injectable()
-export class MailEvalService {
+export class EvaluationReportService {
   constructor(
     private readonly entityManager: EntityManager,
-    private readonly nodemailerService: NodemailerService,
-    private readonly templateService: TemplateService,
+    private readonly easeyContentTemplateService: EaseyContentTemplateService,
+    private readonly mailService: MailService,
     private readonly configService: ConfigService,
     private dataSetService: DataSetService,
     private copyOfRecordService: CopyOfRecordService,
@@ -417,51 +417,6 @@ export class MailEvalService {
     });
   };
 
-  async sendEmailWithRetry(
-    to: string,
-    cc: string,
-    from: string,
-    subject: string,
-    template: string,
-    templateContext: any,
-    attempt: number = 1,
-    attachments: object[] = [],
-  ): Promise<void> {
-    if (attempt < 3) {
-      try {
-        // Render template using template service
-        const html = await this.templateService.renderTemplateByName(template, templateContext);
-        
-        await this.nodemailerService.sendMail({
-          to, // List of receivers email addresses
-          cc,
-          from,
-          subject,
-          html,
-          attachments,
-        });
-      } catch (err) {
-        // Wait before retrying
-        await new Promise((resolve) => setTimeout(resolve, attempt * 1000 * attempt));
-        // Retry sending the email
-        await this.sendEmailWithRetry(
-          to, // List of receivers email address
-          cc,
-          from,
-          subject,
-          template,
-          templateContext,
-          attempt + 1,
-          attachments,
-        );
-      }
-    } else {
-      throw new EaseyException(
-        new Error('Exceeded email attempt retry threshold'),
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
-  }
 
 
   async buildEvalReports(
@@ -665,9 +620,7 @@ export class MailEvalService {
     let templateContext: any = {};
     const documents = [];
 
-    const env = this.configService.get<string>('app.env')?.trim()?.toLowerCase();
-    const subjectSuffix = env && !['prod', 'production', ''].includes(env) ? ` (sent from ECMPS 2.0 ${env})` : '';
-    subject = `ECMPS Evaluation Report | ${this.displayCurrentDate()} ${subjectSuffix}`;
+    subject = `ECMPS Evaluation Report | ${this.displayCurrentDate()}`;
 
     template = 'massEvaluationTemplate';
     records = await this.returnManager().find(Evaluation, {
@@ -770,15 +723,14 @@ export class MailEvalService {
       mappedStatusCodes,
     );
 
-    this.sendEmailWithRetry(
+    this.mailService.sendTemplateEmail({
+      templateId: EMAIL_TEMPLATE_IDS.MASS_EVALUATION,
       to,
       cc,
       from,
       subject,
-      template,
-      templateContext,
-      1,
-      documents,
-    );
+      context: templateContext,
+      attachments: documents,
+    });
   }
 }

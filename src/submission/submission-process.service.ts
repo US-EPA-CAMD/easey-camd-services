@@ -12,14 +12,14 @@ import { promises as fsPromises } from 'fs';
 import * as path from 'path';
 import { SubmissionSetHelperService } from './submission-set-helper.service';
 import { SubmissionEmailService } from './submission-email.service';
-import { MailEvalService } from '../mail/mail-eval.service';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class SubmissionProcessService {
   constructor(
     private readonly entityManager: EntityManager,
     private readonly logger: Logger,
-    private readonly mailEvalService: MailEvalService,
+    private readonly mailService: MailService,
     private readonly documentService: DocumentService,
     private readonly transactionService: SubmissionTransactionService,
     private readonly errorHandlerService: ErrorHandlerService,
@@ -101,16 +101,15 @@ export class SubmissionProcessService {
           // Attempt to send an email. If sending an email for this particular file type fails,
           // log the error and continue attempting to send emails for the others
           try {
-            await this.mailEvalService.sendEmailWithRetry(
-              submissionFeedbackEmailData.toEmail,
-              submissionFeedbackEmailData.ccEmail,
-              submissionFeedbackEmailData.fromEmail,
-              submissionFeedbackEmailData.subject,
-              submissionFeedbackEmailData.emailTemplate,
-              submissionFeedbackEmailData.templateContext,
-              1,
-              submissionFeedbackEmailData.feedbackAttachmentDocuments,
-            );
+            this.mailService.sendTemplateEmail({
+              templateId: submissionFeedbackEmailData.emailTemplateId,
+              to: submissionFeedbackEmailData.toEmail,
+              cc: submissionFeedbackEmailData.ccEmail,
+              from: submissionFeedbackEmailData.fromEmail,
+              subject: submissionFeedbackEmailData.subject,
+              context: submissionFeedbackEmailData.templateContext,
+              attachments: submissionFeedbackEmailData.feedbackAttachmentDocuments,
+            });
           } catch (e) {
             this.logger.error('Error attempting to send feedback email : ' +  {processCode : submissionFeedbackEmailData.processCode}, e.stack, 'SubmissionProcessService');
             await this.errorHandlerService.handleSubmissionProcessingError(submissionFeedbackEmailData.submissionSet, submissionFeedbackEmailData.submissionQueueRecords, submissionStages, e);

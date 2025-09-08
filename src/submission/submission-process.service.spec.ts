@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { SubmissionProcessService } from './submission-process.service';
 import { EntityManager } from 'typeorm';
 import { LoggerModule, Logger } from '@us-epa-camd/easey-common/logger';
-import { MailEvalService } from '../mail/mail-eval.service';
+import { MailService } from '../mail/mail.service';
 import { DocumentService } from './document.service';
 import { SubmissionTransactionService } from './submission-transaction.service';
 import { ErrorHandlerService } from './error-handler.service';
@@ -37,9 +37,9 @@ describe('SubmissionProcessService', () => {
           },
         },
         {
-          provide: MailEvalService,
+          provide: MailService,
           useValue: {
-            sendEmailWithRetry: jest.fn(),
+            sendTemplateEmail: jest.fn(),
           },
         },
         {

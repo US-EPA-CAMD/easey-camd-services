@@ -9,7 +9,8 @@ import { MatsBulkFile } from '../entities/mats-bulk-file.entity';
 import { Plant } from '../entities/plant.entity';
 import { DocumentService } from '../submission/document.service';
 import { RecipientListService } from '../submission/recipient-list.service';
-import { MailEvalService } from '../mail/mail-eval.service';
+import { MailService } from '../mail/mail.service';
+import { ClientConfigService } from '../mail/client-config.service';
 import { LoggerModule } from '@us-epa-camd/easey-common';
 import { EvaluationSetHelperService } from '../evaluation/evaluation-set-helper.service';
 
@@ -33,9 +34,9 @@ describe('MatsFileUploadService', () => {
           },
         },
         {
-          provide: MailEvalService,
+          provide: MailService,
           useValue: {
-            sendEmailWithRetry: jest.fn(),
+            sendTemplateEmail: jest.fn(),
           },
         },
         {
@@ -47,15 +48,19 @@ describe('MatsFileUploadService', () => {
         },
         {
           provide: EvaluationSetHelperService,
-          useValue: {
-            getECMPSClientConfig: jest.fn(),
-          }
+          useValue: {},
         },
         {
           provide: HttpService,
           useValue: {
             get: jest.fn(),
             post: jest.fn(),
+          },
+        },
+        {
+          provide: ClientConfigService,
+          useValue: {
+            getECMPSClientConfig: jest.fn(),
           },
         },
       ],

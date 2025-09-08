@@ -5,12 +5,13 @@ import { SubmissionSet } from '../entities/submission-set.entity';
 import { SubmissionQueue } from '../entities/submission-queue.entity';
 import { SubmissionSetHelperService } from './submission-set-helper.service';
 import { SubmissionEmailService } from './submission-email.service';
-import { MailEvalService } from '../mail/mail-eval.service';
+import { MailService } from '../mail/mail.service';
 import { ConfigService } from '@nestjs/config';
 import { SubmissionFeedbackRecordService } from './submission-feedback-record.service';
 import { EntityManager } from 'typeorm';
 import { Plant } from '../entities/plant.entity';
 import { SeverityCode } from '../entities/severity-code.entity';
+import { ClientConfigService } from '../mail/client-config.service';
 
 jest.mock('uuid', () => ({
   v4: jest.fn().mockReturnValue('mock-error-id'),
@@ -20,7 +21,7 @@ describe('ErrorHandlerService', () => {
   let service: ErrorHandlerService;
   let submissionSetHelper: SubmissionSetHelperService;
   let submissionEmailService: SubmissionEmailService;
-  let mailEvalService: MailEvalService;
+  let mailService: MailService;
   let configService: ConfigService;
   let submissionFeedbackRecordService: SubmissionFeedbackRecordService;
   let entityManager: EntityManager;
@@ -49,23 +50,28 @@ describe('ErrorHandlerService', () => {
         {
           provide: SubmissionEmailService,
           useValue: {
-            getECMPSClientConfig: jest.fn().mockResolvedValue({
-              supportEmail: 'support@example.com',
-            }),
             getSubmissionType: jest.fn().mockResolvedValue('Test Submission Type'),
             findRecordWithHighestSeverityLevel: jest.fn(),
           },
         },
         {
-          provide: MailEvalService,
+          provide: MailService,
           useValue: {
-            sendEmailWithRetry: jest.fn(),
+            sendTemplateEmail: jest.fn(),
           },
         },
         {
           provide: ConfigService,
           useValue: {
             get: jest.fn().mockReturnValue('from@example.com'),
+          },
+        },
+        {
+          provide: ClientConfigService,
+          useValue: {
+            getECMPSClientConfig: jest.fn().mockResolvedValue({
+              supportEmail: 'support@example.com',
+            }),
           },
         },
         {
@@ -80,7 +86,7 @@ describe('ErrorHandlerService', () => {
     service = module.get<ErrorHandlerService>(ErrorHandlerService);
     submissionSetHelper = module.get<SubmissionSetHelperService>(SubmissionSetHelperService);
     submissionEmailService = module.get<SubmissionEmailService>(SubmissionEmailService);
-    mailEvalService = module.get<MailEvalService>(MailEvalService);
+    mailService = module.get<MailService>(MailService);
     configService = module.get<ConfigService>(ConfigService);
     submissionFeedbackRecordService = module.get<SubmissionFeedbackRecordService>(SubmissionFeedbackRecordService);
     entityManager = module.get<EntityManager>(EntityManager);
@@ -157,27 +163,27 @@ describe('ErrorHandlerService', () => {
       expect(submissionEmailService.getSubmissionType).toHaveBeenCalledWith('EM');
       expect(submissionFeedbackRecordService.getDisplayDate).toHaveBeenCalledWith(set.queuedTime || expect.any(Date));
 
-      expect(mailEvalService.sendEmailWithRetry).toHaveBeenCalledTimes(2);
+      expect(mailService.sendTemplateEmail).toHaveBeenCalledTimes(2);
 
-      // Check arguments of sendEmailWithRetry
-      expect(mailEvalService.sendEmailWithRetry).toHaveBeenCalledWith(
-        'user@example.com',
-        expect.any(String),
-        'from@example.com',
-        expect.any(String),
-        'submissionFailureUserTemplate',
-        expect.any(Object),
-        1,
+      // Check arguments of sendTemplateEmail
+      expect(mailService.sendTemplateEmail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          templateId: expect.any(Number),
+          to: 'user@example.com',
+          from: 'from@example.com',
+          subject: expect.any(String),
+          context: expect.any(Object),
+        })
       );
 
-      expect(mailEvalService.sendEmailWithRetry).toHaveBeenCalledWith(
-        'support@example.com',
-        expect.any(String),
-        'from@example.com',
-        expect.any(String),
-        'submissionFailureSupportTemplate',
-        expect.any(Object),
-        1,
+      expect(mailService.sendTemplateEmail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          templateId: expect.any(Number),
+          to: 'support@example.com',
+          from: 'from@example.com',
+          subject: expect.any(String),
+          context: expect.any(Object),
+        })
       );
     });
   });

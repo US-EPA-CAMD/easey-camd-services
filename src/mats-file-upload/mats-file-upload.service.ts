@@ -23,9 +23,10 @@ import { Unit } from '../entities/unit.entity';
 import { SubmissionEmailParamsDto } from '../dto/submission-email-params.dto';
 import { MatsProcessParamsDTO } from '../dto/mats-process-params.dto';
 import { RecipientListService } from '../submission/recipient-list.service';
-import { MailEvalService } from '../mail/mail-eval.service';
+import { MailService } from '../mail/mail.service';
 import { DocumentService } from '../submission/document.service';
-import { EvaluationSetHelperService } from '../evaluation/evaluation-set-helper.service';
+import { ClientConfigService } from '../mail/client-config.service';
+import { EMAIL_TEMPLATE_IDS } from '../constants/email-template-ids';
 
 
 
@@ -41,9 +42,9 @@ export class MatsFileUploadService {
     private readonly configService: ConfigService,
     private readonly entityManager: EntityManager,
     private readonly recipientListService: RecipientListService,
-    private readonly mailEvalService: MailEvalService,
+    private readonly mailService: MailService,
     private readonly documentService: DocumentService,
-     private readonly evaluationSetHelper: EvaluationSetHelperService,
+    private readonly clientConfigService: ClientConfigService,
     private readonly httpService: HttpService,
     private readonly logger: Logger,
   ) {
@@ -315,7 +316,7 @@ export class MatsFileUploadService {
 
     let supportEmail: string;
     try {
-      const ecmpsClientConfig = await this.evaluationSetHelper.getECMPSClientConfig();
+      const ecmpsClientConfig = await this.clientConfigService.getECMPSClientConfig();
       supportEmail = ecmpsClientConfig?.supportEmail?.trim?.() || 'ecmps-support@camdsupport.com';
     } catch (configError) {
       supportEmail = 'ecmps-support@camdsupport.com';
@@ -329,15 +330,14 @@ export class MatsFileUploadService {
     submissionEmailParamsDto.templateContext['SUBMISSION_DATE'] = submission.completedTime;
     submissionEmailParamsDto.templateContext['supportEmail'] = supportEmail;
 
-    await this.mailEvalService.sendEmailWithRetry(
-      submissionEmailParamsDto.toEmail,
-      submissionEmailParamsDto.ccEmail,
-      this.configService.get<string>('app.defaultFromEmail'),
+    this.mailService.sendTemplateEmail({
+      templateId: EMAIL_TEMPLATE_IDS.MATS_SUBMISSION,
+      to: submissionEmailParamsDto.toEmail,
+      cc: submissionEmailParamsDto.ccEmail,
+      from: this.configService.get<string>('app.defaultFromEmail'),
       subject,
-      'matsSubmissionTemplate',
-      submissionEmailParamsDto.templateContext,
-      1,
-    );
+      context: submissionEmailParamsDto.templateContext,
+    });
   }
 
 }
