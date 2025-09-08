@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsString } from 'class-validator';
+import { IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class MatsProcessParamsDTO {
     @ApiProperty()
@@ -25,4 +25,9 @@ export class MatsProcessParamsDTO {
     @ApiProperty()
     @IsString()
     activityDescription: string
+
+    @ApiProperty({ required: false })
+    @IsString()
+    @IsOptional()
+    htmlMetadataReport?: string;
 }
