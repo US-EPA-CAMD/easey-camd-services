@@ -665,10 +665,6 @@ export class MailEvalService {
     let templateContext: any = {};
     const documents = [];
 
-    const env = this.configService.get<string>('app.env')?.trim()?.toLowerCase();
-    const subjectSuffix = env && !['prod', 'production', ''].includes(env) ? ` (sent from ECMPS 2.0 ${env})` : '';
-    subject = `ECMPS Evaluation Report | ${this.displayCurrentDate()} ${subjectSuffix}`;
-
     template = 'massEvaluationTemplate';
     records = await this.returnManager().find(Evaluation, {
       where: { evaluationSetIdentifier: setId },
@@ -676,6 +672,10 @@ export class MailEvalService {
     setRecord = await this.returnManager().findOneBy(EvaluationSet, {
       evaluationSetIdentifier: setId,
     });
+
+    const env = this.configService.get<string>('app.env')?.trim()?.toLowerCase();
+    const subjectSuffix = env && !['prod', 'production', ''].includes(env) ? ` (sent from ECMPS 2.0 ${env})` : '';
+    subject = `$ECMPS Evaluation Report for ORIS Code ${setRecord?.orisCode} ${setRecord?.configuration} | ${this.displayCurrentDate()} ${subjectSuffix}`;
 
     await this.buildEvalReports(setRecord, records, documents);
 
