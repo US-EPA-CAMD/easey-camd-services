@@ -13,3 +13,15 @@ export const EMAIL_TEMPLATE_IDS = {
 
 // Type for template ID validation
 export type EmailTemplateId = typeof EMAIL_TEMPLATE_IDS[keyof typeof EMAIL_TEMPLATE_IDS];
+
+// Handlebars partials configuration for different template types
+export const EMAIL_TEMPLATE_PARTIALS = {
+  SUBMISSION_FEEDBACK: {
+    basePath: 'email/submissions/feedback/partials',
+    partials: ['ADMNOVR', 'CRIT1', 'CRIT2', 'INFORM', 'NONCRIT', 'NONE'],
+  },
+  // Add other template types and their partials as needed
+} as const;
+
+// Type for partials configuration
+export type EmailTemplatePartialsConfig = typeof EMAIL_TEMPLATE_PARTIALS;

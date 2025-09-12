@@ -179,6 +179,7 @@ export class SubmissionEmailService {
     ) : '';
 
     submissionEmailParamsDto.templateContext['toEmail'] = submissionEmailParamsDto.toEmail;
+    submissionEmailParamsDto.templateContext['fromEmail'] = submissionEmailParamsDto.fromEmail;
     submissionEmailParamsDto.templateContext['ccEmail'] = submissionEmailParamsDto.ccEmail;
     const emailSubject = await this.constructEmailSubject(submissionEmailParamsDto);
     this.logger.debug(`Constructed email subject: ${emailSubject}`,);

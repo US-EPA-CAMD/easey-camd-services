@@ -7,17 +7,77 @@ import { Logger } from '@us-epa-camd/easey-common/logger';
 import { EmailTemplate } from '../entities/email-template.entity';
 import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
 import * as Handlebars from 'handlebars';
+import { EMAIL_TEMPLATE_PARTIALS } from '../constants/email-template-ids';
 
 @Injectable()
 export class EaseyContentTemplateService {
   private handlebars = Handlebars.create();
+  private partialsRegistered = false;
 
   constructor(
     private readonly entityManager: EntityManager,
     private readonly configService: ConfigService,
     private readonly httpService: HttpService,
     private readonly logger: Logger,
-  ) {}
+  ) {
+    // Register custom helpers for the isolated handlebars instance
+    this.registerHelpers();
+  }
+
+  private registerHelpers() {
+    // Register the notEquals helper needed by templates
+    this.handlebars.registerHelper('notEquals', function(a, b) {
+      return a !== b;
+    });
+
+    // Register the eq helper
+    this.handlebars.registerHelper('eq', function(a, b) {
+      return a === b;
+    });
+
+    // Register the equals helper (alternative to eq)
+    this.handlebars.registerHelper('equals', function(a, b) {
+      return a === b;
+    });
+
+    // Register the not_eq helper (alternative to notEquals)
+    this.handlebars.registerHelper('not_eq', function(a, b) {
+      return a !== b;
+    });
+
+    // Register the and helper for logical AND operations
+    this.handlebars.registerHelper('and', function() {
+      return Array.prototype.every.call(arguments, Boolean);
+    });
+
+    // Register the or helper for logical OR operations
+    this.handlebars.registerHelper('or', function() {
+      return Array.prototype.slice.call(arguments, 0, -1).some(Boolean);
+    });
+
+    // Register isObject helper to check if value is an object
+    this.handlebars.registerHelper('isObject', function(value) {
+      return typeof value === 'object' && value !== null;
+    });
+  }
+
+  private async registerPartials() {
+    // Register all configured partials
+    for (const [templateType, config] of Object.entries(EMAIL_TEMPLATE_PARTIALS)) {
+      this.logger.debug(`Registering partials for ${templateType}`);
+      
+      for (const partialName of config.partials) {
+        try {
+          const partialPath = `${config.basePath}/${partialName}.hbs`;
+          const partialContent = await this.getTemplateContent(partialPath);
+          this.handlebars.registerPartial(partialName, partialContent);
+          this.logger.debug(`Registered partial: ${partialName}`);
+        } catch (error) {
+          this.logger.error(`Failed to register partial ${partialName} from ${config.basePath}`, error);
+        }
+      }
+    }
+  }
 
   returnManager() {
     return this.entityManager;
@@ -27,7 +87,8 @@ export class EaseyContentTemplateService {
   async getTemplateContent(templateLocation: string): Promise<string> {
     const contentUri = this.configService.get<string>('app.contentUri');
     try {
-      const url = `${contentUri}/${templateLocation}`;
+      // Handle trailing/leading slashes properly
+      const url = new URL(templateLocation, contentUri).toString();
       const template = await firstValueFrom(this.httpService.get(url));
       return template.data;
     } catch (e) {
@@ -52,6 +113,12 @@ export class EaseyContentTemplateService {
   //This is for rending standard handlebars syntax
   async renderHandlebarsTemplate(templateLocation: string, context: any): Promise<string> {
     try {
+      // Ensure partials are registered before rendering (lazy loading)
+      if (!this.partialsRegistered) {
+        await this.registerPartials();
+        this.partialsRegistered = true;
+      }
+
       const templateString = await this.getTemplateContent(templateLocation);
       // Compile template (following TemplateService pattern with strict mode)
       const template = this.handlebars.compile(templateString, { strict: true });
@@ -67,7 +134,8 @@ export class EaseyContentTemplateService {
     let templateString;
     const contentUri = this.configService.get<string>('app.contentUri');
     try {
-      const url = `${contentUri}/${templateUrl}`;
+      // Handle trailing/leading slashes properly
+      const url = new URL(templateUrl, contentUri).toString();
       const template = await firstValueFrom(this.httpService.get(url));
       templateString = template.data;
     } catch (e) {
