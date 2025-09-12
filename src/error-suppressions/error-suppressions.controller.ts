@@ -34,6 +34,7 @@ export class ErrorSuppressionsController {
   constructor(private service: ErrorSuppressionsService) {}
 
   @Get()
+  @RoleGuard({ requiredRoles: ['ECMPS Admin'] }, LookupType.MonitorPlan)
   @ApiOkResponse({
     description: 'Data retrieved successfully',
     content: {

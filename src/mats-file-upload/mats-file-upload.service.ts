@@ -11,6 +11,7 @@ import { join } from 'path';
 import { mkdirSync, writeFileSync } from 'fs';
 import { Request } from 'express';
 import { AxiosResponse } from 'axios';
+import { format } from 'date-fns';
 
 import { MatsBulkFile } from '../entities/mats-bulk-file.entity';
 import { MonitorPlan } from '../entities/monitor-plan.entity';
@@ -19,6 +20,8 @@ import { MatsDataSubmission } from '../entities/mats-data-submission.entity';
 import { MatsDataSubmissionPayloadFile } from '../entities/mats-data-submission-payload-file.entity';
 import { Plant } from '../entities/plant.entity';
 import { Unit } from '../entities/unit.entity';
+import { MonitorLocation } from '../entities/monitor-location.entity';
+import { StackPipe } from '../entities/stack-pipe.entity';
 
 import { SubmissionEmailParamsDto } from '../dto/submission-email-params.dto';
 import { MatsProcessParamsDTO } from '../dto/mats-process-params.dto';
@@ -179,6 +182,10 @@ export class MatsFileUploadService {
       // Writing Certification Statements...
       writeFileSync(`${folderPath}/${documents[0]?.documentTitle}.html`, documents[0]?.context);
 
+      // MATS metadata HTML report if provided
+      if (matsProcessParams.htmlMetadataReport) {
+        writeFileSync(`${folderPath}/MATS_Metadata_Report.html`, matsProcessParams.htmlMetadataReport);
+      }
       // Download files from import bucket - similar to existing processMatsRecord
       for (const file of payloadFiles) {
         const getObjectResponse = await this.importS3Client.send(
@@ -284,23 +291,11 @@ export class MatsFileUploadService {
     const facility: Plant = await this.entityManager.findOne(Plant, {
       where: { facIdentifier: submission.facId },
     });
+    const matsSubmissionWithLocation = await this.getMatsSubmissionWithLocation(submission.monLocId)
+    const primaryLocation = matsSubmissionWithLocation?.primary_location;
 
-    const query = `
-      SELECT stack_name FROM camdecmps.STACK_PIPE
-      WHERE fac_id = $1
-      LIMIT 1
-    `;
-    const stack = await this.entityManager.query(query, [submission.facId]);
-    const stackName = stack && stack[0] && stack.stack_name;
-    let unit: Unit;
 
-    if (!stackName) {
-      unit = await this.entityManager.findOne(Unit, {
-        where: { facId: submission.facId },
-      });
-    }
-
-    const subject: string = `MATS Data Submission Feedback for ORIS Code ${facility.orisCode} Unit ${stackName || unit.name}`
+    const subject: string = `MATS Data Submission Feedback for ORIS Code ${facility.orisCode} ${primaryLocation}`
 
     //Get the recipients list from the recipient's list API
     const recipientsListApiEnabled = this.configService.get<boolean>('app.recipientsListApiEnabled');
@@ -320,14 +315,18 @@ export class MatsFileUploadService {
       supportEmail = ecmpsClientConfig?.supportEmail?.trim?.() || 'ecmps-support@camdsupport.com';
     } catch (configError) {
       supportEmail = 'ecmps-support@camdsupport.com';
-      this.logger.error( 'Failed to get support email. Using: ' + supportEmail, configError.stack, );
+      this.logger.error('Failed to get support email. Using: ' + supportEmail, configError.stack,);
     }
+
+    const now = new Date();
+    const currentDate = format(now, 'MM/dd/yyyy HH:mm:ss');
+
 
     submissionEmailParamsDto.templateContext['PLANT_NAME'] = facility.facilityName;
     submissionEmailParamsDto.templateContext['PLANT_STATE'] = facility.state;
     submissionEmailParamsDto.templateContext['ORIS_CODE'] = facility.orisCode;
-    submissionEmailParamsDto.templateContext['LOCATION_LIST'] = stackName || unit.name;
-    submissionEmailParamsDto.templateContext['SUBMISSION_DATE'] = submission.completedTime;
+    submissionEmailParamsDto.templateContext['LOCATION_LIST'] = primaryLocation;
+    submissionEmailParamsDto.templateContext['SUBMISSION_DATE'] = currentDate; //submission.completedTime will after email send
     submissionEmailParamsDto.templateContext['supportEmail'] = supportEmail;
 
     this.mailService.sendTemplateEmail({
@@ -338,6 +337,21 @@ export class MatsFileUploadService {
       subject,
       context: submissionEmailParamsDto.templateContext,
     });
+  }
+
+  async getMatsSubmissionWithLocation(monLocId: string) {
+    return await this.entityManager
+      .createQueryBuilder()
+      .select([
+        'mats.mon_loc_id',
+        'COALESCE(sp.stack_name, u.unitid) AS primary_location',
+      ])
+      .from(MatsDataSubmission, 'mats')
+      .innerJoin(MonitorLocation, 'ml', 'mats.mon_loc_id = ml.mon_loc_id')
+      .leftJoin(StackPipe, 'sp', 'ml.stack_pipe_id = sp.stack_pipe_id')
+      .leftJoin(Unit, 'u', 'ml.unit_id = u.unit_id')
+      .where('mats.mon_loc_id = :monLocId', { monLocId })
+      .getRawOne();
   }
 
 }
