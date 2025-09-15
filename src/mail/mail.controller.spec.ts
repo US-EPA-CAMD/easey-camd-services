@@ -7,7 +7,7 @@ import { MailController } from './mail.controller';
 import { MailService } from './mail.service';
 import { ProcessMailDTO } from '../dto/process-mail.dto';
 import { MailEvalService } from './mail-eval.service';
-import { MailTemplateService } from './mail-template.service';
+import { EaseyContentTemplateService } from './easey-content-template.service';
 import { MassEvalParamsDTO } from '../dto/mass-eval-params.dto';
 import { RecipientListService } from '../submission/recipient-list.service';
 import { EmailRecipientListRequestDto } from '../dto/email-recipient-list-request.dto';
@@ -35,7 +35,7 @@ describe('Mail Controller', () => {
   let controller: MailController;
   let service: MailService;
   let evalService: MailEvalService;
-  let templateService: MailTemplateService;
+  let easeyContentTemplateService: EaseyContentTemplateService;
   let recipientListService: RecipientListService;
 
   beforeAll(async () => {
@@ -45,7 +45,7 @@ describe('Mail Controller', () => {
       providers: [
         { provide: MailService, useFactory: mockMailService },
         { provide: MailEvalService, useFactory: mockEvalService },
-        { provide: MailTemplateService, useFactory: mockTemplateService },
+        { provide: EaseyContentTemplateService, useFactory: mockTemplateService },
         { provide: RecipientListService, useFactory: mockRecipientListService },
         ConfigService,
       ],
@@ -53,7 +53,7 @@ describe('Mail Controller', () => {
 
     service = module.get(MailService);
     evalService = module.get(MailEvalService);
-    templateService = module.get(MailTemplateService);
+    easeyContentTemplateService = module.get(EaseyContentTemplateService);
     recipientListService = module.get(RecipientListService);
     controller = module.get(MailController);
   });
@@ -77,7 +77,7 @@ describe('Mail Controller', () => {
   it('should call the template service', () => {
     controller.sendRecord(new ProcessMailDTO());
 
-    expect(templateService.sendEmailRecord).toHaveBeenCalled();
+    expect(easeyContentTemplateService.sendEmailRecord).toHaveBeenCalled();
   });
 
   it('should call the recipient list service', async () => {

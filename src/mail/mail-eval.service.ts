@@ -1,6 +1,7 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { EntityManager } from 'typeorm';
-import { MailerService } from '@nestjs-modules/mailer';
+import { NodemailerService } from './nodemailer/nodemailer.service';
+import { TemplateService } from './template/template.service';
 import { Evaluation } from '../entities/evaluation.entity';
 import { EvaluationSet } from '../entities/evaluation-set.entity';
 import { MonitorPlan } from '../entities/monitor-plan.entity';
@@ -33,7 +34,8 @@ import { SeverityCode } from '../entities/severity-code.entity';
 export class MailEvalService {
   constructor(
     private readonly entityManager: EntityManager,
-    private readonly mailerService: MailerService,
+    private readonly nodemailerService: NodemailerService,
+    private readonly templateService: TemplateService,
     private readonly configService: ConfigService,
     private dataSetService: DataSetService,
     private copyOfRecordService: CopyOfRecordService,
@@ -427,13 +429,15 @@ export class MailEvalService {
   ): Promise<void> {
     if (attempt < 3) {
       try {
-        await this.mailerService.sendMail({
+        // Render template using template service
+        const html = await this.templateService.renderTemplateByName(template, templateContext);
+        
+        await this.nodemailerService.sendMail({
           to, // List of receivers email addresses
           cc,
           from,
           subject,
-          template,
-          context: templateContext,
+          html,
           attachments,
         });
       } catch (err) {
@@ -661,10 +665,6 @@ export class MailEvalService {
     let templateContext: any = {};
     const documents = [];
 
-    const env = this.configService.get<string>('app.env')?.trim()?.toLowerCase();
-    const subjectSuffix = env && !['prod', 'production', ''].includes(env) ? ` (sent from ECMPS 2.0 ${env})` : '';
-    subject = `ECMPS Evaluation Report | ${this.displayCurrentDate()} ${subjectSuffix}`;
-
     template = 'massEvaluationTemplate';
     records = await this.returnManager().find(Evaluation, {
       where: { evaluationSetIdentifier: setId },
@@ -672,6 +672,10 @@ export class MailEvalService {
     setRecord = await this.returnManager().findOneBy(EvaluationSet, {
       evaluationSetIdentifier: setId,
     });
+
+    const env = this.configService.get<string>('app.env')?.trim()?.toLowerCase();
+    const subjectSuffix = env && !['prod', 'production', ''].includes(env) ? ` (sent from ECMPS 2.0 ${env})` : '';
+    subject = `$ECMPS Evaluation Report for ORIS Code ${setRecord?.orisCode} ${setRecord?.configuration} | ${this.displayCurrentDate()} ${subjectSuffix}`;
 
     await this.buildEvalReports(setRecord, records, documents);
 

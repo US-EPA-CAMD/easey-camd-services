@@ -5,46 +5,82 @@
   </head>
 
   <style>
-    h2 {background-color: #005ea2; color: white; padding: 5px} div
-    {border-bottom: 1px solid grey; padding:40px} img {padding: 10px} body
-    {margin: 10px} table { font-family: Arial, Helvetica, sans-serif;
-    border-collapse: collapse; width: 100%; } table td, table th { border: 1px
-    solid #ddd; padding: 8px; } table tr:nth-child(even){background-color:
-    #f2f2f2;} table th { padding-top: 12px; padding-bottom: 12px; text-align:
-    left; background-color: white; color: black; } a{padding: 5px; font-size:
-    1.06rem; line-height: 1.5;} h3{margin-top: 25px;}
+    h2 {
+      background-color: #005ea2;
+      color: white;
+      padding: 5px;
+    }
+    div {
+      border-bottom: 1px solid grey;
+      padding: 40px;
+    }
+    img {
+      padding: 10px;
+    }
+    body {
+      margin: 10px;
+    }
+    table {
+      font-family: Arial, Helvetica, sans-serif;
+      border-collapse: collapse;
+      width: 100%;
+    }
+    table td,
+    table th {
+      border: 1px solid #ddd;
+      padding: 8px;
+    }
+    table tr:nth-child(even) {
+      background-color: #f2f2f2;
+    }
+    table th {
+      padding-top: 12px;
+      padding-bottom: 12px;
+      text-align: left;
+      background-color: white;
+      color: black;
+    }
+    a {
+      padding: 5px;
+      font-size: 1.06rem;
+      line-height: 1.5;
+    }
+    h3 {
+      margin-top: 25px;
+    }
   </style>
 
   <body>
 
     <div>
-      <p>The U.S. Environmental Protection Agency (EPA) has received your recent
-        Emissions Collection and Monitoring Plan System (ECMPS) submission as
-        identified below, and has loaded your data into the EPA host system:
-        <br />Files may be viewed by accessing the submission search page
-        located here:
-        <a
-          href='https://cdx.epa.gov/SilentHandoff?URL=https://cdxnodengn.epa.gov/cdx-cedri-phase2/action/Search'
-        >
-          https://cdx.epa.gov/SilentHandoff?URL=https://cdxnodengn.epa.gov/cdx-cedri-phase2/action/Search</a></p>
-      <p>MATS Data Submission for
-        {{PLANT_NAME}},
-        {{PLANT_STATE}}, Orispl
-        {{ORIS_CODE}}, Location ID
+      <p>The U.S. Environmental Protection Agency (EPA) has received and loaded
+        your recent Emissions Collection and Monitoring Plan System (ECMPS)
+        submission as identified below. Files may be viewed by accessing the
+        submission search page located here:
+        <a href='https://cfpub.epa.gov/webfire/'>
+          https://cfpub.epa.gov/webfire/</a>
+      </p>
+      <p>
+        MATS Data Submission for
+        {{PLANT_NAME}},{{PLANT_STATE}}, Oris Code
+        {{ORIS_CODE}}, Location ID(s)
         {{LOCATION_LIST}}. Submitted on
         {{SUBMISSION_DATE}}.
-        <br />
-        <span>--------------------------------------------</span>
-        <br />
-        E-Signature information for this submission:<br
-        /></p>
+      </p>
+
+      <p>
+        For the person who submitted this file, a record of this submission is
+        available to view in CDX. To view this submission record, log into CDX
+        using your credentials and select the Submission History tab. This page
+        will show your most recent submissions.
+      </p>
       <p>
         If you have any questions regarding this correspondence, please contact
-        <a href="mailto:{{supportEmail}}">{{supportEmail}}</a> and your EPA Monitoring/Emissions
-        Reporting analyst as soon as possible. For analyst contact information,
-        see
+        <a href='mailto:{{supportEmail}}'>{{supportEmail}}</a>
+        and/or your EPA Monitoring/Emissions Reporting analyst. For analyst
+        contact information, see
         <a
-          href='https://www.epa.gov/airmarkets/business-center-and-emissions-monitoring-contacts'
+          href='https://www.epa.gov/power-sector/key-program-dates-contacts#BusinessContacts'
         >CAMD Staff Contacts</a>.
       </p>
     </div>
