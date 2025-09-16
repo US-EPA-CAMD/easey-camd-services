@@ -176,9 +176,7 @@ export class ErrorHandlerService {
 
       // Email subject
     const processCode = emailTemplateContextForUser?.processCode || 'N/A';
-    const env = this.configService.get<string>('app.env')?.trim()?.toLowerCase();
-    const subjectSuffix = env && !['prod', 'production', ''].includes(env) ? `(sent from ECMPS 2.0 ${env})` : '(sent from ECMPS 2.0)';
-    const emailSubject = `Error - ${processCode} Feedback for ORIS code ${emailTemplateContextForUser?.orisCode} Unit ${emailTemplateContextForUser?.configuration} ${subjectSuffix}`;
+    const emailSubject = `Error - ${processCode} Feedback for ORIS code ${emailTemplateContextForUser?.orisCode} Unit ${emailTemplateContextForUser?.configuration}`;
   
       // Send email to user
       await this.sendEmail(

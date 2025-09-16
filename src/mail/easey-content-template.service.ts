@@ -88,7 +88,7 @@ export class EaseyContentTemplateService {
     const contentUri = this.configService.get<string>('app.contentUri');
     try {
       // Handle trailing/leading slashes properly
-      const url = new URL(templateLocation, contentUri).toString();
+      const url = new URL(templateLocation, `${contentUri}/`).toString();
       const template = await firstValueFrom(this.httpService.get(url));
       return template.data;
     } catch (e) {
@@ -135,7 +135,7 @@ export class EaseyContentTemplateService {
     const contentUri = this.configService.get<string>('app.contentUri');
     try {
       // Handle trailing/leading slashes properly
-      const url = new URL(templateUrl, contentUri).toString();
+      const url = new URL(templateUrl, contentUri.replace(/\/?$/, '/')).toString();
       const template = await firstValueFrom(this.httpService.get(url));
       templateString = template.data;
     } catch (e) {

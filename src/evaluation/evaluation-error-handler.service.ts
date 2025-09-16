@@ -127,9 +127,7 @@ export class EvaluationErrorHandlerService {
 
       // Email subject
       const processCode = currentEvaluationQueue?.processCode || 'N/A';
-      const env = this.configService.get<string>('app.env')?.trim()?.toLowerCase();
-      const subjectSuffix = env && !['prod', 'production', ''].includes(env) ? `(sent from ECMPS 2.0 ${env})` : '(sent from ECMPS 2.0)';
-      const emailSubject = `Error - ${processCode} Evaluation Feedback for ORIS code ${emailTemplateContext.orisCode} Unit ${emailTemplateContext.configuration} ${subjectSuffix}`;
+      const emailSubject = `Error - ${processCode} Evaluation Feedback for ORIS code ${emailTemplateContext.orisCode} Unit ${emailTemplateContext.configuration}`;
 
       // Send failure email to user
       await this.sendEmail(
