@@ -17,7 +17,7 @@ export type EmailTemplateId = typeof EMAIL_TEMPLATE_IDS[keyof typeof EMAIL_TEMPL
 // Handlebars partials configuration for different template types
 export const EMAIL_TEMPLATE_PARTIALS = {
   SUBMISSION_FEEDBACK: {
-    basePath: 'email/submissions/feedback/partials',
+    basePath: 'templates/email/submissions/feedback/partials',
     partials: ['ADMNOVR', 'CRIT1', 'CRIT2', 'INFORM', 'NONCRIT', 'NONE'],
   },
   // Add other template types and their partials as needed
