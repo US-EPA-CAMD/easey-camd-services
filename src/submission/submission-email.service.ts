@@ -238,7 +238,7 @@ export class SubmissionEmailService {
       submissionEmailParamsDto.ccEmail,
       submissionEmailParamsDto.fromEmail,
       emailSubject,
-      EMAIL_TEMPLATE_IDS.SUBMISSION_FEEDBACK,
+      EMAIL_TEMPLATE_IDS.SUBMISSION_CONFIRMATION,
       submissionEmailParamsDto.templateContext,
       feedbackAttachmentDocuments,
       submissionEmailParamsDto.submissionSet,
