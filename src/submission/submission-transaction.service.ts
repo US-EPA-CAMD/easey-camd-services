@@ -30,7 +30,6 @@ export class SubmissionTransactionService {
   }
 
   async buildTransactions(set: SubmissionSet, records: SubmissionQueue[], folderPath: string): Promise<any[]> {
-
     let transactions: any[] = [];
     this.logger.log(`building transactions...`);
     for (const record of records) {
@@ -43,7 +42,6 @@ export class SubmissionTransactionService {
           break;
         case 'QA':
           if (record.testSumIdentifier) {
-            await this.removeExistingProtocolGasByTestSumId(record.testSumIdentifier)
             transactions.push({
               command: 'CALL camdecmps.copy_qa_test_summary_from_workspace_to_global($1)',
               params: [record.testSumIdentifier],
@@ -75,15 +73,7 @@ export class SubmissionTransactionService {
     return transactions;
   }
 
-  // Delete Existing Protocol Gas Record By test_sum_id; Avoid Duplicate Protocol Gas Records #6635
-  private async removeExistingProtocolGasByTestSumId(testSumIdentifier:string) {
-    await this.entityManager.query(
-      `DELETE FROM camdecmps.protocol_gas WHERE test_sum_id = $1`,
-      [testSumIdentifier],
-    );
-  }
-
- private async processMatsRecord(set: SubmissionSet, record: SubmissionQueue, folderPath: string) {
+  private async processMatsRecord(set: SubmissionSet, record: SubmissionQueue, folderPath: string) {
     const matsRecord = await this.entityManager.findOne(MatsBulkFile, {
       where: { id: record.matsBulkFileId },
     });
