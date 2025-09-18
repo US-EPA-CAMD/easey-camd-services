@@ -34,7 +34,7 @@
     "class-validator": "0.14.2"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.890.0",
+    "@aws-sdk/client-s3": "^3.891.0",
     "@css-inline/css-inline": "^0.17.0",
     "@nestjs/axios": "4.0.0",
     "@nestjs/common": "^11.1.6",
@@ -62,7 +62,7 @@
     "swagger-ui-express": "^5.0.1",
     "typeorm": "0.3.10",
     "uuidv4": "^6.2.13",
-    "dompurify": "^3.2.4",
+    "dompurify": "^3.2.7",
     "jsdom": "26.1.0"
   },
   "devDependencies": {
