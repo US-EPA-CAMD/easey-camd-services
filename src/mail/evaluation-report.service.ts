@@ -630,6 +630,8 @@ export class EvaluationReportService {
       evaluationSetIdentifier: setId,
     });
 
+    subject = `ECMPS Evaluation Report for ORIS Code ${setRecord?.orisCode} ${setRecord?.configuration} | ${this.displayCurrentDate()}`;
+
     await this.buildEvalReports(setRecord, records, documents);
 
     // Build the context for our email --------------------------------------
