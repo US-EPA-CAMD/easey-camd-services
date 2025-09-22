@@ -675,7 +675,7 @@ export class MailEvalService {
 
     const env = this.configService.get<string>('app.env')?.trim()?.toLowerCase();
     const subjectSuffix = env && !['prod', 'production', ''].includes(env) ? ` (sent from ECMPS 2.0 ${env})` : '';
-    subject = `$ECMPS Evaluation Report for ORIS Code ${setRecord?.orisCode} ${setRecord?.configuration} | ${this.displayCurrentDate()} ${subjectSuffix}`;
+    subject = `ECMPS Evaluation Report for ORIS Code ${setRecord?.orisCode} ${setRecord?.configuration} | ${this.displayCurrentDate()} ${subjectSuffix}`;
 
     await this.buildEvalReports(setRecord, records, documents);
 
