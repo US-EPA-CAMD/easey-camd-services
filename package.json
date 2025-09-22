@@ -60,7 +60,7 @@
     "rimraf": "^6.0.1",
     "rxjs": "^7.8.2",
     "swagger-ui-express": "^5.0.1",
-    "typeorm": "0.3.10",
+    "typeorm": "0.3.27",
     "uuidv4": "^6.2.13",
     "dompurify": "^3.2.7",
     "jsdom": "26.1.0"
