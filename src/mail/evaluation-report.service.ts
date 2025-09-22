@@ -623,12 +623,25 @@ export class EvaluationReportService {
     subject = `ECMPS Evaluation Report | ${this.displayCurrentDate()}`;
 
     template = 'massEvaluationTemplate';
-    records = await this.returnManager().find(Evaluation, {
+    const allRecords = await this.returnManager().find(Evaluation, {
       where: { evaluationSetIdentifier: setId },
     });
     setRecord = await this.returnManager().findOneBy(EvaluationSet, {
       evaluationSetIdentifier: setId,
     });
+
+    // Filter out ERROR records: Evaluation Report email must exclude all records with the status ERROR
+    const errorRecords = allRecords.filter(r => r.statusCode === 'ERROR');
+    const nonErrorRecords = allRecords.filter(r => r.statusCode !== 'ERROR');
+
+    // If all records have ERROR status, don't send evaluation report email
+    if (errorRecords.length > 0 && nonErrorRecords.length === 0) {
+      // All records have ERROR status - skip sending evaluation report email
+      return;
+    }
+
+    // Use only non-ERROR records for processing
+    records = nonErrorRecords;
 
     subject = `ECMPS Evaluation Report for ORIS Code ${setRecord?.orisCode} ${setRecord?.configuration} | ${this.displayCurrentDate()}`;
 
