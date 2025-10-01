@@ -8,6 +8,7 @@ importMatsS3Bucket: cg-313e2894-003b-4eda-88ca-ce57b954a57d
 ecmpsHost: https://ecmps-perf.app.cloud.gov
 epaAnalystLink: https://www.epa.gov/power-sector/business-center-and-emissions-monitoring-contacts#MonitoringContacts
 recipientsListApi: https://cbsstagei.epa.gov/CBSD/api/auth-mgmt/emailRecipients
+recipientsListApiEnabled: false
 maxConnectionPool: 30
 idleTimeout: 30000
 connectionTimeout: 60000
