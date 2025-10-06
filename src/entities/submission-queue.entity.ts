@@ -4,6 +4,8 @@ import { NumericColumnTransformer } from '@us-epa-camd/easey-common/transforms';
 
 import { ReportingPeriod } from './reporting-period.entity';
 
+import { SeverityCode } from './severity-code.entity';
+
 @Entity({ name: 'camdecmpsaux.submission_queue' })
 export class SubmissionQueue extends BaseEntity {
   @PrimaryColumn({ name: 'submission_id' })
@@ -62,4 +64,8 @@ export class SubmissionQueue extends BaseEntity {
   @ManyToOne(() => ReportingPeriod)
   @JoinColumn({ name: 'rpt_period_id' })
   reportingPeriod: ReportingPeriod;
+
+  @ManyToOne(() => SeverityCode)
+  @JoinColumn({ name: 'severity_cd' })
+  severityCodeRecord: SeverityCode;
 }

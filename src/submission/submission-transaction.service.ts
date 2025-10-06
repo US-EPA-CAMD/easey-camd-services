@@ -45,6 +45,9 @@ export class SubmissionTransactionService {
     let transactions: any[] = [];
     this.logger.log(`building transactions...`);
     for (const record of records) {
+      // Do not update records with critical errors.
+      if (record.severityCodeRecord.evalStatusCode === 'ERR') continue;
+
       switch (record.processCode) {
         case 'MP':
           transactions.push({
