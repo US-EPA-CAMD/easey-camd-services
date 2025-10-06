@@ -16,7 +16,10 @@ jest.mock('./submission.service');
 jest.mock('./submission-process.service');
 
 describe('-- Submission Controller --', () => {
+  // Explicitly typed mock instances pulled from the Nest container
   let controller: SubmissionController;
+  let submissionService: jest.Mocked<SubmissionService>;
+  let processService: jest.Mocked<SubmissionProcessService>;
 
   beforeAll(async () => {
     const module = await Test.createTestingModule({
@@ -36,6 +39,18 @@ describe('-- Submission Controller --', () => {
     }).compile();
 
     controller = module.get(SubmissionController);
+
+    // Get the auto-mocked class instances that Nest created
+    submissionService = module.get(SubmissionService) as any;
+    processService = module.get(SubmissionProcessService) as any;
+
+    // Ensure all async service methods return Promises (not undefined)
+    submissionService.queueSubmissionRecords.mockResolvedValue(undefined as any);
+    submissionService.getLastUpdated.mockResolvedValue({} as any);
+    submissionService.getSubmissionQueueOrder?.mockResolvedValue([] as any);
+
+    // IMPORTANT: processSubmissionSet must return a Promise because controller calls `.catch(...)`
+    processService.processSubmissionSet.mockResolvedValue(undefined as any);
   });
 
   it('should be defined', async () => {
