@@ -118,4 +118,85 @@ describe('SubmissionEmailService', () => {
     });
 
   });
+
+  // TESTS FOR EM GROUPING FIX - UPDATED FOR rptPeriodIdentifier GROUPING
+  describe('groupSubmissionRecords - EM Grouping Fix Tests', () => {
+    it('should group EM records by rptPeriodIdentifier (one email per EM file)', () => {
+      const mockRecords = [
+        { processCode: 'EM', rptPeriodIdentifier: 1, monLocationId: 'unit3', submissionSetIdentifier: 'test-set' },
+        { processCode: 'EM', rptPeriodIdentifier: 1, monLocationId: 'unit4', submissionSetIdentifier: 'test-set' },
+        { processCode: 'EM', rptPeriodIdentifier: 2, monLocationId: 'CT5', submissionSetIdentifier: 'test-set' },
+        { processCode: 'EM', rptPeriodIdentifier: 2, monLocationId: 'CT7', submissionSetIdentifier: 'test-set' },
+      ] as any[];
+
+      const result = service.groupSubmissionRecords(mockRecords);
+
+      // Should have EM groups by reporting period (one email per EM file)
+      expect(result['EM_1']).toBeDefined();
+      expect(result['EM_1'].records).toHaveLength(2);
+      expect(result['EM_1'].processCode).toBe('EM');
+
+      expect(result['EM_2']).toBeDefined();
+      expect(result['EM_2'].records).toHaveLength(2);
+      expect(result['EM_2'].processCode).toBe('EM');
+
+      // Should NOT have old static EM group or individual record groups
+      expect(result['EM']).toBeUndefined();
+      expect(result['EM_0']).toBeUndefined();
+    });
+
+    it('should maintain MP and QA grouping behavior unchanged', () => {
+      const mockRecords = [
+        { processCode: 'MP', submissionSetIdentifier: 'test-set' },
+        { processCode: 'QA', severityCode: 'CRIT1', testSumIdentifier: 'test1' },
+        { processCode: 'QA', severityCode: 'INFORM', qaCertEventIdentifier: 'cert1' },
+      ] as any[];
+
+      const result = service.groupSubmissionRecords(mockRecords);
+
+      // MP should remain single group
+      expect(result.MP.records).toHaveLength(1);
+      expect(result.MP.processCode).toBe('MP');
+
+      // QA should remain split by severity
+      expect(result.qaCriticalRecords.records).toHaveLength(1);
+      expect(result.qaNonCriticalRecords.records).toHaveLength(1);
+    });
+
+    it('should handle single reporting period with multiple EM records (ORIS 2706 scenario)', () => {
+      const mockRecords = [
+        { processCode: 'MP', submissionSetIdentifier: 'test-set' },
+        { processCode: 'QA', severityCode: 'CRIT1', testSumIdentifier: 'test1' },
+        { processCode: 'EM', rptPeriodIdentifier: 1, monLocationId: 'unit3', submissionSetIdentifier: 'test-set' },
+        { processCode: 'EM', rptPeriodIdentifier: 1, monLocationId: 'unit4', submissionSetIdentifier: 'test-set' },
+        { processCode: 'EM', rptPeriodIdentifier: 1, monLocationId: 'CT5', submissionSetIdentifier: 'test-set' },
+        { processCode: 'EM', rptPeriodIdentifier: 1, monLocationId: 'CT7', submissionSetIdentifier: 'test-set' },
+      ] as any[];
+
+      const result = service.groupSubmissionRecords(mockRecords);
+
+      // Should generate exactly 3 email groups:
+      // 1. MP: 1 email
+      // 2. QA Critical: 1 email
+      // 3. EM_1: 1 email (consolidates all 4 EM records from same reporting period)
+      const nonEmptyGroups = Object.entries(result).filter(([_, group]) => group.records.length > 0);
+      expect(nonEmptyGroups).toHaveLength(3);
+
+      expect(result.MP.records).toHaveLength(1);
+      expect(result.qaCriticalRecords.records).toHaveLength(1);
+      expect(result['EM_1'].records).toHaveLength(4); // All EM records from same period in single group
+    });
+
+    it('should handle empty EM records gracefully', () => {
+      const mockRecords = [
+        { processCode: 'MP', submissionSetIdentifier: 'test-set' },
+      ] as any[];
+
+      const result = service.groupSubmissionRecords(mockRecords);
+
+      // Should not have any EM groups if no EM records
+      const emGroups = Object.keys(result).filter(key => key.startsWith('EM_'));
+      expect(emGroups.length).toBe(0);
+    });
+  });
 });
