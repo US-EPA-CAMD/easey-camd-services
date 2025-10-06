@@ -5,13 +5,15 @@ import { SubmissionQueue } from '../entities/submission-queue.entity';
 import { v4 as uuidv4 } from 'uuid';
 import { SubmissionSetHelperService } from './submission-set-helper.service';
 import { SubmissionEmailService } from './submission-email.service';
-import { MailEvalService } from '../mail/mail-eval.service';
+import { MailService } from '../mail/mail.service';
+import { ClientConfigService } from '../mail/client-config.service';
 import { ConfigService } from '@nestjs/config';
 import { SubmissionFeedbackRecordService } from './submission-feedback-record.service';
 import { Plant } from '../entities/plant.entity';
 import { SeverityCode } from '../entities/severity-code.entity';
 import { EntityManager } from 'typeorm';
 import { ReportingPeriod } from '../entities/reporting-period.entity';
+import { EMAIL_TEMPLATE_IDS } from '../constants/email-template-ids';
 
 @Injectable()
 export class ErrorHandlerService {
@@ -21,8 +23,9 @@ export class ErrorHandlerService {
     @Inject(forwardRef(() => SubmissionEmailService))
     private readonly submissionEmailService: SubmissionEmailService,
     private readonly entityManager: EntityManager,
-    private readonly mailEvalService: MailEvalService,
+    private readonly mailService: MailService,
     private readonly submissionSetHelper: SubmissionSetHelperService,
+    private readonly clientConfigService: ClientConfigService,
     private readonly configService: ConfigService,
     private readonly submissionFeedbackRecordService: SubmissionFeedbackRecordService,
   ) {}
@@ -91,7 +94,7 @@ export class ErrorHandlerService {
         userEmail,
         '',
         emailSubject,
-        'submissionQueueingFailureUserTemplate',
+        EMAIL_TEMPLATE_IDS.SUBMISSION_FAILURE_USER,
       );
 
       // Prepare email context for support
@@ -110,7 +113,7 @@ export class ErrorHandlerService {
         emailTemplateContextForSupport.supportEmail,
         '',
         emailSubject,
-        'submissionQueueingFailureSupportTemplate'
+        EMAIL_TEMPLATE_IDS.SUBMISSION_FAILURE_SUPPORT
       );
 
     } catch (emailError) {
@@ -175,9 +178,7 @@ export class ErrorHandlerService {
 
       // Email subject
     const processCode = emailTemplateContextForUser?.processCode || 'N/A';
-    const env = this.configService.get<string>('app.env')?.trim()?.toLowerCase();
-    const subjectSuffix = env && !['prod', 'production', ''].includes(env) ? `(sent from ECMPS 2.0 ${env})` : '(sent from ECMPS 2.0)';
-    const emailSubject = `Error - ${processCode} Feedback for ORIS code ${emailTemplateContextForUser?.orisCode} Unit ${emailTemplateContextForUser?.configuration} ${subjectSuffix}`;
+    const emailSubject = `Error - ${processCode} Feedback for ORIS code ${emailTemplateContextForUser?.orisCode} Unit ${emailTemplateContextForUser?.configuration}`;
   
       // Send email to user
       await this.sendEmail(
@@ -185,7 +186,7 @@ export class ErrorHandlerService {
         emailTemplateContextForUser.toEmail,
         '',
         emailSubject,
-        'submissionFailureUserTemplate'
+        EMAIL_TEMPLATE_IDS.SUBMISSION_FAILURE_USER
       );
 
       // Prepare email context for support
@@ -204,7 +205,7 @@ export class ErrorHandlerService {
         emailTemplateContextForSupport.supportEmail,
         '',
         emailSubject,
-        'submissionFailureSupportTemplate'
+        EMAIL_TEMPLATE_IDS.SUBMISSION_FAILURE_SUPPORT
       );
 
     } catch (error) {
@@ -222,7 +223,7 @@ export class ErrorHandlerService {
     // Get support email
     let supportEmail: string;
     try {
-      const ecmpsClientConfig = await this.submissionEmailService.getECMPSClientConfig();
+      const ecmpsClientConfig = await this.clientConfigService.getECMPSClientConfig();
       supportEmail = ecmpsClientConfig?.supportEmail?.trim?.() || 'ecmps-support@camdsupport.com';
     } catch (configError) {
       supportEmail = 'ecmps-support@camdsupport.com';
@@ -357,7 +358,7 @@ export class ErrorHandlerService {
     toEmail: string,
     ccEmail: string,
     subject: string,
-    template: string,
+    template: number,
   ) {
 
     let fromEmail: string;
@@ -372,15 +373,14 @@ export class ErrorHandlerService {
     // Send email
     if (toEmail) {
       try {
-        await this.mailEvalService.sendEmailWithRetry(
-          toEmail,
-          ccEmail || '',
-          fromEmail,
+        this.mailService.sendTemplateEmail({
+          templateId: template,
+          to: toEmail,
+          cc: ccEmail || '',
+          from: fromEmail,
           subject,
-          template, // Template name
-          emailTemplateContext,
-          1,
-        );
+          context: emailTemplateContext,
+        });
       } catch (userEmailError) {
         this.logger.error('Failed to send failure email to ' + toEmail, userEmailError?.stack);
       }
@@ -390,8 +390,6 @@ export class ErrorHandlerService {
   }
 
   private buildEmailSubject(processCode: string, orisCode: string, configuration: string): string {
-    const env = this.configService.get<string>('app.env')?.trim()?.toLowerCase();
-    const subjectSuffix = env && !['prod', 'production', ''].includes(env) ? ` (sent from ECMPS 2.0 ${env})` : '';
-    return `${processCode} Feedback for ORIS code ${orisCode} Unit ${configuration} ${subjectSuffix}`;
+    return `${processCode} Feedback for ORIS code ${orisCode} Unit ${configuration}`;
   }
 }
