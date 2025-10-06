@@ -61,7 +61,7 @@ export class ErrorHandlerService {
 
       try {
         // Attempt to update submission queue records
-        await this.submissionSetHelper.setRecordStatusCode(submissionSet, [currentSubmissionQueue], 'ERROR', submissionSet.note, 'REQUIRE',);
+        await this.submissionSetHelper.setRecordStatusCode(submissionSet, currentSubmissionQueue, 'ERROR', submissionSet.note, 'REQUIRE',);
       } catch (updateQueueError) {
         this.logger.error('Error during handleQueueingError for submission set, while updating submission queue:' + submissionSet?.submissionSetIdentifier, updateQueueError.stack,);
       }
@@ -150,7 +150,9 @@ export class ErrorHandlerService {
 
       try {
         // Attempt to update submission queue records
-        await this.submissionSetHelper.setRecordStatusCode(submissionSet, queueRecords, 'ERROR', submissionSet.note, 'REQUIRE',);
+        for (const record of queueRecords) {
+          await this.submissionSetHelper.setRecordStatusCode(submissionSet, record, 'ERROR', submissionSet.note, 'REQUIRE');
+        }
       } catch (updateQueueError) {
         this.logger.error('Error during handleSubmissionProcessingError for submission set, while updating submission queue:' + submissionSet?.submissionSetIdentifier, updateQueueError.stack,);
       }

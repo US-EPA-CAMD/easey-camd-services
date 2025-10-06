@@ -8,6 +8,7 @@ import { SubmissionTransactionService } from './submission-transaction.service';
 import { ErrorHandlerService } from './error-handler.service';
 import { SubmissionSetHelperService } from './submission-set-helper.service';
 import { SubmissionEmailService } from './submission-email.service';
+import { SeverityCode } from '../entities/severity-code.entity';
 import { SubmissionSet } from '../entities/submission-set.entity';
 import { SubmissionQueue } from '../entities/submission-queue.entity';
 import * as fsPromises from 'fs/promises';
@@ -100,7 +101,13 @@ describe('SubmissionProcessService', () => {
       submissionSet.statusCode = 'QUEUED';
       submissionSet.hasCritErrors = false;
 
-      const submissionSetRecords = [new SubmissionQueue()];
+      const severityCode = new SeverityCode();
+      severityCode.evalStatusCode = 'PASS';
+
+      const submissionQueue = new SubmissionQueue();
+      submissionQueue.severityCodeRecord = severityCode;
+
+      const submissionSetRecords = [submissionQueue];
 
       jest.spyOn(entityManager, 'findOne')
         .mockResolvedValueOnce(submissionSet) // Initial fetch
@@ -129,6 +136,7 @@ describe('SubmissionProcessService', () => {
       );
       expect(entityManager.find).toHaveBeenCalledWith(SubmissionQueue, {
         where: { submissionSetIdentifier: setId },
+        relations: { severityCodeRecord: true },
       });
       expect(service['submissionSetHelper'].updateSubmissionSetStatus).toHaveBeenCalledWith(
         submissionSet,
@@ -136,7 +144,7 @@ describe('SubmissionProcessService', () => {
       );
       expect(service['submissionSetHelper'].setRecordStatusCode).toHaveBeenCalledWith(
         submissionSet,
-        submissionSetRecords,
+        submissionSetRecords[0],
         'WIP',
         '',
         'PENDING',
