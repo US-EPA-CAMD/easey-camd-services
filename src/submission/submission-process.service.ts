@@ -72,7 +72,10 @@ export class SubmissionProcessService {
       await this.submissionSetHelper.updateSubmissionSetStatus(set, 'WIP');
       submissionQueueRecords = await this.entityManager.find(SubmissionQueue, {
         where: { submissionSetIdentifier: id },
-        relations: { severityCodeRecord: true },
+        relations: { 
+          reportingPeriod: true,
+          severityCodeRecord: true,
+        },
       });
       for (const record of submissionQueueRecords) {
         await this.submissionSetHelper.setRecordStatusCode(set, record, 'WIP', '', 'PENDING');
