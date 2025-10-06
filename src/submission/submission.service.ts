@@ -19,7 +19,6 @@ import { QaCertEvent } from '../entities/qa-cert-event.entity';
 import { QaSuppData } from '../entities/qa-supp.entity';
 import { QaTee } from '../entities/qa-tee.entity';
 import { ReportingPeriod } from '../entities/reporting-period.entity';
-import { SeverityCode } from '../entities/severity-code.entity';
 import { SubmissionQueue } from '../entities/submission-queue.entity';
 import { SubmissionSet } from '../entities/submission-set.entity';
 import { CombinedSubmissionsMap } from '../maps/combined-submissions.map';
@@ -566,6 +565,7 @@ export class SubmissionService {
       // Get all submission queue records for this set
       const submissionQueueRecords = await entityManager.find(SubmissionQueue, {
         where: { submissionSetIdentifier: setId },
+        relations: { severityCodeRecord: true },
       });
 
       // Check if any record has a severity code with evalStatusCode of ERR
@@ -573,11 +573,7 @@ export class SubmissionService {
 
       // Iterate through each record to check its severity code's evalStatusCode
       for (const record of submissionQueueRecords) {
-        const severity = await entityManager.findOneBy(SeverityCode, {
-          severityCode: record.severityCode,
-        });
-
-        if (severity?.evalStatusCode === 'ERR') {
+        if (record.severityCodeRecord?.evalStatusCode === 'ERR') {
           submissionSet.hasCritErrors = true;
           break;
         }
@@ -588,7 +584,7 @@ export class SubmissionService {
         await entityManager.save(SubmissionSet, submissionSet);
       }
 
-      this.logger.log(`Successfully queued record. SetId: ${setId}, MonPlanId: ${evaluationItem?.monPlanId || 'N/A'}, hasCritErrors: ${submissionSet.hasCritErrors}`,);
+      this.logger.log(`Successfully queued record. SetId: ${setId}, MonPlanId: ${submissionSet.monPlanIdentifier || 'N/A'}, hasCritErrors: ${submissionSet.hasCritErrors}`,);
 
     } catch (e) {
       this.logger.error(`Failed to queue record. MonPlanId: ${evaluationItem?.monPlanId || 'N/A'}, Error: ${e.message}`, e.stack,);

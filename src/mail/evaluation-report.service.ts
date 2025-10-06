@@ -620,8 +620,6 @@ export class EvaluationReportService {
     let templateContext: any = {};
     const documents = [];
 
-    subject = `ECMPS Evaluation Report | ${this.displayCurrentDate()}`;
-
     template = 'massEvaluationTemplate';
     records = await this.returnManager().find(Evaluation, {
       where: { evaluationSetIdentifier: setId },
@@ -629,6 +627,8 @@ export class EvaluationReportService {
     setRecord = await this.returnManager().findOneBy(EvaluationSet, {
       evaluationSetIdentifier: setId,
     });
+
+    subject = `ECMPS Evaluation Report for ORIS Code ${setRecord?.orisCode} ${setRecord?.configuration} | ${this.displayCurrentDate()}`;
 
     await this.buildEvalReports(setRecord, records, documents);
 

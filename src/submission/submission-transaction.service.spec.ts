@@ -128,6 +128,7 @@ describe('SubmissionTransactionService', () => {
       const records = [
         Object.assign(new SubmissionQueue(), {
           processCode: 'MP',
+          severityCodeRecord: { evalStatusCode: 'PASS' },
         }),
       ];
       const folderPath = 'mock/folder/path';
