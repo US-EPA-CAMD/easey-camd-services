@@ -135,7 +135,7 @@ export class EvaluationErrorHandlerService {
         userEmail,
         '',
         emailSubject,
-        EMAIL_TEMPLATE_IDS.QUEUEING_FAILURE_USER,
+        EMAIL_TEMPLATE_IDS.EVALUATION_QUEUEING_FAILURE_USER,
       );
 
       // Prepare email context for support
@@ -155,7 +155,7 @@ export class EvaluationErrorHandlerService {
         emailTemplateContextForSupport.supportEmail,
         '',
         emailSubject,
-        EMAIL_TEMPLATE_IDS.QUEUEING_FAILURE_SUPPORT,
+        EMAIL_TEMPLATE_IDS.EVALUATION_QUEUEING_FAILURE_SUPPORT,
       );
     } catch (emailError) {
       this.logger.error(
