@@ -242,7 +242,7 @@ export class SubmissionEmailService {
       submissionEmailParamsDto.ccEmail,
       submissionEmailParamsDto.fromEmail,
       emailSubject,
-      EMAIL_TEMPLATE_IDS.SUBMISSION_FEEDBACK,
+      EMAIL_TEMPLATE_IDS.SUBMISSION_CONFIRMATION,
       submissionEmailParamsDto.templateContext,
       feedbackAttachmentDocuments,
       submissionEmailParamsDto.submissionSet,
@@ -372,7 +372,12 @@ export class SubmissionEmailService {
     const unitStackPipe = submissionEmailParamsDto.templateContext['monitorPlan'].item.unitStackPipe;
     const severityLevelDescription = submissionEmailParamsDto?.highestSeverityRecord?.severityCode?.severityCodeDescription;
 
-    return `${fileTypeAbbrev} Feedback for ORIS Code ${orisCode} ${unitStackPipe} (${severityLevelDescription})`;
+    let yearAndQuarter = '';
+    if (submissionEmailParamsDto.processCode === 'EM' && submissionEmailParamsDto.rptPeriod) {
+      yearAndQuarter = `${submissionEmailParamsDto.rptPeriod.periodAbbreviation.replace(' ', '')} `;
+    }
+
+    return `${fileTypeAbbrev} Feedback for ORIS Code ${orisCode} ${unitStackPipe} ${yearAndQuarter}(${severityLevelDescription})`;
   }
 
   private async getEmissionsSummaryReport(
