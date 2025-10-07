@@ -9,7 +9,6 @@ import { EmissionEvaluation } from '../entities/emission-evaluation.entity';
 import { TestSummary } from '../entities/test-summary.entity';
 import { Plant } from '../entities/plant.entity';
 import { ConfigService } from '@nestjs/config';
-import { ClientConfig } from '../entities/client-config.entity';
 
 @Injectable()
 export class EvaluationSetHelperService {
@@ -18,13 +17,7 @@ export class EvaluationSetHelperService {
     private readonly configService: ConfigService
 
   ) {}
-
-  public async getECMPSClientConfig(): Promise<ClientConfig> {
-    return await this.entityManager.findOne(ClientConfig, {
-      where: { name: 'ecmps-ui' },
-    });
-  }
-
+  
   async setRecordStatusCode(
     evaluationSet: EvaluationSet,
     records: Evaluation[],

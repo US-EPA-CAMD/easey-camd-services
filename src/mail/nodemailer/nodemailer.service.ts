@@ -18,7 +18,8 @@ export class NodemailerService implements OnModuleInit {
 
   async onModuleInit() {
     this.createTransporter();
-    await this.verifyConnection();
+    // Verify connection in background - don't block startup
+    this.verifyConnectionInBackground();
   }
 
   private createTransporter(): void {
@@ -30,14 +31,17 @@ export class NodemailerService implements OnModuleInit {
     this.logger.debug(`Nodemailer transporter created for ${smtpHost}:${smtpPort}`);
   }
 
-  private async verifyConnection(): Promise<void> {
-    try {
-      await this.transporter.verify();
-      this.logger.debug('Nodemailer connection verified successfully');
-    } catch (error) {
-      this.logger.error('Failed to verify nodemailer connection', error);
-      // Don't throw - allow service to start even if mail server is temporarily unavailable
-    }
+  private verifyConnectionInBackground(): void {
+    // Run verification in background without blocking startup
+    setImmediate(async () => {
+      try {
+        await this.transporter.verify();
+        this.logger.debug('Nodemailer connection verified successfully');
+      } catch (error) {
+        this.logger.error('Failed to verify nodemailer connection', error);
+        // Don't throw - allow service to start even if mail server is temporarily unavailable
+      }
+    });
   }
 
   async sendMail(mailOptions: SendMailOptions): Promise<SentMessageInfo> {
@@ -50,10 +54,43 @@ export class NodemailerService implements OnModuleInit {
         return await this.previewEmail(mailOptions);
       }
 
-      // Normal email sending
-      const result = await this.transporter.sendMail(mailOptions);
-      this.logger.debug(`Email sent successfully to ${mailOptions.to}`);
-      return result;
+      // Handle comma-separated recipients by sending individual emails
+      const recipients = this.splitRecipients(mailOptions.to);
+      
+      if (recipients.length <= 1) {
+        // Single or no recipient - send normally
+        const result = await this.transporter.sendMail(mailOptions);
+        this.logger.debug(`Email sent successfully to ${mailOptions.to}`);
+        return result;
+      }
+      
+      // Multiple recipients - send individual emails
+      let successCount = 0;
+      const successful: string[] = [];
+      const failed: string[] = [];
+      
+      for (const recipient of recipients) {
+        try {
+          await this.transporter.sendMail({ ...mailOptions, to: recipient });
+          successful.push(recipient);
+          successCount++;
+        } catch (error) {
+          failed.push(recipient);
+          this.logger.error(`Failed to send email to ${recipient}`, error);
+        }
+      }
+      
+      // If all failed, throw error
+      if (successCount === 0) {
+        throw new Error(`Failed to send emails to all ${recipients.length} recipients`);
+      }
+      
+      this.logger.debug(`Sent ${successCount}/${recipients.length} emails successfully`);
+      return {
+        accepted: successful,
+        rejected: failed,
+        response: `Sent individual emails to ${successCount}/${recipients.length} recipients`
+      } as SentMessageInfo;
     } catch (error) {
       this.logger.error(`Failed to send email to ${mailOptions.to}`, error);
       throw error;
@@ -99,6 +136,18 @@ export class NodemailerService implements OnModuleInit {
       this.logger.error('Failed to preview email', error);
       throw error;
     }
+  }
+
+  private splitRecipients(to: string | string[] | undefined | null): string[] {
+    if (!to) return [];
+    
+    if (Array.isArray(to)) {
+      return to.flatMap(recipient => 
+        recipient ? recipient.split(',').map(email => email.trim()).filter(email => email) : []
+      );
+    }
+    
+    return to.split(',').map(email => email.trim()).filter(email => email);
   }
 
   getTransporter(): nodemailer.Transporter {
