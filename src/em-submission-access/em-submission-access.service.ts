@@ -23,6 +23,19 @@ export class EmSubmissionAccessService {
     private readonly entityManager: EntityManager,
   ) {}
 
+  private async triggerCollateralEmDataUpdate(
+    transactionalEntityManager: EntityManager,
+    monitorPlanId: string,
+    reportingPeriodId: number,
+  ): Promise<void> {
+    const sql = `SELECT * FROM camdecmpswks.update_collateral_em_data_for_esa_changes($1, $2)`;
+    const result = await transactionalEntityManager.query(sql, [monitorPlanId, reportingPeriodId]);
+    
+    if (result && result[0] && result[0].result === 'F') {
+      throw new Error(`Failed to update collateral EM data: ${result[0].error_msg}`);
+    }
+  }
+
   async getEmSubmissionAccess(
     params: EmSubmissionAccessParamsDTO,
   ): Promise<EmSubmissionAccessDTO[]> {
@@ -73,19 +86,28 @@ export class EmSubmissionAccessService {
     payload: EmSubmissionAccessCreateDTO,
   ): Promise<EmSubmissionAccessDTO> {
     const currentTime = currentDateTime();
+    let savedEntityId: number;
+    
     try {
-      const entity = this.repository.create({
-        ...payload,
-        dataLoadedFlag: null,
-        addDate: currentTime,
-        updateDate: null,
-        submissionTypeCode: 'RQRESUB',
-        submissionAvailabilityCode: 'REQUIRE',
-        emissionStatusCode: 'APPRVD',
+      await this.entityManager.transaction(async (transactionalEntityManager) => {
+        const entity = this.repository.create({
+          ...payload,
+          dataLoadedFlag: null,
+          addDate: currentTime,
+          updateDate: null,
+          submissionTypeCode: 'RQRESUB',
+          submissionAvailabilityCode: 'REQUIRE',
+          emissionStatusCode: 'APPRVD',
+        });
+        const savedEntity = await transactionalEntityManager.save(entity);
+        savedEntityId = savedEntity.id;
+        
+        // Trigger collateral EM data updates for ESA changes
+        await this.triggerCollateralEmDataUpdate(transactionalEntityManager, payload.monitorPlanId, payload.reportingPeriodId,);
       });
-      await this.repository.save(entity);
+      
       let emSubmissionAccess = await this.viewRepository.findOneBy({
-        id: entity.id,
+        id: savedEntityId,
       });
       const dto = await this.map.one(emSubmissionAccess);
       return dto;
@@ -109,17 +131,22 @@ export class EmSubmissionAccessService {
           HttpStatus.NOT_FOUND,
         );
 
-      recordToUpdate.emissionStatusCode = payload?.emissionStatusCode;
-      recordToUpdate.submissionAvailabilityCode =
-        payload?.submissionAvailabilityCode;
-      recordToUpdate.resubExplanation = payload?.resubExplanation;
-      recordToUpdate.userid = payload?.userid;
-      recordToUpdate.closeDate = payload?.closeDate;
-      recordToUpdate.updateDate = currentTime;
+      await this.entityManager.transaction(async (transactionalEntityManager) => {
+        recordToUpdate.emissionStatusCode = payload?.emissionStatusCode;
+        recordToUpdate.submissionAvailabilityCode =
+          payload?.submissionAvailabilityCode;
+        recordToUpdate.resubExplanation = payload?.resubExplanation;
+        recordToUpdate.userid = payload?.userid;
+        recordToUpdate.closeDate = payload?.closeDate;
+        recordToUpdate.updateDate = currentTime;
 
-      await this.repository.save(recordToUpdate);
+        await transactionalEntityManager.save(recordToUpdate);
+        
+        // Trigger collateral EM data updates for ESA changes
+        await this.triggerCollateralEmDataUpdate(transactionalEntityManager, recordToUpdate.monitorPlanId, recordToUpdate.reportingPeriodId, );
+      });
     } catch (e) {
-      throw new EaseyException(e, e.status);
+      throw new EaseyException(e, e.status || HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     let emSubmissionAccess = await this.viewRepository.findOneBy({
