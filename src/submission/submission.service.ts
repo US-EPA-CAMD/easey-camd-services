@@ -19,7 +19,6 @@ import { QaCertEvent } from '../entities/qa-cert-event.entity';
 import { QaSuppData } from '../entities/qa-supp.entity';
 import { QaTee } from '../entities/qa-tee.entity';
 import { ReportingPeriod } from '../entities/reporting-period.entity';
-import { SeverityCode } from '../entities/severity-code.entity';
 import { SubmissionQueue } from '../entities/submission-queue.entity';
 import { SubmissionSet } from '../entities/submission-set.entity';
 import { CombinedSubmissionsMap } from '../maps/combined-submissions.map';
@@ -566,6 +565,7 @@ export class SubmissionService {
       // Get all submission queue records for this set
       const submissionQueueRecords = await entityManager.find(SubmissionQueue, {
         where: { submissionSetIdentifier: setId },
+        relations: { severityCodeRecord: true },
       });
 
       // Check if any record has a severity code with evalStatusCode of ERR
@@ -573,11 +573,7 @@ export class SubmissionService {
 
       // Iterate through each record to check its severity code's evalStatusCode
       for (const record of submissionQueueRecords) {
-        const severity = await entityManager.findOneBy(SeverityCode, {
-          severityCode: record.severityCode,
-        });
-
-        if (severity?.evalStatusCode === 'ERR') {
+        if (record.severityCodeRecord?.evalStatusCode === 'ERR') {
           submissionSet.hasCritErrors = true;
           break;
         }
@@ -588,7 +584,7 @@ export class SubmissionService {
         await entityManager.save(SubmissionSet, submissionSet);
       }
 
-      this.logger.log(`Successfully queued record. SetId: ${setId}, MonPlanId: ${evaluationItem?.monPlanId || 'N/A'}, hasCritErrors: ${submissionSet.hasCritErrors}`,);
+      this.logger.log(`Successfully queued record. SetId: ${setId}, MonPlanId: ${submissionSet.monPlanIdentifier || 'N/A'}, hasCritErrors: ${submissionSet.hasCritErrors}`,);
 
     } catch (e) {
       this.logger.error(`Failed to queue record. MonPlanId: ${evaluationItem?.monPlanId || 'N/A'}, Error: ${e.message}`, e.stack,);
@@ -622,13 +618,15 @@ export class SubmissionService {
     const checks = [];
     for (const item of submissionQueueParam.items) {
       // Check all the EM records
+
+      // Check that each EM record is within the submission window.
       for (const period of item.emissionsReportingPeriods) {
-        const checkPromise = this.entityManager.query(
+        const checkExpiredPromise = this.entityManager.query(
           `SELECT window_expired_date, facility_name, oris_code, configuration
-           FROM camdecmpswks.vw_em_eval_and_submit 
-           WHERE mon_plan_id = $1 
+           FROM camdecmpswks.vw_em_submit 
+           WHERE mon_plan_id = $1 AND period_abbreviation = $2
            `,
-          [item.monPlanId],
+          [item.monPlanId, period],
         ).then(result => {
           if (result && result.length > 0) {
             const endDate = new Date(result[0].window_expired_date);
@@ -650,7 +648,31 @@ export class SubmissionService {
             );
           }
         });
-        checks.push(checkPromise);
+        checks.push(checkExpiredPromise);
+      }
+
+      // Check that all periods up to the maximum provided are included in the payload.
+      if (item.emissionsReportingPeriods.length > 0) {
+        const maxPeriod = item.emissionsReportingPeriods.reduce(
+          (a, b) => (a > b ? a : b),
+          item.emissionsReportingPeriods[0],
+        );
+        const checkAllIncludedPromise = this.entityManager.query(`
+          SELECT EXISTS(
+            SELECT 1 FROM camdecmpswks.vw_em_submit
+            WHERE mon_plan_id = $1 AND period_abbreviation <= $2 AND period_abbreviation != ALL($3)
+          )`,
+          [item.monPlanId, maxPeriod, item.emissionsReportingPeriods]
+        ).then(result => {
+          const periodMissingFromPayload = result[0].exists;
+          if (periodMissingFromPayload) {
+            throw new EaseyException(
+              new Error(`All emissions reporting periods up to and including ${maxPeriod} must be included in the submission for Monitor Plan ID: ${item.monPlanId}.`),
+              HttpStatus.BAD_REQUEST,
+            );
+          }
+        });
+        checks.push(checkAllIncludedPromise);
       }
     }
 

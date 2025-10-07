@@ -45,7 +45,7 @@ export class SubmissionEmailService {
 
     const severityCodes: SeverityCode[] = await this.entityManager.find(SeverityCode,);
 
-    this.logger.debug('Grouping submission records by file type.');
+    this.logger.debug(`Grouping submission records by file type.`);
     const submissionQueueRecordsByFileType = this.groupSubmissionRecords(submissionSetRecords,);
 
     const emailPromises = Object.entries(
@@ -131,8 +131,12 @@ export class SubmissionEmailService {
 
       ...submissionQueueRecords
         .filter((r) => r.processCode === 'EM')
-        .reduce((acc, record, index) => {
-          acc[`EM_${index}`] = { processCode: 'EM', records: [record] };
+        .reduce((acc, record) => {
+          const key = `EM_${record.rptPeriodIdentifier}`;
+          if (!acc[key]) {
+            acc[key] = { processCode: 'EM', records: [] };
+          }
+          acc[key].records.push(record);
           return acc;
         }, {}),
     };
