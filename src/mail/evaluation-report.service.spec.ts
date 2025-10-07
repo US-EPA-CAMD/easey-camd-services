@@ -2,7 +2,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { LoggerModule } from '@us-epa-camd/easey-common/logger';
 import { HttpModule } from '@nestjs/axios';
 import { NodemailerService } from './nodemailer/nodemailer.service';
-import { TemplateService } from './template/template.service';
 import { ClientConfig } from '../entities/client-config.entity';
 import { EntityManager } from 'typeorm';
 import { MonitorSystem } from '../entities/monitor-system.entity';
@@ -18,7 +17,9 @@ import { MonitorPlan } from '../entities/monitor-plan.entity';
 import { Plant } from '../entities/plant.entity';
 import { CountyCode } from '../entities/county-code.entity';
 import { ConfigService } from '@nestjs/config';
-import { MailEvalService } from './mail-eval.service';
+import { EvaluationReportService } from './evaluation-report.service';
+import { EaseyContentTemplateService } from './easey-content-template.service';
+import { MailService } from './mail.service';
 import { DataSetService } from '../dataset/dataset.service';
 import { CopyOfRecordService } from '../copy-of-record/copy-of-record.service';
 
@@ -28,15 +29,15 @@ jest.mock('../copy-of-record/copy-of-record.service');
 const mockEvalList = [new Evaluation(), new Evaluation(), new Evaluation()];
 
 describe('Mail Eval Service', () => {
-  let service: MailEvalService;
+  let service: EvaluationReportService;
   let nodemailerService: NodemailerService;
-  let templateService: TemplateService;
+  let module: TestingModule;
 
   beforeAll(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       imports: [LoggerModule, HttpModule],
       providers: [
-        MailEvalService,
+        EvaluationReportService,
         {
           provide: NodemailerService,
           useFactory: () => ({
@@ -44,10 +45,17 @@ describe('Mail Eval Service', () => {
           }),
         },
         {
-          provide: TemplateService,
-          useFactory: () => ({
-            renderTemplateByName: jest.fn().mockResolvedValue('<html>Mock template</html>'),
-          }),
+          provide: EaseyContentTemplateService,
+          useValue: {
+            getTemplateById: jest.fn().mockResolvedValue({ templateLocation: 'test' }),
+            renderHandlebarsTemplate: jest.fn().mockResolvedValue('<html></html>'),
+          },
+        },
+        {
+          provide: MailService,
+          useValue: {
+            sendTemplateEmail: jest.fn(),
+          },
         },
         ConfigService,
         DataSetService,
@@ -56,9 +64,8 @@ describe('Mail Eval Service', () => {
       ],
     }).compile();
 
-    service = module.get(MailEvalService);
+    service = module.get(EvaluationReportService);
     nodemailerService = module.get(NodemailerService);
-    templateService = module.get(TemplateService);
 
     const mockManager = {
       findOneBy: jest.fn().mockImplementation((val) => {
@@ -293,7 +300,9 @@ describe('Mail Eval Service', () => {
     jest.spyOn(service, 'formatTeeContext').mockResolvedValue({});
     jest.spyOn(service, 'formatEmissionsContext').mockResolvedValue({});
 
+    const mailService = module.get(MailService);
+    
     await service.sendMassEvalEmail('', '', '', '');
-    expect(nodemailerService.sendMail).toHaveBeenCalled();
+    expect(mailService.sendTemplateEmail).toHaveBeenCalled();
   });
 });

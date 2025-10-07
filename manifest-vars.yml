@@ -20,6 +20,7 @@ ecmpsHost: https://ecmps-dev.app.cloud.gov
 cdxUrl: https://dev.epacdx.net/
 epaAnalystLink: https://www.epa.gov/power-sector/business-center-and-emissions-monitoring-contacts#MonitoringContacts
 recipientsListApi: https://cbsstagei.epa.gov/CBSD/api/auth-mgmt/emailRecipients
+recipientsListApiEnabled: true
 maxConnectionPool: 30
 idleTimeout: 30000
 connectionTimeout: 60000

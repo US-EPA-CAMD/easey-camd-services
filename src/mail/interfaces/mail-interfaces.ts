@@ -12,3 +12,12 @@ export interface SendMailOptions {
   [key: string]: any; // Allow additional nodemailer options
 }
 
+export interface TemplateEmailOptions extends SendMailOptions {
+  templateId: number;
+  context?: any;
+}
+
+export interface DatabaseEmailOptions {
+  emailToSendId: number;
+}
+

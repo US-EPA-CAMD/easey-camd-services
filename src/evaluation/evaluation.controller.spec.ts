@@ -7,13 +7,13 @@ import { Logger } from '@us-epa-camd/easey-common/logger';
 import { EvaluationController } from './evaluation.controller';
 import { EvaluationService } from './evaluation.service';
 import { EvaluationErrorHandlerService } from './evaluation-error-handler.service';
-import { MailEvalService } from '../mail/mail-eval.service';
+import { EvaluationReportService } from '../mail/evaluation-report.service';
 import { EvaluationSetHelperService } from './evaluation-set-helper.service';
 import { EvaluationDTO } from '../dto/evaluation.dto';
 
 jest.mock('./evaluation.service');
 jest.mock('./evaluation-error-handler.service');
-jest.mock('../mail/mail-eval.service');
+jest.mock('../mail/evaluation-report.service');
 jest.mock('./evaluation-set-helper.service');
 
 describe('-- Evaluation Controller --', () => {
@@ -43,7 +43,7 @@ describe('-- Evaluation Controller --', () => {
         EvaluationService,
         ConfigService,
         EvaluationErrorHandlerService,
-        MailEvalService,
+        EvaluationReportService,
         EvaluationSetHelperService,
       ],
     }).compile();

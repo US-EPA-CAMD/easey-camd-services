@@ -59,7 +59,7 @@ export class SubmissionFeedbackEmailData {
     public ccEmail: string,
     public fromEmail: string,
     public subject: string,
-    public emailTemplate: string,
+    public emailTemplateId: number,
     public templateContext: any,
     public feedbackAttachmentDocuments: any[],
     public submissionSet : SubmissionSet,

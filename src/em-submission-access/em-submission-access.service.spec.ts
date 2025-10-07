@@ -31,6 +31,8 @@ const mockMap = () => ({
 
 const mockEntityManager = () => ({
   query: jest.fn(),
+  transaction: jest.fn(),
+  save: jest.fn(),
 });
 
 describe('EmSubmissionAccessService', () => {
@@ -243,20 +245,65 @@ describe('EmSubmissionAccessService', () => {
     const mockedDto = genEmSubmissionAccess<EmSubmissionAccessDTO>()[0];
     map.one.mockReturnValue(mockedDto);
     let payload = new EmSubmissionAccessCreateDTO();
+    payload.monitorPlanId = 'TEST-MP-123';
+    payload.reportingPeriodId = 123;
+    
+    const mockSavedEntity = { id: 12345, ...payload };
+    const mockTransactionalEntityManager = {
+      save: jest.fn().mockResolvedValue(mockSavedEntity),
+      query: jest.fn().mockResolvedValue([{ result: 'T', error_msg: '' }]),
+    };
+    
+    entityManager.transaction.mockImplementation(async (callback) => {
+      return await callback(mockTransactionalEntityManager);
+    });
+    
     viewRepository.findOneBy.mockResolvedValue(new EmSubmissionAccess());
+    
     const result = await service.createEmSubmissionAccess(payload);
+    
     expect(result).toEqual(mockedDto);
+    expect(entityManager.transaction).toHaveBeenCalled();
+    expect(mockTransactionalEntityManager.save).toHaveBeenCalled();
+    expect(mockTransactionalEntityManager.query).toHaveBeenCalledWith(
+      'SELECT * FROM camdecmpswks.update_collateral_em_data_for_esa_changes($1, $2)',
+      [payload.monitorPlanId, payload.reportingPeriodId]
+    );
   });
 
   it('calls EmSubmissionAccessRepository.updateEmSubmissionAccess() and updates an emission submission access record', async () => {
     const mockedDto = genEmSubmissionAccess<EmSubmissionAccessDTO>()[0];
     map.one.mockReturnValue(mockedDto);
     let payload = new EmSubmissionAccessUpdateDTO();
-    repository.findOneBy.mockResolvedValue(new EmSubmissionAccess());
+    
+    const existingEntity = new EmSubmissionAccess();
+    existingEntity.id = mockedDto.id;
+    existingEntity.monitorPlanId = 'TEST-MP-456';
+    existingEntity.reportingPeriodId = 456;
+    
+    const mockTransactionalEntityManager = {
+      save: jest.fn().mockResolvedValue(existingEntity),
+      query: jest.fn().mockResolvedValue([{ result: 'T', error_msg: '' }]),
+    };
+    
+    entityManager.transaction.mockImplementation(async (callback) => {
+      return await callback(mockTransactionalEntityManager);
+    });
+    
+    repository.findOneBy.mockResolvedValue(existingEntity);
+    viewRepository.findOneBy.mockResolvedValue(existingEntity);
+    
     const result = await service.updateEmSubmissionAccess(
       mockedDto.id,
       payload,
     );
+    
     expect(result).toEqual(mockedDto);
+    expect(entityManager.transaction).toHaveBeenCalled();
+    expect(mockTransactionalEntityManager.save).toHaveBeenCalled();
+    expect(mockTransactionalEntityManager.query).toHaveBeenCalledWith(
+      'SELECT * FROM camdecmpswks.update_collateral_em_data_for_esa_changes($1, $2)',
+      [existingEntity.monitorPlanId, existingEntity.reportingPeriodId]
+    );
   });
 });
