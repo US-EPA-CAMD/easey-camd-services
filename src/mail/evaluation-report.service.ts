@@ -620,8 +620,6 @@ export class EvaluationReportService {
     let templateContext: any = {};
     const documents = [];
 
-    subject = `ECMPS Evaluation Report | ${this.displayCurrentDate()}`;
-
     template = 'massEvaluationTemplate';
     records = await this.returnManager().find(Evaluation, {
       where: { evaluationSetIdentifier: setId },

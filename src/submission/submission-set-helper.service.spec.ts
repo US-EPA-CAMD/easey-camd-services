@@ -59,7 +59,7 @@ describe('SubmissionSetHelperService', () => {
 
       entityManager.findOne = jest.fn().mockResolvedValueOnce(monitorPlan);
 
-      await service.setRecordStatusCode(set, [record], 'COMPLETE', 'Details', 'UPDATED');
+      await service.setRecordStatusCode(set, record, 'COMPLETE', 'Details', 'UPDATED');
 
       expect(record.statusCode).toBe('COMPLETE');
       expect(record.note).toBe('Details');

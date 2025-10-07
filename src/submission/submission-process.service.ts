@@ -43,13 +43,43 @@ export class SubmissionProcessService {
         throw new Error(`SubmissionSet with id ${id} not found.`);
       }
 
+      if (set.statusCode === 'WIP' || set.statusCode === 'COMPLETE') {
+        this.logger.warn(`SubmissionSet ${id} is already ${set.statusCode}, skipping duplicate processing.`);
+        return;
+      }
+
+      // Atomic update to WIP - only if still QUEUED
+      const updateResult = await this.entityManager.update(
+        SubmissionSet,
+        { submissionSetIdentifier: id, statusCode: 'QUEUED' },
+        { statusCode: 'WIP', startedTime: new Date() }
+      );
+
+      if (updateResult.affected === 0) {
+        this.logger.warn(`SubmissionSet ${id} was already processed by another instance, skipping.`);
+        return;
+      }
+
+      this.logger.log(`Successfully acquired lock for SubmissionSet ${id}, proceeding with processing.`);
+
       //Push the submission stage here
       submissionStages.push({ action: 'SUBMISSION_LOADED', dateTime: (await this.submissionSetHelper.getFormattedDateTime())  || 'N/A' });
 
+      // Refresh set data after atomic update
+      set = await this.entityManager.findOne(SubmissionSet, { where: { submissionSetIdentifier: id }, });
+
       // Update the submission set and submission queue statuses to 'WIP'
       await this.submissionSetHelper.updateSubmissionSetStatus(set, 'WIP');
-      submissionQueueRecords = await this.entityManager.find(SubmissionQueue, { where: { submissionSetIdentifier: id },});
-      await this.submissionSetHelper.setRecordStatusCode(set, submissionQueueRecords, 'WIP', '', 'PENDING');
+      submissionQueueRecords = await this.entityManager.find(SubmissionQueue, {
+        where: { submissionSetIdentifier: id },
+        relations: { 
+          reportingPeriod: true,
+          severityCodeRecord: true,
+        },
+      });
+      for (const record of submissionQueueRecords) {
+        await this.submissionSetHelper.setRecordStatusCode(set, record, 'WIP', '', 'PENDING');
+      }
       this.logger.log(`Updating submission records to IP status.`);
 
       //Push the submission stage here
@@ -118,11 +148,18 @@ export class SubmissionProcessService {
 
       submissionStages.push({ action: 'FEEDBACK_EMAILS_SENT', dateTime: (await this.submissionSetHelper.getFormattedDateTime())  || 'N/A' });
 
-      // Update the submission set and submission queue statuses to 'COMPLETE' and submission status to 'UPDATED'
-      // ONLY if there are no submission queue records that have Errors
+      // Update the submission set and submission queue statuses to 'COMPLETE' and submission status to 'UPDATED' or 'CRITERR'
       const nonErrorRecords = submissionQueueRecords.filter(record => record.statusCode !== 'ERROR');
       const errorRecords = submissionQueueRecords.filter(record => record.statusCode === 'ERROR');
-      await this.submissionSetHelper.setRecordStatusCode(set, nonErrorRecords, 'COMPLETE', '', set.hasCritErrors ? 'CRITERR' : 'UPDATED');
+      for (const record of nonErrorRecords) {
+        await this.submissionSetHelper.setRecordStatusCode(
+          set,
+          record,
+          'COMPLETE',
+          '',
+          record.severityCodeRecord.evalStatusCode === 'ERR' ? 'CRITERR' : 'UPDATED',
+        );
+      }
       if (errorRecords.length <= 0) {
         await this.submissionSetHelper.updateSubmissionSetStatus(set, 'COMPLETE');
       }
@@ -143,14 +180,11 @@ export class SubmissionProcessService {
     transactions: any[],
   ) {
     try {
-
-      if (!set.hasCritErrors) {
-        await this.entityManager.transaction(async (manager) => {
-          for (const trans of transactions) {
-            await manager.query(trans.command, trans.params);
-          }
-        });
-      }
+      await this.entityManager.transaction(async (manager) => {
+        for (const trans of transactions) {
+          await manager.query(trans.command, trans.params);
+        }
+      });
     } catch (e) {
       this.logger.error('Error during copyToOfficial processing.', e.stack, 'SubmissionProcessService');
       throw e; //Rethrow so that error handling takes over
