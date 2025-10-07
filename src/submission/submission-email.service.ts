@@ -372,7 +372,12 @@ export class SubmissionEmailService {
     const unitStackPipe = submissionEmailParamsDto.templateContext['monitorPlan'].item.unitStackPipe;
     const severityLevelDescription = submissionEmailParamsDto?.highestSeverityRecord?.severityCode?.severityCodeDescription;
 
-    return `${fileTypeAbbrev} Feedback for ORIS Code ${orisCode} ${unitStackPipe} (${severityLevelDescription})`;
+    let yearAndQuarter = '';
+    if (submissionEmailParamsDto.processCode === 'EM' && submissionEmailParamsDto.rptPeriod) {
+      yearAndQuarter = `${submissionEmailParamsDto.rptPeriod.periodAbbreviation.replace(' ', '')} `;
+    }
+
+    return `${fileTypeAbbrev} Feedback for ORIS Code ${orisCode} ${unitStackPipe} ${yearAndQuarter}(${severityLevelDescription})`;
   }
 
   private async getEmissionsSummaryReport(
