@@ -42,96 +42,94 @@ export class SubmissionSetHelperService {
 
   async setRecordStatusCode(
     set: SubmissionSet,
-    records: SubmissionQueue[],
+    record: SubmissionQueue,
     statusCode: string,
     note: string,
     originRecordCode: string,
   ): Promise<void> {
-    for (const record of records) {
-      record.statusCode = statusCode;
+    record.statusCode = statusCode;
 
-      if (note) {
-        record.note = note;
-        record.noteTime = new Date();
-      }
+    if (note) {
+      record.note = note;
+      record.noteTime = new Date();
+    }
 
-      if (statusCode === 'WIP') {
-        record.startedTime = new Date();
-      }
+    if (statusCode === 'WIP') {
+      record.startedTime = new Date();
+    }
 
-      if (statusCode === 'COMPLETE') {
-        record.completedTime = new Date();
-      }
+    if (statusCode === 'COMPLETE') {
+      record.completedTime = new Date();
+    }
 
-      let originRecord;
+    let originRecord;
 
-      switch (record.processCode) {
-        case 'MP':
-          originRecord = await this.entityManager.findOne(MonitorPlan, {
-            where: { monPlanIdentifier: set.monPlanIdentifier },
+    switch (record.processCode) {
+      case 'MP':
+        originRecord = await this.entityManager.findOne(MonitorPlan, {
+          where: { monPlanIdentifier: set.monPlanIdentifier },
+        });
+        break;
+      case 'QA':
+        if (record.testSumIdentifier) {
+          originRecord = await this.entityManager.findOne(QaSuppData, {
+            where: { testSumId: record.testSumIdentifier },
           });
-          break;
-        case 'QA':
-          if (record.testSumIdentifier) {
-            originRecord = await this.entityManager.findOne(QaSuppData, {
-              where: { testSumId: record.testSumIdentifier },
-            });
-          } else if (record.qaCertEventIdentifier) {
-            originRecord = await this.entityManager.findOne(QaCertEvent, {
-              where: {
-                qaCertEventIdentifier: record.qaCertEventIdentifier,
-              },
-            });
-          } else {
-            originRecord = await this.entityManager.findOne(QaTee, {
-              where: {
-                testExtensionExemptionIdentifier:
-                record.testExtensionExemptionIdentifier,
-              },
-            });
-          }
-          break;
-        case 'EM':
-          originRecord = await this.entityManager.findOne(EmissionEvaluation, {
+        } else if (record.qaCertEventIdentifier) {
+          originRecord = await this.entityManager.findOne(QaCertEvent, {
             where: {
-              monPlanIdentifier: set.monPlanIdentifier,
-              rptPeriodIdentifier: record.rptPeriodIdentifier,
+              qaCertEventIdentifier: record.qaCertEventIdentifier,
             },
           });
-
-          if (originRecordCode === 'UPDATED') {
-            await this.entityManager.query(
-              `UPDATE camdecmpsaux.em_submission_access
-               SET em_status_cd = $1, sub_availability_cd = $2, submission_id = $3
-               WHERE mon_plan_id = $4
-                 AND rpt_period_id = $5
-                 AND access_begin_date = (SELECT MAX(access_begin_date)
-                                          FROM camdecmpsaux.em_submission_access
-                                          WHERE mon_plan_id = $4 AND rpt_period_id = $5);`,
-              [
-                'RECVD',
-                'UPDATED',
-                record.submissionIdentifier,
-                set.monPlanIdentifier,
-                record.rptPeriodIdentifier,
-              ],
-            );
-          }
-          break;
-        case 'MATS':
-          originRecord = await this.entityManager.findOne(MatsBulkFile, {
-            where: { id: record.matsBulkFileId },
+        } else {
+          originRecord = await this.entityManager.findOne(QaTee, {
+            where: {
+              testExtensionExemptionIdentifier:
+              record.testExtensionExemptionIdentifier,
+            },
           });
-          break;
-      }
+        }
+        break;
+      case 'EM':
+        originRecord = await this.entityManager.findOne(EmissionEvaluation, {
+          where: {
+            monPlanIdentifier: set.monPlanIdentifier,
+            rptPeriodIdentifier: record.rptPeriodIdentifier,
+          },
+        });
 
-      if (originRecord) {
-        originRecord.submissionIdentifier = record.submissionIdentifier;
-        originRecord.submissionAvailabilityCode = originRecordCode;
-        await this.entityManager.save(originRecord);
-      }
-      await this.entityManager.save(record);
+        if (originRecordCode === 'UPDATED') {
+          await this.entityManager.query(
+            `UPDATE camdecmpsaux.em_submission_access
+             SET em_status_cd = $1, sub_availability_cd = $2, submission_id = $3
+             WHERE mon_plan_id = $4
+               AND rpt_period_id = $5
+               AND access_begin_date = (SELECT MAX(access_begin_date)
+                                        FROM camdecmpsaux.em_submission_access
+                                        WHERE mon_plan_id = $4 AND rpt_period_id = $5);`,
+            [
+              'RECVD',
+              'UPDATED',
+              record.submissionIdentifier,
+              set.monPlanIdentifier,
+              record.rptPeriodIdentifier,
+            ],
+          );
+        }
+        break;
+      case 'MATS':
+        originRecord = await this.entityManager.findOne(MatsBulkFile, {
+          where: { id: record.matsBulkFileId },
+        });
+        break;
     }
+
+    if (originRecord) {
+      originRecord.submissionIdentifier = record.submissionIdentifier;
+      originRecord.submissionAvailabilityCode = originRecordCode;
+      await this.entityManager.save(originRecord);
+    }
+    await this.entityManager.save(record);
   }
 
   public async getFacilityByFacIdentifier(facIdentifier: number): Promise<Plant> {

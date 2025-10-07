@@ -1,6 +1,10 @@
-import { BaseEntity, Column, Entity, PrimaryColumn } from 'typeorm';
+import { BaseEntity, Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
 
 import { NumericColumnTransformer } from '@us-epa-camd/easey-common/transforms';
+
+import { ReportingPeriod } from './reporting-period.entity';
+
+import { SeverityCode } from './severity-code.entity';
 
 @Entity({ name: 'camdecmpsaux.submission_queue' })
 export class SubmissionQueue extends BaseEntity {
@@ -56,4 +60,12 @@ export class SubmissionQueue extends BaseEntity {
 
   @Column({ name: 'note_time' })
   noteTime?: Date;
+
+  @ManyToOne(() => ReportingPeriod)
+  @JoinColumn({ name: 'rpt_period_id' })
+  reportingPeriod: ReportingPeriod;
+
+  @ManyToOne(() => SeverityCode)
+  @JoinColumn({ name: 'severity_cd' })
+  severityCodeRecord: SeverityCode;
 }
