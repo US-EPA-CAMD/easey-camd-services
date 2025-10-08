@@ -43,11 +43,6 @@ export class SubmissionProcessService {
         throw new Error(`SubmissionSet with id ${id} not found.`);
       }
 
-      //if (set.statusCode === 'WIP' || set.statusCode === 'COMPLETE') {
-        //this.logger.warn(`SubmissionSet ${id} is already ${set.statusCode}, skipping duplicate processing.`);
-        //return;
-      //}
-
       // Atomic update to WIP - only if still not yet started
       const updateResult = await this.entityManager.update(
         SubmissionSet,
