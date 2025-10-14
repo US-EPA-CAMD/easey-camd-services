@@ -86,13 +86,20 @@ export class EaseyContentTemplateService {
   // Handlebars template methods
   async getTemplateContent(templateLocation: string): Promise<string> {
     const contentUri = this.configService.get<string>('app.contentUri');
+    let url = '';
     try {
-      // Handle trailing/leading slashes properly
-      const url = new URL(templateLocation, `${contentUri}/`).toString();
+      // Handle trailing/leading slashes properly - ensure exactly one trailing slash
+      const baseUrl = contentUri.endsWith('/') ? contentUri : `${contentUri}/`;
+      url = new URL(templateLocation, baseUrl).toString();
       const template = await firstValueFrom(this.httpService.get(url));
       return template.data;
     } catch (e) {
-      this.logger.error(`Failed to fetch template: ${templateLocation}`, e);
+      // Extract meaningful error information
+      const errorMessage = e.response?.status
+        ? `HTTP ${e.response.status}: ${e.response.statusText || 'Request failed'}`
+        : e.message || 'Unknown error';
+
+      this.logger.error(`Failed to fetch template from ${url}: ${errorMessage}`);
       throw new EaseyException(e, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
@@ -139,6 +146,12 @@ export class EaseyContentTemplateService {
       const template = await firstValueFrom(this.httpService.get(url));
       templateString = template.data;
     } catch (e) {
+      // Extract meaningful error information
+      const errorMessage = e.response?.status
+        ? `HTTP ${e.response.status}: ${e.response.statusText || 'Request failed'}`
+        : e.message || 'Unknown error';
+
+      this.logger.error(`Failed to fetch template from ${templateUrl}: ${errorMessage}`);
       throw new EaseyException(e, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
