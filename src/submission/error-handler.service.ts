@@ -94,7 +94,7 @@ export class ErrorHandlerService {
         userEmail,
         '',
         emailSubject,
-        EMAIL_TEMPLATE_IDS.SUBMISSION_FAILURE_USER,
+        EMAIL_TEMPLATE_IDS.SUBMISSION_QUEUEING_FAILURE_USER,
       );
 
       // Prepare email context for support
@@ -113,7 +113,7 @@ export class ErrorHandlerService {
         emailTemplateContextForSupport.supportEmail,
         '',
         emailSubject,
-        EMAIL_TEMPLATE_IDS.SUBMISSION_FAILURE_SUPPORT
+        EMAIL_TEMPLATE_IDS.SUBMISSION_QUEUEING_FAILURE_SUPPORT
       );
 
     } catch (emailError) {

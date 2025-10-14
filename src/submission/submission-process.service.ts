@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { EntityManager } from 'typeorm';
+import { EntityManager, IsNull } from 'typeorm';
 import { Logger } from '@us-epa-camd/easey-common/logger';
 import { SubmissionSet } from '../entities/submission-set.entity';
 import { SubmissionQueue } from '../entities/submission-queue.entity';
@@ -43,15 +43,10 @@ export class SubmissionProcessService {
         throw new Error(`SubmissionSet with id ${id} not found.`);
       }
 
-      if (set.statusCode === 'WIP' || set.statusCode === 'COMPLETE') {
-        this.logger.warn(`SubmissionSet ${id} is already ${set.statusCode}, skipping duplicate processing.`);
-        return;
-      }
-
-      // Atomic update to WIP - only if still QUEUED
+      // Atomic update to WIP - only if still not yet started
       const updateResult = await this.entityManager.update(
         SubmissionSet,
-        { submissionSetIdentifier: id, statusCode: 'QUEUED' },
+        { submissionSetIdentifier: id, statusCode: 'WIP', startedTime: IsNull () },
         { statusCode: 'WIP', startedTime: new Date() }
       );
 
