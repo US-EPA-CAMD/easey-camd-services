@@ -62,7 +62,7 @@
     "swagger-ui-express": "^5.0.1",
     "typeorm": "0.3.10",
     "uuidv4": "^6.2.13",
-    "dompurify": "^3.2.7",
+    "dompurify": "^3.3.0",
     "jsdom": "26.1.0"
   },
   "devDependencies": {
