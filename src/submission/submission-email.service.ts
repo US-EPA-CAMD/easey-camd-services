@@ -19,6 +19,7 @@ import { EaseyContentTemplateService } from '../mail/easey-content-template.serv
 import { ClientConfigService } from '../mail/client-config.service';
 import { ErrorHandlerService } from './error-handler.service';
 import { EMAIL_TEMPLATE_IDS } from '../constants/email-template-ids';
+import { isCritical1Severity } from '../dto/submission-email-params.dto';
 
 @Injectable()
 export class SubmissionEmailService {
@@ -334,6 +335,7 @@ export class SubmissionEmailService {
     const severityLevelCode = submissionEmailParamsDto?.highestSeverityRecord?.severityCode?.severityCode;
 
     submissionEmailParamsDto.templateContext['severityLevelCode'] = severityLevelCode;
+    submissionEmailParamsDto.templateContext['isCritical1Error'] = isCritical1Severity(submissionEmailParamsDto?.highestSeverityRecord);
     submissionEmailParamsDto.templateContext['hasNonNoneSeverity'] = severityLevelCode !== 'NONE';
 
     const ecmpsClientConfig = await this.clientConfigService.getECMPSClientConfig();
