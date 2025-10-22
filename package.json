@@ -34,7 +34,7 @@
     "class-validator": "0.14.2"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.911.0",
+    "@aws-sdk/client-s3": "^3.914.0",
     "@css-inline/css-inline": "^0.17.0",
     "@nestjs/axios": "4.0.0",
     "@nestjs/common": "^11.1.6",
@@ -77,9 +77,9 @@
     "@types/node": "20",
     "@types/nodemailer": "^7.0.2",
     "@types/supertest": "^6.0.3",
-    "@typescript-eslint/eslint-plugin": "8.46.1",
-    "@typescript-eslint/parser": "8.46.1",
-    "eslint": "^9.37.0",
+    "@typescript-eslint/eslint-plugin": "8.46.2",
+    "@typescript-eslint/parser": "8.46.2",
+    "eslint": "^9.38.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
     "jest": "^30.0.5",
