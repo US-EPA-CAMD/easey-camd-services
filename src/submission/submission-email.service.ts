@@ -8,6 +8,7 @@ import { DataSetService } from '../dataset/dataset.service';
 import { SeverityCode } from '../entities/severity-code.entity';
 import { ReportingPeriod } from '../entities/reporting-period.entity';
 import {
+  isCritical1Severity,
   HighestSeverityRecord,
   SubmissionEmailParamsDto, SubmissionFeedbackEmailData,
 } from '../dto/submission-email-params.dto';
@@ -19,7 +20,6 @@ import { EaseyContentTemplateService } from '../mail/easey-content-template.serv
 import { ClientConfigService } from '../mail/client-config.service';
 import { ErrorHandlerService } from './error-handler.service';
 import { EMAIL_TEMPLATE_IDS } from '../constants/email-template-ids';
-import { isCritical1Severity } from '../dto/submission-email-params.dto';
 
 @Injectable()
 export class SubmissionEmailService {
