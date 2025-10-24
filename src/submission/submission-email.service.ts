@@ -174,7 +174,7 @@ export class SubmissionEmailService {
       isMats = result && result.length > 0;
     }
 
-    const recipientsList = recipientsListApiEnabled ? await this.recipientListService.getEmailRecipients(
+    submissionEmailParamsDto.ccEmail = recipientsListApiEnabled ? await this.recipientListService.getEmailRecipients(
       submissionSet.userIdentifier,
       submissionEmailParamsDto.processCode,
       isMats,
@@ -182,8 +182,9 @@ export class SubmissionEmailService {
       submissionEmailParamsDto.facId?.toString(),
     ) : '';
 
-    submissionEmailParamsDto.templateContext['toEmail'] = this.combineEmailAddresses(submissionEmailParamsDto.toEmail, recipientsList);
+    submissionEmailParamsDto.templateContext['toEmail'] = submissionEmailParamsDto.toEmail;
     submissionEmailParamsDto.templateContext['fromEmail'] = submissionEmailParamsDto.fromEmail;
+    submissionEmailParamsDto.templateContext['ccEmail'] = submissionEmailParamsDto.ccEmail;
     const emailSubject = await this.constructEmailSubject(submissionEmailParamsDto);
     this.logger.debug(`Constructed email subject: ${emailSubject}`,);
 
@@ -238,6 +239,7 @@ export class SubmissionEmailService {
     this.logger.log(`Completed processing building data for : ${submissionEmailParamsDto.processCode}`);
     return new SubmissionFeedbackEmailData(
       submissionEmailParamsDto.toEmail,
+      submissionEmailParamsDto.ccEmail,
       submissionEmailParamsDto.fromEmail,
       emailSubject,
       EMAIL_TEMPLATE_IDS.SUBMISSION_CONFIRMATION,
@@ -247,19 +249,6 @@ export class SubmissionEmailService {
       submissionEmailParamsDto.submissionQueueRecords,
       submissionEmailParamsDto.processCode,
     );
-  }
-
-  private combineEmailAddresses(primaryEmail: string, additionalEmails: string): string {
-    if (!additionalEmails || additionalEmails.trim() === '') {
-      return primaryEmail;
-    }
-  
-    if (!primaryEmail || primaryEmail.trim() === '') {
-      return additionalEmails;
-    }
-  
-  // Combine with proper comma separator
-    return `${primaryEmail},${additionalEmails}`;
   }
 
   private async setCommonParams(

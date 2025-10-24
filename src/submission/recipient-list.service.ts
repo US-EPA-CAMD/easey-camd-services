@@ -84,9 +84,7 @@ export class RecipientListService {
       const emailList = response
         .map(item => item.emailAddressList)
         .filter(emailAddressList => emailAddressList)
-        .flatMap(emailList => emailList.split(',').map(email => email.trim()))
-        .filter(email => email !== '')
-        .join(',');
+        .join(';');
 
       return emailList;
     } catch (error) {
