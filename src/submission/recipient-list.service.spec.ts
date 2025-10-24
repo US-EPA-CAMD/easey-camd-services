@@ -143,7 +143,7 @@ describe('RecipientListService', () => {
       jest.spyOn(service, 'getClientToken').mockResolvedValue('mockToken');
 
       const result = await service.getEmailRecipients('', '', false, '', '');
-      expect(result).toEqual('email1@example.com;email2@example.com');
+      expect(result).toEqual('email1@example.com,email2@example.com');
     });
 
     it('should return an empty string if client token is not obtained', async () => {

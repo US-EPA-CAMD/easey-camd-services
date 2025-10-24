@@ -129,7 +129,6 @@ export class SubmissionProcessService {
             this.mailService.sendTemplateEmail({
               templateId: submissionFeedbackEmailData.emailTemplateId,
               to: submissionFeedbackEmailData.toEmail,
-              cc: submissionFeedbackEmailData.ccEmail,
               from: submissionFeedbackEmailData.fromEmail,
               subject: submissionFeedbackEmailData.subject,
               context: submissionFeedbackEmailData.templateContext,
