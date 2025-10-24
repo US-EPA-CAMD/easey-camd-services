@@ -182,7 +182,9 @@ export class SubmissionEmailService {
       submissionEmailParamsDto.facId?.toString(),
     ) : '';
 
-    submissionEmailParamsDto.templateContext['toEmail'] = this.combineEmailAddresses(submissionEmailParamsDto.toEmail, recipientsList);
+    const toEmails = this.combineEmailAddresses(submissionEmailParamsDto.toEmail, recipientsList);
+    submissionEmailParamsDto.templateContext['toEmail'] = toEmails;
+    submissionEmailParamsDto.toEmail = toEmails;
     submissionEmailParamsDto.templateContext['fromEmail'] = submissionEmailParamsDto.fromEmail;
     const emailSubject = await this.constructEmailSubject(submissionEmailParamsDto);
     this.logger.debug(`Constructed email subject: ${emailSubject}`,);

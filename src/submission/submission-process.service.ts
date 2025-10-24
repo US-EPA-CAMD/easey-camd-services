@@ -123,24 +123,30 @@ export class SubmissionProcessService {
 
           this.logger.debug('Sending email feedback...');
 
-          // Attempt to send an email. If sending an email for this particular file type fails,
-          // log the error and continue attempting to send emails for the others
+        // Attempt to send an email. If sending an email for this particular file type fails,
+        // log the error and continue attempting to send emails for the others
+        const emailList = submissionFeedbackEmailData.toEmail
+          ? submissionFeedbackEmailData.toEmail.split(',').map(email => email.trim())
+          : [];
+        for (const toEmail of emailList) {
           try {
             this.mailService.sendTemplateEmail({
               templateId: submissionFeedbackEmailData.emailTemplateId,
-              to: submissionFeedbackEmailData.toEmail,
+              to: toEmail,
               from: submissionFeedbackEmailData.fromEmail,
               subject: submissionFeedbackEmailData.subject,
               context: submissionFeedbackEmailData.templateContext,
               attachments: submissionFeedbackEmailData.feedbackAttachmentDocuments,
+              bodyToEmailsList: emailList
             });
           } catch (e) {
-            this.logger.error('Error attempting to send feedback email : ' +  {processCode : submissionFeedbackEmailData.processCode}, e.stack, 'SubmissionProcessService');
+            this.logger.error('Error attempting to send feedback email : ' + { processCode: submissionFeedbackEmailData.processCode }, e.stack, 'SubmissionProcessService');
             await this.errorHandlerService.handleSubmissionProcessingError(submissionFeedbackEmailData.submissionSet, submissionFeedbackEmailData.submissionQueueRecords, submissionStages, e);
           }
-      }
+        }
 
-      submissionStages.push({ action: 'FEEDBACK_EMAILS_SENT', dateTime: (await this.submissionSetHelper.getFormattedDateTime())  || 'N/A' });
+      }
+      submissionStages.push({ action: 'FEEDBACK_EMAILS_SENT', dateTime: (await this.submissionSetHelper.getFormattedDateTime()) || 'N/A' });
 
       // Update the submission set and submission queue statuses to 'COMPLETE' and submission status to 'UPDATED' or 'CRITERR'
       const nonErrorRecords = submissionQueueRecords.filter(record => record.statusCode !== 'ERROR');
