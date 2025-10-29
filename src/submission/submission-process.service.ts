@@ -126,7 +126,7 @@ export class SubmissionProcessService {
         // Attempt to send an email. If sending an email for this particular file type fails,
         // log the error and continue attempting to send emails for the others
         const emailList = submissionFeedbackEmailData.toEmail
-          ? submissionFeedbackEmailData.toEmail.split(',').map(email => email.trim())
+          ? submissionFeedbackEmailData.toEmail.split(/[;,]/).map(email => email.trim()).filter(Boolean)
           : [];
         for (const toEmail of emailList) {
           try {
