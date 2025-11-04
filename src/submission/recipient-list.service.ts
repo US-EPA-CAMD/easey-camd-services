@@ -55,7 +55,7 @@ export class RecipientListService {
 
       return response.data.token;
     } catch (error) {
-      this.logger.error('Error occurred during the API call to auth-api token validation API', error);
+      this.logger.error('Error occurred during the API call to auth-api token validation API', error.message);
       return '';
     }
   }
@@ -90,7 +90,7 @@ export class RecipientListService {
 
       return emailList;
     } catch (error) {
-      this.logger.error('Error occurred during the API call to emailRecipients', error.message || error);
+      this.logger.error('Error occurred during the API call to emailRecipients', error.message);
       // Check if the error has a response (e.g., HTTP status code errors)
       if (error.response) {
         this.logger.error('API response error status:', error.response.status || '');
@@ -191,7 +191,7 @@ export class RecipientListService {
         errorMessage: '',
       };
     } catch (error) {
-      this.logger.error('Error occurred in getEmailRecipientList', error.message || error);
+      this.logger.error('Error occurred in getEmailRecipientList', error.message);
       
       // Log additional error details if available
       if (error.response) {
