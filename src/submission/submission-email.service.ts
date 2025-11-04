@@ -8,6 +8,7 @@ import { DataSetService } from '../dataset/dataset.service';
 import { SeverityCode } from '../entities/severity-code.entity';
 import { ReportingPeriod } from '../entities/reporting-period.entity';
 import {
+  isCritical1Severity,
   HighestSeverityRecord,
   SubmissionEmailParamsDto, SubmissionFeedbackEmailData,
 } from '../dto/submission-email-params.dto';
@@ -347,6 +348,7 @@ export class SubmissionEmailService {
     const severityLevelCode = submissionEmailParamsDto?.highestSeverityRecord?.severityCode?.severityCode;
 
     submissionEmailParamsDto.templateContext['severityLevelCode'] = severityLevelCode;
+    submissionEmailParamsDto.templateContext['isCritical1Error'] = isCritical1Severity(submissionEmailParamsDto?.highestSeverityRecord);
     submissionEmailParamsDto.templateContext['hasNonNoneSeverity'] = severityLevelCode !== 'NONE';
 
     const ecmpsClientConfig = await this.clientConfigService.getECMPSClientConfig();
