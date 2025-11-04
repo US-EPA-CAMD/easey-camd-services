@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { EntityManager } from 'typeorm';
+import { EntityManager, IsNull } from 'typeorm';
 import { Logger } from '@us-epa-camd/easey-common/logger';
 import { SubmissionSet } from '../entities/submission-set.entity';
 import { SubmissionQueue } from '../entities/submission-queue.entity';
@@ -12,14 +12,14 @@ import { promises as fsPromises } from 'fs';
 import * as path from 'path';
 import { SubmissionSetHelperService } from './submission-set-helper.service';
 import { SubmissionEmailService } from './submission-email.service';
-import { MailEvalService } from '../mail/mail-eval.service';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class SubmissionProcessService {
   constructor(
     private readonly entityManager: EntityManager,
     private readonly logger: Logger,
-    private readonly mailEvalService: MailEvalService,
+    private readonly mailService: MailService,
     private readonly documentService: DocumentService,
     private readonly transactionService: SubmissionTransactionService,
     private readonly errorHandlerService: ErrorHandlerService,
@@ -43,13 +43,38 @@ export class SubmissionProcessService {
         throw new Error(`SubmissionSet with id ${id} not found.`);
       }
 
+      // Atomic update to WIP - only if still not yet started
+      const updateResult = await this.entityManager.update(
+        SubmissionSet,
+        { submissionSetIdentifier: id, statusCode: 'WIP', startedTime: IsNull () },
+        { statusCode: 'WIP', startedTime: new Date() }
+      );
+
+      if (updateResult.affected === 0) {
+        this.logger.warn(`SubmissionSet ${id} was already processed by another instance, skipping.`);
+        return;
+      }
+
+      this.logger.log(`Successfully acquired lock for SubmissionSet ${id}, proceeding with processing.`);
+
       //Push the submission stage here
       submissionStages.push({ action: 'SUBMISSION_LOADED', dateTime: (await this.submissionSetHelper.getFormattedDateTime())  || 'N/A' });
 
+      // Refresh set data after atomic update
+      set = await this.entityManager.findOne(SubmissionSet, { where: { submissionSetIdentifier: id }, });
+
       // Update the submission set and submission queue statuses to 'WIP'
       await this.submissionSetHelper.updateSubmissionSetStatus(set, 'WIP');
-      submissionQueueRecords = await this.entityManager.find(SubmissionQueue, { where: { submissionSetIdentifier: id },});
-      await this.submissionSetHelper.setRecordStatusCode(set, submissionQueueRecords, 'WIP', '', 'PENDING');
+      submissionQueueRecords = await this.entityManager.find(SubmissionQueue, {
+        where: { submissionSetIdentifier: id },
+        relations: { 
+          reportingPeriod: true,
+          severityCodeRecord: true,
+        },
+      });
+      for (const record of submissionQueueRecords) {
+        await this.submissionSetHelper.setRecordStatusCode(set, record, 'WIP', '', 'PENDING');
+      }
       this.logger.log(`Updating submission records to IP status.`);
 
       //Push the submission stage here
@@ -98,32 +123,43 @@ export class SubmissionProcessService {
 
           this.logger.debug('Sending email feedback...');
 
-          // Attempt to send an email. If sending an email for this particular file type fails,
-          // log the error and continue attempting to send emails for the others
+        // Attempt to send an email. If sending an email for this particular file type fails,
+        // log the error and continue attempting to send emails for the others
+        const emailList = submissionFeedbackEmailData.toEmail
+          ? submissionFeedbackEmailData.toEmail.split(/[;,]/).map(email => email.trim()).filter(Boolean)
+          : [];
+        for (const toEmail of emailList) {
           try {
-            await this.mailEvalService.sendEmailWithRetry(
-              submissionFeedbackEmailData.toEmail,
-              submissionFeedbackEmailData.ccEmail,
-              submissionFeedbackEmailData.fromEmail,
-              submissionFeedbackEmailData.subject,
-              submissionFeedbackEmailData.emailTemplate,
-              submissionFeedbackEmailData.templateContext,
-              1,
-              submissionFeedbackEmailData.feedbackAttachmentDocuments,
-            );
+            this.mailService.sendTemplateEmail({
+              templateId: submissionFeedbackEmailData.emailTemplateId,
+              to: toEmail,
+              from: submissionFeedbackEmailData.fromEmail,
+              subject: submissionFeedbackEmailData.subject,
+              context: submissionFeedbackEmailData.templateContext,
+              attachments: submissionFeedbackEmailData.feedbackAttachmentDocuments,
+              bodyToEmailsList: emailList
+            });
           } catch (e) {
-            this.logger.error('Error attempting to send feedback email : ' +  {processCode : submissionFeedbackEmailData.processCode}, e.stack, 'SubmissionProcessService');
+            this.logger.error('Error attempting to send feedback email : ' + { processCode: submissionFeedbackEmailData.processCode }, e.stack, 'SubmissionProcessService');
             await this.errorHandlerService.handleSubmissionProcessingError(submissionFeedbackEmailData.submissionSet, submissionFeedbackEmailData.submissionQueueRecords, submissionStages, e);
           }
+        }
+
       }
+      submissionStages.push({ action: 'FEEDBACK_EMAILS_SENT', dateTime: (await this.submissionSetHelper.getFormattedDateTime()) || 'N/A' });
 
-      submissionStages.push({ action: 'FEEDBACK_EMAILS_SENT', dateTime: (await this.submissionSetHelper.getFormattedDateTime())  || 'N/A' });
-
-      // Update the submission set and submission queue statuses to 'COMPLETE' and submission status to 'UPDATED'
-      // ONLY if there are no submission queue records that have Errors
+      // Update the submission set and submission queue statuses to 'COMPLETE' and submission status to 'UPDATED' or 'CRITERR'
       const nonErrorRecords = submissionQueueRecords.filter(record => record.statusCode !== 'ERROR');
       const errorRecords = submissionQueueRecords.filter(record => record.statusCode === 'ERROR');
-      await this.submissionSetHelper.setRecordStatusCode(set, nonErrorRecords, 'COMPLETE', '', set.hasCritErrors ? 'CRITERR' : 'UPDATED');
+      for (const record of nonErrorRecords) {
+        await this.submissionSetHelper.setRecordStatusCode(
+          set,
+          record,
+          'COMPLETE',
+          '',
+          record.severityCodeRecord.evalStatusCode === 'ERR' ? 'CRITERR' : 'UPDATED',
+        );
+      }
       if (errorRecords.length <= 0) {
         await this.submissionSetHelper.updateSubmissionSetStatus(set, 'COMPLETE');
       }
@@ -144,14 +180,11 @@ export class SubmissionProcessService {
     transactions: any[],
   ) {
     try {
-
-      if (!set.hasCritErrors) {
-        await this.entityManager.transaction(async (manager) => {
-          for (const trans of transactions) {
-            await manager.query(trans.command, trans.params);
-          }
-        });
-      }
+      await this.entityManager.transaction(async (manager) => {
+        for (const trans of transactions) {
+          await manager.query(trans.command, trans.params);
+        }
+      });
     } catch (e) {
       this.logger.error('Error during copyToOfficial processing.', e.stack, 'SubmissionProcessService');
       throw e; //Rethrow so that error handling takes over

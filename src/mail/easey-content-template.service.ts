@@ -1,44 +1,162 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { EntityManager } from 'typeorm';
-import { NodemailerService } from './nodemailer/nodemailer.service';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
 import { Logger } from '@us-epa-camd/easey-common/logger';
-import { EmailToSend } from '../entities/email-to-send.entity';
 import { EmailTemplate } from '../entities/email-template.entity';
 import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
-import { EmailProcessResponseDto } from '../dto/email-process-response.dto';
-import { inline } from '@css-inline/css-inline';
+import * as Handlebars from 'handlebars';
+import { EMAIL_TEMPLATE_PARTIALS } from '../constants/email-template-ids';
 
-//Processes templates from easey-content API with custom syntax
 @Injectable()
 export class EaseyContentTemplateService {
+  private handlebars = Handlebars.create();
+  private partialsRegistered = false;
+
   constructor(
     private readonly entityManager: EntityManager,
-    private readonly nodemailerService: NodemailerService,
     private readonly configService: ConfigService,
     private readonly httpService: HttpService,
     private readonly logger: Logger,
-  ) {}
+  ) {
+    // Register custom helpers for the isolated handlebars instance
+    this.registerHelpers();
+  }
+
+  private registerHelpers() {
+    // Register the notEquals helper needed by templates
+    this.handlebars.registerHelper('notEquals', function(a, b) {
+      return a !== b;
+    });
+
+    // Register the eq helper
+    this.handlebars.registerHelper('eq', function(a, b) {
+      return a === b;
+    });
+
+    // Register the equals helper (alternative to eq)
+    this.handlebars.registerHelper('equals', function(a, b) {
+      return a === b;
+    });
+
+    // Register the not_eq helper (alternative to notEquals)
+    this.handlebars.registerHelper('not_eq', function(a, b) {
+      return a !== b;
+    });
+
+    // Register the and helper for logical AND operations
+    this.handlebars.registerHelper('and', function() {
+      return Array.prototype.every.call(arguments, Boolean);
+    });
+
+    // Register the or helper for logical OR operations
+    this.handlebars.registerHelper('or', function() {
+      return Array.prototype.slice.call(arguments, 0, -1).some(Boolean);
+    });
+
+    // Register isObject helper to check if value is an object
+    this.handlebars.registerHelper('isObject', function(value) {
+      return typeof value === 'object' && value !== null;
+    });
+  }
+
+  private async registerPartials() {
+    // Register all configured partials
+    for (const [templateType, config] of Object.entries(EMAIL_TEMPLATE_PARTIALS)) {
+      this.logger.debug(`Registering partials for ${templateType}`);
+      
+      for (const partialName of config.partials) {
+        try {
+          const partialPath = `${config.basePath}/${partialName}.hbs`;
+          const partialContent = await this.getTemplateContent(partialPath);
+          this.handlebars.registerPartial(partialName, partialContent);
+          this.logger.debug(`Registered partial: ${partialName}`);
+        } catch (error) {
+          this.logger.error(`Failed to register partial ${partialName} from ${config.basePath}`, error);
+        }
+      }
+    }
+  }
 
   returnManager() {
     return this.entityManager;
   }
 
-  async getAndFormatTemplate(templateUrl, context): Promise<string> {
+  // Handlebars template methods
+  async getTemplateContent(templateLocation: string): Promise<string> {
+    const contentUri = this.configService.get<string>('app.contentUri');
+    let url = '';
+    try {
+      // Handle trailing/leading slashes properly - ensure exactly one trailing slash
+      const baseUrl = contentUri.endsWith('/') ? contentUri : `${contentUri}/`;
+      url = new URL(templateLocation, baseUrl).toString();
+      const template = await firstValueFrom(this.httpService.get(url));
+      return template.data;
+    } catch (e) {
+      // Extract meaningful error information
+      const errorMessage = e.response?.status
+        ? `HTTP ${e.response.status}: ${e.response.statusText || 'Request failed'}`
+        : e.message || 'Unknown error';
+
+      this.logger.error(`Failed to fetch template from ${url}: ${errorMessage}`);
+      throw new EaseyException(e, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async getTemplateById(templateId: number): Promise<EmailTemplate> {
+    const template = await this.entityManager.findOneBy(EmailTemplate, {
+      templateIdentifier: templateId,
+    });
+    if (!template) {
+      throw new EaseyException(
+        new Error(`Template with ID ${templateId} not found`),
+        HttpStatus.NOT_FOUND,
+      );
+    }
+    return template;
+  }
+
+  //This is for rending standard handlebars syntax
+  async renderHandlebarsTemplate(templateLocation: string, context: any): Promise<string> {
+    try {
+      // Ensure partials are registered before rendering (lazy loading)
+      if (!this.partialsRegistered) {
+        await this.registerPartials();
+        this.partialsRegistered = true;
+      }
+
+      const templateString = await this.getTemplateContent(templateLocation);
+      // Compile template (following TemplateService pattern with strict mode)
+      const template = this.handlebars.compile(templateString, { strict: true });
+      return template(context);
+    } catch (error) {
+      this.logger.error(`Failed to render Handlebars template ${templateLocation}`, error);
+      throw error;
+    }
+  }
+
+  //This is for rending simple custom template syntax that is currently using [[]] format.
+  async renderCustomTemplate(templateUrl, context): Promise<string> {
     let templateString;
     const contentUri = this.configService.get<string>('app.contentUri');
     try {
-      const url = `${contentUri}/${templateUrl}`;
+      // Handle trailing/leading slashes properly
+      const url = new URL(templateUrl, contentUri.replace(/\/?$/, '/')).toString();
       const template = await firstValueFrom(this.httpService.get(url));
       templateString = template.data;
     } catch (e) {
+      // Extract meaningful error information
+      const errorMessage = e.response?.status
+        ? `HTTP ${e.response.status}: ${e.response.statusText || 'Request failed'}`
+        : e.message || 'Unknown error';
+
+      this.logger.error(`Failed to fetch template from ${templateUrl}: ${errorMessage}`);
       throw new EaseyException(e, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     // Process loop syntax first: [[#arrayName]]...[[/arrayName]]
-    templateString = this.processLoopSyntax(templateString, context);
+    templateString = this.processCustomLoopSyntax(templateString, context);
 
     // Process regular variable substitution
     for (const key in context) {
@@ -60,7 +178,7 @@ export class EaseyContentTemplateService {
     return templateString;
   }
 
-  private processLoopSyntax(templateString: string, context: any): string {
+  private processCustomLoopSyntax(templateString: string, context: any): string {
     // Find loop patterns: [[#arrayName]]content[[/arrayName]]
     const loopPattern = /\[\[#(\w+)]]([\s\S]*?)\[\[\/\1]]/g;
     
@@ -94,96 +212,4 @@ export class EaseyContentTemplateService {
   }
 
 
-  async sendTemplateEmail(
-    to: string,
-    from: string,
-    subject: string,
-    templateLocation: string,
-    context: object,
-  ) {
-    try {
-      const formattedTemplate = await this.getAndFormatTemplate(
-        templateLocation,
-        context,
-      );
-      
-      // Inline CSS for better email client compatibility
-      let htmlContent = formattedTemplate;
-      try {
-        htmlContent = inline(formattedTemplate, {
-          keepAtRules: true,
-        });
-      } catch (inlineError) {
-        this.logger.warn('Failed to inline CSS, using original HTML', inlineError);
-      }
-      
-      this.nodemailerService.sendMail({
-        from: from,
-        to: to, // List of receivers email address
-        subject: subject, // Subject line
-        html: htmlContent, // HTML body content
-      })
-      .then((_success) => {
-        this.logger.debug(`Successfully sent a template email`);
-      })
-      .catch((_err) => {
-        this.logger.error(`Failed to send a template email`);
-      });
-    } catch (err) {
-      this.logger.error(`Failed to prepare template email`, err);
-    }
-  }
-
-  async sendEmailRecord(emailToSendId: number): Promise<EmailProcessResponseDto> {
-    try {
-      const record = await this.entityManager.findOneBy(EmailToSend, {
-        toSendIdentifier: emailToSendId,
-      });
-      
-      if (!record) {
-        // Scenario 2: Record not found
-        this.logger.error(`Email record not found for emailToSendId: ${emailToSendId}`);
-        return { success: false, message: `Email record ${emailToSendId} not found` };
-      }
-
-      //Call into the template email service
-      const template =
-        record.templateIdentifier &&
-        (await this.entityManager.findOneBy(EmailTemplate, {
-          templateIdentifier: record.templateIdentifier,
-        }));
-
-      if (!template) {
-        this.logger.error(`Template not found for templateId: ${record.templateIdentifier ?? 'null'}`);
-        return { success: false, message: `Template ${record.templateIdentifier ?? 'null'} not found` };
-      }
-
-      let context; //Extract context
-      if (record.context) {
-        context = JSON.parse(record.context);
-      } else {
-        context = {};
-      }
-
-      // Add email addresses to context for template variables
-      context.toEmail = record.toEmail;
-      context.fromEmail = record.fromEmail;
-
-      await this.sendTemplateEmail(
-        record.toEmail,
-        record.fromEmail,
-        template.templateSubject,
-        template.templateLocation,
-        context,
-      );
-
-      record.statusCode = 'COMPLETE';
-      await this.entityManager.save(record);
-      
-      return { success: true };
-    } catch (e) {
-      this.logger.error(`Failed to process email ${emailToSendId}: ${e.message}`, e.stack);
-      return { success: false, message: e.message };
-    }
-  }
 }

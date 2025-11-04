@@ -4,20 +4,23 @@ import { EvaluationSet } from '../entities/evaluation-set.entity';
 import { Evaluation } from '../entities/evaluation.entity';
 import { v4 as uuidv4 } from 'uuid';
 import { EvaluationSetHelperService } from './evaluation-set-helper.service';
-import { MailEvalService } from '../mail/mail-eval.service';
+import { MailService } from '../mail/mail.service';
+import { ClientConfigService } from '../mail/client-config.service';
 import { ConfigService } from '@nestjs/config';
 import { Plant } from '../entities/plant.entity';
 import { EntityManager } from 'typeorm';
 import { ReportingPeriod } from '../entities/reporting-period.entity';
 import { EvalErrorParamsDTO } from '../dto/eval-error-params.dto';
+import { EMAIL_TEMPLATE_IDS } from '../constants/email-template-ids';
 
 @Injectable()
 export class EvaluationErrorHandlerService {
   constructor(
     private readonly logger: Logger,
     private readonly entityManager: EntityManager,
-    private readonly mailEvalService: MailEvalService,
+    private readonly mailService: MailService,
     private readonly evaluationSetHelper: EvaluationSetHelperService,
+    private readonly clientConfigService: ClientConfigService,
     private readonly configService: ConfigService,
   ) {}
 
@@ -124,7 +127,7 @@ export class EvaluationErrorHandlerService {
 
       // Email subject
       const processCode = currentEvaluationQueue?.processCode || 'N/A';
-      const emailSubject = `${processCode} Evaluation Feedback for ORIS code ${emailTemplateContext.orisCode} Unit ${emailTemplateContext.configuration}`;
+      const emailSubject = `Error - ${processCode} Evaluation Feedback for ORIS code ${emailTemplateContext.orisCode} Unit ${emailTemplateContext.configuration}`;
 
       // Send failure email to user
       await this.sendEmail(
@@ -132,7 +135,7 @@ export class EvaluationErrorHandlerService {
         userEmail,
         '',
         emailSubject,
-        'queueingFailureUserTemplate',
+        EMAIL_TEMPLATE_IDS.EVALUATION_QUEUEING_FAILURE_USER,
       );
 
       // Prepare email context for support
@@ -152,7 +155,7 @@ export class EvaluationErrorHandlerService {
         emailTemplateContextForSupport.supportEmail,
         '',
         emailSubject,
-        'queueingFailureSupportTemplate',
+        EMAIL_TEMPLATE_IDS.EVALUATION_QUEUEING_FAILURE_SUPPORT,
       );
     } catch (emailError) {
       this.logger.error(
@@ -172,7 +175,7 @@ export class EvaluationErrorHandlerService {
     // Get support email
     let supportEmail: string;
     try {
-      const ecmpsClientConfig = await this.evaluationSetHelper.getECMPSClientConfig();
+      const ecmpsClientConfig = await this.clientConfigService.getECMPSClientConfig();
       supportEmail = ecmpsClientConfig?.supportEmail?.trim?.() || 'ecmps-support@camdsupport.com';
     } catch (configError) {
       supportEmail = 'ecmps-support@camdsupport.com';
@@ -319,7 +322,7 @@ export class EvaluationErrorHandlerService {
     toEmail: string,
     ccEmail: string,
     subject: string,
-    template: string,
+    templateId: number,
   ) {
     let fromEmail: string;
 
@@ -335,15 +338,14 @@ export class EvaluationErrorHandlerService {
     // Send email
     if (toEmail) {
       try {
-        await this.mailEvalService.sendEmailWithRetry(
-          toEmail,
-          ccEmail || '',
-          fromEmail,
-          subject,
-          template, // Template name
-          emailTemplateContext,
-          1,
-        );
+        this.mailService.sendTemplateEmail({
+          templateId: templateId,
+          to: toEmail,
+          cc: ccEmail || '',
+          from: fromEmail,
+          subject: subject,
+          context: emailTemplateContext,
+        });
       } catch (userEmailError) {
         this.logger.error( 'Failed to send failure email to ' + toEmail, userEmailError?.stack, );
       }

@@ -5,7 +5,7 @@ import {
   ApiBearerAuth,
   ApiQuery,
 } from '@nestjs/swagger';
-import { Body, Controller, Post, UseGuards, Get, Query } from '@nestjs/common';
+import { Body, Controller, Post, UseGuards, Get, Query, HttpCode, HttpStatus, Logger } from '@nestjs/common';
 import { SubmissionService } from './submission.service';
 import { ArrayResponse } from '@us-epa-camd/easey-common/interfaces/common.interface';
 import { AuditLog, RoleGuard } from '@us-epa-camd/easey-common/decorators';
@@ -17,7 +17,6 @@ import { ProcessParamsDTO } from '../dto/process-params.dto';
 import { SubmissionsLastUpdatedQueryDTO, SubmissionsLastUpdatedResponseDTO } from '../dto/submission-last-updated.dto';
 import { ApiExcludeControllerByEnv } from '../decorators/swagger-decorator';
 import { EvalSubmissionQueueOrderParamsDTO, SubmissionQueuePlaceDTO} from '../dto/eval-submission-queue.dto';
-
 
 @Controller()
 @ApiTags('Submission')
@@ -67,8 +66,17 @@ export class SubmissionController {
   @ApiSecurity('ClientId')
   @ApiBearerAuth('ClientToken')
   @UseGuards(ClientTokenGuard)
+  @HttpCode(HttpStatus.ACCEPTED) // 202: accepted for async processing
   async process(@Body() params: ProcessParamsDTO): Promise<void> {
-    this.processService.processSubmissionSet(params.submissionSetId);
+    // Fire-and-forget with safe error handling
+    void this.processService.processSubmissionSet(params.submissionSetId)
+      .catch((err) => {
+        Logger.error(
+          `processSubmissionSet failed for ${params.submissionSetId}: ${err?.message}`,
+          err?.stack,
+          'SubmissionController',
+        );
+      });
   }
 
   @Get('/queueOrder')

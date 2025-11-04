@@ -13,7 +13,6 @@ import { SubmissionFeedbackRecordService } from './submission-feedback-record.se
 import { DocumentService } from './document.service';
 import { ErrorHandlerService } from './error-handler.service';
 import { SubmissionSetHelperService } from './submission-set-helper.service';
-import { SubmissionTemplateService } from './submission-template.service';
 import { SubmissionTransactionService } from './submission-transaction.service';
 import { SubmissionEmailService } from './submission-email.service';
 import { SubmissionQueuePosition } from '../entities/submission_queue_position.entity';
@@ -30,7 +29,6 @@ import { SubmissionQueuePosition } from '../entities/submission_queue_position.e
     DocumentService,
     ErrorHandlerService,
     SubmissionSetHelperService,
-    SubmissionTemplateService,
     SubmissionTransactionService,
     SubmissionEmailService,
   ],

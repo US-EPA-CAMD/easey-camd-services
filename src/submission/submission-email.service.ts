@@ -12,12 +12,13 @@ import {
   SubmissionEmailParamsDto, SubmissionFeedbackEmailData,
 } from '../dto/submission-email-params.dto';
 import { SubmissionFeedbackRecordService } from './submission-feedback-record.service';
-import { MailEvalService } from '../mail/mail-eval.service';
+import { EvaluationReportService } from '../mail/evaluation-report.service';
 import { RecipientListService } from './recipient-list.service';
-import { ClientConfig } from '../entities/client-config.entity';
 import { ReportParamsDTO } from '../dto/report-params.dto';
-import { SubmissionTemplateService } from './submission-template.service';
+import { EaseyContentTemplateService } from '../mail/easey-content-template.service';
+import { ClientConfigService } from '../mail/client-config.service';
 import { ErrorHandlerService } from './error-handler.service';
+import { EMAIL_TEMPLATE_IDS } from '../constants/email-template-ids';
 
 @Injectable()
 export class SubmissionEmailService {
@@ -27,9 +28,10 @@ export class SubmissionEmailService {
     private readonly configService: ConfigService,
     private readonly dataSetService: DataSetService,
     private readonly submissionFeedbackRecordService: SubmissionFeedbackRecordService,
-    private readonly templateService: SubmissionTemplateService,
-    private readonly mailEvalService: MailEvalService,
+    private readonly easeyContentTemplateService: EaseyContentTemplateService,
+    private readonly evaluationReportService: EvaluationReportService,
     private readonly recipientListService: RecipientListService,
+    private readonly clientConfigService: ClientConfigService,
 
     @Inject(forwardRef(() => ErrorHandlerService))
     private readonly errorHandlerService: ErrorHandlerService,
@@ -43,7 +45,7 @@ export class SubmissionEmailService {
 
     const severityCodes: SeverityCode[] = await this.entityManager.find(SeverityCode,);
 
-    this.logger.debug('Grouping submission records by file type.');
+    this.logger.debug(`Grouping submission records by file type.`);
     const submissionQueueRecordsByFileType = this.groupSubmissionRecords(submissionSetRecords,);
 
     const emailPromises = Object.entries(
@@ -129,8 +131,12 @@ export class SubmissionEmailService {
 
       ...submissionQueueRecords
         .filter((r) => r.processCode === 'EM')
-        .reduce((acc, record, index) => {
-          acc[`EM_${index}`] = { processCode: 'EM', records: [record] };
+        .reduce((acc, record) => {
+          const key = `EM_${record.rptPeriodIdentifier}`;
+          if (!acc[key]) {
+            acc[key] = { processCode: 'EM', records: [] };
+          }
+          acc[key].records.push(record);
           return acc;
         }, {}),
     };
@@ -168,7 +174,7 @@ export class SubmissionEmailService {
       isMats = result && result.length > 0;
     }
 
-    submissionEmailParamsDto.ccEmail = recipientsListApiEnabled ? await this.recipientListService.getEmailRecipients(
+    const recipientsList = recipientsListApiEnabled ? await this.recipientListService.getEmailRecipients(
       submissionSet.userIdentifier,
       submissionEmailParamsDto.processCode,
       isMats,
@@ -176,8 +182,10 @@ export class SubmissionEmailService {
       submissionEmailParamsDto.facId?.toString(),
     ) : '';
 
-    submissionEmailParamsDto.templateContext['toEmail'] = submissionEmailParamsDto.toEmail;
-    submissionEmailParamsDto.templateContext['ccEmail'] = submissionEmailParamsDto.ccEmail;
+    const toEmails = this.combineEmailAddresses(submissionEmailParamsDto.toEmail, recipientsList);
+    submissionEmailParamsDto.templateContext['toEmail'] = toEmails;
+    submissionEmailParamsDto.toEmail = toEmails;
+    submissionEmailParamsDto.templateContext['fromEmail'] = submissionEmailParamsDto.fromEmail;
     const emailSubject = await this.constructEmailSubject(submissionEmailParamsDto);
     this.logger.debug(`Constructed email subject: ${emailSubject}`,);
 
@@ -207,7 +215,7 @@ export class SubmissionEmailService {
     ) {
       this.logger.log(`Building evaluation reports`);
       const evaluationReportDocuments = [];
-      await this.mailEvalService.buildEvalReports( submissionSet, submissionQueueRecords, evaluationReportDocuments,);
+      await this.evaluationReportService.buildEvalReports( submissionSet, submissionQueueRecords, evaluationReportDocuments,);
 
       for (const report of evaluationReportDocuments) {
         evaluationReportsContent += this.extractBodyContent(report.content);
@@ -216,8 +224,9 @@ export class SubmissionEmailService {
       submissionEmailParamsDto.templateContext['evaluationReportsContent'] = evaluationReportsContent;
     }
 
-    const attachmentContent = await this.templateService.renderTemplate(
-      'submissionFeedbackTemplate.hbs',
+    const templateRecord = await this.easeyContentTemplateService.getTemplateById(EMAIL_TEMPLATE_IDS.SUBMISSION_FEEDBACK);
+    const attachmentContent = await this.easeyContentTemplateService.renderHandlebarsTemplate(
+      templateRecord.templateLocation,
       submissionEmailParamsDto.templateContext,
     );
 
@@ -231,16 +240,28 @@ export class SubmissionEmailService {
     this.logger.log(`Completed processing building data for : ${submissionEmailParamsDto.processCode}`);
     return new SubmissionFeedbackEmailData(
       submissionEmailParamsDto.toEmail,
-      submissionEmailParamsDto.ccEmail,
       submissionEmailParamsDto.fromEmail,
       emailSubject,
-      'submissionTemplate',
+      EMAIL_TEMPLATE_IDS.SUBMISSION_CONFIRMATION,
       submissionEmailParamsDto.templateContext,
       feedbackAttachmentDocuments,
       submissionEmailParamsDto.submissionSet,
       submissionEmailParamsDto.submissionQueueRecords,
       submissionEmailParamsDto.processCode,
     );
+  }
+
+  private combineEmailAddresses(primaryEmail: string, additionalEmails: string): string {
+    if (!additionalEmails || additionalEmails.trim() === '') {
+      return primaryEmail;
+    }
+  
+    if (!primaryEmail || primaryEmail.trim() === '') {
+      return additionalEmails;
+    }
+  
+  // Combine with proper comma separator
+    return `${primaryEmail},${additionalEmails}`;
   }
 
   private async setCommonParams(
@@ -328,15 +349,9 @@ export class SubmissionEmailService {
     submissionEmailParamsDto.templateContext['severityLevelCode'] = severityLevelCode;
     submissionEmailParamsDto.templateContext['hasNonNoneSeverity'] = severityLevelCode !== 'NONE';
 
-    const ecmpsClientConfig = await this.getECMPSClientConfig();
+    const ecmpsClientConfig = await this.clientConfigService.getECMPSClientConfig();
     submissionEmailParamsDto.templateContext['supportEmail'] = ecmpsClientConfig?.supportEmail?.trim() ?? '';
     submissionEmailParamsDto.templateContext['cdxUrl'] = this.configService.get<string>('app.cdxUrl')?.trim() ?? '';
-  }
-
-  public async getECMPSClientConfig(): Promise<ClientConfig> {
-    return await this.entityManager.findOne(ClientConfig, {
-      where: { name: 'ecmps-ui' },
-    });
   }
 
   public async getSubmissionType(processCode: string ): Promise<string> {
@@ -370,9 +385,12 @@ export class SubmissionEmailService {
     const unitStackPipe = submissionEmailParamsDto.templateContext['monitorPlan'].item.unitStackPipe;
     const severityLevelDescription = submissionEmailParamsDto?.highestSeverityRecord?.severityCode?.severityCodeDescription;
 
-    const env = this.configService.get<string>('app.env')?.trim()?.toLowerCase();
-    const subjectSuffix = env && !['prod', 'production', ''].includes(env) ? ` (sent from ECMPS 2.0 ${env})` : '';
-    return `${fileTypeAbbrev} Feedback for ORIS Code ${orisCode} ${unitStackPipe} (${severityLevelDescription})${subjectSuffix}`;
+    let yearAndQuarter = '';
+    if (submissionEmailParamsDto.processCode === 'EM' && submissionEmailParamsDto.rptPeriod) {
+      yearAndQuarter = `${submissionEmailParamsDto.rptPeriod.periodAbbreviation.replace(' ', '')} `;
+    }
+
+    return `${fileTypeAbbrev} Feedback for ORIS Code ${orisCode} ${unitStackPipe} ${yearAndQuarter}(${severityLevelDescription})`;
   }
 
   private async getEmissionsSummaryReport(

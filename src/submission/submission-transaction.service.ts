@@ -30,10 +30,24 @@ export class SubmissionTransactionService {
   }
 
   async buildTransactions(set: SubmissionSet, records: SubmissionQueue[], folderPath: string): Promise<any[]> {
+    // Sort records by process code and, for 'EM' process code, by reporting period.
+    const processCodeOrder = { 'MP': 1, 'QA': 2, 'EM': 3, 'MATS': 4 };
+    records
+      .sort((a, b) => processCodeOrder[a.processCode] - processCodeOrder[b.processCode])
+      .sort((a, b) => {
+        if (a.processCode !== 'EM' || b.processCode !== 'EM') return 0;
+        if (a.reportingPeriod.calendarYear !== b.reportingPeriod.calendarYear) {
+          return a.reportingPeriod.calendarYear - b.reportingPeriod.calendarYear;
+        }
+        return a.reportingPeriod.quarter - b.reportingPeriod.quarter;
+      });
 
     let transactions: any[] = [];
     this.logger.log(`building transactions...`);
     for (const record of records) {
+      // Do not update records with critical errors.
+      if (record.severityCodeRecord.evalStatusCode === 'ERR') continue;
+
       switch (record.processCode) {
         case 'MP':
           transactions.push({
@@ -43,7 +57,6 @@ export class SubmissionTransactionService {
           break;
         case 'QA':
           if (record.testSumIdentifier) {
-            await this.removeExistingProtocolGasByTestSumId(record.testSumIdentifier)
             transactions.push({
               command: 'CALL camdecmps.copy_qa_test_summary_from_workspace_to_global($1)',
               params: [record.testSumIdentifier],
@@ -75,15 +88,7 @@ export class SubmissionTransactionService {
     return transactions;
   }
 
-  // Delete Existing Protocol Gas Record By test_sum_id; Avoid Duplicate Protocol Gas Records #6635
-  private async removeExistingProtocolGasByTestSumId(testSumIdentifier:string) {
-    await this.entityManager.query(
-      `DELETE FROM camdecmps.protocol_gas WHERE test_sum_id = $1`,
-      [testSumIdentifier],
-    );
-  }
-
- private async processMatsRecord(set: SubmissionSet, record: SubmissionQueue, folderPath: string) {
+  private async processMatsRecord(set: SubmissionSet, record: SubmissionQueue, folderPath: string) {
     const matsRecord = await this.entityManager.findOne(MatsBulkFile, {
       where: { id: record.matsBulkFileId },
     });

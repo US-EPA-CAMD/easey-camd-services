@@ -96,7 +96,7 @@ export class EmSubmissionAccessController {
     description: 'Updates an Emission Submission Access Record.',
   })
   @AuditLog({
-    label: 'Emission Submission Access - Update',
+    label: 'Emission Submission Access - Extend',
     responseBodyOutFields: '*',
   })
   async updateEmSubmissionAccess(

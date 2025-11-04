@@ -24,7 +24,7 @@ import { ApiExcludeControllerByEnv } from '../decorators/swagger-decorator';
 @ApiBearerAuth('Token')
 @ApiExcludeControllerByEnv()
 export class ReportWorkspaceController {
-  constructor(private service: DataSetService) {}
+  constructor(private service: DataSetService) { }
 
   @Get('list')
   @ApiOkResponse({
@@ -35,10 +35,13 @@ export class ReportWorkspaceController {
     description: 'Retrieves list of workspace reports available.',
   })
   @AuditLog({
-    label:'Retrieved workspace reports',
+    label: 'Retrieved workspace reports',
   })
   async getAvailableReports() {
-    return this.service.getAvailableDataSets();
+    const reportsList = await this.service.getAvailableDataSets();
+    return {
+      items: reportsList
+    };
   }
 
   @Get()
@@ -57,7 +60,7 @@ export class ReportWorkspaceController {
     explode: false,
   })
   @AuditLog({
-    label:'Retrieved workspace report',
+    label: 'Retrieved workspace report',
     requestQueryOutFields: '*',
   })
   async getReport(@Query() params: ReportParamsDTO) {
