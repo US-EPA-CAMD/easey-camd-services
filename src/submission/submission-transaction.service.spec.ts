@@ -1,3 +1,25 @@
+// Mock the fs module
+jest.mock('fs', () => ({
+  promises: {
+    access: jest.fn(),
+    readFile: jest.fn(),
+    writeFile: jest.fn(),
+  },
+  writeFileSync: jest.fn(),
+  createReadStream: jest.fn(),
+  statSync: jest.fn(),
+  readdirSync: jest.fn(),
+  existsSync: jest.fn(),
+  realpathSync: jest.fn(),
+}));
+
+jest.mock('fs/promises', () => ({
+  access: jest.fn(),
+  readFile: jest.fn(),
+  writeFile: jest.fn(),
+}));
+
+
 import { Test, TestingModule } from '@nestjs/testing';
 import { SubmissionTransactionService } from './submission-transaction.service';
 import { LoggerModule } from '@us-epa-camd/easey-common/logger';
@@ -6,15 +28,6 @@ import { EntityManager } from 'typeorm';
 import { SubmissionSet } from '../entities/submission-set.entity';
 import { SubmissionQueue } from '../entities/submission-queue.entity';
 
-// Mock the fs module
-jest.mock('fs', () => ({
-  promises: {
-    access: jest.fn(),
-    readFile: jest.fn(),
-  },
-  writeFileSync: jest.fn(),
-  createReadStream: jest.fn(),
-}));
 
 // Mock the AWS SDK S3Client and commands
 jest.mock('@aws-sdk/client-s3', () => {

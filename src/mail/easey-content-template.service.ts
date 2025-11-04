@@ -73,7 +73,7 @@ export class EaseyContentTemplateService {
           this.handlebars.registerPartial(partialName, partialContent);
           this.logger.debug(`Registered partial: ${partialName}`);
         } catch (error) {
-          this.logger.error(`Failed to register partial ${partialName} from ${config.basePath}`, error);
+          this.logger.error(`Failed to register partial ${partialName} from ${config.basePath}`, error.message);
         }
       }
     }
@@ -131,7 +131,7 @@ export class EaseyContentTemplateService {
       const template = this.handlebars.compile(templateString, { strict: true });
       return template(context);
     } catch (error) {
-      this.logger.error(`Failed to render Handlebars template ${templateLocation}`, error);
+      this.logger.error(`Failed to render Handlebars template ${templateLocation}`, error.message);
       throw error;
     }
   }
