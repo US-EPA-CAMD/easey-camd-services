@@ -409,20 +409,27 @@ export class SubmissionEmailService {
     const monLocationIds = submissionEmailParamsDto.monLocationIds
       .split(',')
       .map((item) => item.trim());
+    const unitStackPipes = submissionEmailParamsDto.unitStackPipe
+      .split(',')
+      .map((item) => item.trim());
     const promises = [];
 
+    let index = 0;
     for (const monLocationId of monLocationIds) {
-      reportParams.locationId = monLocationId;
+      let unitStackPipe = unitStackPipes[index];
+      const locationId = monLocationId;
+      const params = {...reportParams, locationId}
       const promise = this.dataSetService
-        .getDataSet(reportParams, true)
+        .getDataSet(params, true)
         .then((report) => {
           return this.submissionFeedbackRecordService.generateSummaryTableForUnitStack(
             report,
-            reportParams.locationId,
+            unitStackPipe,
           );
         });
 
       promises.push(promise);
+      index++;
     }
 
     const results = await Promise.all(promises);
