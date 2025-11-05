@@ -110,15 +110,16 @@ describe('RecipientListService', () => {
     });
 
     it('should return an empty string and log error on exception', async () => {
+      const error = new Error('API Error');
       jest.spyOn(httpService, 'post').mockImplementation(() => {
-        throw new Error('API Error');
+        throw error;
       });
 
       const result = await service.getClientToken();
       expect(result).toEqual('');
       expect(logger.error).toHaveBeenCalledWith(
         'Error occurred during the API call to auth-api token validation API',
-        expect.any(Error),
+        error.message,
       );
     });
   });
@@ -143,7 +144,7 @@ describe('RecipientListService', () => {
       jest.spyOn(service, 'getClientToken').mockResolvedValue('mockToken');
 
       const result = await service.getEmailRecipients('', '', false, '', '');
-      expect(result).toEqual('email1@example.com;email2@example.com');
+      expect(result).toEqual('email1@example.com,email2@example.com');
     });
 
     it('should return an empty string if client token is not obtained', async () => {

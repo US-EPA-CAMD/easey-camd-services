@@ -56,7 +56,6 @@ export function hasNonNoneSeverity(record: HighestSeverityRecord): boolean {
 export class SubmissionFeedbackEmailData {
   constructor(
     public toEmail: string,
-    public ccEmail: string,
     public fromEmail: string,
     public subject: string,
     public emailTemplateId: number,

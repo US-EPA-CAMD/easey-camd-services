@@ -101,15 +101,16 @@ export class SubmissionSetHelperService {
         if (originRecordCode === 'UPDATED') {
           await this.entityManager.query(
             `UPDATE camdecmpsaux.em_submission_access
-             SET em_status_cd = $1, sub_availability_cd = $2
-             WHERE mon_plan_id = $3
-               AND rpt_period_id = $4
+             SET em_status_cd = $1, sub_availability_cd = $2, submission_id = $3
+             WHERE mon_plan_id = $4
+               AND rpt_period_id = $5
                AND access_begin_date = (SELECT MAX(access_begin_date)
                                         FROM camdecmpsaux.em_submission_access
-                                        WHERE mon_plan_id = $3 AND rpt_period_id = $4);`,
+                                        WHERE mon_plan_id = $4 AND rpt_period_id = $5);`,
             [
               'RECVD',
               'UPDATED',
+              record.submissionIdentifier,
               set.monPlanIdentifier,
               record.rptPeriodIdentifier,
             ],

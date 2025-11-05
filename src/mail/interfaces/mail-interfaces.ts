@@ -10,6 +10,7 @@ export interface SendMailOptions {
   html?: string;
   attachments?: Attachment[];
   [key: string]: any; // Allow additional nodemailer options
+  bodyToEmailsList?: string | string[];
 }
 
 export interface TemplateEmailOptions extends SendMailOptions {
