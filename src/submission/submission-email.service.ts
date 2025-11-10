@@ -8,6 +8,7 @@ import { DataSetService } from '../dataset/dataset.service';
 import { SeverityCode } from '../entities/severity-code.entity';
 import { ReportingPeriod } from '../entities/reporting-period.entity';
 import {
+  isCritical1Severity,
   HighestSeverityRecord,
   SubmissionEmailParamsDto, SubmissionFeedbackEmailData,
 } from '../dto/submission-email-params.dto';
@@ -182,9 +183,13 @@ export class SubmissionEmailService {
       submissionEmailParamsDto.facId?.toString(),
     ) : '';
 
-    const toEmails = this.combineEmailAddresses(submissionEmailParamsDto.toEmail, recipientsList);
-    submissionEmailParamsDto.templateContext['toEmail'] = toEmails;
-    submissionEmailParamsDto.toEmail = toEmails;
+    const allToEmails = this.combineEmailAddresses(submissionEmailParamsDto.toEmail, recipientsList);
+    const spacedEmails = allToEmails.replace(/([,;])/g, '$1 ')
+    //For submission-confirmation
+    submissionEmailParamsDto.templateContext['allToEmails'] = spacedEmails;
+    //For submission-feedback - update this per recipient later
+    submissionEmailParamsDto.templateContext['toEmail'] = submissionEmailParamsDto.toEmail;
+    submissionEmailParamsDto.toEmail = spacedEmails;
     submissionEmailParamsDto.templateContext['fromEmail'] = submissionEmailParamsDto.fromEmail;
     const emailSubject = await this.constructEmailSubject(submissionEmailParamsDto);
     this.logger.debug(`Constructed email subject: ${emailSubject}`,);
@@ -224,18 +229,6 @@ export class SubmissionEmailService {
       submissionEmailParamsDto.templateContext['evaluationReportsContent'] = evaluationReportsContent;
     }
 
-    const templateRecord = await this.easeyContentTemplateService.getTemplateById(EMAIL_TEMPLATE_IDS.SUBMISSION_FEEDBACK);
-    const attachmentContent = await this.easeyContentTemplateService.renderHandlebarsTemplate(
-      templateRecord.templateLocation,
-      submissionEmailParamsDto.templateContext,
-    );
-
-    const feedbackAttachmentDocuments = [];
-    feedbackAttachmentDocuments.push({
-      filename: `${submissionSet.orisCode}_SUBMISSION_FEEDBACK.html`,
-      content: attachmentContent,
-    });
-
     //Finally, return the collected email data
     this.logger.log(`Completed processing building data for : ${submissionEmailParamsDto.processCode}`);
     return new SubmissionFeedbackEmailData(
@@ -244,12 +237,34 @@ export class SubmissionEmailService {
       emailSubject,
       EMAIL_TEMPLATE_IDS.SUBMISSION_CONFIRMATION,
       submissionEmailParamsDto.templateContext,
-      feedbackAttachmentDocuments,
+      [],// Empty attachments array - generate per recipient
       submissionEmailParamsDto.submissionSet,
       submissionEmailParamsDto.submissionQueueRecords,
       submissionEmailParamsDto.processCode,
     );
   }
+
+  public async generateRecipientSpecificAttachment(
+  submissionFeedbackEmailData: SubmissionFeedbackEmailData,
+  recipientEmail: string
+): Promise<any> {
+  // Create a copy of the template context to avoid modifying the original
+  const recipientSpecificContext = { ...submissionFeedbackEmailData.templateContext };
+  
+  // Update the toEmail in the context to show only this specific recipient
+  recipientSpecificContext['toEmail'] = recipientEmail;
+
+  const templateRecord = await this.easeyContentTemplateService.getTemplateById(EMAIL_TEMPLATE_IDS.SUBMISSION_FEEDBACK);
+  const attachmentContent = await this.easeyContentTemplateService.renderHandlebarsTemplate(
+    templateRecord.templateLocation,
+    recipientSpecificContext,
+  );
+
+  return {
+    filename: `${submissionFeedbackEmailData.submissionSet.orisCode}_SUBMISSION_FEEDBACK.html`,
+    content: attachmentContent,
+  };
+}
 
   private combineEmailAddresses(primaryEmail: string, additionalEmails: string): string {
     if (!additionalEmails || additionalEmails.trim() === '') {
@@ -261,7 +276,7 @@ export class SubmissionEmailService {
     }
   
   // Combine with proper comma separator
-    return `${primaryEmail},${additionalEmails}`;
+    return `${primaryEmail}, ${additionalEmails}`;
   }
 
   private async setCommonParams(
@@ -347,6 +362,7 @@ export class SubmissionEmailService {
     const severityLevelCode = submissionEmailParamsDto?.highestSeverityRecord?.severityCode?.severityCode;
 
     submissionEmailParamsDto.templateContext['severityLevelCode'] = severityLevelCode;
+    submissionEmailParamsDto.templateContext['isCritical1Error'] = isCritical1Severity(submissionEmailParamsDto?.highestSeverityRecord);
     submissionEmailParamsDto.templateContext['hasNonNoneSeverity'] = severityLevelCode !== 'NONE';
 
     const ecmpsClientConfig = await this.clientConfigService.getECMPSClientConfig();
@@ -409,20 +425,27 @@ export class SubmissionEmailService {
     const monLocationIds = submissionEmailParamsDto.monLocationIds
       .split(',')
       .map((item) => item.trim());
+    const unitStackPipes = submissionEmailParamsDto.unitStackPipe
+      .split(',')
+      .map((item) => item.trim());
     const promises = [];
 
+    let index = 0;
     for (const monLocationId of monLocationIds) {
-      reportParams.locationId = monLocationId;
+      let unitStackPipe = unitStackPipes[index];
+      const locationId = monLocationId;
+      const params = {...reportParams, locationId}
       const promise = this.dataSetService
-        .getDataSet(reportParams, true)
+        .getDataSet(params, true)
         .then((report) => {
           return this.submissionFeedbackRecordService.generateSummaryTableForUnitStack(
             report,
-            reportParams.locationId,
+            unitStackPipe,
           );
         });
 
       promises.push(promise);
+      index++;
     }
 
     const results = await Promise.all(promises);
