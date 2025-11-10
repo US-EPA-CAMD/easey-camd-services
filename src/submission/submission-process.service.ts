@@ -125,19 +125,24 @@ export class SubmissionProcessService {
 
         // Attempt to send an email. If sending an email for this particular file type fails,
         // log the error and continue attempting to send emails for the others
-        const emailList = submissionFeedbackEmailData.toEmail
-          ? submissionFeedbackEmailData.toEmail.split(/[;,]/).map(email => email.trim()).filter(Boolean)
-          : [];
+          const emailList = submissionFeedbackEmailData.toEmail
+        ? submissionFeedbackEmailData.toEmail.split(/[;,]+/).map(email => email.trim()).filter(Boolean)
+        : [];
+
         for (const toEmail of emailList) {
           try {
+            const recipientSpecificAttachment = await this.submissionEmailService.generateRecipientSpecificAttachment(
+            submissionFeedbackEmailData,
+            toEmail
+            );
+
             this.mailService.sendTemplateEmail({
               templateId: submissionFeedbackEmailData.emailTemplateId,
               to: toEmail,
               from: submissionFeedbackEmailData.fromEmail,
               subject: submissionFeedbackEmailData.subject,
               context: submissionFeedbackEmailData.templateContext,
-              attachments: submissionFeedbackEmailData.feedbackAttachmentDocuments,
-              bodyToEmailsList: emailList
+              attachments: [recipientSpecificAttachment],
             });
           } catch (e) {
             this.logger.error('Error attempting to send feedback email : ' + { processCode: submissionFeedbackEmailData.processCode }, e.stack, 'SubmissionProcessService');
