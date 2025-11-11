@@ -6,6 +6,7 @@ export class EmSubmissionAccessView extends BaseEntity {
   @Column({
     name: 'em_sub_access_id',
     transformer: new NumericColumnTransformer(),
+    type: 'numeric',
   })
   id: number;
 
@@ -17,6 +18,7 @@ export class EmSubmissionAccessView extends BaseEntity {
   @Column({
     name: 'rpt_period_id',
     transformer: new NumericColumnTransformer(),
+    type: 'numeric',
   })
   reportingPeriodId: number;
 
@@ -84,12 +86,14 @@ export class EmSubmissionAccessView extends BaseEntity {
   @Column({
     name: 'fac_id',
     transformer: new NumericColumnTransformer(),
+    type: 'numeric',
   })
   facilityId: number;
 
   @Column({
     name: 'oris_code',
     transformer: new NumericColumnTransformer(),
+    type: 'numeric',
   })
   orisCode: number;
 
@@ -104,10 +108,15 @@ export class EmSubmissionAccessView extends BaseEntity {
   @Column({
     name: 'calendar_year',
     transformer: new NumericColumnTransformer(),
+    type: 'numeric',
   })
   year: number;
 
-  @Column({ name: 'quarter', transformer: new NumericColumnTransformer() })
+  @Column({
+    name: 'quarter',
+    transformer: new NumericColumnTransformer(),
+    type: 'numeric',
+  })
   quarter: number;
 
   @Column({ name: 'report_freq_cd' })
@@ -119,6 +128,7 @@ export class EmSubmissionAccessView extends BaseEntity {
   @Column({
     name: 'submission_id',
     transformer: new NumericColumnTransformer(),
+    type: 'numeric',
   })
   lastSubmissionId: number;
 

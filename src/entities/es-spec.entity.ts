@@ -20,13 +20,18 @@ export class EsSpec extends BaseEntity {
   @Column({
     name: 'check_catalog_result_id',
     transformer: new NumericColumnTransformer(),
+    type: 'numeric',
   })
   checkCatalogResultId: number;
 
   @Column({ name: 'severity_cd' })
   severityCode: string;
 
-  @Column({ name: 'fac_id', transformer: new NumericColumnTransformer() })
+  @Column({
+    name: 'fac_id',
+    transformer: new NumericColumnTransformer(),
+    type: 'numeric',
+  })
   facilityId: number;
 
   @Column({ name: 'location_name_list' })
@@ -44,6 +49,7 @@ export class EsSpec extends BaseEntity {
   @Column({
     name: 'match_historical_ind',
     transformer: new NumericColumnTransformer(),
+    type: 'numeric',
   })
   matchHistoricalIndicator: number;
 
@@ -62,7 +68,11 @@ export class EsSpec extends BaseEntity {
   @Column({ name: 'note' })
   note: string;
 
-  @Column({ name: 'active_ind', transformer: new NumericColumnTransformer() })
+  @Column({
+    name: 'active_ind',
+    transformer: new NumericColumnTransformer(),
+    type: 'numeric',
+  })
   active: number;
 
   @Column({ name: 'userid' })

@@ -7,13 +7,18 @@ export class CheckCatalog extends BaseEntity {
   @PrimaryColumn({
     name: 'check_catalog_id',
     transformer: new NumericColumnTransformer(),
+    type: 'numeric',
   })
   checkCatalogId: number;
 
   @Column({ name: 'check_type_cd' })
   checkTypeCode: string;
 
-  @Column({ name: 'check_number', transformer: new NumericColumnTransformer() })
+  @Column({
+    name: 'check_number',
+    transformer: new NumericColumnTransformer(),
+    type: 'numeric',
+  })
   checkNumber: number;
 
   @Column({ name: 'check_name' })
