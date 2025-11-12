@@ -43,7 +43,7 @@ export class MailService {
       
       // Always add email addresses to context for template replacement
       const context = { ...options.context };
-      context.toEmail = options.bodyToEmailsList || options.to;
+      context.toEmail = options.to;
       context.fromEmail = options.from;
       
       const html = await this.easeyContentTemplateService.renderHandlebarsTemplate(
