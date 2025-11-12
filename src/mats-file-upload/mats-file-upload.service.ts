@@ -30,6 +30,7 @@ import { MailService } from '../mail/mail.service';
 import { DocumentService } from '../submission/document.service';
 import { ClientConfigService } from '../mail/client-config.service';
 import { EMAIL_TEMPLATE_IDS } from '../constants/email-template-ids';
+import { combineEmailAddresses } from '../utilities/email-helper'
 
 
 
@@ -300,15 +301,14 @@ export class MatsFileUploadService {
     //Get the recipients list from the recipient's list API
     const recipientsListApiEnabled = this.configService.get<boolean>('app.recipientsListApiEnabled');
 
-    submissionEmailParamsDto.toEmail = submission.userEmail;
-    submissionEmailParamsDto.ccEmail = recipientsListApiEnabled ? await this.recipientListService.getEmailRecipients(
+    const recipientsList = recipientsListApiEnabled ? await this.recipientListService.getEmailRecipients(
       submission.userId,
       'PDF',
       true,
       'SUBMISSIONCONFIRMATION',
       submission.facId?.toString(),
     ) : '';
-
+    const allToEmails = combineEmailAddresses(submission.userEmail, recipientsList);
     let supportEmail: string;
     try {
       const ecmpsClientConfig = await this.clientConfigService.getECMPSClientConfig();
@@ -328,15 +328,22 @@ export class MatsFileUploadService {
     submissionEmailParamsDto.templateContext['LOCATION_LIST'] = primaryLocation;
     submissionEmailParamsDto.templateContext['SUBMISSION_DATE'] = currentDate; //submission.completedTime will after email send
     submissionEmailParamsDto.templateContext['supportEmail'] = supportEmail;
+    submissionEmailParamsDto.templateContext['allToEmails'] = allToEmails.join(', ');
 
-    this.mailService.sendTemplateEmail({
-      templateId: EMAIL_TEMPLATE_IDS.MATS_SUBMISSION,
-      to: submissionEmailParamsDto.toEmail,
-      cc: submissionEmailParamsDto.ccEmail,
-      from: this.configService.get<string>('app.defaultFromEmail'),
-      subject,
-      context: submissionEmailParamsDto.templateContext,
-    });
+    for (const toEmail of allToEmails) {
+
+      try {
+        this.mailService.sendTemplateEmail({
+          templateId: EMAIL_TEMPLATE_IDS.MATS_SUBMISSION,
+          to: toEmail,
+          from: this.configService.get<string>('app.defaultFromEmail'),
+          subject,
+          context: submissionEmailParamsDto.templateContext,
+        });
+      } catch (e) {
+        this.logger.error('Error attempting to send MATS Data Submission Feedback');
+      }
+    }
   }
 
   async getMatsSubmissionWithLocation(monLocId: string) {
