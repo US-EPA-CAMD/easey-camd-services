@@ -171,7 +171,9 @@ export class EaseyContentTemplateService {
           formattedValue = context[key] ?? '';
         }
 
-        templateString = templateString.replace(regex, formattedValue);
+        // Escape HTML to prevent angle brackets from being interpreted as HTML tags
+        const escapedValue = this.handlebars.escapeExpression(formattedValue);
+        templateString = templateString.replace(regex, escapedValue);
       }
     }
 
@@ -200,7 +202,9 @@ export class EaseyContentTemplateService {
           if (Object.prototype.hasOwnProperty.call(item, key)) {
             const regex = new RegExp(`\\[\\[${key}\\]\\]`, 'g');
             const value = item[key] ?? '';
-            processedContent = processedContent.replace(regex, value);
+            // Escape HTML to prevent angle brackets from being interpreted as HTML tags
+            const escapedValue = this.handlebars.escapeExpression(value);
+            processedContent = processedContent.replace(regex, escapedValue);
           }
         }
         
