@@ -183,9 +183,10 @@ export class SubmissionEmailService {
     ) : '';
 
     const allToEmails = this.combineEmailAddresses(submissionEmailParamsDto.toEmail, recipientsList);
-    const spacedEmails = allToEmails.replace(/([,;])/g, '$1 ')
+    const spacedEmails = allToEmails.replace(/([,;])/g, '$1 '); // NOSONAR - replaceAll not available in current TS target
+    const commaSeparation = allToEmails.replace(/;/g, ',').replace(/,\s*/g, ', '); // NOSONAR - replaceAll not available in current TS target
     //For submission-confirmation
-    submissionEmailParamsDto.templateContext['allToEmails'] = spacedEmails;
+    submissionEmailParamsDto.templateContext['allToEmails'] = commaSeparation;
     //For submission-feedback - update this per recipient later
     submissionEmailParamsDto.templateContext['toEmail'] = submissionEmailParamsDto.toEmail;
     submissionEmailParamsDto.toEmail = spacedEmails;
