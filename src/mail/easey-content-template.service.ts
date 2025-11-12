@@ -173,7 +173,7 @@ export class EaseyContentTemplateService {
 
         if (context['toEmail'] || context['allToEmails']) {
           // Replace semicolon separators with comma separators for email display
-          formattedValue = formattedValue.replace(/;\s*/g, ', ');
+          formattedValue = formattedValue.replace(/;\s*/g, ', ');// NOSONAR - replaceAll not available in current TS target
         }
 
         // Escape HTML to prevent angle brackets from being interpreted as HTML tags
