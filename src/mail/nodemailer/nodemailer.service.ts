@@ -142,12 +142,20 @@ export class NodemailerService implements OnModuleInit {
     if (!to) return [];
     
     if (Array.isArray(to)) {
-      return to.flatMap(recipient => 
-        recipient ? recipient.split(',').map(email => email.trim()).filter(email => email) : []
+      return to.flatMap(recipient =>
+        recipient ? this.splitBySeparators(recipient) : []
       );
     }
-    
-    return to.split(',').map(email => email.trim()).filter(email => email);
+
+    return this.splitBySeparators(to);
+  }
+
+  private splitBySeparators(emailString: string): string[] {
+    // Split by both commas and semicolons, trim whitespace, and filter out empty strings
+    return emailString
+      .split(/[,;]/)
+      .map(email => email.trim())
+      .filter(email => email);
   }
 
   getTransporter(): nodemailer.Transporter {
