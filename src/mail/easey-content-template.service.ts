@@ -171,7 +171,14 @@ export class EaseyContentTemplateService {
           formattedValue = context[key] ?? '';
         }
 
-        templateString = templateString.replace(regex, formattedValue);
+        if (context['toEmail'] || context['allToEmails']) {
+          // Replace semicolon separators with comma separators for email display
+          formattedValue = formattedValue.replace(/;\s*/g, ', ');// NOSONAR - replaceAll not available in current TS target
+        }
+
+        // Escape HTML to prevent angle brackets from being interpreted as HTML tags
+        const escapedValue = this.handlebars.escapeExpression(formattedValue);
+        templateString = templateString.replace(regex, escapedValue);
       }
     }
 
@@ -200,7 +207,9 @@ export class EaseyContentTemplateService {
           if (Object.prototype.hasOwnProperty.call(item, key)) {
             const regex = new RegExp(`\\[\\[${key}\\]\\]`, 'g');
             const value = item[key] ?? '';
-            processedContent = processedContent.replace(regex, value);
+            // Escape HTML to prevent angle brackets from being interpreted as HTML tags
+            const escapedValue = this.handlebars.escapeExpression(value);
+            processedContent = processedContent.replace(regex, escapedValue);
           }
         }
         
