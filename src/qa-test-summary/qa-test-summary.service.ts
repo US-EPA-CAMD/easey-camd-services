@@ -1,7 +1,8 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
 import { currentDateTime } from '@us-epa-camd/easey-common/utilities/functions';
-import { EntityManager } from 'typeorm';
+import { withSlaveConnection } from '@us-epa-camd/easey-common/connection';
+import { DataSource, EntityManager } from 'typeorm';
 
 import { QaTestSummaryMaintViewDTO } from '../dto/qa-test-summary-maint-vw.dto';
 import { QaUpdateDto } from '../dto/qa-update.dto';
@@ -10,6 +11,7 @@ import { QaUpdateDto } from '../dto/qa-update.dto';
 export class QaTestSummaryService {
   constructor(
     private readonly manager: EntityManager,
+    private readonly dataSource: DataSource,
   ) {}
 
   private mapToQaTestSummaryMaintViewDTO(
@@ -50,10 +52,8 @@ export class QaTestSummaryService {
   ): Promise<QaTestSummaryMaintViewDTO[]> {
 
     try {
-      let rows = []
-
-      await this.manager.transaction(async (transactionalEntityManager) => {
-        rows = await transactionalEntityManager.query(
+      const rows = await withSlaveConnection(this.dataSource, async (manager) => {
+        return await manager.query(
           `SELECT * FROM camdecmps.get_qa_test_summary($1, $2, $3)`,
           [null, orisCode, null]);
       });

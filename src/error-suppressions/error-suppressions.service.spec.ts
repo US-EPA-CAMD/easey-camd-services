@@ -1,5 +1,10 @@
+jest.mock('@us-epa-camd/easey-common/connection', () => ({
+  withSlaveConnection: jest.fn(),
+}));
+
 import { Test } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
+import { DataSource } from 'typeorm';
 
 import { LoggerModule } from '@us-epa-camd/easey-common/logger';
 import { ErrorSuppressionsService } from './error-suppressions.service';
@@ -23,10 +28,46 @@ const mockMap = () => ({
   one: jest.fn(),
 });
 
+const mockWithSlaveConnection = require('@us-epa-camd/easey-common/connection').withSlaveConnection;
+
 describe('-- Error Suppressions Service --', () => {
   let service: ErrorSuppressionsService;
   let map: any;
   let repository: any;
+
+  beforeEach(async () => {
+    mockWithSlaveConnection.mockImplementation(async (dataSource, operation) => {
+      const mockManager = {
+        query: jest.fn().mockResolvedValue([]),
+        find: jest.fn().mockResolvedValue([]),
+        findBy: jest.fn().mockResolvedValue([]),
+        getRepository: jest.fn().mockReturnValue({
+          find: jest.fn().mockResolvedValue([]),
+          findBy: jest.fn().mockResolvedValue([]),
+          createQueryBuilder: jest.fn().mockReturnValue({
+            where: jest.fn().mockReturnThis(),
+            getMany: jest.fn().mockResolvedValue([]),
+          }),
+        }),
+      };
+      const originalConstructor = require('./error-suppressions.repository').ErrorSuppressionsRepository;
+      const MockedRepository = jest.fn().mockImplementation(() => ({
+        getErrorSuppressions: jest.fn().mockResolvedValue([]),
+        findOne: jest.fn().mockResolvedValue(null),
+        save: jest.fn().mockResolvedValue({}),
+        create: jest.fn().mockReturnValue({}),
+      }));
+
+      require('./error-suppressions.repository').ErrorSuppressionsRepository = MockedRepository;
+
+      try {
+        return await operation(mockManager);
+      } finally {
+        // Restore original constructor
+        require('./error-suppressions.repository').ErrorSuppressionsRepository = originalConstructor;
+      }
+    });
+  });
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
@@ -41,6 +82,10 @@ describe('-- Error Suppressions Service --', () => {
         {
           provide: ErrorSuppressionsMap,
           useFactory: mockMap,
+        },
+        {
+          provide: DataSource,
+          useValue: {},
         },
       ],
     }).compile();

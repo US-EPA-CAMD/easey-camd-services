@@ -1,7 +1,8 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
 import { currentDateTime } from '@us-epa-camd/easey-common/utilities/functions';
-import { EntityManager } from 'typeorm';
+import { withSlaveConnection } from '@us-epa-camd/easey-common/connection';
+import { EntityManager, DataSource } from 'typeorm';
 
 import { QaTeeMaintViewDTO } from '../dto/qa-tee-maint-vw.dto';
 import { QaUpdateDto } from '../dto/qa-update.dto';
@@ -13,6 +14,7 @@ export class QaTestExtensionExemptionService {
   constructor(
     private readonly manager: EntityManager,
     private readonly map: QaTeeMaintMap,
+    private readonly dataSource: DataSource,
   ) {}
 
   async getQaTeeViewData(
@@ -26,8 +28,10 @@ export class QaTestExtensionExemptionService {
     if (unitStack !== null && unitStack !== undefined)
       where.unitStack = unitStack;
 
-    const result = await this.manager.find(QaTeeMaintView, {
-      where,
+    const result = await withSlaveConnection(this.dataSource, async (manager) => {
+      return await manager.find(QaTeeMaintView, {
+        where,
+      });
     });
     return this.map.many(result);
   }

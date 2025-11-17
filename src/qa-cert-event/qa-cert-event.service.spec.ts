@@ -1,14 +1,41 @@
+jest.mock('@us-epa-camd/easey-common/connection', () => ({
+  withSlaveConnection: jest.fn(),
+}));
+
 import { Test, TestingModule } from '@nestjs/testing';
 import { QaCertEventService } from './qa-cert-event.service';
-import { EntityManager } from 'typeorm';
+import { EntityManager, DataSource } from 'typeorm';
 import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
 import { QaUpdateDto } from '../dto/qa-update.dto';
 import { QaCertEventMaintMap } from '../maps/qa-cert-event-maint.map';
+
+const mockWithSlaveConnection = require('@us-epa-camd/easey-common/connection').withSlaveConnection;
 
 describe('QaCertEventService', () => {
   let service: QaCertEventService;
   let entityManager: EntityManager;
   let updatePayload;
+
+  beforeEach(async () => {
+    mockWithSlaveConnection.mockImplementation(async (dataSource, operation) => {
+      const mockManager = {
+        query: jest.fn().mockResolvedValue([]),
+        find: jest.fn().mockResolvedValue([]),
+        findBy: jest.fn().mockResolvedValue([]),
+        findOne: jest.fn().mockResolvedValue(null),
+        findOneBy: jest.fn().mockResolvedValue(null),
+        getRepository: jest.fn().mockReturnValue({
+          find: jest.fn().mockResolvedValue([]),
+          findBy: jest.fn().mockResolvedValue([]),
+          createQueryBuilder: jest.fn().mockReturnValue({
+            where: jest.fn().mockReturnThis(),
+            getMany: jest.fn().mockResolvedValue([]),
+          }),
+        }),
+      };
+      return await operation(mockManager);
+    });
+  });
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -24,6 +51,10 @@ describe('QaCertEventService', () => {
           },
         },
         QaCertEventMaintMap,
+        {
+          provide: DataSource,
+          useValue: {},
+        },
       ],
     }).compile();
 

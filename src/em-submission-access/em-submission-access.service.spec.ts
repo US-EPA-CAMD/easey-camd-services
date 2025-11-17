@@ -1,3 +1,7 @@
+jest.mock('@us-epa-camd/easey-common/connection', () => ({
+  withSlaveConnection: jest.fn(),
+}));
+
 import { Test, TestingModule } from '@nestjs/testing';
 import { EmSubmissionAccessService } from './em-submission-access.service';
 import { EmSubmissionAccessViewRepository } from './em-submission-access-view.repository';
@@ -11,7 +15,7 @@ import { EmSubmissionAccessMap } from '../maps/em-submission-access.map';
 import { EmSubmissionAccessRepository } from './em-submission-access.repository';
 import { genEmSubmissionAccess } from '../../test/object-generators/em-submission-access';
 import { EmSubmissionAccess } from '../entities/em-submission-access.entity';
-import { EntityManager } from 'typeorm';
+import { EntityManager, DataSource } from 'typeorm';
 
 const mockViewRepository = () => ({
   getEmSubmissionAccess: jest.fn(),
@@ -35,12 +39,60 @@ const mockEntityManager = () => ({
   save: jest.fn(),
 });
 
+const mockWithSlaveConnection = require('@us-epa-camd/easey-common/connection').withSlaveConnection;
+
 describe('EmSubmissionAccessService', () => {
   let service: EmSubmissionAccessService;
   let viewRepository: any;
   let repository: any;
   let map: any;
   let entityManager: any;
+
+  let mockManagerQuery: jest.Mock;
+  let mockRepositoryGetEmSubmissionAccess: jest.Mock;
+
+  beforeEach(async () => {
+    // Reset mocks
+    mockManagerQuery = jest.fn();
+    mockRepositoryGetEmSubmissionAccess = jest.fn();
+
+    mockWithSlaveConnection.mockImplementation(async (dataSource, operation) => {
+      const mockManager = {
+        query: mockManagerQuery,
+        find: jest.fn().mockResolvedValue([]),
+        findBy: jest.fn().mockResolvedValue([]),
+        getRepository: jest.fn().mockReturnValue({
+          find: jest.fn().mockResolvedValue([]),
+          findBy: jest.fn().mockResolvedValue([]),
+          createQueryBuilder: jest.fn().mockReturnValue({
+            where: jest.fn().mockReturnThis(),
+            getMany: jest.fn().mockResolvedValue([]),
+          }),
+        }),
+      };
+
+      // Mock the repository constructor to avoid metadata issues
+      const originalConstructor = require('./em-submission-access-view.repository').EmSubmissionAccessViewRepository;
+      const MockedRepository = jest.fn().mockImplementation(() => ({
+        getEmSubmissionAccess: mockRepositoryGetEmSubmissionAccess,
+      }));
+
+      require('./em-submission-access-view.repository').EmSubmissionAccessViewRepository = MockedRepository;
+
+      try {
+      const result = await operation(mockManager);
+        return result;
+      } finally {
+        // Restore original constructor
+        require('./em-submission-access-view.repository').EmSubmissionAccessViewRepository = originalConstructor;
+      }
+    });
+
+    // Clear specific mocks between tests but preserve our setup
+    mockWithSlaveConnection.mockClear();
+    if (mockManagerQuery) mockManagerQuery.mockClear();
+    if (mockRepositoryGetEmSubmissionAccess) mockRepositoryGetEmSubmissionAccess.mockClear();
+  });
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -61,6 +113,10 @@ describe('EmSubmissionAccessService', () => {
         {
           provide: EntityManager,
           useFactory: mockEntityManager,
+        },
+        {
+          provide: DataSource,
+          useValue: {},
         },
       ],
     }).compile();
@@ -115,25 +171,26 @@ describe('EmSubmissionAccessService', () => {
       addDate: null,
       updateDate: null,
     }));
-  
-    // Ensure the repository call is NOT made
-    map.many.mockReturnValue([]); // Shouldn't be called
-    entityManager.query.mockResolvedValue(mockedNoWindowRecords);
-  
+
     let filters = new EmSubmissionAccessParamsDTO();
     filters.status = 'NO WINDOW';
     filters.orisCode = 12345;
     filters.year = 2024;
     filters.quarter = 1;
   
+    // Setup mock to return the no-window data right before the call
+
+    mockManagerQuery.mockResolvedValue(mockedNoWindowRecords);
+
     let result = await service.getEmSubmissionAccess(filters);
   
     expect(result).toEqual(expectedNoWindowDTOs);
     expect(viewRepository.getEmSubmissionAccess).not.toHaveBeenCalled();
-    expect(entityManager.query).toHaveBeenCalledWith(
+    expect(mockManagerQuery).toHaveBeenCalledWith(
       `SELECT * FROM camdecmpsaux.get_em_submission_access_no_window_view($1, $2, $3)`,
       [filters.orisCode, filters.year, filters.quarter]
     );
+    expect(mockRepositoryGetEmSubmissionAccess).not.toHaveBeenCalled();
   });
 
   it('should return both no-window records and view records when status is undefined', async () => {
@@ -204,8 +261,10 @@ describe('EmSubmissionAccessService', () => {
       updateDate: null,
     }));
   
+    // Setup mocks for both repository and query calls
     map.many.mockReturnValue(mockedViewRecords);
-    entityManager.query.mockResolvedValue(mockedNoWindowRecords);
+    mockRepositoryGetEmSubmissionAccess.mockResolvedValue([]);
+    mockManagerQuery.mockResolvedValue(mockedNoWindowRecords);
   
     let filters = new EmSubmissionAccessParamsDTO();
     filters.status = undefined;
@@ -216,8 +275,8 @@ describe('EmSubmissionAccessService', () => {
     let result = await service.getEmSubmissionAccess(filters);
   
     expect(result).toEqual([...mockedViewRecords, ...expectedNoWindowDTOs]);
-    expect(viewRepository.getEmSubmissionAccess).toHaveBeenCalledWith(filters);
-    expect(entityManager.query).toHaveBeenCalledWith(
+    expect(mockRepositoryGetEmSubmissionAccess).toHaveBeenCalledWith(filters);
+    expect(mockManagerQuery).toHaveBeenCalledWith(
       `SELECT * FROM camdecmpsaux.get_em_submission_access_no_window_view($1, $2, $3)`,
       [filters.orisCode, filters.year, filters.quarter]
     );
@@ -225,8 +284,10 @@ describe('EmSubmissionAccessService', () => {
 
   it('should successfully return data only from EmSubmissionAccessViewRepository when status is not NO WINDOW', async () => {
     const mockedViewRecords = genEmSubmissionAccess<EmSubmissionAccessDTO>();
+
+    // Setup mocks - only repository call should be made
     map.many.mockReturnValue(mockedViewRecords);
-    entityManager.query.mockResolvedValue([]);
+    mockRepositoryGetEmSubmissionAccess.mockResolvedValue([]);
 
     let filters = new EmSubmissionAccessParamsDTO();
     filters.status = 'APPROVED';
@@ -237,8 +298,8 @@ describe('EmSubmissionAccessService', () => {
     let result = await service.getEmSubmissionAccess(filters);
 
     expect(result).toEqual(mockedViewRecords);
-    expect(viewRepository.getEmSubmissionAccess).toHaveBeenCalledWith(filters);
-    expect(entityManager.query).not.toHaveBeenCalled();
+    expect(mockRepositoryGetEmSubmissionAccess).toHaveBeenCalledWith(filters);
+    expect(mockManagerQuery).not.toHaveBeenCalled();
   });
 
   it('calls EmSubmissionAccessRepository.createEmSubmissionAccess() and creates an emission submission access record', async () => {

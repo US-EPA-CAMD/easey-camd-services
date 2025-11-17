@@ -12,7 +12,8 @@ import { EmSubmissionAccess } from '../entities/em-submission-access.entity';
 import { EmSubmissionAccessMap } from '../maps/em-submission-access.map';
 import { EmSubmissionAccessViewRepository } from './em-submission-access-view.repository';
 import { EmSubmissionAccessRepository } from './em-submission-access.repository';
-import { EntityManager } from 'typeorm';
+import { withSlaveConnection } from '@us-epa-camd/easey-common/connection';
+import { EntityManager, DataSource } from 'typeorm';
 
 @Injectable()
 export class EmSubmissionAccessService {
@@ -21,6 +22,7 @@ export class EmSubmissionAccessService {
     private readonly repository: EmSubmissionAccessRepository,
     private readonly map: EmSubmissionAccessMap,
     private readonly entityManager: EntityManager,
+    private readonly dataSource: DataSource
   ) {}
 
   private async triggerCollateralEmDataUpdate(
@@ -46,7 +48,9 @@ export class EmSubmissionAccessService {
 
       if (params.status === 'NO WINDOW' || params.status === undefined) {
         const sql = `SELECT * FROM camdecmpsaux.get_em_submission_access_no_window_view($1, $2, $3)`;
-        const rows = await this.entityManager.query(sql, [params.orisCode, params.year, params.quarter]);
+        const rows = await withSlaveConnection(this.dataSource, async (manager) => {
+          return await manager.query(sql, [params.orisCode, params.year, params.quarter]);
+        });
         //manually mapping each row to an EmSubmissionAccessDTO object
         rowsForNoWindowStatus = rows.map(row => {
           const dto = new EmSubmissionAccessDTO();
@@ -72,7 +76,10 @@ export class EmSubmissionAccessService {
       }
 
       if (params.status !== 'NO WINDOW') {
-        query = await this.viewRepository.getEmSubmissionAccess(params);
+        query = await withSlaveConnection(this.dataSource, async (manager) => {
+          const viewRepository = new EmSubmissionAccessViewRepository(manager);
+          return await viewRepository.getEmSubmissionAccess(params);
+        });
         rowsFromEmSubmissionAccessView = await this.map.many(query);
       }
 

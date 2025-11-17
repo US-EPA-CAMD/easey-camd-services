@@ -1,9 +1,16 @@
+import { getRepositoryToken } from '@nestjs/typeorm';
+
+jest.mock('@us-epa-camd/easey-common/connection', () => ({
+  withSlaveConnection: jest.fn(),
+}));
+
 import { Test, TestingModule } from '@nestjs/testing';
-import { EntityManager } from 'typeorm';
+import { EntityManager, DataSource } from 'typeorm';
 
 import { QaTestSummaryService } from './qa-test-summary.service';
 import { QaUpdateDto } from '../dto/qa-update.dto';
 import { QaTestSummaryMaintViewDTO } from '../dto/qa-test-summary-maint-vw.dto';
+import { DataSetRepository } from '../dataset/dataset.repository';
 
 const mockQaDto = new QaTestSummaryMaintViewDTO();
 
@@ -21,10 +28,31 @@ const mockEntityManager = {
   query: jest.fn(),
 };
 
+const mockWithSlaveConnection = require('@us-epa-camd/easey-common/connection').withSlaveConnection;
+
 describe('QaTestSummaryService', () => {
   let service: QaTestSummaryService;
   let entityManager: EntityManager;
   const updatePayload = new QaUpdateDto();
+
+  beforeEach(async () => {
+    mockWithSlaveConnection.mockImplementation(async (dataSource, operation) => {
+      const mockManager = {
+        query: jest.fn().mockResolvedValue([mockDbRow]),
+        find: jest.fn().mockResolvedValue([]),
+        findBy: jest.fn().mockResolvedValue([]),
+        getRepository: jest.fn().mockReturnValue({
+          find: jest.fn().mockResolvedValue([]),
+          findBy: jest.fn().mockResolvedValue([]),
+          createQueryBuilder: jest.fn().mockReturnValue({
+            where: jest.fn().mockReturnThis(),
+            getMany: jest.fn().mockResolvedValue([]),
+          }),
+        }),
+      };
+      return await operation(mockManager);
+    });
+  });
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -33,6 +61,10 @@ describe('QaTestSummaryService', () => {
         {
           provide: EntityManager,
           useValue: mockEntityManager,
+        },
+        {
+          provide: DataSource,
+          useValue: {}
         },
       ],
     }).compile();

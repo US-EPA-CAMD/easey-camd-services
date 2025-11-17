@@ -1,6 +1,7 @@
-import { EntityManager } from 'typeorm';
+import { EntityManager, DataSource } from 'typeorm';
 import { Injectable } from '@nestjs/common';
 import { BadRequestException } from '@nestjs/common/exceptions';
+import { withSlaveConnection } from '@us-epa-camd/easey-common/connection';
 
 import { ReportDTO } from '../dto/report.dto';
 import { DataSetRepository } from './dataset.repository';
@@ -16,13 +17,16 @@ export class DataSetService {
   constructor(
     private readonly entityManager: EntityManager,
     private readonly repository: DataSetRepository,
+    private readonly dataSource: DataSource,
   ) {}
 
   async getAvailableDataSets() {
-    const results = await this.repository.find({
+    const results = await withSlaveConnection(this.dataSource, async (manager) => {
+      const repository = new DataSetRepository(manager);
+      return await repository.find({
       where: { groupCode: 'REPORT' },
+      });
     });
-
     return results.map((e) => {
       return {
         code: e.code,
@@ -58,7 +62,10 @@ export class DataSetService {
 
     const report = new ReportDTO();
     const schema = isWorkspace ? 'camdecmpswks' : 'camdecmps';
-    const dataSet = await this.repository.getDataSet(params.reportCode);
+    const dataSet = await withSlaveConnection(this.dataSource, async (manager) => {
+      const repository = new DataSetRepository(manager);
+      return await repository.getDataSet(params.reportCode);
+    });
 
     if (!dataSet) {
       throw new BadRequestException('Invalid report code');
@@ -68,7 +75,8 @@ export class DataSetService {
 
     if (params.reportCode === 'TEST_DETAIL') {
       const promises = [];
-      const tests = await this.entityManager.query(
+      const tests = await withSlaveConnection(this.dataSource, async (manager) => {
+        return await manager.query(
         `
         SELECT
           test_sum_id AS "id",
@@ -77,7 +85,7 @@ export class DataSetService {
         WHERE test_sum_id = ANY($1);`,
         [params.testId],
       );
-
+    });
       tests.forEach((test: { id: string; code: string }) => {
         promises.push(this.getTestDataSet(schema, dataSet, params, test, reportColumns, hasFacilityInfo));
       });
@@ -140,10 +148,12 @@ export class DataSetService {
       : table.template.displayName;
     detailDto.templateCode = table.template.code;
     detailDto.templateType = table.template.type;
-    detailDto.results = await this.entityManager.query(
+    detailDto.results = await withSlaveConnection(this.dataSource, async (manager) => {
+      return await manager.query(
       table.sqlStatement,
       sqlParams,
     );
+  });
 
     if (detailDto.results.length > 0) {
       let columnDto = reportColumns.find(
