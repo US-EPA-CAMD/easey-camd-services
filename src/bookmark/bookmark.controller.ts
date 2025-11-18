@@ -58,7 +58,6 @@ export class BookmarkController {
   @Post()
   @ApiSecurity('ClientId')
   @ApiBearerAuth('ClientToken')
-  @UseGuards(ClientTokenGuard)
   @ApiOkResponse({
     type: BookmarkCreatedDTO,
     description: 'Data created successfully',
