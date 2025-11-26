@@ -16,8 +16,16 @@ export const combineEmailAddresses = (primaryEmail: string, additionalEmails: st
         emails.push(...splitEmails);
     }
 
-    // Remove duplicates
-    const uniqueEmails = [...new Set(emails)];
+    // Remove duplicates (case-insensitive)
+    const seenNormalized = new Set<string>();
+    const uniqueEmails = emails.filter(email => {
+        const normalized = email.toLowerCase();
+        if (seenNormalized.has(normalized)) {
+            return false;
+        }
+        seenNormalized.add(normalized);
+        return true;
+    });
 
     return uniqueEmails;
 }
