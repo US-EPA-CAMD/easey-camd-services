@@ -165,10 +165,10 @@ export class EaseyContentTemplateService {
 
         let formattedValue;
 
-        if (typeof context[key] === 'object') {
+        if (Array.isArray(context[key])) {
           formattedValue = context[key].join(', ');
         } else {
-          formattedValue = context[key] ?? '';
+          formattedValue = (context[key] ?? '').toString();
         }
 
         if (context['toEmail'] || context['allToEmails']) {
