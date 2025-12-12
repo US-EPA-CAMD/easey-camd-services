@@ -1,11 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Logger } from '@us-epa-camd/easey-common/logger';
+import { extname } from 'node:path';
+
 import { NodemailerService } from './nodemailer/nodemailer.service';
 import { EaseyContentTemplateService } from './easey-content-template.service';
 import { EmailToSendService } from './email-to-send.service';
 import { ClientConfigService } from './client-config.service';
-import { TemplateEmailOptions, DatabaseEmailOptions, SendMailOptions } from './interfaces/mail-interfaces';
+import { TemplateEmailOptions, SendMailOptions } from './interfaces/mail-interfaces';
 import { CreateMailDto } from '../dto/create-mail.dto';
 
 @Injectable()
@@ -146,11 +148,22 @@ export class MailService {
       context.toEmail = emailRecord.toEmail;
       context.fromEmail = emailRecord.fromEmail;
       
-      // Use original custom template processing (not Handlebars)
-      const html = await this.easeyContentTemplateService.renderCustomTemplate(
-        template.templateLocation,
-        context
-      );
+      const html = await (() => {
+        const ext = extname(template.templateLocation).toLowerCase();
+        if (ext === '.hbs') {
+          // Use Handlebars template processing
+          return this.easeyContentTemplateService.renderHandlebarsTemplate(
+            template.templateLocation,
+            context,
+          );
+        } else {
+          // Use original custom template processing
+          return this.easeyContentTemplateService.renderCustomTemplate(
+            template.templateLocation,
+            context
+          );
+        }
+      })();
 
       // Send email using MailService with synchronous retry
       const result = await this.sendEmailWithSyncRetry({

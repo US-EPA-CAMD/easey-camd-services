@@ -33,7 +33,11 @@ export class MatsDataSubmission extends BaseEntity {
   @Column({ name: 'original_sub_id', nullable: true })
   originalSubId: number;
 
-  @Column({ name: 'fac_id', type: 'numeric', transformer: new NumericColumnTransformer() })
+  @Column({
+    name: 'fac_id',
+    type: 'numeric',
+    transformer: new NumericColumnTransformer(),
+  })
   facId: number;
 
   @Column({ name: 'mon_plan_id' })
@@ -69,3 +73,4 @@ export class MatsDataSubmission extends BaseEntity {
   @Column({ name: 'activity_id', nullable: true })
   activityId: string;
 }
+

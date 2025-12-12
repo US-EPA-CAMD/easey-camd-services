@@ -20,7 +20,7 @@ export class DataSetRepository extends Repository<DataSet> {
       .getOne();
   }
 
-  async query(query: string, params: any[]): Promise<any[]> {
-    return this.query(query, params);
+  async query<T = any>(query: string, parameters?: any[]): Promise<T> {
+    return super.query(query, parameters);
   }
 }

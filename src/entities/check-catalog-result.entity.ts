@@ -16,12 +16,14 @@ export class CheckCatalogResult extends BaseEntity {
   @PrimaryColumn({
     name: 'check_catalog_result_id',
     transformer: new NumericColumnTransformer(),
+    type: 'numeric',
   })
   checkCatalogResultId: number;
 
   @Column({
     name: 'check_catalog_id',
     transformer: new NumericColumnTransformer(),
+    type: 'numeric',
   })
   checkCatalogId: number;
 
@@ -34,12 +36,14 @@ export class CheckCatalogResult extends BaseEntity {
   @Column({
     name: 'response_catalog_id',
     transformer: new NumericColumnTransformer(),
+    type: 'numeric',
   })
   responseCatalogId: number;
 
   @Column({
     name: 'es_allowed_ind',
     transformer: new NumericColumnTransformer(),
+    type: 'numeric',
   })
   esAllowedInd: number;
 
