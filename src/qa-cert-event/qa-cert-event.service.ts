@@ -1,8 +1,7 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
 import { currentDateTime } from '@us-epa-camd/easey-common/utilities/functions';
-import { withSlaveConnection } from '@us-epa-camd/easey-common/connection';
-import { DataSource, EntityManager } from 'typeorm';
+import { EntityManager } from 'typeorm';
 
 import { QaCertEventMaintViewDTO } from '../dto/qa-cert-event-maint-vw.dto';
 import { QaUpdateDto } from '../dto/qa-update.dto';
@@ -14,7 +13,6 @@ export class QaCertEventService {
   constructor(
     private readonly manager: EntityManager,
     private readonly map: QaCertEventMaintMap,
-    private readonly dataSource: DataSource,
   ) {}
 
   async getQaCertEventViewData(
@@ -28,10 +26,8 @@ export class QaCertEventService {
     if (unitStack !== null && unitStack !== undefined)
       where.unitStack = unitStack;
 
-    const result = await withSlaveConnection(this.dataSource, async (manager) => {
-      return await manager.find(QaCertEventMaintView, {
+    const result = await this.manager.find(QaCertEventMaintView, {
         where,
-      });
     });
     return this.map.many(result);
   }

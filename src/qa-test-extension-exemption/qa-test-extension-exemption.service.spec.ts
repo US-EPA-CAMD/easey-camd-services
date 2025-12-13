@@ -1,15 +1,9 @@
-jest.mock('@us-epa-camd/easey-common/connection', () => ({
-  withSlaveConnection: jest.fn(),
-}));
-
 import { Test, TestingModule } from '@nestjs/testing';
 import { QaTestExtensionExemptionService } from './qa-test-extension-exemption.service';
-import { EntityManager, DataSource } from 'typeorm';
+import { EntityManager } from 'typeorm';
 import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
 import { QaUpdateDto } from '../dto/qa-update.dto';
 import { QaTeeMaintMap } from '../maps/qa-tee-maint.map';
-
-const mockWithSlaveConnection = require('@us-epa-camd/easey-common/connection').withSlaveConnection;
 
 describe('QaTestExtensionExemptionService', () => {
   let service: QaTestExtensionExemptionService;
@@ -17,36 +11,11 @@ describe('QaTestExtensionExemptionService', () => {
   let updatePayload;
 
   beforeEach(async () => {
-    mockWithSlaveConnection.mockImplementation(async (dataSource, operation) => {
-      const mockManager = {
-        query: jest.fn().mockResolvedValue([]),
-        find: jest.fn().mockResolvedValue([]),
-        findBy: jest.fn().mockResolvedValue([]),
-        findOne: jest.fn().mockResolvedValue(null),
-        findOneBy: jest.fn().mockResolvedValue(null),
-        getRepository: jest.fn().mockReturnValue({
-          find: jest.fn().mockResolvedValue([]),
-          findBy: jest.fn().mockResolvedValue([]),
-          createQueryBuilder: jest.fn().mockReturnValue({
-            where: jest.fn().mockReturnThis(),
-            getMany: jest.fn().mockResolvedValue([]),
-          }),
-        }),
-      };
-      return await operation(mockManager);
-    });
-  });
-
-  beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         QaTestExtensionExemptionService,
         EntityManager,
         QaTeeMaintMap,
-        {
-          provide: DataSource,
-          useValue: {},
-        }
       ],
     }).compile();
 

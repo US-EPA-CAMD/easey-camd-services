@@ -538,12 +538,9 @@ export class EvaluationService {
 
     const { orisCodes } = params;
 
-    return withSlaveConnection(this.dataSource, async (manager) => {
-      const evaluationQueuePositionRepo = manager.getRepository(EvaluationQueuePosition);
-      return evaluationQueuePositionRepo
+    return this.evaluationQueuePositionRepo
         .createQueryBuilder('evs')
         .where('evs.oris_code = ANY(:orisCodes)', { orisCodes })
         .getMany();
-    });
   }
 }

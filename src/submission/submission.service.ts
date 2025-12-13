@@ -774,12 +774,9 @@ export class SubmissionService {
 
     const { orisCodes } = params;
 
-    return await withSlaveConnection(this.dataSource, async (manager) => {
-      const repository = manager.getRepository(SubmissionQueuePosition);
-      return await repository
+    return await this.submissionQueuePositionRepo
         .createQueryBuilder('ss')
         .where('ss.oris_code = ANY(:orisCodes)', { orisCodes })
         .getMany();
-    });
   }
 }
