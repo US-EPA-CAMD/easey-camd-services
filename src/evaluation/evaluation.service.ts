@@ -1,4 +1,4 @@
-import { EntityManager, In, Repository } from 'typeorm';
+import { EntityManager, DataSource, In, Repository } from 'typeorm';
 import {
   Injectable,
   HttpException,
@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Logger } from '@us-epa-camd/easey-common/logger';
+import { withSlaveConnection } from '@us-epa-camd/easey-common/connection';
 import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
 
 import { EvaluationDTO, EvaluationItem } from '../dto/evaluation.dto';
@@ -40,6 +41,7 @@ export class EvaluationService {
 
     @InjectRepository(EvaluationQueuePosition)
     private readonly evaluationQueuePositionRepo: Repository<EvaluationQueuePosition>,
+    private readonly dataSource: DataSource,
   ) { }
 
   private async validateEvaluationInput(evaluationItem: EvaluationItem, entityManager: EntityManager) {
@@ -537,8 +539,8 @@ export class EvaluationService {
     const { orisCodes } = params;
 
     return this.evaluationQueuePositionRepo
-      .createQueryBuilder('evs')
-      .where('evs.oris_code = ANY(:orisCodes)', { orisCodes })
-      .getMany();
+        .createQueryBuilder('evs')
+        .where('evs.oris_code = ANY(:orisCodes)', { orisCodes })
+        .getMany();
   }
 }

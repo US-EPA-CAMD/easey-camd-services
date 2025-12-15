@@ -27,7 +27,7 @@ export class QaTestExtensionExemptionService {
       where.unitStack = unitStack;
 
     const result = await this.manager.find(QaTeeMaintView, {
-      where,
+        where,
     });
     return this.map.many(result);
   }

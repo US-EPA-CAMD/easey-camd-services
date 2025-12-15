@@ -1,6 +1,7 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
 import { currentDateTime } from '@us-epa-camd/easey-common/utilities/functions';
+
 import { EntityManager } from 'typeorm';
 
 import { QaTestSummaryMaintViewDTO } from '../dto/qa-test-summary-maint-vw.dto';
@@ -50,13 +51,9 @@ export class QaTestSummaryService {
   ): Promise<QaTestSummaryMaintViewDTO[]> {
 
     try {
-      let rows = []
-
-      await this.manager.transaction(async (transactionalEntityManager) => {
-        rows = await transactionalEntityManager.query(
+      const rows = await this.manager.query(
           `SELECT * FROM camdecmps.get_qa_test_summary($1, $2, $3)`,
           [null, orisCode, null]);
-      });
 
       if (rows === null || rows.length === 0) {
         throw new EaseyException(

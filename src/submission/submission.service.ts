@@ -1,7 +1,8 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
 import { Logger } from '@us-epa-camd/easey-common/logger';
-import { EntityManager, In, MoreThanOrEqual, Not, Repository } from 'typeorm';
+import { EntityManager, In, MoreThanOrEqual, Not, Repository, DataSource } from 'typeorm';
+import { withSlaveConnection } from '@us-epa-camd/easey-common/connection';
 import { v4 as uuidv4 } from 'uuid';
 import { InjectRepository } from '@nestjs/typeorm';
 
@@ -41,6 +42,7 @@ export class SubmissionService {
     private readonly emissionsLastUpdatedMap: EmissionsLastUpdatedMap,
     private readonly errorHandlerService: ErrorHandlerService,
     private readonly submissionSetHelper: SubmissionSetHelperService,
+    private readonly dataSource: DataSource,
 
     @InjectRepository(SubmissionQueuePosition)
     private readonly submissionQueuePositionRepo: Repository<SubmissionQueuePosition>,
@@ -741,20 +743,25 @@ export class SubmissionService {
   ): Promise<SubmissionsLastUpdatedResponseDTO> {
     const dto = new SubmissionsLastUpdatedResponseDTO();
 
-    const clock: Date = (await this.entityManager.query('SELECT now();'))[0]
-      .now;
+    const clock: Date = (await withSlaveConnection(this.dataSource, async (manager) => {
+      return await manager.query('SELECT now();');
+    }))[0].now;
 
     dto.submissionLogs = await this.combinedSubmissionMap.many(
-      await this.entityManager.findBy(CombinedSubmissions, {
-        submissionEndStateStageTime: MoreThanOrEqual(new Date(queryTime)),
-        statusCode: 'COMPLETE',
-        processCode: 'EM',
+      await withSlaveConnection(this.dataSource, async (manager) => {
+        return await manager.findBy(CombinedSubmissions, {
+          submissionEndStateStageTime: MoreThanOrEqual(new Date(queryTime)),
+          statusCode: 'COMPLETE',
+          processCode: 'EM',
+        });
       }),
     );
 
     dto.emissionReports = await this.emissionsLastUpdatedMap.many(
-      await this.entityManager.findBy(EmissionEvaluationGlobal, {
-        lastUpdated: MoreThanOrEqual(new Date(queryTime).toISOString()),
+      await withSlaveConnection(this.dataSource, async (manager) => {
+        return await manager.findBy(EmissionEvaluationGlobal, {
+          lastUpdated: MoreThanOrEqual(new Date(queryTime).toISOString()),
+        });
       }),
     );
 
@@ -767,9 +774,9 @@ export class SubmissionService {
 
     const { orisCodes } = params;
 
-    return this.submissionQueuePositionRepo
-      .createQueryBuilder('ss')
-      .where('ss.oris_code = ANY(:orisCodes)', { orisCodes })
-      .getMany();
+    return await this.submissionQueuePositionRepo
+        .createQueryBuilder('ss')
+        .where('ss.oris_code = ANY(:orisCodes)', { orisCodes })
+        .getMany();
   }
 }

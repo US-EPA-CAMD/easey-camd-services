@@ -1,6 +1,10 @@
+jest.mock('@us-epa-camd/easey-common/connection', () => ({
+  withSlaveConnection: jest.fn(),
+}));
+
 import { Template } from './../entities/template.entity';
 import { Test } from '@nestjs/testing';
-import { EntityManager } from 'typeorm';
+import { EntityManager, DataSource } from 'typeorm';
 
 import { DataSetRepository } from './dataset.repository';
 import { DataSetService } from './dataset.service';
@@ -40,9 +44,30 @@ dataTable.parameters.push(dataParam);
 dataset.tables = [];
 dataset.tables.push(dataTable);
 
+const mockWithSlaveConnection = require('@us-epa-camd/easey-common/connection').withSlaveConnection;
+
 describe('DataSetService', () => {
   let repository: any;
   let service: DataSetService;
+
+  beforeEach(async () => {
+    mockWithSlaveConnection.mockImplementation(async (dataSource, operation) => {
+      const mockManager = {
+        query: jest.fn().mockResolvedValue([]),
+        find: jest.fn().mockResolvedValue([]),
+        findBy: jest.fn().mockResolvedValue([]),
+        getRepository: jest.fn().mockReturnValue({
+          find: jest.fn().mockResolvedValue([]),
+          findBy: jest.fn().mockResolvedValue([]),
+          createQueryBuilder: jest.fn().mockReturnValue({
+            where: jest.fn().mockReturnThis(),
+            getMany: jest.fn().mockResolvedValue([]),
+          }),
+        }),
+      };
+      return await operation(mockManager);
+    });
+  });
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
@@ -52,6 +77,10 @@ describe('DataSetService', () => {
         {
           provide: DataSetRepository,
           useFactory: mockRepository,
+        },
+        {
+          provide: DataSource,
+          useValue: {}
         },
       ],
     }).compile();
