@@ -9,7 +9,6 @@ export class SubmissionReportService  {
   constructor(
     private readonly map: SubmissionListMap,
     private readonly viewRepository: SubmissionListViewRepository,
-    
   ) {}
 
   async getSubmissionReport(
@@ -19,7 +18,7 @@ export class SubmissionReportService  {
     try{
     let rowsSubmissionReport = []
 
-    query = await this.viewRepository.getSubmissionReportList(params)
+    query = await this.viewRepository.getSubmissionReportList(params);
     rowsSubmissionReport = await this.map.many(query);
 
     return [...rowsSubmissionReport]

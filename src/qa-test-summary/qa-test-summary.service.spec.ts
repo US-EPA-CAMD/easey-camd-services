@@ -4,6 +4,7 @@ import { EntityManager } from 'typeorm';
 import { QaTestSummaryService } from './qa-test-summary.service';
 import { QaUpdateDto } from '../dto/qa-update.dto';
 import { QaTestSummaryMaintViewDTO } from '../dto/qa-test-summary-maint-vw.dto';
+import { DataSetRepository } from '../dataset/dataset.repository';
 
 const mockQaDto = new QaTestSummaryMaintViewDTO();
 

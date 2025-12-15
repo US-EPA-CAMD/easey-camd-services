@@ -1,6 +1,10 @@
+jest.mock('@us-epa-camd/easey-common/connection', () => ({
+  withSlaveConnection: jest.fn(),
+}));
+
 import { Test } from '@nestjs/testing';
 import { LoggerModule } from '@us-epa-camd/easey-common/logger';
-import { EntityManager } from 'typeorm';
+import { EntityManager, DataSource } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
 
 import { EvaluationDTO, EvaluationItem } from '../dto/evaluation.dto';
@@ -30,6 +34,8 @@ payloadDto.userId = 'user123';
 payloadDto.userEmail = 'user@example.com';
 payloadDto.items = [dtoItem, dtoItem]; // Two items to test multiple iterations
 
+const mockWithSlaveConnection = require('@us-epa-camd/easey-common/connection').withSlaveConnection;
+
 describe('-- Evaluation Service --', () => {
   let service: EvaluationService;
   let mockedEntityManager: any;
@@ -39,6 +45,39 @@ describe('-- Evaluation Service --', () => {
   let mockSave: jest.Mock;
   let evaluationSetHelper: EvaluationSetHelperService;
   let errorHandlerService: EvaluationErrorHandlerService;
+
+  beforeAll(async () => {
+    mockWithSlaveConnection.mockImplementation(async (dataSource, operation) => {
+      const mockManager = {
+        query: jest.fn().mockResolvedValue([]),
+        find: jest.fn().mockResolvedValue([]),
+        findBy: jest.fn().mockResolvedValue([]),
+        findOne: jest.fn().mockResolvedValue(null),
+        findOneBy: jest.fn().mockResolvedValue(null),
+        save: jest.fn().mockResolvedValue({}),
+        createQueryBuilder: jest.fn().mockReturnValue({
+          where: jest.fn().mockReturnThis(),
+          andWhere: jest.fn().mockReturnThis(),
+          innerJoin: jest.fn().mockReturnThis(),
+          orderBy: jest.fn().mockReturnThis(),
+          getOne: jest.fn().mockResolvedValue(null),
+          getMany: jest.fn().mockResolvedValue([]),
+        }),
+        getRepository: jest.fn().mockReturnValue({
+          find: jest.fn().mockResolvedValue([]),
+          findBy: jest.fn().mockResolvedValue([]),
+          findOne: jest.fn().mockResolvedValue(null),
+          findOneBy: jest.fn().mockResolvedValue(null),
+          createQueryBuilder: jest.fn().mockReturnValue({
+            where: jest.fn().mockReturnThis(),
+            orderBy: jest.fn().mockReturnThis(),
+            getMany: jest.fn().mockResolvedValue([]),
+          }),
+        }),
+      };
+      return await operation(mockManager);
+    });
+  });
 
   beforeAll(async () => {
     mockQuery = jest.fn();
@@ -97,6 +136,10 @@ describe('-- Evaluation Service --', () => {
           provide: EvaluationErrorHandlerService,
           useValue: mockedEvaluationErrorHandlerService,
         },
+        {
+          provide: DataSource,
+          useValue: {},
+        }
       ],
     }).compile();
 
