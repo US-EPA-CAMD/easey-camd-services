@@ -48,6 +48,7 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
             password: this.configService.get<string>('database.pwd'),
             database: this.configService.get<string>('database.name'),
             ssl: this.tlsOptions,
+            applicationName: this.configService.get<string>('app.name'),
           },
           slaves: [
             {
@@ -57,6 +58,7 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
               password: this.configService.get<string>('database.pwd'),
               database: this.configService.get<string>('database.name'),
               ssl: this.tlsOptions,
+              applicationName: this.configService.get<string>('app.name'),
             },
           ],
         },
