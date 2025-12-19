@@ -87,6 +87,9 @@ export default registerAs('app', () => ({
     'EASEY_CAMD_SERVICES_ENABLE_ROLE_GUARD_CHECKOUT',
     true,
   ),
+  enableReplicaDbAccess: getConfigValueBoolean(
+    'EASEY_CAMD_SERVICES_ENABLE_REPLICA_DB_ACCESS',
+  ),
   ecmpsHost: getConfigValue('EASEY_CAMD_SERVICES_ECMPS_HOST'),
   version: getConfigValue('EASEY_CAMD_SERVICES_VERSION', 'v0.0.0'),
   published: getConfigValue('EASEY_CAMD_SERVICES_PUBLISHED', 'local'),
