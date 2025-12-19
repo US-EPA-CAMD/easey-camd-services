@@ -32,10 +32,12 @@
     "xml2js": "^0.5.0",
     "wrap-ansi": "^7.0.0",
     "class-validator": "0.14.3",
-    "preview-email/nodemailer": "^7.0.0"
+    "mailparser": "3.9.1",
+    "nodemailer": "7.0.11",
+    "preview-email/nodemailer": "7.0.11"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.954.0",
+    "@aws-sdk/client-s3": "^3.955.0",
     "@css-inline/css-inline": "^0.18.0",
     "@nestjs/axios": "4.0.1",
     "@nestjs/common": "^11.1.9",
@@ -94,7 +96,7 @@
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.9.3",
-    "webpack": "^5.104.0"
+    "webpack": "^5.104.1"
   },
   "jest": {
     "moduleFileExtensions": [
