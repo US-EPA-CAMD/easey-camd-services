@@ -33,7 +33,7 @@
     "wrap-ansi": "^7.0.0",
     "class-validator": "0.14.3",
     "mailparser": "3.9.1",
-    "nodemailer": "7.0.11",
+    "nodemailer": "7.0.12",
     "preview-email/nodemailer": "7.0.11"
   },
   "dependencies": {
@@ -59,7 +59,7 @@
     "jsdom": "26.1.0",
     "liquidjs": "^10.24.0",
     "moment": "^2.30.1",
-    "nodemailer": "^7.0.11",
+    "nodemailer": "^7.0.12",
     "pg": "^8.16.3",
     "preview-email": "^3.0.19",
     "reflect-metadata": "^0.2.2",
