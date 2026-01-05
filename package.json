@@ -71,7 +71,7 @@
   },
   "devDependencies": {
     "@faker-js/faker": "^7.6.0",
-    "@golevelup/ts-jest": "^0.7.0",
+    "@golevelup/ts-jest": "^1.1.1",
     "@nestjs/cli": "^11.0.14",
     "@nestjs/schematics": "^11.0.9",
     "@nestjs/testing": "^11.1.11",
