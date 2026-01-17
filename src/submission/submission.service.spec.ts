@@ -1,5 +1,11 @@
+import { SubmissionEmailService } from './submission-email.service';
+
+jest.mock('@us-epa-camd/easey-common/connection', () => ({
+  withSlaveConnection: jest.fn(),
+}));
+
 import { Test } from '@nestjs/testing';
-import { EntityManager } from 'typeorm';
+import { EntityManager, DataSource } from 'typeorm';
 import { LoggerModule } from '@us-epa-camd/easey-common/logger';
 import { getRepositoryToken } from '@nestjs/typeorm';
 
@@ -41,10 +47,43 @@ payloadDto.userId = 'testUser';
 payloadDto.userEmail = 'test@example.com';
 payloadDto.activityId = 'activity123';
 
+const mockWithSlaveConnection = require('@us-epa-camd/easey-common/connection').withSlaveConnection;
+
 describe('-- Submission Service --', () => {
   let service: SubmissionService;
   let entityManagerMock: any;
   let errorHandlerServiceMock: any;
+
+  beforeEach(async () => {
+    mockWithSlaveConnection.mockImplementation(async (dataSource, operation) => {
+      const mockManager = {
+        query: jest.fn().mockResolvedValue([]),
+        find: jest.fn().mockResolvedValue([]),
+        findBy: jest.fn().mockResolvedValue([]),
+        findOne: jest.fn().mockResolvedValue(null),
+        findOneBy: jest.fn().mockResolvedValue(null),
+        save: jest.fn().mockResolvedValue({}),
+        createQueryBuilder: jest.fn().mockReturnValue({
+          where: jest.fn().mockReturnThis(),
+          andWhere: jest.fn().mockReturnThis(),
+          innerJoin: jest.fn().mockReturnThis(),
+          getOne: jest.fn().mockResolvedValue(null),
+          getMany: jest.fn().mockResolvedValue([]),
+        }),
+        getRepository: jest.fn().mockReturnValue({
+          find: jest.fn().mockResolvedValue([]),
+          findBy: jest.fn().mockResolvedValue([]),
+          findOne: jest.fn().mockResolvedValue(null),
+          findOneBy: jest.fn().mockResolvedValue(null),
+          createQueryBuilder: jest.fn().mockReturnValue({
+            where: jest.fn().mockReturnThis(),
+            getMany: jest.fn().mockResolvedValue([]),
+          }),
+        }),
+      };
+      return await operation(mockManager);
+    });
+  });
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -157,6 +196,10 @@ describe('-- Submission Service --', () => {
         },
         CombinedSubmissionsMap,
         EmissionsLastUpdatedMap,
+        {
+          provide: DataSource,
+          useValue: {},
+        }
       ],
     }).compile();
 

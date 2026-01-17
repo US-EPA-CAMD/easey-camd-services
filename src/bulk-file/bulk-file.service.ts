@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Logger } from '@us-epa-camd/easey-common/logger';
+import { DataSource } from 'typeorm';
+import { withSlaveConnection } from '@us-epa-camd/easey-common/connection';
 
 import { BulkFileDTO } from '../dto/bulk_file.dto';
 import { BulkFileInputDTO } from '../dto/bulk_file_input.dto';
@@ -13,10 +15,15 @@ export class BulkFileService {
     private readonly repository: BulkFileMetadataRepository,
     private readonly map: BulkFileMap,
     private readonly logger: Logger,
+    private readonly dataSource: DataSource,
   ) {}
 
   async getBulkDataFiles(): Promise<BulkFileDTO[]> {
-    return this.map.many(await this.repository.find());
+    const results = await withSlaveConnection(this.dataSource, async (manager) => {
+      const repository = new BulkFileMetadataRepository(manager);
+      return await repository.find();
+    });
+    return this.map.many(results);
   }
 
   async addBulkDataFile(bulkFileDTO: BulkFileInputDTO): Promise<BulkFileDTO> {

@@ -1,6 +1,11 @@
+jest.mock('@us-epa-camd/easey-common/connection', () => ({
+  withSlaveConnection: jest.fn(),
+}));
+
 import { HttpModule } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
+import { DataSource } from 'typeorm';
 import { LoggerModule } from '@us-epa-camd/easey-common/logger';
 import { BulkFileDTO } from '../dto/bulk_file.dto';
 import { BulkFileInputDTO } from '../dto/bulk_file_input.dto';
@@ -22,9 +27,46 @@ const mockMap = () => ({
   one: jest.fn().mockResolvedValue(dto),
 });
 
+const mockWithSlaveConnection = require('@us-epa-camd/easey-common/connection').withSlaveConnection;
+
 describe('-- Bulk File Service --', () => {
   let bulkFileService: BulkFileService;
   let bulkFileRepo: BulkFileMetadataRepository;
+
+  beforeAll(async () => {
+    mockWithSlaveConnection.mockImplementation(async (dataSource, operation) => {
+      const mockManager = {
+        query: jest.fn().mockResolvedValue([]),
+        find: jest.fn().mockResolvedValue([]),
+        findBy: jest.fn().mockResolvedValue([]),
+        getRepository: jest.fn().mockReturnValue({
+          find: jest.fn().mockResolvedValue([]),
+          findBy: jest.fn().mockResolvedValue([]),
+          createQueryBuilder: jest.fn().mockReturnValue({
+            where: jest.fn().mockReturnThis(),
+            getMany: jest.fn().mockResolvedValue([]),
+          }),
+        }),
+      };
+
+      // Create a mock BulkFileMetadataRepository instance
+      const MockedRepository = jest.fn().mockImplementation(() => ({
+        find: jest.fn().mockResolvedValue([]),
+        findBy: jest.fn().mockResolvedValue([]),
+      }));
+
+      // Temporarily replace the constructor in the service
+      const originalConstructor = require('./bulk-file.repository').BulkFileMetadataRepository;
+      require('./bulk-file.repository').BulkFileMetadataRepository = MockedRepository;
+
+      try {
+        return await operation(mockManager);
+      } finally {
+        // Restore original constructor
+        require('./bulk-file.repository').BulkFileMetadataRepository = originalConstructor;
+      }
+    });
+  });
 
   beforeAll(async () => {
     const module = await Test.createTestingModule({
@@ -34,6 +76,7 @@ describe('-- Bulk File Service --', () => {
         BulkFileService,
         { provide: BulkFileMap, useFactory: mockMap },
         { provide: BulkFileMetadataRepository, useFactory: mockRepository },
+        { provide: DataSource, useValue:{} },
       ],
     }).compile();
 

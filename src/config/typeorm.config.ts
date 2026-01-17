@@ -32,10 +32,59 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
       ? false
       : rawLogging.split(',').map(level => level.trim()) as LoggerOptions;
 
+    const replicaHost = this.configService.get<string>('database.replicaHost');
+    const host = this.configService.get<string>('database.host');
+
+    const replicaAccessEnabled = this.configService.get<boolean>('app.enableReplicaDbAccess');
+
+    // Only use replication when replica host differs from master host
+    if (replicaAccessEnabled && replicaHost && replicaHost !== host) {
+      return {
+        type: 'postgres',
+        replication: {
+          defaultMode: 'master',
+          master: {
+            host: host,
+            port: this.configService.get<number>('database.port'),
+            username: this.configService.get<string>('database.user'),
+            password: this.configService.get<string>('database.pwd'),
+            database: this.configService.get<string>('database.name'),
+            ssl: this.tlsOptions,
+            applicationName: this.configService.get<string>('app.name'),
+          },
+          slaves: [
+            {
+              host: replicaHost,
+              port: this.configService.get<number>('database.port'),
+              username: this.configService.get<string>('database.user'),
+              password: this.configService.get<string>('database.pwd'),
+              database: this.configService.get<string>('database.name'),
+              ssl: this.tlsOptions,
+              applicationName: this.configService.get<string>('app.name'),
+            },
+          ],
+        },
+        entities: [__dirname + '/../**/*.entity.{js,ts}'],
+        synchronize: false,
+        // Database specific (Postgres) settings.
+        extra: {
+          max: this.configService.get<number>('app.maxConnectionPool'),
+          idleTimeoutMillis: this.configService.get<number>('app.idleTimeout'),
+          connectionTimeoutMillis: this.configService.get<number>('app.connectionTimeout'),
+          statement_timeout: this.configService.get<number>('app.statementTimeout'),
+          idle_in_transaction_session_timeout: this.configService.get<number>('app.idleInTransactionSessionTimeout'),
+          maxUses: this.configService.get<number>('app.maxUsesBeforeRecreatingConnection'),
+        },
+        logging: sqlLogging,
+        maxQueryExecutionTime: this.configService.get<number>('app.maxQueryExecutionTime'),
+      };
+    }
+
+    // Fallback to standard configuration when no replica or replica equals master
     return {
       type: 'postgres',
       applicationName: this.configService.get<string>('app.name'),
-      host: this.configService.get<string>('database.host'),
+      host: host,
       port: this.configService.get<number>('database.port'),
       username: this.configService.get<string>('database.user'),
       password: this.configService.get<string>('database.pwd'),

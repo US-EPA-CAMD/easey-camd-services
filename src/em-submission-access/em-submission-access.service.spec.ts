@@ -41,8 +41,13 @@ describe('EmSubmissionAccessService', () => {
   let repository: any;
   let map: any;
   let entityManager: any;
+  let mockManagerQuery: jest.Mock;
+  let mockRepositoryGetEmSubmissionAccess: jest.Mock;
 
   beforeEach(async () => {
+    // Initialize mocks
+    mockManagerQuery = jest.fn();
+    mockRepositoryGetEmSubmissionAccess = jest.fn();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         EmSubmissionAccessService,
@@ -60,7 +65,11 @@ describe('EmSubmissionAccessService', () => {
         },
         {
           provide: EntityManager,
-          useFactory: mockEntityManager,
+          useValue: {
+            query: mockManagerQuery,
+            transaction: jest.fn(),
+            save: jest.fn(),
+          },
         },
       ],
     }).compile();
@@ -70,6 +79,9 @@ describe('EmSubmissionAccessService', () => {
     repository = module.get(EmSubmissionAccessRepository);
     map = module.get(EmSubmissionAccessMap);
     entityManager = module.get(EntityManager);
+
+    // Connect the mock repository method
+    viewRepository.getEmSubmissionAccess = mockRepositoryGetEmSubmissionAccess;
   });
 
   it('should be defined', () => {
@@ -115,25 +127,26 @@ describe('EmSubmissionAccessService', () => {
       addDate: null,
       updateDate: null,
     }));
-  
-    // Ensure the repository call is NOT made
-    map.many.mockReturnValue([]); // Shouldn't be called
-    entityManager.query.mockResolvedValue(mockedNoWindowRecords);
-  
+
     let filters = new EmSubmissionAccessParamsDTO();
     filters.status = 'NO WINDOW';
     filters.orisCode = 12345;
     filters.year = 2024;
     filters.quarter = 1;
   
+    // Setup mock to return the no-window data right before the call
+
+    mockManagerQuery.mockResolvedValue(mockedNoWindowRecords);
+
     let result = await service.getEmSubmissionAccess(filters);
   
     expect(result).toEqual(expectedNoWindowDTOs);
     expect(viewRepository.getEmSubmissionAccess).not.toHaveBeenCalled();
-    expect(entityManager.query).toHaveBeenCalledWith(
+    expect(mockManagerQuery).toHaveBeenCalledWith(
       `SELECT * FROM camdecmpsaux.get_em_submission_access_no_window_view($1, $2, $3)`,
       [filters.orisCode, filters.year, filters.quarter]
     );
+    expect(mockRepositoryGetEmSubmissionAccess).not.toHaveBeenCalled();
   });
 
   it('should return both no-window records and view records when status is undefined', async () => {
@@ -204,8 +217,10 @@ describe('EmSubmissionAccessService', () => {
       updateDate: null,
     }));
   
+    // Setup mocks for both repository and query calls
     map.many.mockReturnValue(mockedViewRecords);
-    entityManager.query.mockResolvedValue(mockedNoWindowRecords);
+    mockRepositoryGetEmSubmissionAccess.mockResolvedValue([]);
+    mockManagerQuery.mockResolvedValue(mockedNoWindowRecords);
   
     let filters = new EmSubmissionAccessParamsDTO();
     filters.status = undefined;
@@ -216,8 +231,8 @@ describe('EmSubmissionAccessService', () => {
     let result = await service.getEmSubmissionAccess(filters);
   
     expect(result).toEqual([...mockedViewRecords, ...expectedNoWindowDTOs]);
-    expect(viewRepository.getEmSubmissionAccess).toHaveBeenCalledWith(filters);
-    expect(entityManager.query).toHaveBeenCalledWith(
+    expect(mockRepositoryGetEmSubmissionAccess).toHaveBeenCalledWith(filters);
+    expect(mockManagerQuery).toHaveBeenCalledWith(
       `SELECT * FROM camdecmpsaux.get_em_submission_access_no_window_view($1, $2, $3)`,
       [filters.orisCode, filters.year, filters.quarter]
     );
@@ -225,8 +240,10 @@ describe('EmSubmissionAccessService', () => {
 
   it('should successfully return data only from EmSubmissionAccessViewRepository when status is not NO WINDOW', async () => {
     const mockedViewRecords = genEmSubmissionAccess<EmSubmissionAccessDTO>();
+
+    // Setup mocks - only repository call should be made
     map.many.mockReturnValue(mockedViewRecords);
-    entityManager.query.mockResolvedValue([]);
+    mockRepositoryGetEmSubmissionAccess.mockResolvedValue([]);
 
     let filters = new EmSubmissionAccessParamsDTO();
     filters.status = 'APPROVED';
@@ -237,8 +254,8 @@ describe('EmSubmissionAccessService', () => {
     let result = await service.getEmSubmissionAccess(filters);
 
     expect(result).toEqual(mockedViewRecords);
-    expect(viewRepository.getEmSubmissionAccess).toHaveBeenCalledWith(filters);
-    expect(entityManager.query).not.toHaveBeenCalled();
+    expect(mockRepositoryGetEmSubmissionAccess).toHaveBeenCalledWith(filters);
+    expect(mockManagerQuery).not.toHaveBeenCalled();
   });
 
   it('calls EmSubmissionAccessRepository.createEmSubmissionAccess() and creates an emission submission access record', async () => {

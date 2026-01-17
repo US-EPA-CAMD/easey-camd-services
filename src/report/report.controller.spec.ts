@@ -1,5 +1,5 @@
 import { Test } from '@nestjs/testing';
-import { EntityManager } from 'typeorm';
+import { EntityManager, DataSource } from 'typeorm';
 
 import { DataSetService } from '../dataset/dataset.service';
 import { ReportController } from './report.controller';
@@ -14,7 +14,7 @@ describe('-- Report Controller --', () => {
   beforeAll(async () => {
     const module = await Test.createTestingModule({
       controllers: [ReportController],
-      providers: [DataSetService, DataSetRepository, EntityManager],
+      providers: [DataSetService, DataSetRepository, EntityManager, { provide: DataSource, useValue: {} }],
     }).compile();
 
     controller = module.get(ReportController);

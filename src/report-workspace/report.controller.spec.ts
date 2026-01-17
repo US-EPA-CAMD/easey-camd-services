@@ -1,7 +1,7 @@
 import { HttpModule } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
-import { EntityManager } from 'typeorm';
+import { EntityManager, DataSource } from 'typeorm';
 import { LoggerModule } from '@us-epa-camd/easey-common/logger';
 
 import { DataSetRepository } from '../dataset/dataset.repository';
@@ -23,6 +23,10 @@ describe('-- Report Controller --', () => {
         DataSetService,
         DataSetRepository,
         EntityManager,
+        {
+          provide: DataSource,
+          useValue: {}
+        },
       ],
     }).compile();
 
