@@ -1,6 +1,6 @@
 #THIS FILE SHOULD CONTAIN DEV SETTINGS AND CI/CD WORKFLOW WILL CHANGE SETTINGS BASED ON ENV
 disk: 1024
-memory: 1024
+memory: 2048
 instances: 1
 name: camd-services
 host: api-easey-dev.app.cloud.gov
