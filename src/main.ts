@@ -7,6 +7,7 @@ import {
 import { useContainer } from 'class-validator';
 import { ValidationPipe } from '@nestjs/common';
 import * as http from 'http';
+import {types} from 'pg'
 
 import { AppModule } from './app.module';
 
@@ -35,6 +36,8 @@ async function gracefulShutdown(exitCode: number) {
   clearTimeout(forceExitTimer);
   process.exit(exitCode);
 }
+//PostgreSQL internal type IDs: 1700 = NUMERIC | 20 = BIGINT | 23 = INTEGER
+types.setTypeParser(1700, (val: string) => Number(val));
 
 export async function bootstrap() {
   const app = await NestFactory.create(AppModule);
