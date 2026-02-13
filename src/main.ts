@@ -37,7 +37,7 @@ async function gracefulShutdown(exitCode: number) {
   process.exit(exitCode);
 }
 //PostgreSQL internal type IDs: 1700 = NUMERIC | 20 = BIGINT | 23 = INTEGER
-types.setTypeParser(1700, (val: string) => Number(val));
+types.setTypeParser(1700, Number);
 
 export async function bootstrap() {
   const app = await NestFactory.create(AppModule);
