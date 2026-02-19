@@ -22,7 +22,7 @@ import { UnitsExpectedDTO } from '../dto/units-expected.dto';
 @ApiExtraModels(UnitsExpectedDTO)
 export class UnitsExpectedToSubmitController {
   constructor(
-    private service: UnitsExpectedToSubmitService,
+    private readonly service: UnitsExpectedToSubmitService,
   ) {}
 
   @Get()
