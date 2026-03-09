@@ -57,7 +57,7 @@
     "jsdom": "26.1.0",
     "liquidjs": "^10.25.0",
     "moment": "^2.30.1",
-    "nodemailer": "^7.0.12",
+    "nodemailer": "^8.0.2",
     "pg": "^8.20.0",
     "preview-email": "^3.1.1",
     "reflect-metadata": "^0.2.2",
