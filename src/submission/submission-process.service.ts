@@ -46,7 +46,7 @@ export class SubmissionProcessService {
       // Atomic update to WIP - only if still not yet started
       const updateResult = await this.entityManager.update(
         SubmissionSet,
-        { submissionSetIdentifier: id, statusCode: 'WIP', startedTime: IsNull () },
+        { submissionSetIdentifier: id, statusCode: 'CLAIMED', startedTime: IsNull () },
         { statusCode: 'WIP', startedTime: new Date() }
       );
 
@@ -63,8 +63,7 @@ export class SubmissionProcessService {
       // Refresh set data after atomic update
       set = await this.entityManager.findOne(SubmissionSet, { where: { submissionSetIdentifier: id }, });
 
-      // Update the submission set and submission queue statuses to 'WIP'
-      await this.submissionSetHelper.updateSubmissionSetStatus(set, 'WIP');
+      // Update the submission queue statuses to 'WIP'
       submissionQueueRecords = await this.entityManager.find(SubmissionQueue, {
         where: { submissionSetIdentifier: id },
         relations: { 
