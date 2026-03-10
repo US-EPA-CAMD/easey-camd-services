@@ -21,6 +21,9 @@ export const copyOfRecordTemplate = `
     table td, table th { border: 1px solid #ddd; padding: 8px; } 
     a{padding: 5px; border-left: .5rem solid; font-size: 1.06rem; line-height: 1.5;}
     h3{margin-top: 25px;}
+    table.emissions_evaluation_report td:not(:empty) { background-color: white;border-bottom: none;}
+    table.emissions_evaluation_report td:empty { border-top: none !important; border-bottom: none !important; background-color: white;}
+    table.emissions_evaluation_report tbody{border: 1px solid #ddd; padding: 8px;}
   </style>
 
   <body>

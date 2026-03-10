@@ -115,10 +115,10 @@ export class CopyOfRecordService {
     return innerContent;
   }
 
-  addDefaultTable(columns: ReportColumnDTO, detail: ReportDetailDTO): string {
+  addDefaultTable(columns: ReportColumnDTO, detail: ReportDetailDTO, isEmissionEvaluation:boolean): string {
     let innerContent = this.addTableHeader(detail.displayName, false, detail);
 
-    innerContent += '<div> <table class = "default">';
+    innerContent += `<div><table class="default ${isEmissionEvaluation ? 'emissions_evaluation_report' : ''}">`;
 
     //Load column headings
     innerContent += '<tr>';
@@ -208,7 +208,7 @@ export class CopyOfRecordService {
     return documentContent;
   }
 
-  generateCopyOfRecord(data: ReportDTO, isPdf: boolean = false, evalStatusCodes: Set<string> = new Set()): string {
+  generateCopyOfRecord(data: ReportDTO, isPdf: boolean = false, evalStatusCodes: Set<string> = new Set(), isEmissionEvaluation: boolean = false): string {
     let documentContent = copyOfRecordTemplate;
     documentContent = this.addDocumentHeader(documentContent, data.displayName);
     let innerContent = '';
@@ -242,7 +242,7 @@ export class CopyOfRecordService {
         }
       } else {
         //Default table view
-        innerContent += this.addDefaultTable(columns, detail);
+        innerContent += this.addDefaultTable(columns, detail, isEmissionEvaluation);
       }
     }
 
@@ -260,8 +260,8 @@ export class CopyOfRecordService {
       params,
       isWorkspace,
     );
-
-    const htmlContent = this.generateCopyOfRecord(reportInformation, true);
+    const isEmissionEvaluation = params.reportCode === 'EM_EVAL';
+    const htmlContent = this.generateCopyOfRecord(reportInformation, true,null ,isEmissionEvaluation);
 
     const plant: Plant = await this.entityManager.findOneBy(Plant, {
       orisCode: params.facilityId,

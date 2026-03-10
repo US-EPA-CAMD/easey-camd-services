@@ -580,6 +580,7 @@ export class EvaluationReportService {
             reportInformation,
             false,
             evalStatusCodes,
+            true
           ),
         });
       }

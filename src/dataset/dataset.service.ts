@@ -18,7 +18,59 @@ export class DataSetService {
     private readonly entityManager: EntityManager,
     private readonly repository: DataSetRepository,
     private readonly dataSource: DataSource,
-  ) {}
+  ) { }
+
+  private groupEvaluationResults(results: any[]): any[] {
+  if (!results || results.length === 0) return results;
+
+  if (!('checkCode' in results[0])) return results;
+
+  const sorted = [...results].sort((a, b) =>
+    (a.unitStack || '').localeCompare(b.unitStack || '') ||
+    (a.severityCode || '').localeCompare(b.severityCode || '') ||
+    (a.checkCode || '').localeCompare(b.checkCode || '') ||
+    (a.resultMessage || '').localeCompare(b.resultMessage || '')
+  );
+
+  let prevUnitStack = null;
+  let prevSeverity = null;
+  let prevCheckCode = null;
+  let prevMessage = null;
+
+  for (const row of sorted) {
+    if (row.unitStack === prevUnitStack) {
+      row.unitStack = '';
+    } else {
+      prevUnitStack = row.unitStack;
+      prevSeverity = null;
+      prevCheckCode = null;
+      prevMessage = null;
+    }
+
+    if (row.severityCode === prevSeverity && row.unitStack === '') {
+      row.severityCode = '';
+    } else {
+      prevSeverity = row.severityCode;
+      prevCheckCode = null;
+      prevMessage = null;
+    }
+
+    if (row.checkCode === prevCheckCode && row.severityCode === '') {
+      row.checkCode = '';
+    } else {
+      prevCheckCode = row.checkCode;
+      prevMessage = null;
+    }
+
+    if (row.resultMessage === prevMessage && row.checkCode === '') {
+      row.resultMessage = '';
+    } else {
+      prevMessage = row.resultMessage;
+    }
+  }
+
+  return sorted;
+}
 
   async getAvailableDataSets() {
     const results = await withSlaveConnection(this.dataSource, async (manager) => {
@@ -148,12 +200,18 @@ export class DataSetService {
       : table.template.displayName;
     detailDto.templateCode = table.template.code;
     detailDto.templateType = table.template.type;
-    detailDto.results = await withSlaveConnection(this.dataSource, async (manager) => {
+    let results = await withSlaveConnection(this.dataSource, async (manager) => {
       return await manager.query(
-      table.sqlStatement,
-      sqlParams,
-    );
-  });
+        table.sqlStatement,
+        sqlParams,
+      );
+    });
+    // Apply grouping only for evaluation reports
+    if (params.reportCode==='EM_EVAL') {
+      results = this.groupEvaluationResults(results);
+    }
+
+    detailDto.results = results;
 
     if (detailDto.results.length > 0) {
       let columnDto = reportColumns.find(
