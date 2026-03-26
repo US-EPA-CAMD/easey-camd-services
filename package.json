@@ -55,7 +55,7 @@
     "handlebars": "^4.7.8",
     "https": "^1.0.0",
     "jsdom": "26.1.0",
-    "liquidjs": "^10.25.1",
+    "liquidjs": "^10.25.2",
     "moment": "^2.30.1",
     "nodemailer": "^8.0.4",
     "pg": "^8.20.0",
