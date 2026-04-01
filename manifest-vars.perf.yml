@@ -12,7 +12,7 @@ recipientsListApiEnabled: false
 maxConnectionPool: 30
 idleTimeout: 30000
 connectionTimeout: 60000
-statementTimeout: 300000
+statementTimeout: 900000
 idleInTransactionSessionTimeout: 300000
 maxUsesBeforeRecreatingConnection: 500
 sqlLogging: "error"
