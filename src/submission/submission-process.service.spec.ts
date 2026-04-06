@@ -96,11 +96,14 @@ describe('SubmissionProcessService', () => {
   describe('processSubmissionSet', () => {
     it('should process a submission set successfully', async () => {
       const setId = 'test-set-id';
-      const submissionSet = new SubmissionSet();
-      submissionSet.submissionSetIdentifier = setId;
-      //Quartz can pre-set in WIP; service now acquires only when not yet started
-      submissionSet.statusCode = 'WIP';
-      submissionSet.hasCritErrors = false;
+      const submissionSetClaimed = new SubmissionSet();
+      submissionSetClaimed.submissionSetIdentifier = setId;
+      submissionSetClaimed.statusCode = 'CLAIMED';
+
+      const submissionSetWip = new SubmissionSet();
+      submissionSetClaimed.submissionSetIdentifier = setId;
+      submissionSetClaimed.statusCode = 'WIP';
+      submissionSetClaimed.hasCritErrors = false;
 
       const severityCode = new SeverityCode();
       severityCode.evalStatusCode = 'PASS';
@@ -111,8 +114,8 @@ describe('SubmissionProcessService', () => {
       const submissionSetRecords = [submissionQueue];
 
       jest.spyOn(entityManager, 'findOne')
-        .mockResolvedValueOnce(submissionSet) // Initial fetch
-        .mockResolvedValueOnce(submissionSet); // Refresh after atomic update
+        .mockResolvedValueOnce(submissionSetClaimed) // Initial fetch
+        .mockResolvedValueOnce(submissionSetWip); // Refresh after atomic update
       jest.spyOn(entityManager, 'update').mockResolvedValueOnce({ affected: 1, raw: {}, generatedMaps: [] });
       jest.spyOn(entityManager, 'find').mockResolvedValueOnce(submissionSetRecords);
       jest.spyOn(service['submissionSetHelper'], 'updateSubmissionSetStatus').mockResolvedValue();
@@ -132,7 +135,7 @@ describe('SubmissionProcessService', () => {
 
       expect(entityManager.update).toHaveBeenCalledWith(
         SubmissionSet,
-        { submissionSetIdentifier: setId, statusCode: 'WIP', startedTime: IsNull() },
+        { submissionSetIdentifier: setId, statusCode: 'CLAIMED', startedTime: IsNull() },
         { statusCode: 'WIP', startedTime: expect.any(Date) }
       );
       expect(entityManager.find).toHaveBeenCalledWith(SubmissionQueue, {
@@ -142,12 +145,8 @@ describe('SubmissionProcessService', () => {
           severityCodeRecord: true,
         },
       });
-      expect(service['submissionSetHelper'].updateSubmissionSetStatus, ).toHaveBeenCalledWith(
-        submissionSet,
-        'WIP',
-      );
       expect(service['submissionSetHelper'].setRecordStatusCode, ).toHaveBeenCalledWith(
-        submissionSet,
+        submissionSetWip,
         submissionSetRecords[0],
         'WIP',
         '',
@@ -157,15 +156,18 @@ describe('SubmissionProcessService', () => {
 
     it('should handle errors and call error handler properly', async () => {
       const setId = 'test-set-id';
-      const submissionSet = new SubmissionSet();
-      submissionSet.submissionSetIdentifier = setId;
-      submissionSet.statusCode = 'WIP';
+      const submissionSetClaimed = new SubmissionSet();
+      submissionSetClaimed.submissionSetIdentifier = setId;
+      submissionSetClaimed.statusCode = 'CLAIMED';
+      const submissionSetWip = new SubmissionSet();
+      submissionSetWip.submissionSetIdentifier = setId;
+      submissionSetWip.statusCode = 'WIP';
       const submissionSetRecords = [new SubmissionQueue()];
       const error = new Error('Test Error');
 
       jest.spyOn(entityManager, 'findOne')
-        .mockResolvedValueOnce(submissionSet) // Initial fetch
-        .mockResolvedValueOnce(submissionSet); // Refresh after atomic update
+        .mockResolvedValueOnce(submissionSetClaimed) // Initial fetch
+        .mockResolvedValueOnce(submissionSetWip); // Refresh after atomic update
       jest.spyOn(entityManager, 'update').mockResolvedValueOnce({ affected: 1, raw: {}, generatedMaps: [] });
       jest.spyOn(entityManager, 'find').mockResolvedValueOnce(submissionSetRecords);
       jest.spyOn(service['submissionSetHelper'], 'updateSubmissionSetStatus').mockResolvedValue();
@@ -182,14 +184,14 @@ describe('SubmissionProcessService', () => {
         SubmissionSet,
         {
           submissionSetIdentifier: setId,
-          statusCode: 'WIP',
+          statusCode: 'CLAIMED',
           startedTime: IsNull(),
         },
         { statusCode: 'WIP', startedTime: expect.any(Date) },
       );
 
       expect(service['errorHandlerService'].handleSubmissionProcessingError).toHaveBeenCalledWith(
-        submissionSet,
+        submissionSetWip,
         submissionSetRecords,
         expect.any(Array),
         error,
@@ -218,7 +220,7 @@ describe('SubmissionProcessService', () => {
           SubmissionSet,
           {
             submissionSetIdentifier: setId,
-            statusCode: 'WIP',
+            statusCode: 'CLAIMED',
             startedTime: IsNull(),
           },
           { statusCode: 'WIP', startedTime: expect.any(Date) },
@@ -248,7 +250,7 @@ describe('SubmissionProcessService', () => {
           SubmissionSet,
           {
             submissionSetIdentifier: setId,
-            statusCode: 'WIP',
+            statusCode: 'CLAIMED',
             startedTime: IsNull(),
           },
           { statusCode: 'WIP', startedTime: expect.any(Date) },
@@ -274,7 +276,7 @@ describe('SubmissionProcessService', () => {
 
         expect(entityManager.update).toHaveBeenCalledWith(
           SubmissionSet,
-          { submissionSetIdentifier: setId, statusCode: 'WIP', startedTime: IsNull(), },
+          { submissionSetIdentifier: setId, statusCode: 'CLAIMED', startedTime: IsNull(), },
           { statusCode: 'WIP', startedTime: expect.any(Date) },
         );
         // Match service's current warning text
@@ -283,13 +285,16 @@ describe('SubmissionProcessService', () => {
 
       it('should proceed with processing when atomic update succeeds', async () => {
         const setId = 'test-set-id';
-        const submissionSet = new SubmissionSet();
-        submissionSet.submissionSetIdentifier = setId;
-        submissionSet.statusCode = 'WIP';
+        const submissionSetClaimed = new SubmissionSet();
+        submissionSetClaimed.submissionSetIdentifier = setId;
+        submissionSetClaimed.statusCode = 'WIP';
+        const submissionSetWip = new SubmissionSet();
+        submissionSetWip.submissionSetIdentifier = setId;
+        submissionSetWip.statusCode = 'WIP';
 
         jest.spyOn(entityManager, 'findOne')
-          .mockResolvedValueOnce(submissionSet) // Initial fetch
-          .mockResolvedValueOnce(submissionSet); // Refresh after atomic update
+          .mockResolvedValueOnce(submissionSetClaimed) // Initial fetch
+          .mockResolvedValueOnce(submissionSetWip); // Refresh after atomic update
 
         // Mock successful atomic update (claims not-yet-started record)
         jest.spyOn(entityManager, 'update').mockResolvedValueOnce({ affected: 1, raw: {}, generatedMaps: [] });
@@ -308,7 +313,7 @@ describe('SubmissionProcessService', () => {
 
         expect(entityManager.update).toHaveBeenCalledWith(
           SubmissionSet,
-          { submissionSetIdentifier: setId, statusCode: 'WIP', startedTime: IsNull(), },
+          { submissionSetIdentifier: setId, statusCode: 'CLAIMED', startedTime: IsNull(), },
           { statusCode: 'WIP', startedTime: expect.any(Date) },
         );
         expect(loggerLogSpy).toHaveBeenCalledWith(`Successfully acquired lock for SubmissionSet ${setId}, proceeding with processing.`, );
