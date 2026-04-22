@@ -1682,10 +1682,22 @@
     jsonc-parser "3.3.1"
     pluralize "8.0.0"
 
-"@nestjs/swagger@^11.2.7", "@nestjs/swagger@^11.3.0":
+"@nestjs/swagger@^11.3.0":
   version "11.3.0"
   resolved "https://registry.yarnpkg.com/@nestjs/swagger/-/swagger-11.3.0.tgz#ed5574216a3aba9ee13bbe4b9a9d1aa37541ff41"
   integrity sha512-SCS8fG2DL/ZF+9l5in09FwPhpBo5i1Gdo8Se3GYlJ2cn+iNTzF7u13QjHo5XI92BN8DN+Gcug+QTcmWmGvZyNw==
+  dependencies:
+    "@microsoft/tsdoc" "0.16.0"
+    "@nestjs/mapped-types" "2.1.1"
+    js-yaml "4.1.1"
+    lodash "4.18.1"
+    path-to-regexp "8.4.2"
+    swagger-ui-dist "5.32.4"
+
+"@nestjs/swagger@^11.3.2":
+  version "11.4.1"
+  resolved "https://registry.npmjs.org/@nestjs/swagger/-/swagger-11.4.1.tgz#046f2831732bc15c724e50534836c5f505236b43"
+  integrity sha512-GuGzs8F1Cb3n+eEarmOqB4nt2ai+x4XGOYUXNYplOtDeB59DaFY5E16bsHsBWXiWgD1ywbyKQ5OVv02bQtB1Dw==
   dependencies:
     "@microsoft/tsdoc" "0.16.0"
     "@nestjs/mapped-types" "2.1.1"
@@ -2761,20 +2773,20 @@
   resolved "https://registry.yarnpkg.com/@unrs/resolver-binding-win32-x64-msvc/-/resolver-binding-win32-x64-msvc-1.11.1.tgz#538b1e103bf8d9864e7b85cc96fa8d6fb6c40777"
   integrity sha512-lrW200hZdbfRtztbygyaq/6jP6AKE8qQN2KvPcJ+x7wiD038YtnYtZ82IMNJ69GJibV7bwL3y9FgK+5w/pYt6g==
 
-"@us-epa-camd/easey-common@21.5.2":
-  version "21.5.2"
-  resolved "https://npm.pkg.github.com/download/@US-EPA-CAMD/easey-common/21.5.2/a747053be3a389d938334ed91f8da8d5ddd7b123#a747053be3a389d938334ed91f8da8d5ddd7b123"
-  integrity sha512-MSCiZyIOHA0Fzdr+MvNRO63miD/0fW5Ff+gEAjeMd7WusV+4M42iN6ofOA9JSC3A28KXIKFxs5Vjk3lJPMMwvg==
+"@us-epa-camd/easey-common@21.5.3":
+  version "21.5.3"
+  resolved "https://npm.pkg.github.com/download/@US-EPA-CAMD/easey-common/21.5.3/a566a9540c2f580f3b5f3df522bd0a08229c7767#a566a9540c2f580f3b5f3df522bd0a08229c7767"
+  integrity sha512-aMxdKpQtvRujLpz4ottK7KWWjhEXVJnLUO4NyETQVtE3aDudQrV+H/U3obNUtAY2dhlOWZQs8fTT88LXQvaIew==
   dependencies:
     "@golevelup/ts-jest" "^3.0.0"
     "@nestjs/axios" "4.0.1"
     "@nestjs/common" "^11.1.19"
     "@nestjs/config" "^4.0.4"
     "@nestjs/core" "^11.1.19"
-    "@nestjs/swagger" "^11.2.7"
+    "@nestjs/swagger" "^11.3.2"
     "@nestjs/terminus" "^11.1.1"
     "@nestjs/typeorm" "^11.0.1"
-    axios "^1.15.0"
+    axios "^1.15.1"
     class-validator "^0.15.1"
     dotenv "^17.4.2"
     express "^5.2.1"
@@ -3152,6 +3164,15 @@ axios@^1.15.0:
   version "1.15.0"
   resolved "https://registry.yarnpkg.com/axios/-/axios-1.15.0.tgz#0fcee91ef03d386514474904b27863b2c683bf4f"
   integrity sha512-wWyJDlAatxk30ZJer+GeCWS209sA42X+N5jU2jy6oHTp7ufw8uzUTVFBX9+wTfAlhiJXGS0Bq7X6efruWjuK9Q==
+  dependencies:
+    follow-redirects "^1.15.11"
+    form-data "^4.0.5"
+    proxy-from-env "^2.1.0"
+
+axios@^1.15.1:
+  version "1.15.2"
+  resolved "https://registry.npmjs.org/axios/-/axios-1.15.2.tgz#eb8fb6d30349abace6ade5b4cb4d9e8a0dc23e5b"
+  integrity sha512-wLrXxPtcrPTsNlJmKjkPnNPK2Ihe0hn0wGSaTEiHRPxwjvJwT3hKmXF4dpqxmPO9SoNb2FsYXj/xEo0gHN+D5A==
   dependencies:
     follow-redirects "^1.15.11"
     form-data "^4.0.5"

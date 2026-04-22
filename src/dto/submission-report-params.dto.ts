@@ -8,14 +8,13 @@ import {
   IsArray
 } from 'class-validator';
 
-import { IsValidCode, IsInRange } from '@us-epa-camd/easey-common/pipes';
+import { IsValidCode, IsInRange, IsInYearRange } from '@us-epa-camd/easey-common/pipes';
 import { SeverityCodes } from '../enums/severity-codes.enum';
 import { SeverityCode } from '../entities/severity-code.entity';
 import { CheckCatalogService } from '@us-epa-camd/easey-common/check-catalog';
 import { IsDateHrQtrFormat } from '../pipes/is-date-hr-qtr-format.pipe';
 import { FindOneOptions } from 'typeorm/find-options/FindOneOptions';
 import { Plant } from '../entities/plant.entity';
-import { currentDateTime } from '@us-epa-camd/easey-common/utilities/functions';
 import { SubmissionTypeCodes } from '../enums/submission-code.enum';
 import { QADataType } from '../enums/qa-data-type.enum';
 const msgA =
@@ -41,9 +40,9 @@ orisCode?: number;
 
 @IsOptional()
 @ApiProperty()
-@IsInRange(1930, currentDateTime().getFullYear(), {
+@IsInYearRange(1930, null, {
     message: () => {
-    return `Ensure the year value is in the range from 1930 to ${currentDateTime().getFullYear()}`;
+    return `Ensure the year value is in the range from 1930 to ${new Date().getFullYear()}`;
     },
 })
 @Type(() => Number)
