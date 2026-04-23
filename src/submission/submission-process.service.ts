@@ -92,6 +92,21 @@ export class SubmissionProcessService {
 
       //Push the submission stage here
       submissionStages.push({ action: 'DOCUMENTS_BUILT', dateTime: (await this.submissionSetHelper.getFormattedDateTime())  || 'N/A' });
+      submissionStages.push({ action: 'PREPARING_FEEDBACK_EMAIL_DATA', dateTime: (await this.submissionSetHelper.getFormattedDateTime())  || 'N/A' });
+
+      // Collect feedback email data before the call to copyToOfficial (which deletes
+      // data from workspace) and before sending documents for signing so that the
+      // feedback report can be included in the document set sent to CDX.
+      this.logger.log(`Collecting data for sending feedback reports...`);
+      const submissionFeedbackEmailDataList = await this.submissionEmailService.collectFeedbackReportDataForEmail(set, submissionQueueRecords, submissionStages);
+
+      //Push the submission stage here
+      submissionStages.push({ action: 'FEEDBACK_EMAIL_DATA_READY', dateTime: (await this.submissionSetHelper.getFormattedDateTime())  || 'N/A' });
+
+      // Write feedback reports into the document folder so they are signed and
+      // sent to CDX alongside the other submission documents.
+      this.logger.log(`Writing feedback reports to document folder for CDX submission...`);
+      await this.documentService.addFeedbackReports(submissionFeedbackEmailDataList, folderPath);
 
       // Send documents for signing
       this.logger.log(`Sending for signing ... `);
@@ -99,14 +114,6 @@ export class SubmissionProcessService {
 
       //Push the submission stage here
       submissionStages.push({ action: 'DOCUMENTS_SIGNED', dateTime: (await this.submissionSetHelper.getFormattedDateTime())  || 'N/A' });
-      submissionStages.push({ action: 'PREPARING_FEEDBACK_EMAIL_DATA', dateTime: (await this.submissionSetHelper.getFormattedDateTime())  || 'N/A' });
-
-      // Get feedback email data before the call to copyToOfficial, which deletes data from workspace
-      this.logger.log(`Collecting data for sending feedback reports...`);
-      const submissionFeedbackEmailDataList = await this.submissionEmailService.collectFeedbackReportDataForEmail(set, submissionQueueRecords, submissionStages);
-
-      //Push the submission stage here
-      submissionStages.push({ action: 'FEEDBACK_EMAIL_DATA_READY', dateTime: (await this.submissionSetHelper.getFormattedDateTime())  || 'N/A' });
       submissionStages.push({ action: 'COPYING_DATA_TO_OFFICIAL', dateTime: (await this.submissionSetHelper.getFormattedDateTime())  || 'N/A' });
 
       // Copy records from workspace to official

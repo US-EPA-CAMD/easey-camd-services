@@ -6,6 +6,7 @@ import { ReportingPeriod } from '../entities/reporting-period.entity';
 export class SubmissionEmailParamsDto {
 
   processCode           : string;
+  groupKey              : string;
   submissionSet         : SubmissionSet;
   submissionQueueRecords: SubmissionQueue [];
   highestSeverityRecord : HighestSeverityRecord;
@@ -64,5 +65,6 @@ export class SubmissionFeedbackEmailData {
     public submissionSet : SubmissionSet,
     public submissionQueueRecords : SubmissionQueue [],
     public processCode : string,
+    public groupKey: string,
   ) {}
 }

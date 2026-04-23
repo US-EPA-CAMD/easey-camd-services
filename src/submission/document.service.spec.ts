@@ -8,6 +8,8 @@ import { HttpService } from '@nestjs/axios';
 import { EntityManager } from 'typeorm';
 import { SubmissionSet } from '../entities/submission-set.entity';
 import { SubmissionQueue } from '../entities/submission-queue.entity';
+import { SubmissionEmailService } from './submission-email.service';
+import { SubmissionFeedbackEmailData } from '../dto/submission-email-params.dto';
 import * as fs from 'fs';
 
 jest.mock('fs');
@@ -22,6 +24,7 @@ describe('DocumentService', () => {
   let copyOfRecordService: CopyOfRecordService;
   let httpService: HttpService;
   let entityManager: EntityManager;
+  let submissionEmailService: SubmissionEmailService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -60,6 +63,12 @@ describe('DocumentService', () => {
             findOne: jest.fn(),
           },
         },
+        {
+          provide: SubmissionEmailService,
+          useValue: {
+            renderSubmissionFeedbackReportForCdx: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -68,6 +77,7 @@ describe('DocumentService', () => {
     copyOfRecordService = module.get<CopyOfRecordService>(CopyOfRecordService);
     httpService = module.get<HttpService>(HttpService);
     entityManager = module.get<EntityManager>(EntityManager);
+    submissionEmailService = module.get<SubmissionEmailService>(SubmissionEmailService);
   });
 
   afterEach(() => {
@@ -92,6 +102,67 @@ describe('DocumentService', () => {
       expect(service.buildCopyOfRecords).toHaveBeenCalledWith(set, records, expect.any(Array));
       expect(service.addCertificationStatements).toHaveBeenCalledWith(set.monPlanIdentifier, expect.any(Array));
       expect(result).toBeDefined();
+    });
+  });
+
+  describe('addFeedbackReports', () => {
+    it('should render each feedback report and write it to the folder', async () => {
+      const set = new SubmissionSet();
+      set.orisCode = 3001;
+
+      const feedbackDataList: SubmissionFeedbackEmailData[] = [
+        {
+          toEmail: 'user@example.com',
+          fromEmail: 'noreply@example.com',
+          subject: 'MP Feedback',
+          emailTemplateId: 200,
+          templateContext: {},
+          feedbackAttachmentDocuments: [],
+          submissionSet: set,
+          submissionQueueRecords: [new SubmissionQueue()],
+          processCode: 'MP',
+          groupKey: 'MP',
+        } as SubmissionFeedbackEmailData,
+      ];
+
+      const rendered = {
+        documentTitle: '3001_FEEDBACK_MP',
+        context: '<html>MP feedback</html>',
+      };
+      jest
+        .spyOn(submissionEmailService, 'renderSubmissionFeedbackReportForCdx')
+        .mockResolvedValue(rendered);
+      const writeSpy = jest
+        .spyOn(fs, 'writeFileSync')
+        .mockImplementation(jest.fn());
+
+      const result = await service.addFeedbackReports(
+        feedbackDataList,
+        'mock/folder/path',
+      );
+
+      expect(
+        submissionEmailService.renderSubmissionFeedbackReportForCdx,
+      ).toHaveBeenCalledWith(feedbackDataList[0]);
+      expect(writeSpy).toHaveBeenCalledWith(
+        'mock/folder/path/3001_FEEDBACK_MP.html',
+        '<html>MP feedback</html>',
+      );
+      expect(result).toEqual([rendered]);
+    });
+
+    it('should handle an empty feedback data list', async () => {
+      const writeSpy = jest
+        .spyOn(fs, 'writeFileSync')
+        .mockImplementation(jest.fn());
+
+      const result = await service.addFeedbackReports([], 'mock/folder/path');
+
+      expect(
+        submissionEmailService.renderSubmissionFeedbackReportForCdx,
+      ).not.toHaveBeenCalled();
+      expect(writeSpy).not.toHaveBeenCalled();
+      expect(result).toEqual([]);
     });
   });
 });

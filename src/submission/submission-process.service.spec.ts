@@ -50,6 +50,7 @@ describe('SubmissionProcessService', () => {
             buildDocuments: jest.fn(),
             sendForSigning: jest.fn(),
             buildDocumentsAndWriteToFile: jest.fn(),
+            addFeedbackReports: jest.fn(),
           },
         },
         {
@@ -127,6 +128,7 @@ describe('SubmissionProcessService', () => {
       jest.spyOn(fsPromises, 'rm').mockResolvedValue();
       jest.spyOn(service['transactionService'], 'buildTransactions').mockResolvedValue([]);
       jest.spyOn(service['documentService'], 'buildDocumentsAndWriteToFile').mockResolvedValue([]);
+      jest.spyOn(service['documentService'], 'addFeedbackReports').mockResolvedValue([]);
       jest.spyOn(service['documentService'], 'sendForSigning').mockResolvedValue();
       jest.spyOn(service['submissionEmailService'], 'collectFeedbackReportDataForEmail').mockResolvedValue([]);
       jest.spyOn(service, 'copyToOfficial').mockResolvedValue();
@@ -152,6 +154,16 @@ describe('SubmissionProcessService', () => {
         '',
         'PENDING',
       );
+
+      // Feedback reports must be written into the folder before the documents are
+      // sent to CDX for signing, so that CDX receives the feedback report.
+      const addFeedbackReportsOrder = (
+        service['documentService'].addFeedbackReports as jest.Mock
+      ).mock.invocationCallOrder[0];
+      const sendForSigningOrder = (
+        service['documentService'].sendForSigning as jest.Mock
+      ).mock.invocationCallOrder[0];
+      expect(addFeedbackReportsOrder).toBeLessThan(sendForSigningOrder);
     });
 
     it('should handle errors and call error handler properly', async () => {

@@ -4,13 +4,13 @@ import { MatsFileUploadController } from './mats-file-upload.controller';
 import { HttpModule } from '@nestjs/axios';
 import { CopyOfRecordModule } from '../copy-of-record/copy-of-record.module';
 import { MailModule } from '../mail/mail.module';
-import { DocumentService } from '../submission/document.service';
 import { DataSetModule } from '../dataset/dataset.module';
 import { EvaluationSetHelperService } from '../evaluation/evaluation-set-helper.service';
+import { SubmissionModule } from '../submission/submission.module';
 
 @Module({
-  imports: [HttpModule, CopyOfRecordModule, MailModule, DataSetModule],
+  imports: [HttpModule, CopyOfRecordModule, MailModule, DataSetModule, SubmissionModule],
   controllers: [MatsFileUploadController],
-  providers: [MatsFileUploadService, DocumentService, EvaluationSetHelperService]
+  providers: [MatsFileUploadService, EvaluationSetHelperService]
 })
 export class MatsFileUploadModule { }
