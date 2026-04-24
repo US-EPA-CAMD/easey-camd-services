@@ -8,8 +8,7 @@ import {
 import { Status } from '../enums/status.enum';
 import { Type } from 'class-transformer';
 import { Plant } from '../entities/plant.entity';
-import { IsValidCode, IsInRange } from '@us-epa-camd/easey-common/pipes';
-import { currentDateTime } from '@us-epa-camd/easey-common/utilities/functions';
+import { IsValidCode, IsInRange, IsInYearRange } from '@us-epa-camd/easey-common/pipes';
 import {FindOneOptions} from "typeorm/find-options/FindOneOptions";
 
 export class EmSubmissionAccessParamsDTO {
@@ -31,9 +30,9 @@ export class EmSubmissionAccessParamsDTO {
 
   @IsNotEmpty({message: () => 'Year is required'})
   @ApiProperty()
-  @IsInRange(1930, currentDateTime().getFullYear(), {
+  @IsInYearRange(1930, null, {
     message: () => {
-      return `Ensure the year value is in the range from 1930 to ${currentDateTime().getFullYear()}`;
+      return `Ensure the year value is in the range from 1930 to ${new Date().getFullYear()}`;
     },
   })
   @Type(() => Number)
