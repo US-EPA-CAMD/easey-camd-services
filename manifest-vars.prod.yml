@@ -5,7 +5,7 @@ apiHost: api.epa.gov/easey
 campdDatasetsS3Bucket: cg-93dcd25e-017b-456d-a8e2-91ef127da888
 matsS3Bucket: cg-be6a8d39-486e-4f93-95c2-4ac09b325d5f
 importMatsS3Bucket: cg-b64b23b9-6019-45e2-85b7-a22409c274e7
-ecmpsHost: https://ecmps.epa.gov
+ecmpsHost: https://easey.epa.gov/ecmps
 cdxUrl: https://cdx.epa.gov/
 epaAnalystLink: https://www.epa.gov/power-sector/key-program-dates-contacts#MonitoringContacts
 recipientsListApi: https://camd.epa.gov/CBS/api/auth-mgmt/emailRecipients
