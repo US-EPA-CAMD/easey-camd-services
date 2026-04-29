@@ -74,6 +74,7 @@ export class SubmissionEmailService {
               submissionQueueRecords: records,
               highestSeverityRecord: highestSeverityRecord,
               processCode: processCode,
+              groupKey: key,
               rptPeriod: rptPeriod,
               toEmail: set.userEmail,
               fromEmail: this.configService.get<string>('app.defaultFromEmail'),
@@ -242,6 +243,7 @@ export class SubmissionEmailService {
       submissionEmailParamsDto.submissionSet,
       submissionEmailParamsDto.submissionQueueRecords,
       submissionEmailParamsDto.processCode,
+      submissionEmailParamsDto.groupKey,
     );
   }
 
@@ -251,7 +253,7 @@ export class SubmissionEmailService {
 ): Promise<any> {
   // Create a copy of the template context to avoid modifying the original
   const recipientSpecificContext = { ...submissionFeedbackEmailData.templateContext };
-  
+
   // Update the toEmail in the context to show only this specific recipient
   recipientSpecificContext['toEmail'] = recipientEmail;
 
@@ -266,6 +268,46 @@ export class SubmissionEmailService {
     content: attachmentContent,
   };
 }
+
+  public async renderSubmissionFeedbackReportForCdx(
+    submissionFeedbackEmailData: SubmissionFeedbackEmailData,
+  ): Promise<{ documentTitle: string; context: string }> {
+    const templateRecord = await this.easeyContentTemplateService.getTemplateById(
+      EMAIL_TEMPLATE_IDS.SUBMISSION_FEEDBACK,
+    );
+    const content = await this.easeyContentTemplateService.renderHandlebarsTemplate(
+      templateRecord.templateLocation,
+      submissionFeedbackEmailData.templateContext,
+    );
+
+    return {
+      documentTitle: this.buildCdxFeedbackReportTitle(submissionFeedbackEmailData),
+      context: content,
+    };
+  }
+
+  private buildCdxFeedbackReportTitle(
+    data: SubmissionFeedbackEmailData,
+  ): string {
+    const orisCode = data.submissionSet.orisCode;
+
+    if (data.groupKey === 'MP') {
+      return `${orisCode}_FEEDBACK_MP`;
+    }
+    if (data.groupKey === 'qaCriticalRecords') {
+      return `${orisCode}_FEEDBACK_QA_CRITICAL`;
+    }
+    if (data.groupKey === 'qaNonCriticalRecords') {
+      return `${orisCode}_FEEDBACK_QA_NONCRITICAL`;
+    }
+    if (data.groupKey?.startsWith('EM_')) {
+      const rptPeriod = data.submissionQueueRecords[0]?.reportingPeriod;
+      if (rptPeriod?.calendarYear && rptPeriod?.quarter) {
+        return `${orisCode}_FEEDBACK_EM_${rptPeriod.calendarYear}q${rptPeriod.quarter}`;
+      }
+    }
+    return `${orisCode}_FEEDBACK_${data.groupKey}`;
+  }
 
   private combineEmailAddresses(primaryEmail: string, additionalEmails: string): string {
     if (!additionalEmails || additionalEmails.trim() === '') {

@@ -32,5 +32,6 @@ import { SubmissionQueuePosition } from '../entities/submission_queue_position.e
     SubmissionTransactionService,
     SubmissionEmailService,
   ],
+  exports: [DocumentService],
 })
 export class SubmissionModule {}
