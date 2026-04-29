@@ -3,7 +3,7 @@ environment: staging
 host: api-easey-stg.app.cloud.gov
 apiHost: api.epa.gov/easey/staging
 campdDatasetsS3Bucket: cg-e8f4cca5-5be8-434f-8987-bbdfa072f142
-ecmpsHost: https://ecmps-stg.app.cloud.gov
+ecmpsHost: https://ecmps-stg.app.cloud.gov/ecmps
 epaAnalystLink: https://www.epa.gov/power-sector/key-program-dates-contacts#MonitoringContacts
 recipientsListApi: https://cbsstagei.epa.gov/CBS/api/auth-mgmt/emailRecipients
 recipientsListApiEnabled: true
