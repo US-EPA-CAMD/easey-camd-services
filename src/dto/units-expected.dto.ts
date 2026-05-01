@@ -80,4 +80,62 @@ export class UnitsExpectedDTO {
     example: propertyMetadata.severityDescription.example,
   })
   severityDescription: string;
+
+  subRecords?: UnitProgramSubDTO[];
+}
+
+export class UnitProgramSubDTO {
+   @ApiProperty({
+    description: propertyMetadata.unitId.description,
+    example: propertyMetadata.unitId.example,
+  })
+  unitId: string;
+
+  @ApiProperty({
+    description: propertyMetadata.programCode.description,
+    example: propertyMetadata.programCode.example,
+  })
+  programCode: string;
+
+  @ApiProperty({
+    description: propertyMetadata.unitTypeDescription.description,
+    example: propertyMetadata.unitTypeDescription.example,
+  })
+  unitTypeDescription: string;
+
+  @ApiProperty({
+    description: propertyMetadata.commercialOperationDate.description,
+    example: propertyMetadata.commercialOperationDate.example,
+  })
+  commOpDate: Date;
+  
+   @ApiProperty({
+    description: propertyMetadata.commercialOperationDate.description,
+    example: propertyMetadata.commercialOperationDate.example,
+  })
+  comrOpDate: Date;
+
+   @ApiProperty({
+    description: propertyMetadata.operatingStatus.description,
+    example: propertyMetadata.operatingStatus.example,
+  })
+  opStatusDescription: string;
+
+   @ApiProperty({
+    description: propertyMetadata.unitProgramDTOUnitMonitorCertBeginDate.description,
+    example: propertyMetadata.unitProgramDTOUnitMonitorCertBeginDate.example,
+  })
+  unitMonitorCertBeginDate: Date;
+
+   @ApiProperty({
+    description: propertyMetadata.unitProgramDTOUnitMonitorCertDeadline.description,
+    example: propertyMetadata.unitProgramDTOUnitMonitorCertDeadline.example,
+  })
+  unitMonitorCertDeadline: Date;
+
+   @ApiProperty({
+    description: propertyMetadata.unitProgramDTOEmissionsRecordingBeginDate.description,
+    example: propertyMetadata.unitProgramDTOEmissionsRecordingBeginDate.example,
+  })
+  emissionsRecordingBeginDate: Date;
 }

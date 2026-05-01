@@ -20,6 +20,7 @@ export class UnitsExpectedMap extends BaseMap<UnitsExpectedView, UnitsExpectedDT
       submissionId: entity.submissionId,
       submissionDate: entity.submissionDate,
       severityDescription: entity.severityDescription,
+      subRecords: entity.subRecords
     };
   }
 }

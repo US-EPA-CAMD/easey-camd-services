@@ -80,4 +80,6 @@ export class UnitsExpectedView extends BaseEntity {
     name: 'severity_cd_description',
   })
   severityDescription: string;
+  
+  subRecords: any;
 }
