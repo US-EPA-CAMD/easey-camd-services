@@ -5,14 +5,14 @@ apiHost: api.epa.gov/easey/perf
 campdDatasetsS3Bucket: cg-be803552-f63b-4bbb-870b-a746c1685a3e
 matsS3Bucket: cg-93d6e0ee-3e91-4685-baa6-803155585396
 importMatsS3Bucket: cg-313e2894-003b-4eda-88ca-ce57b954a57d
-ecmpsHost: https://ecmps-perf.app.cloud.gov
+ecmpsHost: https://ecmps-perf.app.cloud.gov/ecmps
 epaAnalystLink: https://www.epa.gov/power-sector/key-program-dates-contacts#MonitoringContacts
 recipientsListApi: https://cbsstagei.epa.gov/CBSD/api/auth-mgmt/emailRecipients
 recipientsListApiEnabled: false
 maxConnectionPool: 30
 idleTimeout: 30000
 connectionTimeout: 60000
-statementTimeout: 300000
+statementTimeout: 900000
 idleInTransactionSessionTimeout: 300000
 maxUsesBeforeRecreatingConnection: 500
 sqlLogging: "error"

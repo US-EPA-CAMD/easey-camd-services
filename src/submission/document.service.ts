@@ -13,6 +13,8 @@ import { firstValueFrom } from 'rxjs';
 import { join } from 'path';
 import * as FormData from 'form-data';
 import { EntityManager } from 'typeorm';
+import { SubmissionFeedbackEmailData } from '../dto/submission-email-params.dto';
+import { SubmissionEmailService } from './submission-email.service';
 
 @Injectable()
 export class DocumentService {
@@ -23,6 +25,7 @@ export class DocumentService {
     private readonly configService: ConfigService,
     private readonly httpService: HttpService,
     private readonly entityManager: EntityManager,
+    private readonly submissionEmailService: SubmissionEmailService,
   ) {}
 
   public async buildDocumentsAndWriteToFile(set: SubmissionSet, records: SubmissionQueue[], folderPath: string): Promise<{ documentTitle: string; context: string }[]> {
@@ -208,6 +211,38 @@ export class DocumentService {
         });
       }
     }
+  }
+
+  public async addFeedbackReports(
+    submissionFeedbackEmailDataList: SubmissionFeedbackEmailData[],
+    folderPath: string,
+  ): Promise<{ documentTitle: string; context: string }[]> {
+    const feedbackDocuments: { documentTitle: string; context: string }[] = [];
+
+    // Per-item isolation: a failure rendering or writing one feedback report
+    // must not prevent the rest of the submission documents from being sent to
+    // CDX. We log loudly and continue so the non-feedback documents still ship.
+    for (const feedbackData of submissionFeedbackEmailDataList) {
+      try {
+        const report =
+          await this.submissionEmailService.renderSubmissionFeedbackReportForCdx(
+            feedbackData,
+          );
+        writeFileSync(
+          `${folderPath}/${report.documentTitle}.html`,
+          report.context,
+        );
+        feedbackDocuments.push(report);
+      } catch (e) {
+        this.logger.error(
+          `Failed to render/write feedback report for CDX (groupKey=${feedbackData?.groupKey}, processCode=${feedbackData?.processCode}, orisCode=${feedbackData?.submissionSet?.orisCode}). CDX will not receive this feedback report.`,
+          e?.stack,
+          'DocumentService',
+        );
+      }
+    }
+
+    return feedbackDocuments;
   }
 
   public async addCertificationStatements(monPlanIdentifier: string, documents: any[], addMat?: boolean) {
