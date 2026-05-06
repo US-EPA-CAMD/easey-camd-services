@@ -35,7 +35,7 @@
     "mailparser": "3.9.1"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.1042.0",
+    "@aws-sdk/client-s3": "^3.1043.0",
     "@css-inline/css-inline": "^0.20.2",
     "@nestjs/axios": "4.0.1",
     "@nestjs/common": "^11.1.19",
@@ -79,8 +79,8 @@
     "@types/node": "22",
     "@types/nodemailer": "^8.0.0",
     "@types/supertest": "^7.2.0",
-    "@typescript-eslint/eslint-plugin": "8.59.1",
-    "@typescript-eslint/parser": "8.59.1",
+    "@typescript-eslint/eslint-plugin": "8.59.2",
+    "@typescript-eslint/parser": "8.59.2",
     "eslint": "^9.39.4",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.5",
