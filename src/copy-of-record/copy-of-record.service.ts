@@ -208,7 +208,7 @@ export class CopyOfRecordService {
     return documentContent;
   }
 
-  generateCopyOfRecord(data: ReportDTO, isPdf: boolean = false, evalStatusCodes: Set<string> = new Set(), isEmissionEvaluation: boolean = false): string {
+  generateCopyOfRecord(data: ReportDTO, isEmissionEvaluation: boolean = false): string {
     let documentContent = copyOfRecordTemplate;
     documentContent = this.addDocumentHeader(documentContent, data.displayName);
     let innerContent = '';
@@ -261,7 +261,7 @@ export class CopyOfRecordService {
       isWorkspace,
     );
     const isEmissionEvaluation = params.reportCode === 'EM_EVAL';
-    const htmlContent = this.generateCopyOfRecord(reportInformation, true,null ,isEmissionEvaluation);
+    const htmlContent = this.generateCopyOfRecord(reportInformation, isEmissionEvaluation);
 
     const plant: Plant = await this.entityManager.findOneBy(Plant, {
       orisCode: params.facilityId,
