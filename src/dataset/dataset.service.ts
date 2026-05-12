@@ -21,19 +21,28 @@ export class DataSetService {
   ) { }
 
   private groupEvaluationResults(results: any[]): any[] {
-    if (!results?.length || !('checkCode' in results[0])) {
+    if (!results?.length) {
       return results;
     }
-    
+
+    const codeKey =
+      'checkCode' in results[0] ? 'checkCode' :
+        'checkResult' in results[0] ? 'checkResult' :
+          null;
+
+    if (!codeKey) return results;
+
     const sorted = [...results].sort((a, b) =>
       (a.unitStack || '').localeCompare(b.unitStack || '') ||
       (a.severityCode || '').localeCompare(b.severityCode || '') ||
-      (a.checkCode || '').localeCompare(b.checkCode || '') ||
-      (new Date(a.beginPeriod).getTime() - new Date(b.beginPeriod).getTime()) ||
+      (a[codeKey] || '').localeCompare(b[codeKey] || '') ||
+      ((a.beginPeriod && b.beginPeriod)
+        ? new Date(a.beginPeriod).getTime() - new Date(b.beginPeriod).getTime()
+        : 0) ||
       (a.resultMessage || '').localeCompare(b.resultMessage || '')
     );
 
-    const previousValues = {
+    let prev = {
       unitStack: null,
       severityCode: null,
       checkCode: null,
@@ -41,53 +50,43 @@ export class DataSetService {
     };
 
     for (const row of sorted) {
-      const unitStackRepeated = this.clearIfRepeated(
-        row,
-        'unitStack',
-        previousValues,
-      );
+      const sameUnit = row.unitStack === prev.unitStack;
+      const sameSeverity = sameUnit && row.severityCode === prev.severityCode;
+      const sameCheck = sameSeverity && row[codeKey] === prev.checkCode;
+      const sameMessage = sameCheck && row.resultMessage === prev.resultMessage;
 
-      if (!unitStackRepeated) {
-        previousValues.severityCode = null;
-        previousValues.checkCode = null;
-        previousValues.resultMessage = null;
+      if (sameUnit) {
+        row.unitStack = '';
+      } else {
+        prev.unitStack = row.unitStack;
+        prev.severityCode = null;
+        prev.checkCode = null;
+        prev.resultMessage = null;
       }
 
-      const severityRepeated =
-        unitStackRepeated &&
-        this.clearIfRepeated(row, 'severityCode', previousValues);
-
-      if (!severityRepeated) {
-        previousValues.checkCode = null;
-        previousValues.resultMessage = null;
+      if (sameSeverity) {
+        row.severityCode = '';
+      } else {
+        prev.severityCode = row.severityCode;
+        prev.checkCode = null;
+        prev.resultMessage = null;
       }
 
-      const checkCodeRepeated =
-        severityRepeated &&
-        this.clearIfRepeated(row, 'checkCode', previousValues);
-
-      if (!checkCodeRepeated) {
-        previousValues.resultMessage = null;
+      if (sameCheck) {
+        row[codeKey] = '';
+      } else {
+        prev.checkCode = row[codeKey];
+        prev.resultMessage = null;
       }
 
-      this.clearIfRepeated(row, 'resultMessage', previousValues);
+      if (sameMessage) {
+        row.resultMessage = '';
+      } else {
+        prev.resultMessage = row.resultMessage;
+      }
     }
 
     return sorted;
-  }
-
-  private clearIfRepeated(
-    row: any,
-    key: string,
-    previousValues: Record<string, any>,
-  ): boolean {
-    if (row[key] === previousValues[key]) {
-      row[key] = '';
-      return true;
-    }
-
-    previousValues[key] = row[key];
-    return false;
   }
 
   async getAvailableDataSets() {
