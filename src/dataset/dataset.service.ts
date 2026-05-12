@@ -21,62 +21,80 @@ export class DataSetService {
   ) { }
 
   private groupEvaluationResults(results: any[]): any[] {
-  if (!results || results.length === 0) return results;
+    if (!results?.length || !('checkCode' in results[0])) {
+      return results;
+    }
+    
+    const sorted = [...results].sort((a, b) =>
+      (a.unitStack || '').localeCompare(b.unitStack || '') ||
+      (a.severityCode || '').localeCompare(b.severityCode || '') ||
+      (a.checkCode || '').localeCompare(b.checkCode || '') ||
+      (new Date(a.beginPeriod).getTime() - new Date(b.beginPeriod).getTime()) ||
+      (a.resultMessage || '').localeCompare(b.resultMessage || '')
+    );
 
-  if (!('checkCode' in results[0])) return results;
+    const previousValues = {
+      unitStack: null,
+      severityCode: null,
+      checkCode: null,
+      resultMessage: null,
+    };
 
-  const sorted = [...results].sort((a, b) =>
-    (a.unitStack || '').localeCompare(b.unitStack || '') ||
-    (a.severityCode || '').localeCompare(b.severityCode || '') ||
-    (a.checkCode || '').localeCompare(b.checkCode || '') ||
-    (a.resultMessage || '').localeCompare(b.resultMessage || '')
-  );
+    for (const row of sorted) {
+      const unitStackRepeated = this.clearIfRepeated(
+        row,
+        'unitStack',
+        previousValues,
+      );
 
-  let prevUnitStack = null;
-  let prevSeverity = null;
-  let prevCheckCode = null;
-  let prevMessage = null;
+      if (!unitStackRepeated) {
+        previousValues.severityCode = null;
+        previousValues.checkCode = null;
+        previousValues.resultMessage = null;
+      }
 
-  for (const row of sorted) {
-    if (row.unitStack === prevUnitStack) {
-      row.unitStack = '';
-    } else {
-      prevUnitStack = row.unitStack;
-      prevSeverity = null;
-      prevCheckCode = null;
-      prevMessage = null;
+      const severityRepeated =
+        unitStackRepeated &&
+        this.clearIfRepeated(row, 'severityCode', previousValues);
+
+      if (!severityRepeated) {
+        previousValues.checkCode = null;
+        previousValues.resultMessage = null;
+      }
+
+      const checkCodeRepeated =
+        severityRepeated &&
+        this.clearIfRepeated(row, 'checkCode', previousValues);
+
+      if (!checkCodeRepeated) {
+        previousValues.resultMessage = null;
+      }
+
+      this.clearIfRepeated(row, 'resultMessage', previousValues);
     }
 
-    if (row.severityCode === prevSeverity && row.unitStack === '') {
-      row.severityCode = '';
-    } else {
-      prevSeverity = row.severityCode;
-      prevCheckCode = null;
-      prevMessage = null;
-    }
-
-    if (row.checkCode === prevCheckCode && row.severityCode === '') {
-      row.checkCode = '';
-    } else {
-      prevCheckCode = row.checkCode;
-      prevMessage = null;
-    }
-
-    if (row.resultMessage === prevMessage && row.checkCode === '') {
-      row.resultMessage = '';
-    } else {
-      prevMessage = row.resultMessage;
-    }
+    return sorted;
   }
 
-  return sorted;
-}
+  private clearIfRepeated(
+    row: any,
+    key: string,
+    previousValues: Record<string, any>,
+  ): boolean {
+    if (row[key] === previousValues[key]) {
+      row[key] = '';
+      return true;
+    }
+
+    previousValues[key] = row[key];
+    return false;
+  }
 
   async getAvailableDataSets() {
     const results = await withSlaveConnection(this.dataSource, async (manager) => {
       const repository = new DataSetRepository(manager);
       return await repository.find({
-      where: { groupCode: 'REPORT' },
+        where: { groupCode: 'REPORT' },
       });
     });
     return results.map((e) => {
@@ -129,15 +147,15 @@ export class DataSetService {
       const promises = [];
       const tests = await withSlaveConnection(this.dataSource, async (manager) => {
         return await manager.query(
-        `
+          `
         SELECT
           test_sum_id AS "id",
           test_type_cd AS  "code"
         FROM ${schema}.test_summary
         WHERE test_sum_id = ANY($1);`,
-        [params.testId],
-      );
-    });
+          [params.testId],
+        );
+      });
       tests.forEach((test: { id: string; code: string }) => {
         promises.push(this.getTestDataSet(schema, dataSet, params, test, reportColumns, hasFacilityInfo));
       });
@@ -207,7 +225,7 @@ export class DataSetService {
       );
     });
     // Apply grouping only for evaluation reports
-    if (params.reportCode==='EM_EVAL') {
+    if (params.reportCode === 'EM_EVAL') {
       results = this.groupEvaluationResults(results);
     }
 

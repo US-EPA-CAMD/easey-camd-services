@@ -22,8 +22,8 @@ export class CopyOfRecordService {
     private readonly logger: Logger,
     private dataService: DataSetService,
     private readonly entityManager: EntityManager,
-  ) { 
-        this.domPurify = createDOMPurify(new JSDOM('').window);
+  ) {
+    this.domPurify = createDOMPurify(new JSDOM('').window);
   }
 
   addDocumentHeader(content: string, title: string): string {
@@ -83,7 +83,7 @@ export class CopyOfRecordService {
     }
 
     for (let i = 0; i < (columns?.values?.length ?? 0); i++) {
-        groups[i % columnCount].push([
+      groups[i % columnCount].push([
         columns.values[i].displayName,
         columns.values[i].name,
       ]);
@@ -115,76 +115,126 @@ export class CopyOfRecordService {
     return innerContent;
   }
 
-  addDefaultTable(columns: ReportColumnDTO, detail: ReportDetailDTO, isEmissionEvaluation:boolean): string {
-    let innerContent = this.addTableHeader(detail.displayName, false, detail);
 
-    innerContent += `<div><table class="default ${isEmissionEvaluation ? 'emissions_evaluation_report' : ''}">`;
+  addDefaultTable(
+    columns: ReportColumnDTO,
+    detail: ReportDetailDTO,
+    isEmissionEvaluation: boolean,
+  ): string {
+    let innerContent = this.addTableHeader(
+      detail.displayName,
+      false,
+      detail,
+    );
 
-    //Load column headings
-    innerContent += '<tr>';
-    for (const column of columns.values) {
-      innerContent += `<th> ${column.displayName} </th>`;
-    }
-    innerContent += '</tr>';
+    innerContent += `
+    <div>
+      <table class="default ${isEmissionEvaluation ? 'emissions_evaluation_report' : ''
+      }">
+  `;
 
-    const codeToDefinitions = new Map<string, string[]>(); //Prepopulate our table of code descriptions used for the table legend
+    innerContent += this.buildTableHeaders(columns);
 
-    //Load column rows
+    const codeToDefinitions = new Map<string, string[]>();
+
     for (const result of detail.results) {
-      innerContent += '<tr>';
-      for (const column of columns.values) {
-        //Populate the code definitions for the legend of this table
-        if (
-          result[column.name + 'Group'] &&
-          result[column.name + 'Description']
-        ) {
-          if (codeToDefinitions.has(result[column.name + 'Group'])) {
-            const arr = codeToDefinitions.get(result[column.name + 'Group']);
-            arr.push(
-              `${result[column.name]} - ${result[column.name + 'Description']}`,
-            );
-
-            codeToDefinitions.set(result[column.name + 'Group'], arr);
-          } else {
-            const arr = [];
-            arr.push(
-              `${result[column.name]} - ${result[column.name + 'Description']}`,
-            );
-
-            codeToDefinitions.set(result[column.name + 'Group'], arr);
-          }
-        }
-
-        if (result[column.name]) {
-          innerContent += `<td> ${result[column.name]} </td>`;
-        } else {
-          innerContent += `<td></td>`;
-        }
-      }
-      innerContent += '</tr>';
+      innerContent += this.buildTableRow(
+        result,
+        columns,
+        codeToDefinitions,
+      );
     }
 
-    innerContent += '</table> </div>';
+    innerContent += '</table></div>';
 
-    //Populate legend from map
-    codeToDefinitions.forEach((vals, key) => {
-      if (vals.length > 0) {
-        const minifiedVals = new Set(vals);
-        innerContent +=
-          '<div class ="code-section"> <div class = "col-table-container">';
-
-        innerContent += `<div class = "code-group"> ${key}: </div>`;
-        innerContent += `<div class = "code-values">`;
-
-        for (const codeVal of Array.from(minifiedVals)) {
-          innerContent += `<div> ${codeVal} </div>`;
-        }
-
-        innerContent += '</div> </div> </div>';
-      }
-    });
+    innerContent += this.buildLegend(codeToDefinitions);
 
     return innerContent;
+  }
+
+  private buildTableHeaders(columns: ReportColumnDTO): string {
+    let content = '<tr>';
+
+    for (const column of columns.values) {
+      content += `<th>${column.displayName}</th>`;
+    }
+
+    content += '</tr>';
+
+    return content;
+  }
+
+  private buildTableRow(
+    result: any,
+    columns: ReportColumnDTO,
+    codeToDefinitions: Map<string, string[]>,
+  ): string {
+    let row = '<tr>';
+
+    for (const column of columns.values) {
+      this.addCodeDefinition(result, column, codeToDefinitions);
+
+      row += `<td>${result[column.name] ?? ''}</td>`;
+    }
+
+    row += '</tr>';
+
+    return row;
+  }
+
+  private addCodeDefinition(
+    result: any,
+    column: any,
+    codeToDefinitions: Map<string, string[]>,
+  ): void {
+    const group = result[column.name + 'Group'];
+    const description = result[column.name + 'Description'];
+
+    if (!group || !description) {
+      return;
+    }
+
+    const definition = `${result[column.name]} - ${description}`;
+
+    const existingDefinitions =
+      codeToDefinitions.get(group) ?? [];
+
+    existingDefinitions.push(definition);
+
+    codeToDefinitions.set(group, existingDefinitions);
+  }
+
+  private buildLegend(
+    codeToDefinitions: Map<string, string[]>,
+  ): string {
+    let content = '';
+
+    codeToDefinitions.forEach((values, key) => {
+      if (!values.length) {
+        return;
+      }
+
+      const uniqueValues = [...new Set(values)];
+
+      content += `
+      <div class="code-section">
+        <div class="col-table-container">
+          <div class="code-group">${key}:</div>
+          <div class="code-values">
+    `;
+
+      for (const value of uniqueValues) {
+        content += `<div>${value}</div>`;
+      }
+
+      content += `
+          </div>
+        </div>
+      </div>
+    `;
+    });
+
+    return content;
   }
 
   generateCopyOfRecordCert(statements: object[]): string {
@@ -204,7 +254,7 @@ export class CopyOfRecordService {
     });
 
     documentContent = documentContent.replace('{CONTENT}', innerContent);
-    
+
     return documentContent;
   }
 
