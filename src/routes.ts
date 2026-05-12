@@ -16,6 +16,7 @@ import { SubmissionModule } from './submission/submission.module';
 import { MatsFileUploadModule } from './mats-file-upload/mats-file-upload.module';
 import { TestTypeCodeModule } from './test-type-code/test-type-code.module';
 import { HealthModule } from '@us-epa-camd/easey-common/health/health.module';
+import { UnitsExpectedToSubmitModule } from './units-expected-to-submit/units-expected-to-submit.module';
 
 const routes = [
   {
@@ -91,6 +92,10 @@ const routes = [
       {
         path: '/submission-report',
         module: SubmissionReportModule,
+      },
+      {
+        path: '/units-expected-to-submit',
+        module: UnitsExpectedToSubmitModule,
       },
     ],
   },
