@@ -25,68 +25,84 @@ export class DataSetService {
       return results;
     }
 
-    const codeKey =
-      'checkCode' in results[0] ? 'checkCode' :
-        'checkResult' in results[0] ? 'checkResult' :
-          null;
-
+    const codeKey = this.getCodeKey(results[0]);
     if (!codeKey) return results;
 
     const sorted = [...results].sort((a, b) =>
+      this.compareRows(a, b, codeKey)
+    );
+
+    const prev = {
+      unitStack: null as string | null,
+      severityCode: null as string | null,
+      checkCode: null as string | null,
+      resultMessage: null as string | null,
+    };
+
+    for (const row of sorted) {
+      this.processRow(row, prev, codeKey);
+    }
+
+    return sorted;
+  }
+
+  private getCodeKey(sample: any): string | null {
+    if ('checkCode' in sample) return 'checkCode';
+    if ('checkResult' in sample) return 'checkResult';
+    return null;
+  }
+
+  private compareRows(a: any, b: any, codeKey: string): number {
+    return (
       (a.unitStack || '').localeCompare(b.unitStack || '') ||
       (a.severityCode || '').localeCompare(b.severityCode || '') ||
       (a[codeKey] || '').localeCompare(b[codeKey] || '') ||
-      ((a.beginPeriod && b.beginPeriod)
+      (a.beginPeriod && b.beginPeriod
         ? new Date(a.beginPeriod).getTime() - new Date(b.beginPeriod).getTime()
         : 0) ||
       (a.resultMessage || '').localeCompare(b.resultMessage || '')
     );
+  }
 
-    let prev = {
-      unitStack: null,
-      severityCode: null,
-      checkCode: null,
-      resultMessage: null,
-    };
+  private processRow(row: any, prev: any, codeKey: string): void {
+    const sameUnit = row.unitStack === prev.unitStack;
+    const sameSeverity = sameUnit && row.severityCode === prev.severityCode;
+    const sameCheck = sameSeverity && row[codeKey] === prev.checkCode;
+    const sameMessage = sameCheck && row.resultMessage === prev.resultMessage;
 
-    for (const row of sorted) {
-      const sameUnit = row.unitStack === prev.unitStack;
-      const sameSeverity = sameUnit && row.severityCode === prev.severityCode;
-      const sameCheck = sameSeverity && row[codeKey] === prev.checkCode;
-      const sameMessage = sameCheck && row.resultMessage === prev.resultMessage;
-
-      if (sameUnit) {
-        row.unitStack = '';
-      } else {
-        prev.unitStack = row.unitStack;
-        prev.severityCode = null;
-        prev.checkCode = null;
-        prev.resultMessage = null;
-      }
-
-      if (sameSeverity) {
-        row.severityCode = '';
-      } else {
-        prev.severityCode = row.severityCode;
-        prev.checkCode = null;
-        prev.resultMessage = null;
-      }
-
-      if (sameCheck) {
-        row[codeKey] = '';
-      } else {
-        prev.checkCode = row[codeKey];
-        prev.resultMessage = null;
-      }
-
-      if (sameMessage) {
-        row.resultMessage = '';
-      } else {
-        prev.resultMessage = row.resultMessage;
-      }
+    if (sameUnit) {
+      row.unitStack = '';
+    } else {
+      this.resetPrev(prev);
+      prev.unitStack = row.unitStack;
     }
 
-    return sorted;
+    if (sameSeverity) {
+      row.severityCode = '';
+    } else {
+      prev.severityCode = row.severityCode;
+      prev.checkCode = null;
+      prev.resultMessage = null;
+    }
+
+    if (sameCheck) {
+      row[codeKey] = '';
+    } else {
+      prev.checkCode = row[codeKey];
+      prev.resultMessage = null;
+    }
+
+    if (sameMessage) {
+      row.resultMessage = '';
+    } else {
+      prev.resultMessage = row.resultMessage;
+    }
+  }
+
+  private resetPrev(prev: any): void {
+    prev.severityCode = null;
+    prev.checkCode = null;
+    prev.resultMessage = null;
   }
 
   async getAvailableDataSets() {
