@@ -18,13 +18,98 @@ export class DataSetService {
     private readonly entityManager: EntityManager,
     private readonly repository: DataSetRepository,
     private readonly dataSource: DataSource,
-  ) {}
+  ) { }
+
+  private groupEvaluationResults(results: any[]): any[] {
+    if (!results?.length) {
+      return results;
+    }
+
+    const codeKey = this.getCodeKey(results[0]);
+    if (!codeKey) return results;
+
+    const sorted = [...results].sort((a, b) =>
+      this.compareRows(a, b, codeKey)
+    );
+
+    const prev = {
+      unitStack: null as string | null,
+      severityCode: null as string | null,
+      checkCode: null as string | null,
+      resultMessage: null as string | null,
+    };
+
+    for (const row of sorted) {
+      this.processRow(row, prev, codeKey);
+    }
+
+    return sorted;
+  }
+
+  private getCodeKey(sample: any): string | null {
+    if ('checkCode' in sample) return 'checkCode';
+    if ('checkResult' in sample) return 'checkResult';
+    return null;
+  }
+
+  private compareRows(a: any, b: any, codeKey: string): number {
+    return (
+      (a.unitStack || '').localeCompare(b.unitStack || '') ||
+      (a.severityCode || '').localeCompare(b.severityCode || '') ||
+      (a[codeKey] || '').localeCompare(b[codeKey] || '') ||
+      (a.beginPeriod && b.beginPeriod
+        ? new Date(a.beginPeriod).getTime() - new Date(b.beginPeriod).getTime()
+        : 0) ||
+      (a.resultMessage || '').localeCompare(b.resultMessage || '')
+    );
+  }
+
+  private processRow(row: any, prev: any, codeKey: string): void {
+    const sameUnit = row.unitStack === prev.unitStack;
+    const sameSeverity = sameUnit && row.severityCode === prev.severityCode;
+    const sameCheck = sameSeverity && row[codeKey] === prev.checkCode;
+    const sameMessage = sameCheck && row.resultMessage === prev.resultMessage;
+
+    if (sameUnit) {
+      row.unitStack = '';
+    } else {
+      this.resetPrev(prev);
+      prev.unitStack = row.unitStack;
+    }
+
+    if (sameSeverity) {
+      row.severityCode = '';
+    } else {
+      prev.severityCode = row.severityCode;
+      prev.checkCode = null;
+      prev.resultMessage = null;
+    }
+
+    if (sameCheck) {
+      row[codeKey] = '';
+    } else {
+      prev.checkCode = row[codeKey];
+      prev.resultMessage = null;
+    }
+
+    if (sameMessage) {
+      row.resultMessage = '';
+    } else {
+      prev.resultMessage = row.resultMessage;
+    }
+  }
+
+  private resetPrev(prev: any): void {
+    prev.severityCode = null;
+    prev.checkCode = null;
+    prev.resultMessage = null;
+  }
 
   async getAvailableDataSets() {
     const results = await withSlaveConnection(this.dataSource, async (manager) => {
       const repository = new DataSetRepository(manager);
       return await repository.find({
-      where: { groupCode: 'REPORT' },
+        where: { groupCode: 'REPORT' },
       });
     });
     return results.map((e) => {
@@ -77,15 +162,15 @@ export class DataSetService {
       const promises = [];
       const tests = await withSlaveConnection(this.dataSource, async (manager) => {
         return await manager.query(
-        `
+          `
         SELECT
           test_sum_id AS "id",
           test_type_cd AS  "code"
         FROM ${schema}.test_summary
         WHERE test_sum_id = ANY($1);`,
-        [params.testId],
-      );
-    });
+          [params.testId],
+        );
+      });
       tests.forEach((test: { id: string; code: string }) => {
         promises.push(this.getTestDataSet(schema, dataSet, params, test, reportColumns, hasFacilityInfo));
       });
@@ -148,12 +233,18 @@ export class DataSetService {
       : table.template.displayName;
     detailDto.templateCode = table.template.code;
     detailDto.templateType = table.template.type;
-    detailDto.results = await withSlaveConnection(this.dataSource, async (manager) => {
+    let results = await withSlaveConnection(this.dataSource, async (manager) => {
       return await manager.query(
-      table.sqlStatement,
-      sqlParams,
-    );
-  });
+        table.sqlStatement,
+        sqlParams,
+      );
+    });
+    // Apply grouping only for evaluation reports
+    if (params.reportCode === 'EM_EVAL') {
+      results = this.groupEvaluationResults(results);
+    }
+
+    detailDto.results = results;
 
     if (detailDto.results.length > 0) {
       let columnDto = reportColumns.find(

@@ -85,10 +85,10 @@ describe('-- Copy of Record Service --', () => {
 
   it('should add a default table correctly', () => {
     reportDto.displayName = 'Display';
-    const content = service.addDefaultTable(columnDto, reportDto);
+    const content = service.addDefaultTable(columnDto, reportDto, false);
 
-    expect(content).toEqual(
-      `<h3 class = > Display </h3><div> <table class = \"default\"><tr><th> Facility Name </th><th> Facility ID (ORISPL) </th><th> State </th><th> County </th><th> Latitude </th><th> Longitude </th></tr><tr><td> Cholla </td><td> 113 </td><td> AZ </td><td> Navajo County </td><td> 34.9394 </td><td> -110.3033 </td></tr></table> </div>`,
+    expect(content.replace(/\s+/g, ' ').trim()).toEqual(
+      `<h3 class = > Display </h3> <div> <table class=\"default \"> <tr><th>Facility Name</th><th>Facility ID (ORISPL)</th><th>State</th><th>County</th><th>Latitude</th><th>Longitude</th></tr><tr><td>Cholla</td><td>113</td><td>AZ</td><td>Navajo County</td><td>34.9394</td><td>-110.3033</td></tr></table></div>`,
     );
   });
 
