@@ -58,8 +58,8 @@ export class UnitsExpectedRepository extends Repository<UnitsExpectedView> {
         const subRecords = await this.query(
           `SELECT * FROM camdecmpsaux.get_unit_program_subrecords($1, $2, $3)`,
           [
-            facilityId,
-            entity.unitId,
+            row.fac_id,
+            row.unitid,
             programCode 
           ]
         );
