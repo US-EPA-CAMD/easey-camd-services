@@ -264,10 +264,38 @@ export class SubmissionEmailService {
   );
 
   return {
-    filename: `${submissionFeedbackEmailData.submissionSet.orisCode}_SUBMISSION_FEEDBACK.html`,
+    filename: this.buildEmailAttachmentFilename(submissionFeedbackEmailData),
     content: attachmentContent,
   };
 }
+
+  private buildEmailAttachmentFilename(data: SubmissionFeedbackEmailData): string {
+    const orisCode = data.submissionSet.orisCode;
+    const location = data.submissionSet.facName.replace(/[^a-zA-Z0-9]/g, '_').replace(/_+/g, '_');
+
+    // For Emissions: add year/quarter
+    if (data.groupKey?.startsWith('EM_')) {
+      const rptPeriod = data.submissionQueueRecords[0]?.reportingPeriod;
+      if (rptPeriod?.calendarYear && rptPeriod?.quarter) {
+        return `${location}_${orisCode}_FEEDBACK_EM_${rptPeriod.calendarYear}Q${rptPeriod.quarter}.html`;
+      }
+    }
+
+    // For MP and QA: add submission date (YYYYMMDD)
+    const date = data.submissionSet.queuedTime;
+    const dateStr = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`;
+
+    if (data.groupKey === 'MP') {
+      return `${location}_${orisCode}_FEEDBACK_MP_${dateStr}.html`;
+    }
+
+    if (data.groupKey === 'qaCriticalRecords' || data.groupKey === 'qaNonCriticalRecords') {
+      return `${location}_${orisCode}_FEEDBACK_QA_${dateStr}.html`;
+    }
+
+    // Fallback
+    return `${location}_${orisCode}_SUBMISSION_FEEDBACK.html`;
+  }
 
   public async renderSubmissionFeedbackReportForCdx(
     submissionFeedbackEmailData: SubmissionFeedbackEmailData,
