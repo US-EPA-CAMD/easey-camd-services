@@ -271,7 +271,9 @@ export class SubmissionEmailService {
 
   private buildEmailAttachmentFilename(data: SubmissionFeedbackEmailData): string {
     const orisCode = data.submissionSet.orisCode;
-    const location = data.submissionSet.facName.replace(/[^a-zA-Z0-9]/g, '_').replace(/_+/g, '_');
+
+    // Get primary location (alphabetically first stack/pipe)
+    const location = this.getPrimaryLocation(data);
 
     // For Emissions: add year/quarter
     if (data.groupKey?.startsWith('EM_')) {
@@ -295,6 +297,28 @@ export class SubmissionEmailService {
 
     // Fallback
     return `${location}_${orisCode}_SUBMISSION_FEEDBACK.html`;
+  }
+
+  private getPrimaryLocation(data: SubmissionFeedbackEmailData): string {
+    // Extract unitStackPipe from templateContext
+    const unitStackPipe = data.templateContext?.monitorPlan?.item?.unitStackPipe;
+
+    if (!unitStackPipe || unitStackPipe === 'NA') {
+      // Fallback to ORIS code if no location available
+      return String(data.submissionSet.orisCode);
+    }
+
+    // Parse comma-separated list and get alphabetically first location
+    const locations = unitStackPipe
+      .split(',')
+      .map((loc: string) => loc.trim())
+      .filter((loc: string) => loc.length > 0)
+      .sort();
+
+    const primaryLocation = locations.length > 0 ? locations[0] : String(data.submissionSet.orisCode);
+
+    // Sanitize for filename use
+    return primaryLocation.replace(/[^a-zA-Z0-9]/g, '_').replace(/_+/g, '_');
   }
 
   public async renderSubmissionFeedbackReportForCdx(
