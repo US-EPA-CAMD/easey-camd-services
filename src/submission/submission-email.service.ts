@@ -272,8 +272,10 @@ export class SubmissionEmailService {
   private buildEmailAttachmentFilename(data: SubmissionFeedbackEmailData): string {
     const orisCode = data.submissionSet.orisCode;
 
-    // Get primary location (alphabetically first stack/pipe)
-    const location = this.getPrimaryLocation(data);
+    // For QA: use specific QA test location
+    // For MP/EM: use primary location (alphabetically first stack/pipe)
+    const isQA = data.groupKey === 'qaCriticalRecords' || data.groupKey === 'qaNonCriticalRecords';
+    const location = isQA ? this.getQASpecificLocation(data) : this.getPrimaryLocation(data);
 
     // For Emissions: add year/quarter
     if (data.groupKey?.startsWith('EM_')) {
@@ -287,7 +289,7 @@ export class SubmissionEmailService {
     const date = data.submissionSet.queuedTime;
     const dateStr = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`;
 
-    if (data.groupKey === 'MP') {
+    if (isQA) {
       return `${location}_${orisCode}_FEEDBACK_MP_${dateStr}.html`;
     }
 
@@ -299,26 +301,73 @@ export class SubmissionEmailService {
     return `${location}_${orisCode}_SUBMISSION_FEEDBACK.html`;
   }
 
-  private getPrimaryLocation(data: SubmissionFeedbackEmailData): string {
-    // Extract unitStackPipe from templateContext
+  private getQASpecificLocation(data: SubmissionFeedbackEmailData): string {
+    // For QA, use the specific stack/pipe/unit where the QA test was performed
+    // This may differ from the MP primary location
     const unitStackPipe = data.templateContext?.monitorPlan?.item?.unitStackPipe;
 
     if (!unitStackPipe || unitStackPipe === 'NA') {
-      // Fallback to ORIS code if no location available
       return String(data.submissionSet.orisCode);
     }
 
-    // Parse comma-separated list and get alphabetically first location
+    // Parse locations
     const locations = unitStackPipe
       .split(',')
       .map((loc: string) => loc.trim())
-      .filter((loc: string) => loc.length > 0)
-      .sort();
+      .filter((loc: string) => loc.length > 0);
 
-    const primaryLocation = locations.length > 0 ? locations[0] : String(data.submissionSet.orisCode);
+    // If only one location, that's the QA location
+    if (locations.length === 1) {
+      return this.sanitizeLocationName(locations[0]);
+    }
 
+    // For multiple locations, use stack/pipe priority
+    // NOTE: Ideally, we would query the specific mon_loc_id for the QA test
+    // from the database, but that would require additional queries.
+    // Current approach uses the first stack/pipe alphabetically as a reasonable default.
+    return this.getLocationWithStackPipePriority(locations);
+  }
+  private getPrimaryLocation(data: SubmissionFeedbackEmailData): string {
+    // For MP and EM: Primary Location = alphabetically first stack/pipe
+    // If no stacks/pipes, use alphabetically first unit
+    const unitStackPipe = data.templateContext?.monitorPlan?.item?.unitStackPipe;
+
+    if (!unitStackPipe || unitStackPipe === 'NA') {
+
+      return String(data.submissionSet.orisCode);
+    }
+
+    // Parse locations
+    const locations = unitStackPipe
+      .split(',')
+      .map((loc: string) => loc.trim())
+      .filter((loc: string) => loc.length > 0);
+
+    if (locations.length === 0) {
+      return String(data.submissionSet.orisCode);
+    }
+
+    return this.getLocationWithStackPipePriority(locations);
+  }
+
+  private getLocationWithStackPipePriority(locations: string[]): string {
+    // Separate stacks/pipes from units
+    // Stacks/pipes typically contain: STACK, CS, CP, MS, PIPE
+    // Units are typically: numeric or contain UNIT
+    const stackPipePattern = /stack|cs\d|cp\d|ms\d|pipe/i;
+
+    const stacksAndPipes = locations.filter(loc => stackPipePattern.test(loc)).sort();
+    const units = locations.filter(loc => !stackPipePattern.test(loc)).sort();
+
+    // Prefer stacks/pipes over units in multi-location configurations
+    const primaryLocation = stacksAndPipes.length > 0 ? stacksAndPipes[0] : units[0];
+
+    return this.sanitizeLocationName(primaryLocation || String(locations[0]));
+  }
+
+  private sanitizeLocationName(locationName: string): string {
     // Sanitize for filename use
-    return primaryLocation.replace(/[^a-zA-Z0-9]/g, '_').replace(/_+/g, '_');
+    return locationName.replace(/[^a-zA-Z0-9]/g, '_').replace(/_+/g, '_');
   }
 
   public async renderSubmissionFeedbackReportForCdx(
