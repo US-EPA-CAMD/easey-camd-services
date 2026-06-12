@@ -356,8 +356,8 @@ export class SubmissionEmailService {
     // Units are typically: numeric or contain UNIT
     const stackPipePattern = /stack|cs\d|cp\d|ms\d|pipe/i;
 
-    const stacksAndPipes = locations.filter(loc => stackPipePattern.test(loc)).sort();
-    const units = locations.filter(loc => !stackPipePattern.test(loc)).sort();
+    const stacksAndPipes = locations.filter(loc => stackPipePattern.test(loc)).sort((a, b) => a.localeCompare(b));
+    const units = locations.filter(loc => !stackPipePattern.test(loc)).sort((a, b) => a.localeCompare(b));
 
     // Prefer stacks/pipes over units in multi-location configurations
     const primaryLocation = stacksAndPipes.length > 0 ? stacksAndPipes[0] : units[0];
