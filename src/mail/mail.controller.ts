@@ -101,6 +101,7 @@ export class MailController {
   }
 
   @Post('email/emailRecipientList')
+  @ApiExcludeEndpointByEnv()
   @ApiOkResponse({
     description: 'Email recipient list retrieved successfully',
     type: EmailRecipientListResponseDto,
