@@ -10,6 +10,11 @@ import {
 
 import { ImportFileType } from '../enums/import-file-type.enum';
 
+// Returned when a new import set is created.
+export class CreateImportSetResponseDTO {
+  importSetId: string;
+}
+
 // Metadata returned for a file after it has been staged (parsed + uploaded to the staging bucket).
 export class StagedFileDTO {
   fileName: string;
@@ -61,4 +66,33 @@ export class DeleteImportFilesDTO {
   @IsArray()
   @IsString({ each: true })
   s3Paths?: string[];
+}
+
+// One import_queue row as returned for polling (Unit/Stack/Pipe + period derived).
+export class ImportQueueItemDTO {
+  importId: number;
+  fileName: string;
+  fileType: ImportFileType;
+  orisCode: number;
+  monPlanId: string;
+  statusCode: string;
+  note: string;
+  year: number;
+  quarter: number;
+  unitStackPipe: string;
+}
+
+// An import set with its queue rows, returned by GET latest / GET set/:id.
+export class ImportSetDTO {
+  importSetId: string;
+  userId: string;
+  userEmail: string;
+  addTime: Date;
+  queuedTime: Date;
+  startedTime: Date;
+  completedTime: Date;
+  note: string;
+  noteTime: Date;
+  statusCode: string;
+  files: ImportQueueItemDTO[];
 }
