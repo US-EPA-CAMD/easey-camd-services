@@ -19,7 +19,6 @@ import { CurrentUser } from '@us-epa-camd/easey-common/interfaces';
 
 import { ApiExcludeControllerByEnv } from '../decorators/swagger-decorator';
 import {
-  CreateImportSetResponseDTO,
   DeleteImportFilesDTO,
   ImportSetDTO,
   StagedFileDTO,
@@ -34,19 +33,6 @@ import { BulkImportService } from './bulk-import.service';
 export class BulkImportController {
   constructor(private readonly service: BulkImportService) {}
 
-  @Post('set')
-  @ApiOkResponse({
-    type: CreateImportSetResponseDTO,
-    description: 'Creates a new import set in the NEW state',
-  })
-  @UseGuards(AuthGuard)
-  async createSet(
-    @Body('userEmail') userEmail: string,
-    @User() user: CurrentUser,
-  ): Promise<CreateImportSetResponseDTO> {
-    return this.service.createSet(user.userId, userEmail);
-  }
-
   @Post('set/:id/stage')
   @ApiOkResponse({
     type: StagedFileDTO,
@@ -58,13 +44,12 @@ export class BulkImportController {
   async stage(
     @Param('id') importSetId: string,
     @UploadedFiles() files: Express.Multer.File[],
-    @User() user: CurrentUser,
   ): Promise<StagedFileDTO[]> {
-    return this.service.stageFiles(importSetId, files, user);
+    return this.service.stageFiles(importSetId, files);
   }
 
   // With a body of s3Paths, removes those staged objects; with no body, clears
-  // all staged files for the set (cancel / submit failure). The NEW row is kept.
+  // all staged files for the staging ID (cancel / submit failure).
   @Delete('set/:id/files')
   @ApiOkResponse({
     description: 'Removes the given staged files, or all staged files for the set',
@@ -73,9 +58,8 @@ export class BulkImportController {
   async deleteFiles(
     @Param('id') importSetId: string,
     @Body() body: DeleteImportFilesDTO,
-    @User() user: CurrentUser,
   ): Promise<void> {
-    return this.service.deleteFiles(importSetId, body?.s3Paths, user);
+    return this.service.deleteFiles(importSetId, body?.s3Paths);
   }
 
   @Post('set/:id/submit')
@@ -95,7 +79,7 @@ export class BulkImportController {
     @Body() body: SubmitImportDTO,
     @User() user: CurrentUser,
   ): Promise<void> {
-    return this.service.submit(importSetId, body.items, user);
+    return this.service.submit(importSetId, body.items, body.userEmail, user);
   }
 
   @Get('latest')

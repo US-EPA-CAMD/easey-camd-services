@@ -7,7 +7,6 @@ import {
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Brackets, EntityManager, Not } from 'typeorm';
-import { v4 as uuidv4 } from 'uuid';
 
 import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
 import { CurrentUser } from '@us-epa-camd/easey-common/interfaces';
@@ -16,6 +15,7 @@ import { Logger } from '@us-epa-camd/easey-common/logger';
 import { StagedFileDTO, SubmitImportItemDTO } from '../dto/bulk-import.dto';
 import { ImportQueue } from '../entities/import-queue.entity';
 import { ImportSet } from '../entities/import-set.entity';
+import { MonitorPlan } from '../entities/monitor-plan.entity';
 import { ReportingPeriod } from '../entities/reporting-period.entity';
 import { ImportFileType } from '../enums/import-file-type.enum';
 
@@ -51,29 +51,12 @@ export class BulkImportService {
     this.bucket = this.configService.get('fileStagingConfig.bucket');
   }
 
-  // Creates a new, empty import set in the NEW state.
-  async createSet(
-    userId: string,
-    userEmail: string,
-  ): Promise<{ importSetId: string }> {
-    const record = this.entityManager.create(ImportSet, {
-      importSetId: uuidv4(),
-      userId,
-      userEmail,
-      addTime: new Date(),
-    });
-    await this.entityManager.save(record);
-    return { importSetId: record.importSetId };
-  }
-
-  // Parses + validates each file, uploads it to the set's staging folder, and returns its metadata.
+  // Uploads each file to the staging folder under a client-generated staging ID
+  // and returns its metadata. No import_set row exists until submit.
   async stageFiles(
     importSetId: string,
     files: Express.Multer.File[],
-    user: CurrentUser,
   ): Promise<StagedFileDTO[]> {
-    await this.getEditableSet(importSetId, user);
-
     const staged: StagedFileDTO[] = [];
     for (const file of files) {
       const parsed = await this.parseAndResolve(file);
@@ -102,17 +85,13 @@ export class BulkImportService {
     return staged;
   }
 
-  // Removes staged objects for the set. With s3Paths, deletes those specific
-  // objects (user removed a file, or its plan failed checkout during add).
-  // Without, clears every staged object under the set's folder (cancel / submit
-  // failure). The NEW import_set row is always left in place as a record.
+  // Removes staged objects under the staging ID. With s3Paths, deletes those
+  // specific objects (a removed file, or a plan that failed checkout); without,
+  // clears every staged object (cancel / submit failure).
   async deleteFiles(
     importSetId: string,
     s3Paths: string[] | undefined,
-    user: CurrentUser,
   ): Promise<void> {
-    await this.getEditableSet(importSetId, user);
-
     const prefix = `${BULK_IMPORT_PREFIX}/${importSetId}/`;
 
     // Delete a specific set of objects (scoped to this set's folder).
@@ -153,15 +132,14 @@ export class BulkImportService {
     } while (continuationToken);
   }
 
-  // Finalizes the set: creates one import_queue row per staged file and moves
-  // the set + rows to QUEUED. Roles + checkout were enforced by the RoleGuard.
+  // Creates the import_set and one import_queue row per staged file, all QUEUED.
+  // Roles + checkout were enforced by the RoleGuard.
   async submit(
     importSetId: string,
     items: SubmitImportItemDTO[],
+    userEmail: string,
     user: CurrentUser,
   ): Promise<void> {
-    const set = await this.getEditableSet(importSetId, user);
-
     if (!items || items.length === 0) {
       throw new EaseyException(
         new Error('Cannot submit an import with no files.'),
@@ -171,6 +149,15 @@ export class BulkImportService {
 
     await this.entityManager.transaction(async (trx) => {
       const now = new Date();
+      const set = trx.create(ImportSet, {
+        importSetId,
+        userId: user.userId,
+        userEmail,
+        addTime: now,
+        queuedTime: now,
+      });
+      await trx.save(set);
+
       for (const item of items) {
         const row = trx.create(ImportQueue, {
           importSetId,
@@ -185,8 +172,6 @@ export class BulkImportService {
         });
         await trx.save(row);
       }
-      set.queuedTime = now;
-      await trx.save(set);
     });
   }
 
@@ -224,26 +209,14 @@ export class BulkImportService {
         (sub) =>
           sub
             .select(UNIT_STACK_PIPE_AGG)
-            .from('camdecmpswks.monitor_plan_location', 'mpl')
-            .innerJoin(
-              'camdecmpswks.monitor_location',
-              'ml',
-              'ml.mon_loc_id = mpl.mon_loc_id',
-            )
-            .leftJoin('camd.unit', 'u', 'u.unit_id = ml.unit_id')
-            .leftJoin(
-              'camdecmpswks.stack_pipe',
-              'sp',
-              'sp.stack_pipe_id = ml.stack_pipe_id',
-            )
-            .where('mpl.mon_plan_id = iq.mon_plan_id'),
+            .from(MonitorPlan, 'mp')
+            .innerJoin('mp.locations', 'ml')
+            .leftJoin('ml.unit', 'u')
+            .leftJoin('ml.stackPipe', 'sp')
+            .where('mp.mon_plan_id = iq.mon_plan_id'),
         'unitStackPipe',
       )
-      .leftJoin(
-        'camdecmpsmd.reporting_period',
-        'rp',
-        'rp.rpt_period_id = iq.rpt_period_id',
-      )
+      .leftJoin('iq.reportingPeriod', 'rp')
       .where('iq.import_set_id = :importSetId', { importSetId })
       .orderBy('iq.oris_code')
       .addOrderBy(
@@ -259,33 +232,6 @@ export class BulkImportService {
 
   private stagePath(importSetId: string, fileName: string): string {
     return `${BULK_IMPORT_PREFIX}/${importSetId}/${fileName}`;
-  }
-
-  // Loads the set, ensuring it exists, belongs to the caller, and is still NEW.
-  private async getEditableSet(
-    importSetId: string,
-    user: CurrentUser,
-  ): Promise<ImportSet> {
-    const set = await this.entityManager.findOneBy(ImportSet, { importSetId });
-    if (!set) {
-      throw new EaseyException(
-        new Error('Import set not found.'),
-        HttpStatus.NOT_FOUND,
-      );
-    }
-    if (set.userId !== user.userId) {
-      throw new EaseyException(
-        new Error('Import set does not belong to the current user.'),
-        HttpStatus.FORBIDDEN,
-      );
-    }
-    if (set.statusCode !== 'NEW') {
-      throw new EaseyException(
-        new Error('Import set is no longer editable.'),
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-    return set;
   }
 
   // Parses a file's JSON, determines its type, and resolves its active plan.
@@ -397,26 +343,12 @@ export class BulkImportService {
     }
 
     const rows = await this.entityManager
-      .createQueryBuilder()
+      .createQueryBuilder(MonitorPlan, 'mp')
       .select('DISTINCT mp.mon_plan_id', 'monPlanId')
-      .from('camdecmpswks.monitor_plan', 'mp')
-      .innerJoin('camd.plant', 'p', 'p.fac_id = mp.fac_id')
-      .innerJoin(
-        'camdecmpswks.monitor_plan_location',
-        'mpl',
-        'mpl.mon_plan_id = mp.mon_plan_id',
-      )
-      .innerJoin(
-        'camdecmpswks.monitor_location',
-        'ml',
-        'ml.mon_loc_id = mpl.mon_loc_id',
-      )
-      .leftJoin('camd.unit', 'u', 'u.unit_id = ml.unit_id')
-      .leftJoin(
-        'camdecmpswks.stack_pipe',
-        'sp',
-        'sp.stack_pipe_id = ml.stack_pipe_id',
-      )
+      .innerJoin('mp.plant', 'p')
+      .innerJoin('mp.locations', 'ml')
+      .leftJoin('ml.unit', 'u')
+      .leftJoin('ml.stackPipe', 'sp')
       .where('p.oris_code = :orisCode', { orisCode })
       .andWhere('mp.end_rpt_period_id IS NULL')
       .andWhere(
@@ -472,21 +404,12 @@ export class BulkImportService {
 
   private async deriveUnitStackPipe(monPlanId: string): Promise<string> {
     const row = await this.entityManager
-      .createQueryBuilder()
+      .createQueryBuilder(MonitorPlan, 'mp')
       .select(UNIT_STACK_PIPE_AGG, 'unitStackPipe')
-      .from('camdecmpswks.monitor_plan_location', 'mpl')
-      .innerJoin(
-        'camdecmpswks.monitor_location',
-        'ml',
-        'ml.mon_loc_id = mpl.mon_loc_id',
-      )
-      .leftJoin('camd.unit', 'u', 'u.unit_id = ml.unit_id')
-      .leftJoin(
-        'camdecmpswks.stack_pipe',
-        'sp',
-        'sp.stack_pipe_id = ml.stack_pipe_id',
-      )
-      .where('mpl.mon_plan_id = :monPlanId', { monPlanId })
+      .innerJoin('mp.locations', 'ml')
+      .leftJoin('ml.unit', 'u')
+      .leftJoin('ml.stackPipe', 'sp')
+      .where('mp.mon_plan_id = :monPlanId', { monPlanId })
       .getRawOne();
     return row?.unitStackPipe ?? '';
   }

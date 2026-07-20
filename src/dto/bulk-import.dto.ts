@@ -10,11 +10,6 @@ import {
 
 import { ImportFileType } from '../enums/import-file-type.enum';
 
-// Returned when a new import set is created.
-export class CreateImportSetResponseDTO {
-  importSetId: string;
-}
-
 // Metadata returned for a file after it has been staged (parsed + uploaded to the staging bucket).
 export class StagedFileDTO {
   fileName: string;
@@ -51,6 +46,9 @@ export class SubmitImportItemDTO {
 }
 
 export class SubmitImportDTO {
+  @IsString()
+  userEmail: string;
+
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => SubmitImportItemDTO)
