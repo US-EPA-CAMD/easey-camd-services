@@ -317,8 +317,30 @@ export class SubmissionEmailService {
     if (!primaryEmail || primaryEmail.trim() === '') {
       return additionalEmails;
     }
-  
-  // Combine with proper comma separator
+
+    // Check for Primary Email in Additional Emails
+    if ( 
+         additionalEmails.toUpperCase().split( ',' ).map( item => item.trim() ).includes( primaryEmail.toUpperCase() )
+         ||
+         additionalEmails.toUpperCase().includes( `<${primaryEmail.toUpperCase()}>` )
+       ) {
+      return additionalEmails;
+    }
+
+    // Check for Primary Core Email if in pointy brackets
+    const bracketedEmailAddresses = primaryEmail.match(/\<([^}]+)\>/); // Only one address should exist in brakets.
+
+    if ( bracketedEmailAddresses ) {
+      if ( 
+           additionalEmails.toUpperCase().split( ',' ).map( item => item.trim() ).includes( bracketedEmailAddresses[1].toUpperCase() )
+           ||
+           additionalEmails.toUpperCase().includes( `<${bracketedEmailAddresses[1].toUpperCase()}>` )
+         ) {
+        return additionalEmails;
+      }
+    }
+
+    // Combine with proper comma separator
     return `${primaryEmail}, ${additionalEmails}`;
   }
 
