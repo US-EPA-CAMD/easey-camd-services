@@ -275,22 +275,22 @@ export class SubmissionEmailService {
     const location = this.getPrimaryLocation(data);
     
     let fileType: string;
-    let occassion: string;
+    let occasion: string;
     
     if (data.groupKey?.startsWith('EM_')) {
-      fileType := 'EM';
+      fileType = 'EM';
       const rptPeriod = data.submissionQueueRecords[0]?.reportingPeriod;
-      occassion = ( rptPeriod && rptPeriod?.calendarYear && rptPeriod?.quarter ) ? `${rptPeriod.calendarYear}q${rptPeriod.quarter}` : 'MissingQuarter';
+      occasion = ( rptPeriod && rptPeriod?.calendarYear && rptPeriod?.quarter ) ? `${rptPeriod.calendarYear}q${rptPeriod.quarter}` : 'MissingQuarter';
     }
     else if ( data.groupKey === 'qaCriticalRecords' || data.groupKey === 'qaNonCriticalRecords' ){
-      fileType := 'QA';
+      fileType = 'QA';
       const date = data.submissionSet.queuedTime;
-      occassion = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`;
+      occasion = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`;
     }
     else {
-      fileType := 'MP';
+      fileType = 'MP';
       const date = data.submissionSet.queuedTime;
-      occassion = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`;
+      occasion = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`;
     }
 
     return `Submission_Feedback_${orisCode}_${location}_${fileType}_${occasion}.html`;
