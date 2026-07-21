@@ -270,63 +270,32 @@ export class SubmissionEmailService {
 }
 
   private buildEmailAttachmentFilename(data: SubmissionFeedbackEmailData): string {
+    
     const orisCode = data.submissionSet.orisCode;
-
-    // For QA: use specific QA test location
-    // For MP/EM: use primary location (alphabetically first stack/pipe)
-    const isQA = data.groupKey === 'qaCriticalRecords' || data.groupKey === 'qaNonCriticalRecords';
-    const location = isQA ? this.getQASpecificLocation(data) : this.getPrimaryLocation(data);
-
-    // For Emissions: add year/quarter
+    const location = this.getPrimaryLocation(data);
+    
+    let fileType: string;
+    let occassion: string;
+    
     if (data.groupKey?.startsWith('EM_')) {
+      fileType := 'EM';
       const rptPeriod = data.submissionQueueRecords[0]?.reportingPeriod;
-      if (rptPeriod?.calendarYear && rptPeriod?.quarter) {
-        return `${location}_${orisCode}_FEEDBACK_EM_${rptPeriod.calendarYear}Q${rptPeriod.quarter}.html`;
-      }
+      occassion = ( rptPeriod && rptPeriod?.calendarYear && rptPeriod?.quarter ) ? `${rptPeriod.calendarYear}q${rptPeriod.quarter}` : 'MissingQuarter';
+    }
+    else if ( data.groupKey === 'qaCriticalRecords' || data.groupKey === 'qaNonCriticalRecords' ){
+      fileType := 'QA';
+      const date = data.submissionSet.queuedTime;
+      occassion = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`;
+    }
+    else {
+      fileType := 'MP';
+      const date = data.submissionSet.queuedTime;
+      occassion = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`;
     }
 
-    // For MP and QA: add submission date (YYYYMMDD)
-    const date = data.submissionSet.queuedTime;
-    const dateStr = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`;
-
-    if (isQA) {
-      return `${location}_${orisCode}_FEEDBACK_MP_${dateStr}.html`;
-    }
-
-    if (data.groupKey === 'qaCriticalRecords' || data.groupKey === 'qaNonCriticalRecords') {
-      return `${location}_${orisCode}_FEEDBACK_QA_${dateStr}.html`;
-    }
-
-    // Fallback
-    return `${location}_${orisCode}_SUBMISSION_FEEDBACK.html`;
+    return `Submission_Feedback_${orisCode}_${location}_${fileType}_${occasion}.html`;
   }
 
-  private getQASpecificLocation(data: SubmissionFeedbackEmailData): string {
-    // For QA, use the specific stack/pipe/unit where the QA test was performed
-    // This may differ from the MP primary location
-    const unitStackPipe = data.templateContext?.monitorPlan?.item?.unitStackPipe;
-
-    if (!unitStackPipe || unitStackPipe === 'NA') {
-      return String(data.submissionSet.orisCode);
-    }
-
-    // Parse locations
-    const locations = unitStackPipe
-      .split(',')
-      .map((loc: string) => loc.trim())
-      .filter((loc: string) => loc.length > 0);
-
-    // If only one location, that's the QA location
-    if (locations.length === 1) {
-      return this.sanitizeLocationName(locations[0]);
-    }
-
-    // For multiple locations, use stack/pipe priority
-    // NOTE: Ideally, we would query the specific mon_loc_id for the QA test
-    // from the database, but that would require additional queries.
-    // Current approach uses the first stack/pipe alphabetically as a reasonable default.
-    return this.getLocationWithStackPipePriority(locations);
-  }
   private getPrimaryLocation(data: SubmissionFeedbackEmailData): string {
     // For MP and EM: Primary Location = alphabetically first stack/pipe
     // If no stacks/pipes, use alphabetically first unit
