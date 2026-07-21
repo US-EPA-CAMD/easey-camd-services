@@ -9,6 +9,7 @@ import * as https from 'https';
 import * as crypto from 'crypto';
 import { EmailRecipientListRequestDto } from '../dto/email-recipient-list-request.dto';
 import { EmailRecipientListResponseDto, EmailRecipientDto } from '../dto/email-recipient-list-response.dto';
+import { ClientTokenService } from '../client-token/client-token.service';
 
 
 @Injectable()
@@ -18,46 +19,11 @@ export class RecipientListService {
     private readonly httpService: HttpService,
     private readonly entityManager: EntityManager,
     private readonly logger: Logger,
+    private readonly clientTokenService: ClientTokenService,
   ) {}
 
   returnManager() {
     return this.entityManager;
-  }
-
-  async getClientToken(): Promise<string> {
-    this.logger.debug('getClientToken ...');
-
-    //Construct the URL
-    const url =`${this.configService.get<string>('app.authApi.uri')}/tokens/client`;
-    this.logger.debug('using authApi: ' + url);
-
-    //Construct the headers
-    const headers = {
-      "x-api-key": this.configService.get<string>('app.apiKey'),
-    };
-
-    //Construct the body
-    const body = {
-      clientId: this.configService.get<string>('app.clientId'),
-      clientSecret: this.configService.get<string>('app.clientSecret')
-    };
-
-    this.logger.debug('Calling auth-api token validation API: ' +  url);
-    try {
-      const response: AxiosResponse<any> = await firstValueFrom(
-        this.httpService.post(url, body, { headers }),
-      );
-
-      if (!response.data) {
-        this.logger.error('Invalid response from auth-api token validation API');
-        return '';
-      }
-
-      return response.data.token;
-    } catch (error) {
-      this.logger.error('Error occurred during the API call to auth-api token validation API', error.message);
-      return '';
-    }
   }
 
   async getEmailRecipients(
@@ -111,17 +77,15 @@ export class RecipientListService {
     this.logger.debug('using recipientsListApiUrl: ' + recipientsListApiUrl);
 
     //Obtain client token
-    const clientToken = await this.getClientToken();
+    const clientToken = await this.clientTokenService.getClientToken();
     if (!clientToken) {
       this.logger.error('Unable to obtain client token from auth-api. Cannot proceed with emailRecipients API call');
       throw new Error('Unable to obtain client token');
     }
 
     const headers = {
-      'x-api-key': this.configService.get<string>('app.apiKey'),
-      'x-client-id': this.configService.get<string>('app.clientId'),
+      ...this.clientTokenService.buildAuthHeaders(clientToken),
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${clientToken}`,
     };
 
     this.logger.debug('Making API call to:', { url: recipientsListApiUrl });

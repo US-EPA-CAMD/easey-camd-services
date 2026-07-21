@@ -3,6 +3,9 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
+  Logger,
   Param,
   Post,
   UploadedFiles,
@@ -10,20 +13,22 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { ApiOkResponse, ApiSecurity, ApiTags } from '@nestjs/swagger';
+import { ApiOkResponse, ApiSecurity, ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 
 import { RoleGuard, User } from '@us-epa-camd/easey-common/decorators';
 import { LookupType } from '@us-epa-camd/easey-common/enums';
-import { AuthGuard } from '@us-epa-camd/easey-common/guards';
+import { AuthGuard, ClientTokenGuard } from '@us-epa-camd/easey-common/guards';
 import { CurrentUser } from '@us-epa-camd/easey-common/interfaces';
 
 import { ApiExcludeControllerByEnv } from '../decorators/swagger-decorator';
 import {
   DeleteImportFilesDTO,
   ImportSetDTO,
+  ProcessImportDTO,
   StagedFileDTO,
   SubmitImportDTO,
 } from '../dto/bulk-import.dto';
+import { BulkImportProcessService } from './bulk-import-process.service';
 import { BulkImportService } from './bulk-import.service';
 
 @Controller()
@@ -31,7 +36,10 @@ import { BulkImportService } from './bulk-import.service';
 @ApiSecurity('APIKey')
 @ApiExcludeControllerByEnv()
 export class BulkImportController {
-  constructor(private readonly service: BulkImportService) {}
+  constructor(
+    private readonly service: BulkImportService,
+    private readonly processService: BulkImportProcessService,
+  ) {}
 
   @Post('set/:id/stage')
   @ApiOkResponse({
@@ -80,6 +88,23 @@ export class BulkImportController {
     @User() user: CurrentUser,
   ): Promise<void> {
     return this.service.submit(importSetId, body.items, body.userEmail, user);
+  }
+
+  @Post('process')
+  @ApiSecurity('ClientId')
+  @ApiBearerAuth('ClientToken')
+  @UseGuards(ClientTokenGuard)
+  @HttpCode(HttpStatus.ACCEPTED)
+  async process(@Body() params: ProcessImportDTO): Promise<void> {
+    void this.processService
+      .processImportSet(params.importSetId)
+      .catch((err) => {
+        Logger.error(
+          `processImportSet failed for ${params.importSetId}: ${err?.message}`,
+          err?.stack,
+          'BulkImportController',
+        );
+      });
   }
 
   @Get('latest')

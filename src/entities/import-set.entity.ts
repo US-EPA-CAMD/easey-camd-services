@@ -11,11 +11,11 @@ export class ImportSet extends BaseEntity {
   @Column({ name: 'user_email' })
   userEmail: string;
 
-  @Column({ name: 'add_time' })
-  addTime: Date;
-
   @Column({ name: 'queued_time' })
-  queuedTime?: Date;
+  queuedTime: Date;
+
+  @Column({ name: 'claimed_time' })
+  claimedTime?: Date;
 
   @Column({ name: 'started_time' })
   startedTime?: Date;

@@ -45,6 +45,12 @@ export class SubmitImportItemDTO {
   rptPeriodId?: number;
 }
 
+// Payload for the Quartz-triggered process endpoint.
+export class ProcessImportDTO {
+  @IsString()
+  importSetId: string;
+}
+
 export class SubmitImportDTO {
   @IsString()
   userEmail: string;
@@ -85,8 +91,8 @@ export class ImportSetDTO {
   importSetId: string;
   userId: string;
   userEmail: string;
-  addTime: Date;
   queuedTime: Date;
+  claimedTime: Date;
   startedTime: Date;
   completedTime: Date;
   note: string;

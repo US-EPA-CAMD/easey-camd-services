@@ -1,16 +1,18 @@
 import {
   DeleteObjectsCommand,
+  GetObjectCommand,
   ListObjectsV2Command,
   PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Brackets, EntityManager, Not } from 'typeorm';
+import { Brackets, EntityManager } from 'typeorm';
 
 import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
 import { CurrentUser } from '@us-epa-camd/easey-common/interfaces';
 import { Logger } from '@us-epa-camd/easey-common/logger';
+import { currentDateTime } from '@us-epa-camd/easey-common/utilities/functions';
 
 import { StagedFileDTO, SubmitImportItemDTO } from '../dto/bulk-import.dto';
 import { ImportQueue } from '../entities/import-queue.entity';
@@ -20,6 +22,13 @@ import { ReportingPeriod } from '../entities/reporting-period.entity';
 import { ImportFileType } from '../enums/import-file-type.enum';
 
 const BULK_IMPORT_PREFIX = 'bulk-import';
+
+// Each file type requires the corresponding facility data-submission privilege.
+const REQUIRED_PERMISSION: Record<ImportFileType, string> = {
+  [ImportFileType.MP]: 'DSMP',
+  [ImportFileType.QA]: 'DSQA',
+  [ImportFileType.EM]: 'DSEM',
+};
 
 // Expression that aggregates a plan's unit ids / stack names for display.
 const UNIT_STACK_PIPE_AGG = "string_agg(COALESCE(u.unitid, sp.stack_name), ', ')";
@@ -147,13 +156,14 @@ export class BulkImportService {
       );
     }
 
+    this.assertFacilityPermissions(items, user);
+
     await this.entityManager.transaction(async (trx) => {
-      const now = new Date();
+      const now = currentDateTime();
       const set = trx.create(ImportSet, {
         importSetId,
         userId: user.userId,
         userEmail,
-        addTime: now,
         queuedTime: now,
       });
       await trx.save(set);
@@ -167,7 +177,6 @@ export class BulkImportService {
           fileTypeCode: item.fileType,
           orisCode: item.orisCode,
           rptPeriodId: item.rptPeriodId ?? null,
-          addTime: now,
           queuedTime: now,
         });
         await trx.save(row);
@@ -175,11 +184,37 @@ export class BulkImportService {
     });
   }
 
+  // The submit RoleGuard enforces role + checkout for the plans, but a set mixes
+  // MP/QA/EM files that each need a distinct facility privilege (DSMP/DSQA/DSEM),
+  // which a single RoleGuard can't express. Enforce those per file here.
+  private assertFacilityPermissions(
+    items: SubmitImportItemDTO[],
+    user: CurrentUser,
+  ): void {
+    // Non-prod / mock contexts have no facilities and bypass the RoleGuard; match that.
+    if (!user?.facilities) return;
+
+    for (const item of items) {
+      const required = REQUIRED_PERMISSION[item.fileType];
+      const facility = user.facilities.find(
+        (f) => f.orisCode === item.orisCode,
+      );
+      if (!facility?.permissions?.includes(required)) {
+        throw new EaseyException(
+          new Error(
+            `You do not have ${required} permission for ORIS code ${item.orisCode}, required to import ${item.fileName}.`,
+          ),
+          HttpStatus.FORBIDDEN,
+        );
+      }
+    }
+  }
+
   // Latest submitted set for the user.
   async getLatest(userId: string) {
     const set = await this.entityManager.findOne(ImportSet, {
-      where: { userId, statusCode: Not('NEW') },
-      order: { addTime: 'DESC' },
+      where: { userId },
+      order: { queuedTime: 'DESC' },
     });
     if (!set) return null;
     return this.getSet(set.importSetId);
@@ -226,6 +261,15 @@ export class BulkImportService {
       .getRawMany();
 
     return { ...set, files };
+  }
+
+  // Fetches a staged file's JSON contents from the staging bucket.
+  async getStagedObject(s3Path: string): Promise<any> {
+    const object = await this.s3Client.send(
+      new GetObjectCommand({ Bucket: this.bucket, Key: s3Path }),
+    );
+    const body = await object.Body.transformToString('utf8');
+    return JSON.parse(body);
   }
 
   /* ---------- helpers ---------- */

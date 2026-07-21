@@ -46,11 +46,11 @@ export class ImportQueue extends BaseEntity {
   })
   rptPeriodId?: number;
 
-  @Column({ name: 'add_time' })
-  addTime: Date;
-
   @Column({ name: 'queued_time' })
-  queuedTime?: Date;
+  queuedTime: Date;
+
+  @Column({ name: 'claimed_time' })
+  claimedTime?: Date;
 
   @Column({ name: 'started_time' })
   startedTime?: Date;
