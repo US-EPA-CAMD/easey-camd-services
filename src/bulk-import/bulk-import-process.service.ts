@@ -52,8 +52,9 @@ export class BulkImportProcessService {
       throw new Error(`Import set ${importSetId} not found after claim.`);
     }
 
+    let rows: ImportQueue[] = [];
     try {
-      const rows = await this.entityManager.findBy(ImportQueue, { importSetId });
+      rows = await this.entityManager.findBy(ImportQueue, { importSetId });
       rows.sort(
         (a, b) =>
           (FILE_TYPE_ORDER[a.fileTypeCode] ?? 99) -
@@ -80,16 +81,24 @@ export class BulkImportProcessService {
       set.note = err?.message ?? 'Unknown error processing import set.';
       set.noteTime = currentDateTime();
       await this.entityManager.save(set);
+      await this.errorQueueRows(rows, set.note);
+    }
+  }
+
+  // Propagate a set-level ERROR to any queue rows not already in a terminal state.
+  private async errorQueueRows(rows: ImportQueue[], note: string): Promise<void> {
+    for (const row of rows) {
+      if (row.completedTime || row.noteTime) continue;
+      row.note = note;
+      row.noteTime = currentDateTime();
+      await this.entityManager.save(row);
     }
   }
 
   // Imports a single staged file, moving the row QUEUED -> WIP -> COMPLETE/ERROR.
   private async processRow(row: ImportQueue, userId: string): Promise<void> {
     // Mint a fresh token per file so long-running sets never hit token expiry.
-    const clientToken = await this.clientTokenService.getClientToken();
-    if (!clientToken) {
-      throw new Error('Unable to obtain client token for bulk import.');
-    }
+    const headers = await this.buildRequestHeaders();
 
     const now = currentDateTime();
     row.claimedTime = now;
@@ -100,7 +109,7 @@ export class BulkImportProcessService {
       const payload = await this.bulkImportService.getStagedObject(
         row.tempS3BucketFilePath,
       );
-      await this.importFile(row.fileTypeCode, payload, userId, clientToken);
+      await this.importFile(row.fileTypeCode, payload, userId, headers);
       row.completedTime = currentDateTime();
       await this.entityManager.save(row);
     } catch (err) {
@@ -113,17 +122,28 @@ export class BulkImportProcessService {
     }
   }
 
+  // Auth headers for the outbound import call; the client token is skipped when disabled (local testing).
+  private async buildRequestHeaders(): Promise<Record<string, string>> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    if (this.configService.get<boolean>('app.enableClientToken')) {
+      const clientToken = await this.clientTokenService.getClientToken();
+      if (!clientToken) {
+        throw new Error('Unable to obtain client token for bulk import.');
+      }
+      Object.assign(headers, this.clientTokenService.buildAuthHeaders(clientToken));
+    }
+    return headers;
+  }
+
   private async importFile(
     fileType: string,
     payload: any,
     userId: string,
-    clientToken: string,
+    headers: Record<string, string>,
   ): Promise<void> {
     const url = this.buildImportUrl(fileType, userId);
-    const headers = {
-      ...this.clientTokenService.buildAuthHeaders(clientToken),
-      'Content-Type': 'application/json',
-    };
     await firstValueFrom(this.httpService.post(url, payload, { headers }));
   }
 
@@ -133,15 +153,15 @@ export class BulkImportProcessService {
       case ImportFileType.MP:
         return `${this.configService.get<string>(
           'app.monitorPlanApi',
-        )}/import/bulk?draft=false&${user}`;
+        )}/workspace/plans/import/bulk?draft=false&${user}`;
       case ImportFileType.QA:
         return `${this.configService.get<string>(
           'app.qaCertificationApi',
-        )}/import/bulk?${user}`;
+        )}/workspace/import/bulk?${user}`;
       case ImportFileType.EM:
         return `${this.configService.get<string>(
           'app.emissionsApi',
-        )}/import/bulk?${user}`;
+        )}/workspace/emissions/import/bulk?${user}`;
       default:
         throw new Error(`Unrecognized import file type: ${fileType}`);
     }
