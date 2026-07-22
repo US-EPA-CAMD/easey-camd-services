@@ -63,7 +63,6 @@ export class BulkImportProcessService {
           (FILE_TYPE_ORDER[b.fileTypeCode] ?? 99),
       );
 
-      throw new Error('Test error for demonstration purposes'); // Remove this line in production
       for (const row of rows) {
         await this.processRow(row, set.userId);
       }
