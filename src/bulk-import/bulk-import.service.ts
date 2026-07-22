@@ -359,14 +359,11 @@ export class BulkImportService {
   } {
     const unitIds = new Set<string>();
     const stackNames = new Set<string>();
-    for (const value of Object.values(json)) {
-      if (!Array.isArray(value)) continue;
-      for (const item of value) {
-        if (item && typeof item === 'object') {
-          if (item.unitId != null) unitIds.add(String(item.unitId));
-          if (item.stackPipeId != null) stackNames.add(String(item.stackPipeId));
-        }
-      }
+    const items = Object.values(json).filter(Array.isArray).flat();
+    for (const item of items) {
+      if (!item || typeof item !== 'object') continue;
+      if (item.unitId != null) unitIds.add(String(item.unitId));
+      if (item.stackPipeId != null) stackNames.add(String(item.stackPipeId));
     }
     return { unitIds: [...unitIds], stackNames: [...stackNames] };
   }
