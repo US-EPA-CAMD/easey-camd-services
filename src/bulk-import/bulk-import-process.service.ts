@@ -28,7 +28,9 @@ export class BulkImportProcessService {
     private readonly logger: Logger,
     private readonly bulkImportService: BulkImportService,
     private readonly clientTokenService: ClientTokenService,
-  ) {}
+  ) {
+    this.logger.setContext(BulkImportProcessService.name);
+  }
 
   // Imports each staged file in a claimed set, recording per-file errors on the queue rows.
   async processImportSet(importSetId: string): Promise<void> {
@@ -61,6 +63,7 @@ export class BulkImportProcessService {
           (FILE_TYPE_ORDER[b.fileTypeCode] ?? 99),
       );
 
+      throw new Error('Test error for demonstration purposes'); // Remove this line in production
       for (const row of rows) {
         await this.processRow(row, set.userId);
       }
@@ -69,19 +72,28 @@ export class BulkImportProcessService {
       set.completedTime = currentDateTime();
       await this.entityManager.save(set);
 
-      await this.bulkImportService.deleteFiles(importSetId, undefined);
       this.logger.log(`Completed import set: ${importSetId}`);
     } catch (err) {
       // Process-level failure marks the set ERROR.
       this.logger.error(
         `Error processing import set ${importSetId}`,
         err?.stack,
-        'BulkImportProcessService',
       );
       set.note = err?.message ?? 'Unknown error processing import set.';
       set.noteTime = currentDateTime();
       await this.entityManager.save(set);
       await this.errorQueueRows(rows, set.note);
+    } finally {
+      // Always clean up staged S3 files, even on failure; a cleanup error must
+      // not mask the set outcome, so swallow it after logging.
+      try {
+        await this.bulkImportService.deleteFiles(importSetId, undefined);
+      } catch (cleanupErr) {
+        this.logger.error(
+          `Failed to delete S3 files for import set ${importSetId}`,
+          cleanupErr?.stack,
+        );
+      }
     }
   }
 
