@@ -111,9 +111,7 @@ export class BulkImportProcessService {
     // Mint a fresh token per file so long-running sets never hit token expiry.
     const headers = await this.buildRequestHeaders();
 
-    const now = currentDateTime();
-    row.claimedTime = now;
-    row.startedTime = now;
+    row.startedTime = currentDateTime();
     await this.entityManager.save(row);
 
     try {

@@ -124,10 +124,10 @@ describe('BulkImportService', () => {
     });
   });
 
-  describe('submit', () => {
-    it('rejects a submit with no files', async () => {
+  describe('queue', () => {
+    it('rejects a queue request with no files', async () => {
       await expect(
-        service.submit(SET_ID, [], 'user@example.com', {} as any),
+        service.queue(SET_ID, [], 'user@example.com', {} as any),
       ).rejects.toThrow('Cannot submit an import with no files.');
       expect(entityManager.transaction).not.toHaveBeenCalled();
     });

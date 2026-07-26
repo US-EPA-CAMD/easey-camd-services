@@ -14,7 +14,7 @@ import { CurrentUser } from '@us-epa-camd/easey-common/interfaces';
 import { Logger } from '@us-epa-camd/easey-common/logger';
 import { currentDateTime } from '@us-epa-camd/easey-common/utilities/functions';
 
-import { StagedFileDTO, SubmitImportItemDTO } from '../dto/bulk-import.dto';
+import { ImportQueueRequestItemDTO, StagedFileDTO } from '../dto/bulk-import.dto';
 import { ImportQueue } from '../entities/import-queue.entity';
 import { ImportSet } from '../entities/import-set.entity';
 import { MonitorPlan } from '../entities/monitor-plan.entity';
@@ -143,9 +143,9 @@ export class BulkImportService {
 
   // Creates the import_set and one import_queue row per staged file, all QUEUED.
   // Roles + checkout were enforced by the RoleGuard.
-  async submit(
+  async queue(
     importSetId: string,
-    items: SubmitImportItemDTO[],
+    items: ImportQueueRequestItemDTO[],
     userEmail: string,
     user: CurrentUser,
   ): Promise<void> {
@@ -188,7 +188,7 @@ export class BulkImportService {
   // MP/QA/EM files that each need a distinct facility privilege (DSMP/DSQA/DSEM),
   // which a single RoleGuard can't express. Enforce those per file here.
   private assertFacilityPermissions(
-    items: SubmitImportItemDTO[],
+    items: ImportQueueRequestItemDTO[],
     user: CurrentUser,
   ): void {
     // Non-prod / mock contexts have no facilities and bypass the RoleGuard; match that.

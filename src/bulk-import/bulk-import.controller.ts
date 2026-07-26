@@ -23,10 +23,10 @@ import { CurrentUser } from '@us-epa-camd/easey-common/interfaces';
 import { ApiExcludeControllerByEnv } from '../decorators/swagger-decorator';
 import {
   DeleteImportFilesDTO,
+  ImportQueueRequestDTO,
   ImportSetDTO,
   ProcessImportDTO,
   StagedFileDTO,
-  SubmitImportDTO,
 } from '../dto/bulk-import.dto';
 import { BulkImportProcessService } from './bulk-import-process.service';
 import { BulkImportService } from './bulk-import.service';
@@ -70,7 +70,7 @@ export class BulkImportController {
     return this.service.deleteFiles(importSetId, body?.s3Paths);
   }
 
-  @Post('set/:id/submit')
+  @Post('set/:id/queue')
   @ApiOkResponse({
     description: 'Creates import_queue records for quartz and queues the set',
   })
@@ -82,12 +82,12 @@ export class BulkImportController {
     },
     LookupType.MonitorPlan,
   )
-  async submit(
+  async queue(
     @Param('id') importSetId: string,
-    @Body() body: SubmitImportDTO,
+    @Body() body: ImportQueueRequestDTO,
     @User() user: CurrentUser,
   ): Promise<void> {
-    return this.service.submit(importSetId, body.items, body.userEmail, user);
+    return this.service.queue(importSetId, body.items, body.userEmail, user);
   }
 
   @Post('process')

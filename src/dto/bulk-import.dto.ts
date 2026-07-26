@@ -24,7 +24,7 @@ export class StagedFileDTO {
 }
 
 // A single staged file being finalized into an import_queue row.
-export class SubmitImportItemDTO {
+export class ImportQueueRequestItemDTO {
   @IsString()
   monPlanId: string;
 
@@ -51,17 +51,17 @@ export class ProcessImportDTO {
   importSetId: string;
 }
 
-export class SubmitImportDTO {
+export class ImportQueueRequestDTO {
   @IsString()
   userEmail: string;
 
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => SubmitImportItemDTO)
-  items: SubmitImportItemDTO[];
+  @Type(() => ImportQueueRequestItemDTO)
+  items: ImportQueueRequestItemDTO[];
 }
 
-// Removes staged files from an in-progress (NEW) import by their S3 paths.
+// Removes staged files from an in-progress import by their S3 paths.
 // Used both for user-initiated removal from the table and for dropping a file
 // whose plan failed checkout during add.
 export class DeleteImportFilesDTO {

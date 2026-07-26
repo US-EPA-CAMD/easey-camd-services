@@ -7,8 +7,8 @@ import { DataSource, EntityManager } from 'typeorm';
 
 import {
   DeleteImportFilesDTO,
+  ImportQueueRequestDTO,
   ProcessImportDTO,
-  SubmitImportDTO,
 } from '../dto/bulk-import.dto';
 import { BulkImportController } from './bulk-import.controller';
 import { BulkImportProcessService } from './bulk-import-process.service';
@@ -25,7 +25,7 @@ describe('BulkImportController', () => {
     service = {
       stageFiles: jest.fn(),
       deleteFiles: jest.fn(),
-      submit: jest.fn(),
+      queue: jest.fn(),
       getLatest: jest.fn(),
       getSet: jest.fn(),
     };
@@ -74,16 +74,16 @@ describe('BulkImportController', () => {
     expect(service.deleteFiles).toHaveBeenCalledWith(SET_ID, undefined);
   });
 
-  it('submit() unpacks the payload for the service', async () => {
+  it('queue() unpacks the payload for the service', async () => {
     const user = { userId: 'u1' } as CurrentUser;
-    const body: SubmitImportDTO = {
+    const body: ImportQueueRequestDTO = {
       userEmail: 'user@example.com',
       items: [{ monPlanId: 'MP1' }] as any,
     };
 
-    await controller.submit(SET_ID, body, user);
+    await controller.queue(SET_ID, body, user);
 
-    expect(service.submit).toHaveBeenCalledWith(
+    expect(service.queue).toHaveBeenCalledWith(
       SET_ID,
       body.items,
       body.userEmail,

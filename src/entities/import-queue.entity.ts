@@ -49,9 +49,6 @@ export class ImportQueue extends BaseEntity {
   @Column({ name: 'queued_time' })
   queuedTime: Date;
 
-  @Column({ name: 'claimed_time' })
-  claimedTime?: Date;
-
   @Column({ name: 'started_time' })
   startedTime?: Date;
 
