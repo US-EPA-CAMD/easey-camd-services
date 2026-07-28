@@ -7,7 +7,7 @@ import {
 } from '@aws-sdk/client-s3';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Brackets, EntityManager } from 'typeorm';
+import { EntityManager } from 'typeorm';
 
 import { EaseyException } from '@us-epa-camd/easey-common/exceptions';
 import { CurrentUser } from '@us-epa-camd/easey-common/interfaces';
@@ -369,7 +369,7 @@ export class BulkImportService {
   }
 
   // Resolves the single active (end_rpt_period_id IS NULL) monitor plan for the
-  // facility that contains the file's locations.
+  // facility that contains all of the file's locations.
   private async resolveActiveMonPlanId(
     orisCode: number,
     unitIds: string[],
@@ -383,25 +383,34 @@ export class BulkImportService {
       );
     }
 
+    // A location matches the file when its unit id or stack name is referenced.
+    const matchConditions: string[] = [];
+    const totalLocations = unitIds.length + stackNames.length;
+    const params: Record<string, unknown> = { orisCode, totalLocations };
+    if (unitIds.length) {
+      matchConditions.push('u.unitid IN (:...unitIds)');
+      params.unitIds = unitIds;
+    }
+    if (stackNames.length) {
+      matchConditions.push('sp.stack_name IN (:...stackNames)');
+      params.stackNames = stackNames;
+    }
+    const matchExpr = matchConditions.join(' OR ');
+
+    // Require every file location to be in the plan. 
+    // The plan is free to have additional locations beyond those in the file.
     const rows = await this.entityManager
       .createQueryBuilder(MonitorPlan, 'mp')
-      .select('DISTINCT mp.mon_plan_id', 'monPlanId')
+      .select('mp.mon_plan_id', 'monPlanId')
       .innerJoin('mp.plant', 'p')
       .innerJoin('mp.locations', 'ml')
       .leftJoin('ml.unit', 'u')
       .leftJoin('ml.stackPipe', 'sp')
-      .where('p.oris_code = :orisCode', { orisCode })
+      .where('p.oris_code = :orisCode')
       .andWhere('mp.end_rpt_period_id IS NULL')
-      .andWhere(
-        new Brackets((w) => {
-          if (unitIds.length) {
-            w.orWhere('u.unitid IN (:...unitIds)', { unitIds });
-          }
-          if (stackNames.length) {
-            w.orWhere('sp.stack_name IN (:...stackNames)', { stackNames });
-          }
-        }),
-      )
+      .groupBy('mp.mon_plan_id')
+      .having(`COUNT(CASE WHEN ${matchExpr} THEN 1 END) = :totalLocations`)
+      .setParameters(params)
       .getRawMany();
 
     if (rows.length === 0) {
