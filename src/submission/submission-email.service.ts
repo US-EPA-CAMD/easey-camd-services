@@ -273,22 +273,15 @@ export class SubmissionEmailService {
     
     const orisCode = data.submissionSet.orisCode;
     const location = this.getPrimaryLocation(data);
-    
-    let fileType: string;
+    const fileType = data.processCode;
+        
     let occasion: string;
     
-    if (data.groupKey?.startsWith('EM_')) {
-      fileType = 'EM';
+    if (fileType === 'EM') {
       const rptPeriod = data.submissionQueueRecords[0]?.reportingPeriod;
-      occasion = ( rptPeriod && rptPeriod?.calendarYear && rptPeriod?.quarter ) ? `${rptPeriod.calendarYear}q${rptPeriod.quarter}` : 'MissingQuarter';
-    }
-    else if ( data.groupKey === 'qaCriticalRecords' || data.groupKey === 'qaNonCriticalRecords' ){
-      fileType = 'QA';
-      const date = data.submissionSet.queuedTime;
-      occasion = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`;
+      occasion = ( rptPeriod?.calendarYear && rptPeriod?.quarter ) ? `${rptPeriod.calendarYear}q${rptPeriod.quarter}` : 'MissingQuarter';
     }
     else {
-      fileType = 'MP';
       const date = data.submissionSet.queuedTime;
       occasion = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`;
     }
