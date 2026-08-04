@@ -272,7 +272,7 @@ export class SubmissionEmailService {
   private buildEmailAttachmentFilename(data: SubmissionFeedbackEmailData): string {
     
     const orisCode = data.submissionSet.orisCode;
-    const location = this.getPrimaryLocation(data);
+    const location = data.templateContext?.monitorPlan?.item?.primaryLocation;
     const fileType = data.processCode;
         
     let occasion: string;
@@ -287,66 +287,6 @@ export class SubmissionEmailService {
     }
 
     return `Submission_Feedback_${orisCode}_${location}_${fileType}_${occasion}.html`;
-  }
-
-  private getPrimaryLocation(data: SubmissionFeedbackEmailData): string {
-    // For MP and EM: Primary Location = alphabetically first stack/pipe
-    // If no stacks/pipes, use alphabetically first unit
-    const unitStackPipe = data.templateContext?.monitorPlan?.item?.unitStackPipe;
-
-    if (!unitStackPipe || unitStackPipe === 'NA') {
-
-      return String(data.submissionSet.orisCode);
-    }
-
-    // Parse locations
-    const locations = unitStackPipe
-      .split(',')
-      .map((loc: string) => loc.trim())
-      .filter((loc: string) => loc.length > 0);
-
-    if (locations.length === 0) {
-      return String(data.submissionSet.orisCode);
-    }
-
-    return this.getLocationWithStackPipePriority(locations);
-  }
-
-  private getLocationWithStackPipePriority(locations: string[]): string {
-    // Separate stacks/pipes from units
-    // Stacks/pipes typically contain: STACK, CS, CP, MS, PIPE
-    // Units are typically: numeric or contain UNIT
-    const stackPipePattern = /stack|cs\d|cp\d|ms\d|pipe/i;
-
-    const stacksAndPipes = locations.filter(loc => stackPipePattern.test(loc)).sort((a, b) => a.localeCompare(b));
-    const units = locations.filter(loc => !stackPipePattern.test(loc)).sort((a, b) => a.localeCompare(b));
-
-    // Prefer stacks/pipes over units in multi-location configurations
-    const primaryLocation = stacksAndPipes.length > 0 ? stacksAndPipes[0] : units[0];
-
-    return this.sanitizeLocationName(primaryLocation || String(locations[0]));
-  }
-
-  private sanitizeLocationName(locationName: string): string {
-    // Sanitize for filename use
-    return locationName.replace(/[^a-zA-Z0-9]/g, '_').replace(/_+/g, '_');
-  }
-
-  public async renderSubmissionFeedbackReportForCdx(
-    submissionFeedbackEmailData: SubmissionFeedbackEmailData,
-  ): Promise<{ documentTitle: string; context: string }> {
-    const templateRecord = await this.easeyContentTemplateService.getTemplateById(
-      EMAIL_TEMPLATE_IDS.SUBMISSION_FEEDBACK,
-    );
-    const content = await this.easeyContentTemplateService.renderHandlebarsTemplate(
-      templateRecord.templateLocation,
-      submissionFeedbackEmailData.templateContext,
-    );
-
-    return {
-      documentTitle: this.buildCdxFeedbackReportTitle(submissionFeedbackEmailData),
-      context: content,
-    };
   }
 
   private buildCdxFeedbackReportTitle(
@@ -398,7 +338,8 @@ export class SubmissionEmailService {
         SELECT fac.fac_id,
                fac.oris_code,
                fac.facility_name,
-               string_agg(coalesce(unt.Unitid, stp.Stack_Name), ', ') as location_name,
+               string_agg(coalesce(unt.Unitid, stp.Stack_Name), ', ' order by unt.Unitid, stp.Stack_Name) as unit_stack_pipe,
+               coalesce(min(stp.stack_name), min(unt.unitid)) as primary_location,
                fac.state,
                string_agg(mpl.mon_loc_id, ', ') as mon_location_ids
         FROM  camdecmpswks.MONITOR_PLAN_LOCATION mpl
@@ -418,7 +359,8 @@ export class SubmissionEmailService {
     submissionEmailParamsDto.facId = facilityItem.fac_id;
     submissionEmailParamsDto.orisCode = facilityItem.oris_code;
     submissionEmailParamsDto.stateCode = facilityItem.state;
-    submissionEmailParamsDto.unitStackPipe = facilityItem.location_name;
+    submissionEmailParamsDto.unitStackPipe = facilityItem.unit_stack_pipe;
+    submissionEmailParamsDto.primaryLocation = facilityItem.primary_location;
 
     const monPlanStatus = await this.entityManager.query(
       `
@@ -446,6 +388,7 @@ export class SubmissionEmailService {
       'orisCode',
       'stateCode',
       'unitStackPipe',
+      'primaryLocation',
       'submissionDateDisplay',
     ];
 
@@ -458,6 +401,7 @@ export class SubmissionEmailService {
         orisCode: submissionEmailParamsDto.orisCode || 'NA',
         stateCode: submissionEmailParamsDto.stateCode || 'NA',
         unitStackPipe: submissionEmailParamsDto.unitStackPipe || 'NA',
+        primaryLocation: submissionEmailParamsDto.primaryLocation || 'NA',
         submissionDateDisplay: await this.submissionFeedbackRecordService.getDisplayDate(submissionSet.queuedTime,),
       },
     };
