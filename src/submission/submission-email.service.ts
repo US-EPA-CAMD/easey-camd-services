@@ -289,6 +289,23 @@ export class SubmissionEmailService {
     return `Submission_Feedback_${orisCode}_${location}_${fileType}_${occasion}.html`;
   }
 
+  public async renderSubmissionFeedbackReportForCdx(
+    submissionFeedbackEmailData: SubmissionFeedbackEmailData,
+  ): Promise<{ documentTitle: string; context: string }> {
+    const templateRecord = await this.easeyContentTemplateService.getTemplateById(
+      EMAIL_TEMPLATE_IDS.SUBMISSION_FEEDBACK,
+    );
+    const content = await this.easeyContentTemplateService.renderHandlebarsTemplate(
+      templateRecord.templateLocation,
+      submissionFeedbackEmailData.templateContext,
+    );
+
+    return {
+      documentTitle: this.buildCdxFeedbackReportTitle(submissionFeedbackEmailData),
+      context: content,
+    };
+  }
+
   private buildCdxFeedbackReportTitle(
     data: SubmissionFeedbackEmailData,
   ): string {
