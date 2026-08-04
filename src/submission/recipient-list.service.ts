@@ -132,11 +132,12 @@ export class RecipientListService {
       }),
     };
 
-    // This request is a bit unconventional.  The CBS API expects a GET request with a body.
-    // Axios does not support this, so we are using the httpService.request method
+    // httpService.request is used so the body can be sent regardless of verb
+    // (axios can't send a body with GET). Non-POST falls back to GET.
+    const method = this.configService.get<string>('app.recipientsListApiMethod');
     const response: AxiosResponse<any> = await firstValueFrom(
       this.httpService.request({
-        method: 'GET',
+        method: method === 'POST' ? 'POST' : 'GET',
         url: recipientsListApiUrl,
         headers: headers,
         data: body,
