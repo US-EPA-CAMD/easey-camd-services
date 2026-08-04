@@ -320,7 +320,7 @@ export class SubmissionEmailService {
 
     // Check for Primary Email in Additional Emails
     if ( 
-         additionalEmails.toUpperCase().split( ',' ).map( item => item.trim() ).includes( primaryEmail.toUpperCase() )
+         additionalEmails.toUpperCase().split(/[,;]/).map( item => item.trim() ).includes( primaryEmail.toUpperCase() )
          ||
          additionalEmails.toUpperCase().includes( `<${primaryEmail.toUpperCase()}>` )
        ) {
@@ -328,11 +328,12 @@ export class SubmissionEmailService {
     }
 
     // Check for Primary Core Email if in pointy brackets
-    const bracketedEmailAddresses = primaryEmail.match(/\<([^}]+)\>/); // Only one address should exist in brakets.
+    const regex = /<([^>]+)>/;
+    const bracketedEmailAddresses = regex.exec(primaryEmail); // Only one address should exist in brakets.
 
     if ( bracketedEmailAddresses ) {
       if ( 
-           additionalEmails.toUpperCase().split( ',' ).map( item => item.trim() ).includes( bracketedEmailAddresses[1].toUpperCase() )
+           additionalEmails.toUpperCase().split(/[,;]/).map( item => item.trim() ).includes( bracketedEmailAddresses[1].toUpperCase() )
            ||
            additionalEmails.toUpperCase().includes( `<${bracketedEmailAddresses[1].toUpperCase()}>` )
          ) {
