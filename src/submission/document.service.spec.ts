@@ -122,7 +122,6 @@ describe('DocumentService', () => {
           submissionQueueRecords: [new SubmissionQueue()],
           processCode: 'MP',
           groupKey: 'MP',
-          feedbackLocation: '1',
         } as SubmissionFeedbackEmailData,
       ];
 

@@ -244,7 +244,6 @@ export class SubmissionEmailService {
       submissionEmailParamsDto.submissionQueueRecords,
       submissionEmailParamsDto.processCode,
       submissionEmailParamsDto.groupKey,
-      submissionEmailParamsDto.feedbackLocation,
     );
   }
 
@@ -273,7 +272,7 @@ export class SubmissionEmailService {
   private buildEmailAttachmentFilename(data: SubmissionFeedbackEmailData): string {
     
     const orisCode = data.submissionSet.orisCode;
-    const location = data.feedbackLocation;
+    const location = data.templateContext?.monitorPlan?.item?.primaryLocation;
     const fileType = data.processCode;
         
     let occasion: string;
@@ -379,12 +378,6 @@ export class SubmissionEmailService {
     submissionEmailParamsDto.stateCode = facilityItem.state;
     submissionEmailParamsDto.unitStackPipe = facilityItem.unit_stack_pipe;
     submissionEmailParamsDto.primaryLocation = facilityItem.primary_location;
-    submissionEmailParamsDto.feedbackLocation =
-      submissionEmailParamsDto.processCode === 'QA'
-        ? await this.getQaFeedbackLocation(
-          submissionEmailParamsDto.submissionQueueRecords,
-        )
-        : submissionEmailParamsDto.primaryLocation || 'NA';
 
     const monPlanStatus = await this.entityManager.query(
       `
@@ -442,63 +435,6 @@ export class SubmissionEmailService {
     const ecmpsClientConfig = await this.clientConfigService.getECMPSClientConfig();
     submissionEmailParamsDto.templateContext['supportEmail'] = ecmpsClientConfig?.supportEmail?.trim() ?? '';
     submissionEmailParamsDto.templateContext['cdxUrl'] = this.configService.get<string>('app.cdxUrl')?.trim() ?? '';
-  }
-
-  private async getQaFeedbackLocation(
-    submissionQueueRecords: SubmissionQueue[],
-  ): Promise<string> {
-    const testSummaryIds = submissionQueueRecords
-      .map((record) => record.testSumIdentifier)
-      .filter((identifier): identifier is string => Boolean(identifier));
-    const qaCertEventIds = submissionQueueRecords
-      .map((record) => record.qaCertEventIdentifier)
-      .filter((identifier): identifier is string => Boolean(identifier));
-    const testExtensionExemptionIds = submissionQueueRecords
-      .map((record) => record.testExtensionExemptionIdentifier)
-      .filter((identifier): identifier is string => Boolean(identifier));
-
-    const locations = await this.entityManager.query(
-      `
-        WITH qa_location_ids AS (
-          SELECT mon_loc_id
-          FROM camdecmpswks.test_summary
-          WHERE test_sum_id = ANY($1::varchar[])
-
-          UNION
-
-          SELECT mon_loc_id
-          FROM camdecmpswks.qa_cert_event
-          WHERE qa_cert_event_id = ANY($2::varchar[])
-
-          UNION
-
-          SELECT mon_loc_id
-          FROM camdecmpswks.test_extension_exemption
-          WHERE test_extension_exemption_id = ANY($3::varchar[])
-        )
-        SELECT COALESCE(stp.stack_name, unt.unitid) AS feedback_location
-        FROM qa_location_ids qa
-             JOIN camdecmpswks.monitor_location loc
-               ON loc.mon_loc_id = qa.mon_loc_id
-             LEFT JOIN camdecmpswks.stack_pipe stp
-               ON stp.stack_pipe_id = loc.stack_pipe_id
-             LEFT JOIN camd.unit unt
-               ON unt.unit_id = loc.unit_id
-        WHERE COALESCE(stp.stack_name, unt.unitid) IS NOT NULL
-        ORDER BY feedback_location, qa.mon_loc_id
-        LIMIT 1
-      `,
-      [testSummaryIds, qaCertEventIds, testExtensionExemptionIds],
-    );
-
-    const feedbackLocation = locations[0]?.feedback_location;
-    if (!feedbackLocation) {
-      throw new Error(
-        'Unable to resolve a monitoring location for the QA feedback report.',
-      );
-    }
-
-    return feedbackLocation;
   }
 
   public async getSubmissionType(processCode: string ): Promise<string> {
