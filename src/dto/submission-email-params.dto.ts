@@ -19,6 +19,8 @@ export class SubmissionEmailParamsDto {
   orisCode              : number;
   stateCode             : string;
   unitStackPipe         : string;
+  primaryLocation       : string;
+  feedbackLocation      : string;
   monPlanStatus         : string;
 
   templateContext: any = {};
@@ -66,5 +68,6 @@ export class SubmissionFeedbackEmailData {
     public submissionQueueRecords : SubmissionQueue [],
     public processCode : string,
     public groupKey: string,
+    public feedbackLocation: string,
   ) {}
 }
