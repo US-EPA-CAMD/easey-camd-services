@@ -82,10 +82,10 @@
     "@smithy/types" "^4.16.1"
     tslib "^2.6.2"
 
-"@aws-sdk/client-s3@^3.1105.0":
-  version "3.1105.0"
-  resolved "https://registry.yarnpkg.com/@aws-sdk/client-s3/-/client-s3-3.1105.0.tgz#70c67178910c3d16aaae08743cadf904064b9207"
-  integrity sha512-eiR289CNgH2atIh2zOSDSpXOmDVGCxFEk0S8jMHo599oTCjcnjmlNOVsFCWXx5jMPP83+c47Wl/1R7xgUVBzZw==
+"@aws-sdk/client-s3@^3.1106.0":
+  version "3.1106.0"
+  resolved "https://registry.yarnpkg.com/@aws-sdk/client-s3/-/client-s3-3.1106.0.tgz#68a15a3b156c2cd89505fe69a69fb2c3e1376a43"
+  integrity sha512-hUTlnyRRGlVdfvJLL3hCEnMm7CmunSzc/lxFVRX8g1fjJTMUVbyQCfhfMhp7dZ7JBftLU6OYresu3Hje4nvkJw==
   dependencies:
     "@aws-sdk/checksums" "^3.1000.26"
     "@aws-sdk/core" "^3.977.6"
