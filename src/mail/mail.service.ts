@@ -10,6 +10,7 @@ import { EmailToSendService } from './email-to-send.service';
 import { ClientConfigService } from './client-config.service';
 import { TemplateEmailOptions, SendMailOptions } from './interfaces/mail-interfaces';
 import { CreateMailDto } from '../dto/create-mail.dto';
+import { EmailAttachment } from '../entities/email-attachment.entity';
 
 @Injectable()
 export class MailService {
@@ -132,7 +133,7 @@ export class MailService {
    * @returns Valid Nodemailer attachments
    */
   private async getEmailAttachments(emailToSendId: number): Promise<Attachment[]> {
-    let attachmentRecords: unknown;
+    let attachmentRecords: EmailAttachment[];
 
     try {
       attachmentRecords = await this.emailToSendService.findEmailAttachments(emailToSendId);
@@ -153,15 +154,14 @@ export class MailService {
 
     const attachments: Attachment[] = [];
 
-    for (const attachmentRecordData of attachmentRecords) {
-      if (!attachmentRecordData || typeof attachmentRecordData !== 'object') {
+    for (const attachmentRecord of attachmentRecords) {
+      if (!attachmentRecord || typeof attachmentRecord !== 'object') {
         this.logger.warn(
           `Skipping invalid EmailAttachment record for EmailToSend record ${emailToSendId}: record is missing or malformed.`,
         );
         continue;
       }
 
-      const attachmentRecord = attachmentRecordData as Record<string, unknown>;
       const attachmentName = attachmentRecord.emailAttachmentName;
       const attachmentContent = attachmentRecord.emailAttachmentContent;
       const hasValidName =
