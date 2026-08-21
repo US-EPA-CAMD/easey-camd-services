@@ -9,6 +9,7 @@ fileStagingS3Bucket: TODO
 ecmpsHost: https://ecmps-perf.app.cloud.gov/ecmps
 epaAnalystLink: https://www.epa.gov/power-sector/key-program-dates-contacts#MonitoringContacts
 recipientsListApi: https://cbsstagei.epa.gov/CBSD/api/auth-mgmt/emailRecipients
+recipientsListApiMethod: GET
 recipientsListApiEnabled: false
 maxConnectionPool: 30
 idleTimeout: 30000
