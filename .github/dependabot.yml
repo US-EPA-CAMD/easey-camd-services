@@ -22,3 +22,5 @@ updates:
         versions: [">=23.0.0"]
       - dependency-name: "eslint"
         versions: [">=10.0.0"]
+      - dependency-name: "nodemailer"
+        versions: [">=9.0.0"]
