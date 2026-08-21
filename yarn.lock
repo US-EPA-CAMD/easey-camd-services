@@ -5691,10 +5691,10 @@ pretty-format@30.4.1:
     react-is-18 "npm:react-is@^18.3.1"
     react-is-19 "npm:react-is@^19.2.5"
 
-preview-email@^3.2.0:
-  version "3.2.0"
-  resolved "https://registry.yarnpkg.com/preview-email/-/preview-email-3.2.0.tgz#dd5c7a4f27967489f3b730f6d18f251ec329a173"
-  integrity sha512-iUtDHy+fZ2b0kzICgcp+zmKIwDY1EBlG9Ef1J0FkfgXVN4RaETJU3HVTdQxxboVPJJ0ZSdpcMzP0UQ7BHDjgCA==
+preview-email@^3.3.0:
+  version "3.3.0"
+  resolved "https://registry.yarnpkg.com/preview-email/-/preview-email-3.3.0.tgz#79e9982c53da1e216d8d31de398587ef44f3dc7f"
+  integrity sha512-9KxwH7IRm1hcn7GU7YNJFTIa/cMUTcphDfQdB1qZRMC5OOmMAb/heTQtztbTLyMGVdfy+I2u0Zznu0gUiwDLww==
   dependencies:
     ci-info "^3.8.0"
     display-notification "^3.0.0"
@@ -5706,7 +5706,6 @@ preview-email@^3.2.0:
     p-event "4.2.0"
     p-wait-for "3.2.0"
     pug "^3.0.3"
-    uuid "^9.0.1"
 
 promise@^7.0.1:
   version "7.3.1"
@@ -6833,7 +6832,7 @@ uuid@^11.1.1:
   resolved "https://registry.npmjs.org/uuid/-/uuid-11.1.1.tgz#f6d81d2e1c65d00762e5e29b16c5d2d995e208ad"
   integrity sha512-vIYxrBCC/N/K+Js3qSN88go7kIfNPssr/hHCesKCQNAjmgvYS2oqr69kIufEG+O4+PfezOH4EbIeHCfFov8ZgQ==
 
-uuid@^9.0.0, uuid@^9.0.1:
+uuid@^9.0.0:
   version "9.0.1"
   resolved "https://registry.yarnpkg.com/uuid/-/uuid-9.0.1.tgz#e188d4c8853cc722220392c424cd637f32293f30"
   integrity sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==
