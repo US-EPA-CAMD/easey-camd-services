@@ -9,6 +9,7 @@ ecmpsHost: https://easey.epa.gov/ecmps
 cdxUrl: https://cdx.epa.gov/
 epaAnalystLink: https://www.epa.gov/power-sector/key-program-dates-contacts#MonitoringContacts
 recipientsListApi: https://camd.epa.gov/CBS/api/auth-mgmt/emailRecipients
+recipientsListApiMethod: GET
 recipientsListApiEnabled: true
 maxConnectionPool: 30
 idleTimeout: 30000
