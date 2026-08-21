@@ -264,10 +264,30 @@ export class SubmissionEmailService {
   );
 
   return {
-    filename: `${submissionFeedbackEmailData.submissionSet.orisCode}_SUBMISSION_FEEDBACK.html`,
+    filename: this.buildEmailAttachmentFilename(submissionFeedbackEmailData),
     content: attachmentContent,
   };
 }
+
+  private buildEmailAttachmentFilename(data: SubmissionFeedbackEmailData): string {
+    
+    const orisCode = data.submissionSet.orisCode;
+    const location = data.templateContext?.monitorPlan?.item?.primaryLocation;
+    const fileType = data.processCode;
+        
+    let occasion: string;
+    
+    if (fileType === 'EM') {
+      const rptPeriod = data.submissionQueueRecords[0]?.reportingPeriod;
+      occasion = ( rptPeriod?.calendarYear && rptPeriod?.quarter ) ? `${rptPeriod.calendarYear}q${rptPeriod.quarter}` : 'MissingQuarter';
+    }
+    else {
+      const date = data.submissionSet.queuedTime;
+      occasion = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`;
+    }
+
+    return `Submission_Feedback_${orisCode}_${location}_${fileType}_${occasion}.html`;
+  }
 
   public async renderSubmissionFeedbackReportForCdx(
     submissionFeedbackEmailData: SubmissionFeedbackEmailData,
@@ -335,7 +355,8 @@ export class SubmissionEmailService {
         SELECT fac.fac_id,
                fac.oris_code,
                fac.facility_name,
-               string_agg(coalesce(unt.Unitid, stp.Stack_Name), ', ') as location_name,
+               string_agg(coalesce(unt.Unitid, stp.Stack_Name), ', ' order by unt.Unitid, stp.Stack_Name) as unit_stack_pipe,
+               coalesce(min(stp.stack_name), min(unt.unitid)) as primary_location,
                fac.state,
                string_agg(mpl.mon_loc_id, ', ') as mon_location_ids
         FROM  camdecmpswks.MONITOR_PLAN_LOCATION mpl
@@ -355,7 +376,8 @@ export class SubmissionEmailService {
     submissionEmailParamsDto.facId = facilityItem.fac_id;
     submissionEmailParamsDto.orisCode = facilityItem.oris_code;
     submissionEmailParamsDto.stateCode = facilityItem.state;
-    submissionEmailParamsDto.unitStackPipe = facilityItem.location_name;
+    submissionEmailParamsDto.unitStackPipe = facilityItem.unit_stack_pipe;
+    submissionEmailParamsDto.primaryLocation = facilityItem.primary_location;
 
     const monPlanStatus = await this.entityManager.query(
       `
@@ -383,6 +405,7 @@ export class SubmissionEmailService {
       'orisCode',
       'stateCode',
       'unitStackPipe',
+      'primaryLocation',
       'submissionDateDisplay',
     ];
 
@@ -395,6 +418,7 @@ export class SubmissionEmailService {
         orisCode: submissionEmailParamsDto.orisCode || 'NA',
         stateCode: submissionEmailParamsDto.stateCode || 'NA',
         unitStackPipe: submissionEmailParamsDto.unitStackPipe || 'NA',
+        primaryLocation: submissionEmailParamsDto.primaryLocation || 'NA',
         submissionDateDisplay: await this.submissionFeedbackRecordService.getDisplayDate(submissionSet.queuedTime,),
       },
     };
