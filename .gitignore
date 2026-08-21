@@ -33,6 +33,10 @@ lerna-debug.log*
 /coverage
 /.nyc_output
 test-report.xml
+test/**/*.js
+test/**/*.js.map
+test/**/*.d.ts
+*.tsbuildinfo
 
 # IDEs and editors
 /.idea
