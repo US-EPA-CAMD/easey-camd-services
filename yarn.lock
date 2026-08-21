@@ -4952,10 +4952,10 @@ linkify-it@5.0.0:
   dependencies:
     uc.micro "^2.0.0"
 
-liquidjs@^10.27.2:
-  version "10.27.2"
-  resolved "https://registry.yarnpkg.com/liquidjs/-/liquidjs-10.27.2.tgz#4cf2940632c154fc87554d5a34c40e5d618785fe"
-  integrity sha512-kvknfAEtOHjHkAAv7GxLEJh8ghpMQm3Fc4uWVyF7hERSTsSRsdC7saWs0p5aDG7GDcWsu5o+T4232O+8KZO55w==
+liquidjs@^10.29.0:
+  version "10.29.0"
+  resolved "https://registry.yarnpkg.com/liquidjs/-/liquidjs-10.29.0.tgz#ee061890ccf0da26be377aad4f02bd32da0140d8"
+  integrity sha512-pCVOhs6FLAR8su3ItJ07diN26t6W5dHQRnmTMy8HPyTFuv1+oSCVJIGp5pGjfQyOZfh50KswvKtMTp6p4JEIdw==
   dependencies:
     commander "^10.0.0"
 
