@@ -46,6 +46,7 @@ applications:
       TZ: America/New_York
       EASEY_CAMD_SERVICES_RECIPIENT_LIST_API: ((recipientsListApi))
       EASEY_CAMD_SERVICES_RECIPIENT_LIST_API_ENABLED: ((recipientsListApiEnabled))
+      EASEY_CAMD_SERVICES_RECIPIENT_LIST_API_METHOD: ((recipientsListApiMethod))
       EASEY_DB_MAX_CONNECTION_POOL: ((maxConnectionPool))
       EASEY_DB_IDLE_TIMEOUT: ((idleTimeout))
       EASEY_DB_CONNECTION_TIMEOUT: ((connectionTimeout))

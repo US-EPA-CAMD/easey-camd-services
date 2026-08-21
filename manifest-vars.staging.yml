@@ -9,6 +9,7 @@ ecmpsHost: https://ecmps-stg.app.cloud.gov/ecmps
 cdxUrl: https://test.epacdx.net/
 epaAnalystLink: https://www.epa.gov/power-sector/key-program-dates-contacts#MonitoringContacts
 recipientsListApi: https://cbsstagei.epa.gov/CBS/api/auth-mgmt/emailRecipients
+recipientsListApiMethod: GET
 recipientsListApiEnabled: true
 maxConnectionPool: 30
 idleTimeout: 5000
