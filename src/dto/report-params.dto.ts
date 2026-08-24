@@ -50,6 +50,11 @@ export class ReportParamsDTO {
   @IsOptional()
   locationId?: string;
 
+  //Bulk import per-file results report
+  @ApiProperty({ required: false })
+  @IsOptional()
+  importId?: string;
+
   @ApiProperty({ isArray: true, required: false })
   @IsOptional()
   @Transform(({ value }) => value.split('|').map((item: string) => Number(item.trim())))

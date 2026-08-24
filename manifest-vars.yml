@@ -16,6 +16,7 @@ dbSvc: camd-pg-db
 campdDatasetsS3Bucket: cg-e7433599-fb63-4afa-9e14-652c10fa370a
 matsS3Bucket: cg-de847ec0-d683-426d-b04c-21ff72477d2f
 importMatsS3Bucket: cg-a5287c70-6f5f-4b41-acd4-a82bbb633f55
+fileStagingS3Bucket: cg-01331aa0-d042-4830-b338-3d4b11963f08
 ecmpsHost: https://ecmps-dev.app.cloud.gov/ecmps
 cdxUrl: https://dev.epacdx.net/
 epaAnalystLink: https://www.epa.gov/power-sector/key-program-dates-contacts#MonitoringContacts

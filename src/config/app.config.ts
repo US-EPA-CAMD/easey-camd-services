@@ -126,6 +126,18 @@ export default registerAs('app', () => ({
     'EASEY_STREAMING_SERVICES',
     `https://${apiHost}/streaming-services`,
   ),
+  monitorPlanApi: getConfigValue(
+    'EASEY_MONITOR_PLAN_API',
+    `https://${apiHost}/monitor-plan-mgmt`,
+  ),
+  qaCertificationApi: getConfigValue(
+    'EASEY_QA_CERTIFICATION_API',
+    `https://${apiHost}/qa-certification-mgmt`,
+  ),
+  emissionsApi: getConfigValue(
+    'EASEY_EMISSIONS_API',
+    `https://${apiHost}/emissions-mgmt`,
+  ),
   submissionSuccessMessage: getConfigValue(
     'EASEY_CAMD_SERVICES_SUBMISSION_SUCCESS_MESSAGE',
     '',
