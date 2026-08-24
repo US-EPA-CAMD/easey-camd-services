@@ -19,6 +19,7 @@ import routes from './routes';
 import s3Config from './config/s3.config';
 import appConfig from './config/app.config';
 import matsConfig from './config/mats.config';
+import fileStagingConfig from './config/file-staging.config';
 import { TypeOrmConfigService } from './config/typeorm.config';
 import { IsValidLocationsValidator } from './validators/is-valid-locations.validator';
 
@@ -37,6 +38,7 @@ import { QaTestSummaryModule } from './qa-test-summary/qa-test-summary.module';
 import { EmSubmissionAccessModule } from './em-submission-access/em-submission-access.module';
 import { SubmissionModule } from './submission/submission.module';
 import { MatsFileUploadModule } from './mats-file-upload/mats-file-upload.module';
+import { BulkImportModule } from './bulk-import/bulk-import.module';
 import { CopyOfRecordModule } from './copy-of-record/copy-of-record.module';
 import { SubmissionReportModule } from './submission-report/submission-report.module';
 import { UnitsExpectedToSubmitModule } from './units-expected-to-submit/units-expected-to-submit.module';
@@ -48,7 +50,7 @@ import { HealthModule } from '@us-epa-camd/easey-common/health/health.module';
     RouterModule.register(routes),
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [s3Config, dbConfig, appConfig, matsConfig],
+      load: [s3Config, dbConfig, appConfig, matsConfig, fileStagingConfig],
     }),
     TypeOrmModule.forRootAsync({
       useClass: TypeOrmConfigService,
@@ -74,6 +76,7 @@ import { HealthModule } from '@us-epa-camd/easey-common/health/health.module';
     EmSubmissionAccessModule,
     SubmissionModule,
     MatsFileUploadModule,
+    BulkImportModule,
     CopyOfRecordModule,
     HttpModule,
   ],

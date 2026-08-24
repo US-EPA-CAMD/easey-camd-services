@@ -4,21 +4,29 @@ import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
 import { EntityManager } from 'typeorm';
 import { Logger } from '@us-epa-camd/easey-common/logger';
-import { of, throwError } from 'rxjs';
+import { of } from 'rxjs';
 import { AxiosResponse, AxiosHeaders } from 'axios';
 import { EmailRecipientListRequestDto } from '../dto/email-recipient-list-request.dto';
-import { EmailRecipientListResponseDto } from '../dto/email-recipient-list-response.dto';
+import { ClientTokenService } from '../client-token/client-token.service';
 
 describe('RecipientListService', () => {
   let service: RecipientListService;
   let httpService: HttpService;
   let configService: ConfigService;
   let logger: Logger;
+  let clientTokenService: ClientTokenService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         RecipientListService,
+        {
+          provide: ClientTokenService,
+          useValue: {
+            getClientToken: jest.fn().mockResolvedValue('mockToken'),
+            buildAuthHeaders: jest.fn().mockReturnValue({}),
+          },
+        },
         {
           provide: ConfigService,
           useValue: {
@@ -64,6 +72,7 @@ describe('RecipientListService', () => {
     httpService = module.get<HttpService>(HttpService);
     configService = module.get<ConfigService>(ConfigService);
     logger = module.get<Logger>(Logger);
+    clientTokenService = module.get<ClientTokenService>(ClientTokenService);
   });
 
   it('should be defined', () => {
@@ -74,53 +83,6 @@ describe('RecipientListService', () => {
     it('should return the entity manager', () => {
       const entityManager = service.returnManager();
       expect(entityManager).toBeDefined();
-    });
-  });
-
-  describe('getClientToken', () => {
-    it('should return a token when API call is successful', async () => {
-      const mockToken = 'mockToken';
-      const mockResponse: AxiosResponse<{ token: string }> = {
-        data: { token: mockToken },
-        status: 200,
-        statusText: 'OK',
-        headers: {},
-        config: { method: 'post', headers: {} as AxiosHeaders },
-      };
-
-      jest.spyOn(httpService, 'post').mockReturnValue(of(mockResponse) as any);
-
-      const result = await service.getClientToken();
-      expect(result).toEqual(mockToken);
-    });
-
-    it('should return an empty string when API call returns no data', async () => {
-      const mockResponse: AxiosResponse<null> = {
-        data: null,
-        status: 200,
-        statusText: 'OK',
-        headers: {},
-        config: { method: 'post', headers: {} as AxiosHeaders },
-      };
-
-      jest.spyOn(httpService, 'post').mockReturnValue(of(mockResponse) as any);
-
-      const result = await service.getClientToken();
-      expect(result).toEqual('');
-    });
-
-    it('should return an empty string and log error on exception', async () => {
-      const error = new Error('API Error');
-      jest.spyOn(httpService, 'post').mockImplementation(() => {
-        throw error;
-      });
-
-      const result = await service.getClientToken();
-      expect(result).toEqual('');
-      expect(logger.error).toHaveBeenCalledWith(
-        'Error occurred during the API call to auth-api token validation API',
-        error.message,
-      );
     });
   });
 
@@ -141,14 +103,14 @@ describe('RecipientListService', () => {
       jest
         .spyOn(httpService, 'request')
         .mockReturnValue(of(mockResponse) as any);
-      jest.spyOn(service, 'getClientToken').mockResolvedValue('mockToken');
+      jest.spyOn(clientTokenService, 'getClientToken').mockResolvedValue('mockToken');
 
       const result = await service.getEmailRecipients('', '', false, '', '');
       expect(result).toEqual('email1@example.com,email2@example.com');
     });
 
     it('should return an empty string if client token is not obtained', async () => {
-      jest.spyOn(service, 'getClientToken').mockResolvedValue('');
+      jest.spyOn(clientTokenService, 'getClientToken').mockResolvedValue('');
 
       const result = await service.getEmailRecipients('', '', false, '', '');
       expect(result).toEqual('');
@@ -169,7 +131,7 @@ describe('RecipientListService', () => {
       jest
         .spyOn(httpService, 'request')
         .mockReturnValue(of(mockResponse) as any);
-      jest.spyOn(service, 'getClientToken').mockResolvedValue('mockToken');
+      jest.spyOn(clientTokenService, 'getClientToken').mockResolvedValue('mockToken');
 
       const result = await service.getEmailRecipients('', '', false, '', '');
       expect(result).toEqual('');
@@ -180,7 +142,7 @@ describe('RecipientListService', () => {
     });
 
     it('should return an empty string and log error on exception', async () => {
-      jest.spyOn(service, 'getClientToken').mockResolvedValue('mockToken');
+      jest.spyOn(clientTokenService, 'getClientToken').mockResolvedValue('mockToken');
       jest.spyOn(httpService, 'request').mockImplementation(() => {
         throw new Error('API Error With Logging');
       });
@@ -253,7 +215,7 @@ describe('RecipientListService', () => {
       });
 
       jest.spyOn(httpService, 'request').mockReturnValue(of(mockResponse) as any);
-      jest.spyOn(service, 'getClientToken').mockResolvedValue('mockToken');
+      jest.spyOn(clientTokenService, 'getClientToken').mockResolvedValue('mockToken');
 
       const payload: EmailRecipientListRequestDto = {
         emailType: 'SUBMISSIONREMINDER',
@@ -293,7 +255,7 @@ describe('RecipientListService', () => {
         return null;
       });
 
-      jest.spyOn(service, 'getClientToken').mockResolvedValue('mockToken');
+      jest.spyOn(clientTokenService, 'getClientToken').mockResolvedValue('mockToken');
       jest.spyOn(httpService, 'request').mockImplementation(() => {
         throw new Error('Network error');
       });
@@ -338,7 +300,7 @@ describe('RecipientListService', () => {
         data: { message: 'Bad Request' },
       };
 
-      jest.spyOn(service, 'getClientToken').mockResolvedValue('mockToken');
+      jest.spyOn(clientTokenService, 'getClientToken').mockResolvedValue('mockToken');
       jest.spyOn(httpService, 'request').mockImplementation(() => {
         throw errorWithResponse;
       });
