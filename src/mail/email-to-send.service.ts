@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { EntityManager } from 'typeorm';
 import { Logger } from '@us-epa-camd/easey-common/logger';
 import { EmailToSend } from '../entities/email-to-send.entity';
+import { EmailAttachment } from '../entities/email-attachment.entity';
 
 @Injectable()
 export class EmailToSendService {
@@ -18,6 +19,18 @@ export class EmailToSendService {
   async findEmailToSendRecord(emailToSendId: number): Promise<EmailToSend | null> {
     return await this.entityManager.findOne(EmailToSend, {
       where: { toSendIdentifier: emailToSendId }
+    });
+  }
+
+  /**
+   * Find attachment records for an EmailToSend record
+   * @param emailToSendId Database EmailToSend record ID
+   * @returns Attachment records ordered by ID
+   */
+  async findEmailAttachments(emailToSendId: number): Promise<EmailAttachment[]> {
+    return await this.entityManager.find(EmailAttachment, {
+      where: { toSendIdentifier: emailToSendId },
+      order: { emailAttachmentIdentifier: 'ASC' },
     });
   }
 
