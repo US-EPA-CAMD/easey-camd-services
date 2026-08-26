@@ -31,7 +31,8 @@
     "jsdom": "26.1.0",
     "xml2js": "^0.5.0",
     "wrap-ansi": "^7.0.0",
-    "class-validator": "0.15.1"
+    "class-validator": "0.15.1",
+	"linkify-it": "^5.0.2"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1116.0",
