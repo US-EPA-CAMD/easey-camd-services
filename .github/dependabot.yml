@@ -23,7 +23,7 @@ updates:
       - dependency-name: "eslint"
         versions: [">=10.0.0"]
       - dependency-name: "nodemailer"
-        versions: [">=9.0.0"]
+        versions: [">=10.0.0"]
       # Ignore nestjs version 12 and later - this upgrade has breaking changes and is not necessary at this time
       - dependency-name: "@nestjs/axios"
         versions: [">=12.0.0"]
