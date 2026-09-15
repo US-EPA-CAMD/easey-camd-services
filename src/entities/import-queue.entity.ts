@@ -41,7 +41,7 @@ export class ImportQueue extends BaseEntity {
 
   @Column({
     name: 'rpt_period_id',
-    type: 'numeric',
+    type: 'bigint',
     transformer: new NumericColumnTransformer(),
   })
   rptPeriodId?: number;
