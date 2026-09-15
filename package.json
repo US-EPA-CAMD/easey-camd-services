@@ -33,10 +33,11 @@
     "wrap-ansi": "^7.0.0",
     "class-validator": "0.15.1",
 	"linkify-it": "^5.0.2",
-    "nodemailer": "^9.1.1"
+    "nodemailer": "^9.1.1",
+	"multer": "^2.3.0"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.1127.0",
+    "@aws-sdk/client-s3": "^3.1131.0",
     "@css-inline/css-inline": "^0.21.2",
     "@nestjs/axios": "4.0.1",
     "@nestjs/common": "^11.2.3",
@@ -80,8 +81,8 @@
     "@types/node": "24",
     "@types/nodemailer": "^8.0.1",
     "@types/supertest": "^7.2.1",
-    "@typescript-eslint/eslint-plugin": "8.69.0",
-    "@typescript-eslint/parser": "8.69.0",
+    "@typescript-eslint/eslint-plugin": "8.70.0",
+    "@typescript-eslint/parser": "8.70.0",
     "eslint": "^9.39.5",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.6",
