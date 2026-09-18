@@ -1425,10 +1425,10 @@
     webpack "5.106.2"
     webpack-node-externals "3.0.0"
 
-"@nestjs/common@^11.2.3":
-  version "11.2.3"
-  resolved "https://registry.yarnpkg.com/@nestjs/common/-/common-11.2.3.tgz#1aa7d68430aba4b3621d313d61627a4040a1bfd8"
-  integrity sha512-obdauJXHfthhepbV+LpGe88OeBlR/Kw9lwjLo0Utzc//agoLXYb9DUGhPQWtm81IpBWMv+19eiwcve9MsBZwXA==
+"@nestjs/common@^11.2.3", "@nestjs/common@^11.2.4":
+  version "11.2.4"
+  resolved "https://registry.yarnpkg.com/@nestjs/common/-/common-11.2.4.tgz#452e0d0f7b5d4f433109ed2aed51dfd191b223e0"
+  integrity sha512-UROrv8tDQxSJoetOCKZpWnKvQiDNUC1CNEhqVTpuCazUCLksZhofhV1RUNcbDEignH4wwCN3z7UWHxJkadXiSQ==
   dependencies:
     uid "2.0.2"
     file-type "21.3.4"
