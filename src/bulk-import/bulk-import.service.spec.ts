@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { Logger } from '@us-epa-camd/easey-common/logger';
+import { CurrentUser } from '@us-epa-camd/easey-common/interfaces';
 import {
   DeleteObjectsCommand,
   GetObjectCommand,
@@ -8,6 +9,8 @@ import {
 } from '@aws-sdk/client-s3';
 import { EntityManager } from 'typeorm';
 
+import { ImportQueueRequestItemDTO } from '../dto/bulk-import.dto';
+import { ImportFileType } from '../enums/import-file-type.enum';
 import { BulkImportService } from './bulk-import.service';
 
 const SET_ID = 'set-123';
@@ -16,13 +19,18 @@ const PREFIX = `bulk-import/${SET_ID}/`;
 describe('BulkImportService', () => {
   let service: BulkImportService;
   let entityManager: any;
+  let transactionManager: any;
   let s3Send: jest.Mock;
 
   beforeEach(async () => {
+    transactionManager = {
+      create: jest.fn((_entity, data) => data),
+      save: jest.fn(),
+    };
     entityManager = {
       findOneBy: jest.fn(),
       findOne: jest.fn(),
-      transaction: jest.fn(),
+      transaction: jest.fn(async (callback) => callback(transactionManager)),
       createQueryBuilder: jest.fn(),
     };
 
@@ -131,6 +139,55 @@ describe('BulkImportService', () => {
       ).rejects.toThrow('Cannot submit an import with no files.');
       expect(entityManager.transaction).not.toHaveBeenCalled();
     });
+
+    it.each([
+      {
+        scenario: 'prepare-only rights',
+        roles: ['Preparer'],
+        permissions: [],
+        fileTypes: [ImportFileType.MP, ImportFileType.QA, ImportFileType.EM],
+      },
+      {
+        scenario: 'Submit MP-only rights',
+        roles: ['Submitter'],
+        permissions: ['DSMP'],
+        fileTypes: [ImportFileType.QA, ImportFileType.EM],
+      },
+      {
+        scenario: 'Submit MP and QA rights',
+        roles: ['Submitter'],
+        permissions: ['DSMP', 'DSQA'],
+        fileTypes: [ImportFileType.EM],
+      },
+    ])(
+      'queues files for a user with $scenario after RoleGuard authorization',
+      async ({ roles, permissions, fileTypes }) => {
+        const items: ImportQueueRequestItemDTO[] = fileTypes.map(
+          (fileType, index) => ({
+            monPlanId: 'MP1',
+            s3Path: `${PREFIX}${fileType}-${index}.json`,
+            fileName: `${fileType}-${index}.json`,
+            fileType,
+            orisCode: 10,
+          }),
+        );
+        const user: CurrentUser = {
+          userId: 'user-1',
+          sessionId: 'session-1',
+          expiration: '',
+          clientIp: '',
+          roles,
+          facilities: [{ facId: 1, orisCode: 10, permissions }],
+        };
+
+        await expect(
+          service.queue(SET_ID, items, 'user@example.com', user),
+        ).resolves.toBeUndefined();
+
+        expect(entityManager.transaction).toHaveBeenCalledTimes(1);
+        expect(transactionManager.save).toHaveBeenCalledTimes(items.length + 1);
+      },
+    );
   });
 
   describe('getSet', () => {
