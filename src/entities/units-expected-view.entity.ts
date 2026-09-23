@@ -7,9 +7,9 @@ import { BaseEntity, Column, ViewEntity } from 'typeorm';
 })
 export class UnitsExpectedView extends BaseEntity {
   @Column({
-    name: 'oris_code',
+    name: 'fac_id',
     transformer: new NumericColumnTransformer(),
-    type: 'numeric',
+    type: 'bigint',
   })
   facilityId: number;
 

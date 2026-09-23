@@ -1,12 +1,20 @@
+import { NumericColumnTransformer } from '@us-epa-camd/easey-common/transforms';
 import { BaseEntity, Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { MatsDataFileTypeCode } from './mats-data-file-type-code.entity';
 
 @Entity({ name: 'camdecmpsaux.mats_data_submission_payload_file' })
 export class MatsDataSubmissionPayloadFile extends BaseEntity {
-  @PrimaryGeneratedColumn({ name: 'mats_data_sub_payload_file_id' })
+  @PrimaryGeneratedColumn({
+    name: 'mats_data_sub_payload_file_id',
+    type: 'bigint',
+  })
   matsDataSubPayloadFileId: number;
 
-  @Column({ name: 'mats_data_sub_id' })
+  @Column({
+    name: 'mats_data_sub_id',
+    type: 'bigint',
+    transformer: new NumericColumnTransformer(),
+  })
   matsDataSubId: number;
 
   @ManyToOne(() => MatsDataFileTypeCode)
