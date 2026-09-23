@@ -41,7 +41,7 @@ export class UnitsExpectedRepository extends Repository<UnitsExpectedView> {
       result.map(async (row) => {
         const entity = new UnitsExpectedView();
 
-        entity.facilityId = Number(row.oris_code);
+        entity.facilityId = Number(row.fac_id);
         entity.facilityName = row.facility_name;
         entity.stateCode = row.state;
         entity.unitId = row.unitid;

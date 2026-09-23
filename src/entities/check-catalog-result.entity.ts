@@ -16,14 +16,14 @@ export class CheckCatalogResult extends BaseEntity {
   @PrimaryColumn({
     name: 'check_catalog_result_id',
     transformer: new NumericColumnTransformer(),
-    type: 'numeric',
+    type: 'bigint',
   })
   checkCatalogResultId: number;
 
   @Column({
     name: 'check_catalog_id',
     transformer: new NumericColumnTransformer(),
-    type: 'numeric',
+    type: 'bigint',
   })
   checkCatalogId: number;
 
@@ -36,7 +36,7 @@ export class CheckCatalogResult extends BaseEntity {
   @Column({
     name: 'response_catalog_id',
     transformer: new NumericColumnTransformer(),
-    type: 'numeric',
+    type: 'bigint',
   })
   responseCatalogId: number;
 

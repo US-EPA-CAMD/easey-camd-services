@@ -59,7 +59,7 @@ export class SubmissionListView extends BaseEntity {
   @Column({
     name: 'submission_id',
     transformer: new NumericColumnTransformer(),
-    type: 'numeric',
+    type: 'bigint',
   })
   submissionId: number;
 
@@ -96,15 +96,13 @@ export class SubmissionListView extends BaseEntity {
 
   @Column({
     name: 'mon_plan_id',
-    transformer: new NumericColumnTransformer(),
-    type: 'numeric',
   })
-  monitorPlanId: number;
+  monitorPlanId: string;
 
   @Column({
     name: 'rpt_period_id',
     transformer: new NumericColumnTransformer(),
-    type: 'numeric',
+    type: 'bigint',
   })
   reportingPeriodId: number;
 }

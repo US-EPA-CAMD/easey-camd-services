@@ -18,7 +18,7 @@ export class Unit extends BaseEntity {
   @PrimaryColumn({
     name: 'unit_id',
     transformer: new NumericColumnTransformer(),
-    type: 'numeric',
+    type: 'bigint',
   })
   id: number;
 
@@ -29,6 +29,8 @@ export class Unit extends BaseEntity {
 
   @Column({
     name: 'fac_id',
+    transformer: new NumericColumnTransformer(),
+    type: 'bigint',
   })
   facId: number;
 
