@@ -10,7 +10,7 @@ export class MatsBulkFile extends BaseEntity {
 
   @Column({
     name: 'fac_id',
-    type: 'numeric',
+    type: 'bigint',
     transformer: new NumericColumnTransformer(),
     nullable: false,
   })
@@ -59,7 +59,7 @@ export class MatsBulkFile extends BaseEntity {
 
   @Column({
     name: 'submission_id',
-    type: 'numeric',
+    type: 'bigint',
     transformer: new NumericColumnTransformer(),
   })
   submissionIdentifier: number;

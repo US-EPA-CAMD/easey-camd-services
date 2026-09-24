@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Logger } from '@us-epa-camd/easey-common/logger';
 import { extname } from 'node:path';
+import { Attachment } from 'nodemailer/lib/mailer';
 
 import { NodemailerService } from './nodemailer/nodemailer.service';
 import { EaseyContentTemplateService } from './easey-content-template.service';
@@ -9,6 +10,7 @@ import { EmailToSendService } from './email-to-send.service';
 import { ClientConfigService } from './client-config.service';
 import { TemplateEmailOptions, SendMailOptions } from './interfaces/mail-interfaces';
 import { CreateMailDto } from '../dto/create-mail.dto';
+import { EmailAttachment } from '../entities/email-attachment.entity';
 
 @Injectable()
 export class MailService {
@@ -126,6 +128,72 @@ export class MailService {
   }
 
   /**
+   * Load valid attachment records without blocking the parent email
+   * @param emailToSendId Database EmailToSend record ID
+   * @returns Valid Nodemailer attachments
+   */
+  private async getEmailAttachments(emailToSendId: number): Promise<Attachment[]> {
+    let attachmentRecords: EmailAttachment[];
+
+    try {
+      attachmentRecords = await this.emailToSendService.findEmailAttachments(emailToSendId);
+    } catch (error) {
+      this.logger.warn(
+        `Unable to load EmailAttachment records for EmailToSend record ${emailToSendId}. Sending email without attachments.`,
+        error,
+      );
+      return [];
+    }
+
+    if (!Array.isArray(attachmentRecords)) {
+      this.logger.warn(
+        `EmailAttachment lookup returned invalid data for EmailToSend record ${emailToSendId}. Sending email without attachments.`,
+      );
+      return [];
+    }
+
+    const attachments: Attachment[] = [];
+
+    for (const attachmentRecord of attachmentRecords) {
+      if (!attachmentRecord || typeof attachmentRecord !== 'object') {
+        this.logger.warn(
+          `Skipping invalid EmailAttachment record for EmailToSend record ${emailToSendId}: record is missing or malformed.`,
+        );
+        continue;
+      }
+
+      const attachmentName = attachmentRecord.emailAttachmentName;
+      const attachmentContent = attachmentRecord.emailAttachmentContent;
+      const hasValidName =
+        typeof attachmentName === 'string' && attachmentName.trim().length > 0;
+      const hasValidContent =
+        typeof attachmentContent === 'string' &&
+        attachmentContent.trim().length > 0;
+      const invalidFields: string[] = [];
+      if (!hasValidName) {
+        invalidFields.push('emailAttachmentName is missing or empty');
+      }
+      if (!hasValidContent) {
+        invalidFields.push('emailAttachmentContent is missing or empty');
+      }
+
+      if (!hasValidName || !hasValidContent) {
+        this.logger.warn(
+          `Skipping invalid EmailAttachment record ${attachmentRecord.emailAttachmentIdentifier ?? 'unknown'} for EmailToSend record ${emailToSendId}: ${invalidFields.join(', ')}.`,
+        );
+        continue;
+      }
+
+      attachments.push({
+        filename: attachmentName,
+        content: attachmentContent,
+      });
+    }
+
+    return attachments;
+  }
+
+  /**
    * Process EmailToSend record with synchronous error reporting
    * @param emailToSendId Database record ID from EmailToSend table
    * @returns Promise with success/failure details
@@ -137,6 +205,8 @@ export class MailService {
       if (!emailRecord) {
         return { success: false, message: `EmailToSend record ${emailToSendId} not found` };
       }
+
+      const attachments = await this.getEmailAttachments(emailToSendId);
 
       // Get template
       const template = await this.easeyContentTemplateService.getTemplateById(emailRecord.templateIdentifier);
@@ -171,6 +241,7 @@ export class MailService {
         from: emailRecord.fromEmail,
         subject: template.templateSubject,
         html,
+        attachments: attachments.length > 0 ? attachments : undefined,
       });
 
       if (result.success) {

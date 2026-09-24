@@ -45,10 +45,19 @@ export class ReportParamsDTO {
   @IsOptional()
   quarter?: number;
 
+  @ApiProperty({ required: false })
+  @IsOptional()
+  dailyTestSumId?: string;
+
   //Added for Emissions page of the Submission Feedback Email Attachment
   @ApiProperty({ required: false })
   @IsOptional()
   locationId?: string;
+
+  //Bulk import per-file results report
+  @ApiProperty({ required: false })
+  @IsOptional()
+  importId?: string;
 
   @ApiProperty({ isArray: true, required: false })
   @IsOptional()

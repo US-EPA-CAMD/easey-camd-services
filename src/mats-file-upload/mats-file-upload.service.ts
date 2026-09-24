@@ -8,7 +8,8 @@ import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
 import { join } from 'path';
-import { mkdirSync, writeFileSync } from 'fs';
+import * as os from 'os';
+import { mkdirSync, writeFileSync, promises as fsPromises } from 'fs';
 import { Request } from 'express';
 import { AxiosResponse } from 'axios';
 import { format } from 'date-fns';
@@ -151,6 +152,7 @@ export class MatsFileUploadService {
   async matsSubmissionProcess(matsProcessParams: MatsProcessParamsDTO, req: Request) {
     let submission: MatsDataSubmission;
     let payloadFiles: MatsDataSubmissionPayloadFile[];
+    let folderPath: string | undefined;
     const matsDataSubId = matsProcessParams.matsDataSubmissionId;
 
     this.logger.log(`MATS Submission Process Started for: ${matsDataSubId}`);
@@ -173,8 +175,8 @@ export class MatsFileUploadService {
         where: { matsDataSubId },
       });
 
-      const folderPath = join(__dirname, uuidv4());
-      mkdirSync(folderPath);
+      folderPath = join (os.tmpdir(), `mats-${uuidv4()}`);
+      mkdirSync(folderPath, {recursive: true});
 
       const documents: any = [];
       // Add MATS Certification Statement
@@ -195,7 +197,7 @@ export class MatsFileUploadService {
             Key: file.tempS3BucketFilePath,
           }),
         );
-  
+
         const filePath = join(folderPath, file.fileName);
         const bodyContents = await getObjectResponse.Body.transformToByteArray();
         writeFileSync(filePath, Buffer.from(bodyContents));
@@ -249,6 +251,22 @@ export class MatsFileUploadService {
 
       throw new EaseyException(error, error.status);
 
+    } finally {
+      if (folderPath) {
+        try {
+          await fsPromises.rm(folderPath, {
+            recursive: true,
+            force: true,
+            maxRetries: 5,
+            retryDelay: 100,
+          });
+        } catch (clenaupErr) {
+          this.logger.error (
+            `MATS temp folder cleanup failed for ${folderPath}: ${clenaupErr.message}`,
+          );
+          //error is intentionally swallowed os that clenaupErr does not mask the original error
+        }
+      }
     }
   }
 

@@ -10,6 +10,7 @@ import { ClientConfigService } from './client-config.service';
 import { DataSetModule } from '../dataset/dataset.module';
 import { CopyOfRecordModule } from '../copy-of-record/copy-of-record.module';
 import { RecipientListService } from '../submission/recipient-list.service';
+import { ClientTokenModule } from '../client-token/client-token.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { RecipientListService } from '../submission/recipient-list.service';
     NodemailerModule,
     DataSetModule,
     CopyOfRecordModule,
+    ClientTokenModule,
   ],
   controllers: [MailController],
   providers: [

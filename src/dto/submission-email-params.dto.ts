@@ -19,6 +19,7 @@ export class SubmissionEmailParamsDto {
   orisCode              : number;
   stateCode             : string;
   unitStackPipe         : string;
+  primaryLocation       : string;
   monPlanStatus         : string;
 
   templateContext: any = {};

@@ -9,6 +9,7 @@ import { ErrorHandlerService } from './error-handler.service';
 import { v4 as uuidv4 } from 'uuid';
 import { mkdirSync } from 'fs';
 import { promises as fsPromises } from 'fs';
+import * as os from 'os';
 import * as path from 'path';
 import { SubmissionSetHelperService } from './submission-set-helper.service';
 import { SubmissionEmailService } from './submission-email.service';
@@ -66,7 +67,7 @@ export class SubmissionProcessService {
       // Update the submission queue statuses to 'WIP'
       submissionQueueRecords = await this.entityManager.find(SubmissionQueue, {
         where: { submissionSetIdentifier: id },
-        relations: { 
+        relations: {
           reportingPeriod: true,
           severityCodeRecord: true,
         },
@@ -79,8 +80,8 @@ export class SubmissionProcessService {
       //Push the submission stage here
       submissionStages.push({ action: 'SET_STATUS_WIP', dateTime: (await this.submissionSetHelper.getFormattedDateTime())  || 'N/A' });
 
-      folderPath = path.join(__dirname, uuidv4());
-      mkdirSync(folderPath);
+      folderPath = path.join(os.tmpdir(), `submission-${uuidv4()}`);
+      mkdirSync(folderPath, {recursive:true});
 
       // Build transactions
       const transactions = await this.transactionService.buildTransactions(set, submissionQueueRecords, folderPath);

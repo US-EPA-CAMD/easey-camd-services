@@ -30,6 +30,7 @@ applications:
       EASEY_BULK_FILES_AWS_BUCKET: ((campdDatasetsS3Bucket))
       EASEY_CAMD_SERVICES_MATS_BULK_FILES_BUCKET: ((matsS3Bucket))
       EASEY_CAMD_SERVICES_MATS_BULK_FILES_IMPORT_BUCKET: ((importMatsS3Bucket))
+      EASEY_CAMD_SERVICES_FILE_STAGING_BUCKET: ((fileStagingS3Bucket))
       EASEY_API_GATEWAY_HOST: ((apiHost))
       EASEY_AUTH_API: https://((apiHost))/auth-mgmt
       EASEY_CAMD_SERVICES_ENABLE_AUTH_TOKEN: true
@@ -46,6 +47,7 @@ applications:
       TZ: America/New_York
       EASEY_CAMD_SERVICES_RECIPIENT_LIST_API: ((recipientsListApi))
       EASEY_CAMD_SERVICES_RECIPIENT_LIST_API_ENABLED: ((recipientsListApiEnabled))
+      EASEY_CAMD_SERVICES_RECIPIENT_LIST_API_METHOD: ((recipientsListApiMethod))
       EASEY_DB_MAX_CONNECTION_POOL: ((maxConnectionPool))
       EASEY_DB_IDLE_TIMEOUT: ((idleTimeout))
       EASEY_DB_CONNECTION_TIMEOUT: ((connectionTimeout))
@@ -60,4 +62,5 @@ applications:
       - route: ((host))/((path))
     services:
       - camd-pg-db
+      - file-staging
       - log-drain
