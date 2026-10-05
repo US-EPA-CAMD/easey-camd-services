@@ -20,7 +20,7 @@ export class EsSpec extends BaseEntity {
   @Column({
     name: 'check_catalog_result_id',
     transformer: new NumericColumnTransformer(),
-    type: 'bigint',
+    type: 'numeric',
   })
   checkCatalogResultId: number;
 
@@ -30,7 +30,7 @@ export class EsSpec extends BaseEntity {
   @Column({
     name: 'fac_id',
     transformer: new NumericColumnTransformer(),
-    type: 'bigint',
+    type: 'numeric',
   })
   facilityId: number;
 
