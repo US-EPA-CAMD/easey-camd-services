@@ -23,7 +23,7 @@ export class MonitorLocation extends BaseEntity {
 
   @Column({
     name: 'unit_id',
-    type: 'bigint',
+    type: 'numeric',
     transformer: new NumericColumnTransformer(),
   })
   unitIdentifier: number;

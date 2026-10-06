@@ -35,7 +35,7 @@ export class MatsDataSubmission extends BaseEntity {
 
   @Column({
     name: 'fac_id',
-    type: 'bigint',
+    type: 'numeric',
     transformer: new NumericColumnTransformer(),
   })
   facId: number;

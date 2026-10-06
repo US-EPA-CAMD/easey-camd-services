@@ -21,7 +21,7 @@ export class EvaluationSet extends BaseEntity {
 
   @Column({
     name: 'fac_id',
-    type: 'bigint',
+    type: 'numeric',
     transformer: new NumericColumnTransformer(),
   })
   facIdentifier: number;
