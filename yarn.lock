@@ -82,10 +82,10 @@
     "@smithy/types" "^4.19.0"
     tslib "^2.6.2"
 
-"@aws-sdk/client-s3@^3.1145.0":
-  version "3.1145.0"
-  resolved "https://registry.yarnpkg.com/@aws-sdk/client-s3/-/client-s3-3.1145.0.tgz#ca733989525f8c2ddcab8530f9e3a471a1a9ecbc"
-  integrity sha512-MPKAQdx8qCZW1/ChDPILNehtAn/BMP4GNTnaH/xhGCWg3v50ADVq1K2WzxIrFfeANdWUyjwiY0CXDBhclsNWgQ==
+"@aws-sdk/client-s3@^3.1146.0":
+  version "3.1146.0"
+  resolved "https://registry.yarnpkg.com/@aws-sdk/client-s3/-/client-s3-3.1146.0.tgz#40294d678aa29824bc6e77077fa4d2bd0fbeda01"
+  integrity sha512-WY0YCBzxc4muFfY6UbGpA+oib0nGT/Px2aEPGYX7pp1la2OmDLChnK81mu8H7LdYvwGU1pLAsLIa/qgad0Wd7g==
   dependencies:
     "@aws-sdk/checksums" "^3.1001.1"
     "@aws-sdk/core" "^3.978.1"
@@ -5756,9 +5756,9 @@ promise@^7.0.1:
     asap "~2.0.3"
 
 proxy-addr@^2.0.7:
-  version "2.0.7"
-  resolved "https://registry.yarnpkg.com/proxy-addr/-/proxy-addr-2.0.7.tgz#f19fe69ceab311eeb94b42e70e8c2070f9ba1025"
-  integrity sha512-llQsMLSUDUPT44jdrU/O37qlnifitDP+ZwrmmZcoSKyLKvtZxpyV0n2/bD/N4tBAAZ/gJEdZU7KMraoK1+XYAg==
+  version "2.0.8"
+  resolved "https://registry.yarnpkg.com/proxy-addr/-/proxy-addr-2.0.8.tgz#624e760fd8ab06b1b8320c2f8506d4422cf8e932"
+  integrity sha512-5nnx0yGyVUcY6t9RnWcARWtwT9F1D8O9rt08htPvnd49W1IgZtmLkhu9WfMzQj1cFxjHIO6connUNVW5k7AVyQ==
   dependencies:
     forwarded "0.2.0"
     ipaddr.js "1.9.1"
