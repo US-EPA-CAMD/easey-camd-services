@@ -10,7 +10,7 @@ export class MatsBulkFile extends BaseEntity {
 
   @Column({
     name: 'fac_id',
-    type: 'numeric',
+    type: 'integer',
     transformer: new NumericColumnTransformer(),
     nullable: false,
   })
