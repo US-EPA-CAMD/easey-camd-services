@@ -54,7 +54,7 @@
     "dompurify": "^3.4.16",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
-    "handlebars": "^4.7.9",
+    "handlebars": "^4.7.10",
     "https": "^1.0.0",
     "jsdom": "26.1.0",
     "liquidjs": "^10.30.0",
