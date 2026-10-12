@@ -53,7 +53,7 @@
     "date-fns": "^4.4.0",
     "dompurify": "^3.4.16",
     "dotenv": "^17.4.2",
-    "express": "^5.2.1",
+    "express": "^5.3.0",
     "handlebars": "^4.7.10",
     "https": "^1.0.0",
     "jsdom": "26.1.0",
