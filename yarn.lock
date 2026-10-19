@@ -625,77 +625,77 @@
   dependencies:
     "@jridgewell/trace-mapping" "0.3.9"
 
-"@css-inline/css-inline-android-arm-eabi@0.22.0":
-  version "0.22.0"
-  resolved "https://registry.yarnpkg.com/@css-inline/css-inline-android-arm-eabi/-/css-inline-android-arm-eabi-0.22.0.tgz#460b9a4508a56dcf058bf1f72edd3740d9d0026d"
-  integrity sha512-SAKnj3t5SpO5WOP6mSt+LQ+bANcXgx05oS/pEjWugfA5yM4Gcfsu6vqqZIljZSgfwxomGj9KJZvyUCvUzcL88w==
+"@css-inline/css-inline-android-arm-eabi@0.22.1":
+  version "0.22.1"
+  resolved "https://registry.yarnpkg.com/@css-inline/css-inline-android-arm-eabi/-/css-inline-android-arm-eabi-0.22.1.tgz#4b6d5cfb94d036590e404b9ab60a77e7d99202c8"
+  integrity sha512-uwoQkwpKYjI1Fdp8x6EFHiTJjFY23bdp/hzrf15CigRhxamXdRot1gT+nnX8J/Dt8jNEFkxoAr/5QgvUV3L21A==
 
-"@css-inline/css-inline-android-arm64@0.22.0":
-  version "0.22.0"
-  resolved "https://registry.yarnpkg.com/@css-inline/css-inline-android-arm64/-/css-inline-android-arm64-0.22.0.tgz#0b75b2e827d3249cadcb4375db06765780c406ac"
-  integrity sha512-MGCtmZXsM1zqR16LLKYrCQHrrDLEMBPiFaImGFKHZpUgH7LF/wH94QjD0LyryPDbkbEz2qbJ8CCkIx1oQN1jAQ==
+"@css-inline/css-inline-android-arm64@0.22.1":
+  version "0.22.1"
+  resolved "https://registry.yarnpkg.com/@css-inline/css-inline-android-arm64/-/css-inline-android-arm64-0.22.1.tgz#663b0b94d6e7200a203bcb6106f7b13046de3357"
+  integrity sha512-OXxzjH0rCPH3EgHUDybnAGij7erIrn7M3PYjO6nKEE+SPFDzoV4E+4sTeZdaOSsf+oEPRVcdsXSn59CuiEG33Q==
 
-"@css-inline/css-inline-darwin-arm64@0.22.0":
-  version "0.22.0"
-  resolved "https://registry.yarnpkg.com/@css-inline/css-inline-darwin-arm64/-/css-inline-darwin-arm64-0.22.0.tgz#51369b4b857a7451453336a548c433ee0beb1a1b"
-  integrity sha512-/1536wbgC3ajWE/wQpQMrO+es+dCZ6ApYusjSTu+D4wA9c+WQTmc5wT1og09P8FTGzP0y/N2Mec9AsYB2yL1FA==
+"@css-inline/css-inline-darwin-arm64@0.22.1":
+  version "0.22.1"
+  resolved "https://registry.yarnpkg.com/@css-inline/css-inline-darwin-arm64/-/css-inline-darwin-arm64-0.22.1.tgz#47c1b0be0801522ec3e115840c87c11c3a0f5828"
+  integrity sha512-DHvNFtMcnnBEgSYtkBy+oEbXv+gnYpLZZirKRKfPPMFwWsWED1Z9KKRJAS2j2cYA4T1CDO8/MR05RuQjZKQKoQ==
 
-"@css-inline/css-inline-darwin-x64@0.22.0":
-  version "0.22.0"
-  resolved "https://registry.yarnpkg.com/@css-inline/css-inline-darwin-x64/-/css-inline-darwin-x64-0.22.0.tgz#7ed97b919d319c22435b7af2a9f3d793a65f5fbb"
-  integrity sha512-99PM7DCxDQ6yzmlM7BrsTJKauGx0D5WGm70DEIBlhI87it7rax0i2kyykV/xgojOihttR4EbzF1jv9opvKpn+A==
+"@css-inline/css-inline-darwin-x64@0.22.1":
+  version "0.22.1"
+  resolved "https://registry.yarnpkg.com/@css-inline/css-inline-darwin-x64/-/css-inline-darwin-x64-0.22.1.tgz#9ad3e728bf001d97d1b1c49327bc007d6038959a"
+  integrity sha512-xJf7LLH3sCbymvUGIMsP/mnAPW187WxYUKMxwWRTiBS9qr1mc8MrSGfjKuUvevNfPHg4Yy3dqRDQwj8omZT8Qg==
 
-"@css-inline/css-inline-linux-arm-gnueabihf@0.22.0":
-  version "0.22.0"
-  resolved "https://registry.yarnpkg.com/@css-inline/css-inline-linux-arm-gnueabihf/-/css-inline-linux-arm-gnueabihf-0.22.0.tgz#1f5d32101f5711a8f2895642d24ede33a3adc7b4"
-  integrity sha512-5QBP5gunVeQvM2dcirBgSPgeS7hxN5fZO+VGtp1meVw8zArP40MFhnC0yPqt6kCVUjVgchBmYy8PmA/iLS4a+w==
+"@css-inline/css-inline-linux-arm-gnueabihf@0.22.1":
+  version "0.22.1"
+  resolved "https://registry.yarnpkg.com/@css-inline/css-inline-linux-arm-gnueabihf/-/css-inline-linux-arm-gnueabihf-0.22.1.tgz#3e1d1e6899de13bc31f797effc3e26f3a6914575"
+  integrity sha512-QXxo9dW9p09k6S5DsckaoaKXOZDC9q8C/zFzGM44IDcw91Giu5pOa3sM8yf4bYPGjqTAbCKASGd8IUzrBw64ag==
 
-"@css-inline/css-inline-linux-arm64-gnu@0.22.0":
-  version "0.22.0"
-  resolved "https://registry.yarnpkg.com/@css-inline/css-inline-linux-arm64-gnu/-/css-inline-linux-arm64-gnu-0.22.0.tgz#abaa249d2ba67e61a368256a98a5d4bbaabc30db"
-  integrity sha512-UMmZr5kJOZ67LbBZZsGdD2mPhCDGwfCj3/Aaw2srY3lc99HiGAqQ4qgjd9sOI7W85kmBmUEqnf/X60JOJsAhWw==
+"@css-inline/css-inline-linux-arm64-gnu@0.22.1":
+  version "0.22.1"
+  resolved "https://registry.yarnpkg.com/@css-inline/css-inline-linux-arm64-gnu/-/css-inline-linux-arm64-gnu-0.22.1.tgz#57ba6aa32dc6bcf07b9a8d3a08097e022336c6ff"
+  integrity sha512-xWioEtxU0XBFkPES3AMmWU6GVI5QHDJ/2zlqEQ/giwBMoc2d+XadNYmDdUC7ThhEXk5h35WfoGpxSIaoyLL3Mw==
 
-"@css-inline/css-inline-linux-arm64-musl@0.22.0":
-  version "0.22.0"
-  resolved "https://registry.yarnpkg.com/@css-inline/css-inline-linux-arm64-musl/-/css-inline-linux-arm64-musl-0.22.0.tgz#45905fbaa0035be67f2f0022c0b1039c745e67ba"
-  integrity sha512-QgeTwJtVibEE4NN1vDu5xRPrQNWedUyfQyCHxlsh6vdXY8nZ9cd9iFa4aguqaAi7ljr6gkjAFuERHULSjynLJg==
+"@css-inline/css-inline-linux-arm64-musl@0.22.1":
+  version "0.22.1"
+  resolved "https://registry.yarnpkg.com/@css-inline/css-inline-linux-arm64-musl/-/css-inline-linux-arm64-musl-0.22.1.tgz#8381d89ae643fd54fa20bc533e8e47ffc08eb099"
+  integrity sha512-AB2yby7bUlK7X0fjZqS4Cy2r6LYeaS50GjoxombdefHBEI5gCqW08o3Ya/CwwrI5Ix6ZsJp2jWH49CCghnkRVA==
 
-"@css-inline/css-inline-linux-x64-gnu@0.22.0":
-  version "0.22.0"
-  resolved "https://registry.yarnpkg.com/@css-inline/css-inline-linux-x64-gnu/-/css-inline-linux-x64-gnu-0.22.0.tgz#1ac9c3c0ca365d03124ff13b9c638c038fa9639f"
-  integrity sha512-l8QAh5/zEdYNlS1Ctqi/0D9tDXhEic9w9ou7FTxmQjMirAg2+oUmiraqWNnZr0YeYySPN500XHbCKDGq9ACYRg==
+"@css-inline/css-inline-linux-x64-gnu@0.22.1":
+  version "0.22.1"
+  resolved "https://registry.yarnpkg.com/@css-inline/css-inline-linux-x64-gnu/-/css-inline-linux-x64-gnu-0.22.1.tgz#4e8d6f2b3c12fba488e6e5dec3706e56ab3fa5c3"
+  integrity sha512-CjETf4+Sc4a79N6x3m4iT7PP4L452beTGtA5vmtEX+cda4t4GdlaKMmjcR1mjp6acZ+V2GEBy4AH2rF/pJY3Fw==
 
-"@css-inline/css-inline-linux-x64-musl@0.22.0":
-  version "0.22.0"
-  resolved "https://registry.yarnpkg.com/@css-inline/css-inline-linux-x64-musl/-/css-inline-linux-x64-musl-0.22.0.tgz#f6b212affc348d40925cd85b5bf71ad2ba7fd223"
-  integrity sha512-9LcUU2ZJl7VGfcCa6LGCeGQsnUomLgcxJvbnCWiSH7A8iP1O5tZ2HWIj9j8zpCEHciBwn9WklWewZ4gP0ZlB9A==
+"@css-inline/css-inline-linux-x64-musl@0.22.1":
+  version "0.22.1"
+  resolved "https://registry.yarnpkg.com/@css-inline/css-inline-linux-x64-musl/-/css-inline-linux-x64-musl-0.22.1.tgz#1ef0fc3888bf41145ffbc2c60f4f590c07f491cc"
+  integrity sha512-s35aspZZjcunaoUrdQuz2B6QqfKK7RbiFfIPNcGw2kCvfBm8uYAc026b7DJ7xBZuBA3rzBJUqq/ovgxmb2Gg2g==
 
-"@css-inline/css-inline-win32-arm64-msvc@0.22.0":
-  version "0.22.0"
-  resolved "https://registry.yarnpkg.com/@css-inline/css-inline-win32-arm64-msvc/-/css-inline-win32-arm64-msvc-0.22.0.tgz#4e0661ac30b33bd8b360a8c54eec0c751a35a51d"
-  integrity sha512-Sn2F+N3NiMFkho6r4JGgdkiwGmjR9tzUY+pSQ3Jtosruos7rF0qtCBSycu2O3Kceuf/rWaKi3H0q0TnjrSYRVw==
+"@css-inline/css-inline-win32-arm64-msvc@0.22.1":
+  version "0.22.1"
+  resolved "https://registry.yarnpkg.com/@css-inline/css-inline-win32-arm64-msvc/-/css-inline-win32-arm64-msvc-0.22.1.tgz#1578eb845b5750bfdb8b98f8ecdc21c4a749d669"
+  integrity sha512-XSW82qzz3cj56KOKL0AG86JeCvQvBlRK+OOth+2ryr/MNlT3uHZh/zcREHbUM9WVtYnjvpbQ8c6LqRywKGQzEQ==
 
-"@css-inline/css-inline-win32-x64-msvc@0.22.0":
-  version "0.22.0"
-  resolved "https://registry.yarnpkg.com/@css-inline/css-inline-win32-x64-msvc/-/css-inline-win32-x64-msvc-0.22.0.tgz#62333c5234e0baf394c1db0473ed5c1602a4d2eb"
-  integrity sha512-3K87N3QCyznTOuU4gZA3kkVlDSp5niKHTVL/7GtlkSLJQYb6s0ZfKxxBD8AUrOyajd4iYWyWsr8HM/Rs+BdUlg==
+"@css-inline/css-inline-win32-x64-msvc@0.22.1":
+  version "0.22.1"
+  resolved "https://registry.yarnpkg.com/@css-inline/css-inline-win32-x64-msvc/-/css-inline-win32-x64-msvc-0.22.1.tgz#c23b0745a78f55048aea7baa281ceb9fe2f504df"
+  integrity sha512-Ds3NXST3bnPSMUoxwCHh1Dd1l/O0Ij+b13ZBwmYnnBhsYSP2jHkem6gCg8oTgD9krU7eBe02ZAdYT+f6GKdPAw==
 
-"@css-inline/css-inline@^0.22.0":
-  version "0.22.0"
-  resolved "https://registry.yarnpkg.com/@css-inline/css-inline/-/css-inline-0.22.0.tgz#4b507fc86daee1a3e75201523a29811aafee1394"
-  integrity sha512-C1vALHUS02Vv8dBoH07A1fQG7F0Mf/SG7cfQw2BX0eHmUgw+rjWrW/hedP1CGNoBLjGVvBDyjYfVOSjgLdm18w==
+"@css-inline/css-inline@^0.22.1":
+  version "0.22.1"
+  resolved "https://registry.yarnpkg.com/@css-inline/css-inline/-/css-inline-0.22.1.tgz#20a918dc378f5e4d1cfba0f92063566243ee92d0"
+  integrity sha512-12+Nbn11ahDwcLhOqSRxFcIpuM8Pqir/9l42Vp0Co6DiBuNjTn5M86fyG2uB4yPPBrN/Y82GCAKQmYGqJbhBMQ==
   optionalDependencies:
-    "@css-inline/css-inline-android-arm-eabi" "0.22.0"
-    "@css-inline/css-inline-android-arm64" "0.22.0"
-    "@css-inline/css-inline-darwin-arm64" "0.22.0"
-    "@css-inline/css-inline-darwin-x64" "0.22.0"
-    "@css-inline/css-inline-linux-arm-gnueabihf" "0.22.0"
-    "@css-inline/css-inline-linux-arm64-gnu" "0.22.0"
-    "@css-inline/css-inline-linux-arm64-musl" "0.22.0"
-    "@css-inline/css-inline-linux-x64-gnu" "0.22.0"
-    "@css-inline/css-inline-linux-x64-musl" "0.22.0"
-    "@css-inline/css-inline-win32-arm64-msvc" "0.22.0"
-    "@css-inline/css-inline-win32-x64-msvc" "0.22.0"
+    "@css-inline/css-inline-android-arm-eabi" "0.22.1"
+    "@css-inline/css-inline-android-arm64" "0.22.1"
+    "@css-inline/css-inline-darwin-arm64" "0.22.1"
+    "@css-inline/css-inline-darwin-x64" "0.22.1"
+    "@css-inline/css-inline-linux-arm-gnueabihf" "0.22.1"
+    "@css-inline/css-inline-linux-arm64-gnu" "0.22.1"
+    "@css-inline/css-inline-linux-arm64-musl" "0.22.1"
+    "@css-inline/css-inline-linux-x64-gnu" "0.22.1"
+    "@css-inline/css-inline-linux-x64-musl" "0.22.1"
+    "@css-inline/css-inline-win32-arm64-msvc" "0.22.1"
+    "@css-inline/css-inline-win32-x64-msvc" "0.22.1"
 
 "@csstools/color-helpers@^5.1.0":
   version "5.1.0"
