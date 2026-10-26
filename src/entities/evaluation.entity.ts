@@ -24,7 +24,7 @@ export class Evaluation extends BaseEntity {
 
   @Column({
     name: 'rpt_period_id',
-    type: 'bigint',
+    type: 'numeric',
     transformer: new NumericColumnTransformer(),
   })
   rptPeriodIdentifier?: number;
