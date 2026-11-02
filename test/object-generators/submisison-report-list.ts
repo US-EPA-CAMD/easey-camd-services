@@ -8,20 +8,20 @@ export const genSubmissionList = <RepoType>(amount = 1): RepoType[] => {
     submissionListCount++
   ) {
     submissionList.push({
-      orisCode :  faker.datatype.number(),
-      facilityName :  faker.datatype.string(),
-      state :  faker.datatype.string(),
-      locations :  faker.datatype.string(),
-      reportingPeriodAbbreviation :  faker.datatype.string(),
-      reportingFrequencyCode :  faker.datatype.string(),
-      submissionTypeCode :  faker.datatype.string(),
-      submissionId :  faker.datatype.number(),
-      submissionDateTime :  faker.datatype.datetime(),
-      severityLevel :  faker.datatype.string(),
-      mostRecent :  faker.datatype.string(),
-      submissionStatus :  faker.datatype.string(),
-      severityCode :  faker.datatype.string(),
-      submitter :  faker.datatype.string()
+      orisCode :  faker.number.int(),
+      facilityName :  faker.string.sample(),
+      state :  faker.string.sample(),
+      locations :  faker.string.sample(),
+      reportingPeriodAbbreviation :  faker.string.sample(),
+      reportingFrequencyCode :  faker.string.sample(),
+      submissionTypeCode :  faker.string.sample(),
+      submissionId :  faker.number.int(),
+      submissionDateTime :  faker.date.anytime(),
+      severityLevel :  faker.string.sample(),
+      mostRecent :  faker.string.sample(),
+      submissionStatus :  faker.string.sample(),
+      severityCode :  faker.string.sample(),
+      submitter :  faker.string.sample()
     } as unknown as RepoType);
   }
   return submissionList;
