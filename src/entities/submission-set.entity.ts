@@ -21,7 +21,7 @@ export class SubmissionSet extends BaseEntity {
 
   @Column({
     name: 'fac_id',
-    type: 'bigint',
+    type: 'integer',
     transformer: new NumericColumnTransformer(),
   })
   facIdentifier: number;

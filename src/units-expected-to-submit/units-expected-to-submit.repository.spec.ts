@@ -12,7 +12,6 @@ describe('UnitsExpectedRepository', () => {
   const mockQueryResult = [
     {
       oris_code: 3,
-      fac_id: 1,
       facility_name: 'Barry',
       state: 'AL',
       unitid: '5',
@@ -28,7 +27,6 @@ describe('UnitsExpectedRepository', () => {
     },
     {
       oris_code: 3,
-      fac_id: 1,
       facility_name: 'Barry',
       state: 'AL',
       unitid: '6',
@@ -112,14 +110,14 @@ describe('UnitsExpectedRepository', () => {
 
       expect(result).toHaveLength(2);
       expect(result[0]).toBeInstanceOf(UnitsExpectedView);
-      expect(result[0].facilityId).toBe(1);
+      expect(result[0].facilityId).toBe(3);
       expect(result[0].facilityName).toBe('Barry');
       expect(result[0].stateCode).toBe('AL');
       expect(result[0].unitId).toBe('5');
       expect(result[0].windowStatus).toBe('No Window');
       
       expect(result[1]).toBeInstanceOf(UnitsExpectedView);
-      expect(result[1].facilityId).toBe(1);
+      expect(result[1].facilityId).toBe(3);
       expect(result[1].unitId).toBe('6');
       expect(result[1].submissionId).toBe(12345);
       expect(result[1].submissionStatus).toBe('Pending');
@@ -129,7 +127,6 @@ describe('UnitsExpectedRepository', () => {
       jest.spyOn(entityManager, 'query').mockResolvedValue([
         {
           oris_code: 3,
-          fac_id: 1,
           facility_name: 'Barry',
           state: 'AL',
           unitid: '5',

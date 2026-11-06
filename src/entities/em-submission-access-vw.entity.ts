@@ -18,7 +18,7 @@ export class EmSubmissionAccessView extends BaseEntity {
   @Column({
     name: 'rpt_period_id',
     transformer: new NumericColumnTransformer(),
-    type: 'bigint',
+    type: 'numeric',
   })
   reportingPeriodId: number;
 
@@ -43,6 +43,7 @@ export class EmSubmissionAccessView extends BaseEntity {
     name: 'em_sub_type_cd_description',
   })
   submissionTypeDescription: string;
+
 
   @Column({
     name: 'userid',
@@ -85,7 +86,7 @@ export class EmSubmissionAccessView extends BaseEntity {
   @Column({
     name: 'fac_id',
     transformer: new NumericColumnTransformer(),
-    type: 'bigint',
+    type: 'integer',
   })
   facilityId: number;
 
@@ -127,7 +128,7 @@ export class EmSubmissionAccessView extends BaseEntity {
   @Column({
     name: 'submission_id',
     transformer: new NumericColumnTransformer(),
-    type: 'bigint',
+    type: 'numeric',
   })
   lastSubmissionId: number;
 
